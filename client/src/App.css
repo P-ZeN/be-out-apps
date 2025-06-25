@@ -1,0 +1,27 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.social-login {
+    margin-top: 20px;
+}
+
+.social-button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+}
+
+.google {
+    background-color: #db4437;
+}
+
+.facebook {
+    background-color: #4267b2;
+}
