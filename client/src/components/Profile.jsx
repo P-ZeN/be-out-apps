@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import userService from "../services/userService";
 import { useAuth } from "../context/AuthContext";
+import { Button, TextField, Container, Typography, Box, Alert } from '@mui/material';
 
 const Profile = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState({ first_name: "", last_name: "", bio: "" });
     const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -19,7 +21,7 @@ const Profile = () => {
                 };
                 setProfile(sanitizedProfile);
             } catch (error) {
-                setMessage("Failed to fetch profile");
+                setError("Failed to fetch profile");
             }
         };
 
@@ -34,37 +36,72 @@ const Profile = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setMessage("");
+        setError("");
         try {
             await userService.updateProfile(profile);
             setMessage("Profile updated successfully");
         } catch (error) {
-            setMessage("Failed to update profile");
+            setError("Failed to update profile");
         }
     };
 
     return (
-        <div>
-            <h2>Profile</h2>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    name="first_name"
-                    value={profile.first_name}
-                    onChange={handleChange}
-                    placeholder="First Name"
-                />
-                <input
-                    type="text"
-                    name="last_name"
-                    value={profile.last_name}
-                    onChange={handleChange}
-                    placeholder="Last Name"
-                />
-                <textarea name="bio" value={profile.bio} onChange={handleChange} placeholder="Bio"></textarea>
-                <button type="submit">Update Profile</button>
-            </form>
-            {message && <p>{message}</p>}
-        </div>
+        <Container maxWidth="xs">
+            <Box
+                sx={{
+                    marginTop: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}
+            >
+                <Typography component="h1" variant="h5">
+                    Profile
+                </Typography>
+                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+                    <TextField
+                        margin="normal"
+                        fullWidth
+                        id="first_name"
+                        label="First Name"
+                        name="first_name"
+                        value={profile.first_name}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        margin="normal"
+                        fullWidth
+                        id="last_name"
+                        label="Last Name"
+                        name="last_name"
+                        value={profile.last_name}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        margin="normal"
+                        fullWidth
+                        id="bio"
+                        label="Bio"
+                        name="bio"
+                        multiline
+                        rows={4}
+                        value={profile.bio}
+                        onChange={handleChange}
+                    />
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 3, mb: 2 }}
+                    >
+                        Update Profile
+                    </Button>
+                </Box>
+            </Box>
+            {message && <Alert severity="success" sx={{ mt: 2 }}>{message}</Alert>}
+            {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+        </Container>
     );
 };
 
