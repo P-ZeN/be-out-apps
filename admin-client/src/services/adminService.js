@@ -8,10 +8,10 @@ class AdminService {
         if (!token) {
             throw new Error("No authentication token found");
         }
-        
+
         return {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
         };
     }
 

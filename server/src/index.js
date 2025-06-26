@@ -9,6 +9,7 @@ import profileRoutes from "./routes/profile.js";
 import eventsRoutes from "./routes/events.js";
 import bookingsRoutes from "./routes/bookings.js";
 import adminRoutes from "./routes/admin.js";
+import favoritesRoutes from "./routes/favorites.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 
@@ -37,6 +38,7 @@ app.use("/user", profileRoutes);
 app.use("/api/events", eventsRoutes);
 app.use("/api/bookings", bookingsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/favorites", favoritesRoutes);
 
 // Google Auth Routes
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));

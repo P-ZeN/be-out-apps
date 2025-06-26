@@ -34,6 +34,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import EventService from "../services/eventService";
 import BookingModal from "../components/BookingModal";
+import FavoriteButton from "../components/FavoriteButton";
 
 const EventDetail = () => {
     const navigate = useNavigate();
@@ -43,7 +44,6 @@ const EventDetail = () => {
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isFavorite, setIsFavorite] = useState(false);
     const [bookingModalOpen, setBookingModalOpen] = useState(false);
 
     // Load event data from API
@@ -205,9 +205,7 @@ const EventDetail = () => {
                                 </Typography>
                             </Box>
                             <Box sx={{ display: "flex", gap: 1 }}>
-                                <IconButton onClick={handleFavorite} color={isFavorite ? "primary" : "default"}>
-                                    {isFavorite ? <Star /> : <StarBorder />}
-                                </IconButton>
+                                <FavoriteButton eventId={event.id} size="large" />
                                 <IconButton onClick={handleShare}>
                                     <Share />
                                 </IconButton>

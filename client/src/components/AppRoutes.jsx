@@ -3,7 +3,7 @@ import Login from "./Login";
 import Register from "./Register";
 import Profile from "./Profile";
 import PrivateRoute from "./PrivateRoute";
-import { Home, EventDetail, MapView, Bookings } from "../pages";
+import { Home, EventDetail, MapView, Bookings, Favorites } from "../pages";
 
 const AppRoutes = () => {
     return (
@@ -27,6 +27,14 @@ const AppRoutes = () => {
                 element={
                     <PrivateRoute>
                         <Bookings />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/favorites"
+                element={
+                    <PrivateRoute>
+                        <Favorites />
                     </PrivateRoute>
                 }
             />

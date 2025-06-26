@@ -34,6 +34,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useTheme } from "@mui/material/styles";
 import FilterDrawer from "../components/FilterDrawer";
+import FavoriteButton from "../components/FavoriteButton";
 import EventService from "../services/eventService";
 
 const Home = () => {
@@ -117,8 +118,23 @@ const Home = () => {
                     transform: "translateY(-4px)",
                     boxShadow: 4,
                 },
+                position: "relative",
             }}
             onClick={() => navigate(`/event/${event.id}`)}>
+            {/* Favorite Button - positioned absolutely */}
+            <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
+                <FavoriteButton
+                    eventId={event.id}
+                    size="small"
+                    sx={{
+                        backgroundColor: theme.palette.background.paper,
+                        "&:hover": {
+                            backgroundColor: theme.palette.background.paper,
+                        },
+                    }}
+                />
+            </Box>
+
             <CardMedia component="img" height="200" image={event.image_url} alt={event.title} />
             <CardContent>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
@@ -126,9 +142,6 @@ const Home = () => {
                         {event.title}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 0.5 }}>
-                        <IconButton size="small">
-                            <FavoriteOutlined />
-                        </IconButton>
                         <IconButton size="small">
                             <Share />
                         </IconButton>

@@ -18,13 +18,13 @@ class AuthService {
             }
 
             const data = await response.json();
-            
+
             // Store token
             localStorage.setItem("admin_token", data.token);
-            
+
             // Fetch user profile to get role information
             const profile = await this.getProfile();
-            
+
             return { token: data.token, user: profile };
         } catch (error) {
             console.error("Login error:", error);
@@ -39,7 +39,7 @@ class AuthService {
 
             const response = await fetch(`${API_BASE_URL}/user/profile`, {
                 headers: {
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
             });
@@ -50,9 +50,9 @@ class AuthService {
             }
 
             const user = await response.json();
-            
+
             // Verify admin role
-            if (!user.role || (user.role !== 'admin' && user.role !== 'moderator')) {
+            if (!user.role || (user.role !== "admin" && user.role !== "moderator")) {
                 throw new Error("Access denied: Admin privileges required");
             }
 
@@ -83,12 +83,12 @@ class AuthService {
     static isAuthenticated() {
         const token = this.getToken();
         const user = this.getCurrentUser();
-        return token && user && (user.role === 'admin' || user.role === 'moderator');
+        return token && user && (user.role === "admin" || user.role === "moderator");
     }
 
     static isAdmin() {
         const user = this.getCurrentUser();
-        return user && user.role === 'admin';
+        return user && user.role === "admin";
     }
 }
 

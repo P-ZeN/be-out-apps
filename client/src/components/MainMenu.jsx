@@ -16,12 +16,7 @@ import {
     Tab,
     Divider,
 } from "@mui/material";
-import {
-    Person as PersonIcon,
-    Home as HomeIcon,
-    Map as MapIcon,
-    Event as EventIcon,
-} from "@mui/icons-material";
+import { Person as PersonIcon, Home as HomeIcon, Map as MapIcon, Event as EventIcon } from "@mui/icons-material";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const MainMenu = () => {
@@ -119,6 +114,9 @@ const MainMenu = () => {
                             ? [
                                   <MenuItem key="profile" component={Link} to="/profile" onClick={handleMenuClose}>
                                       {t("menu.profile")}
+                                  </MenuItem>,
+                                  <MenuItem key="favorites" component={Link} to="/favorites" onClick={handleMenuClose}>
+                                      Mes favoris
                                   </MenuItem>,
                                   <MenuItem key="bookings" component={Link} to="/bookings" onClick={handleMenuClose}>
                                       Mes réservations

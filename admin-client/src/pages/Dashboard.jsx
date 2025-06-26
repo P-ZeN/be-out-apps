@@ -12,15 +12,7 @@ import {
     CircularProgress,
     Chip,
 } from "@mui/material";
-import {
-    Dashboard,
-    Event,
-    People,
-    Receipt,
-    History,
-    TrendingUp,
-    TrendingDown,
-} from "@mui/icons-material";
+import { Dashboard, Event, People, Receipt, History, TrendingUp, TrendingDown } from "@mui/icons-material";
 import AdminService from "../services/adminService";
 
 const SimpleDashboard = ({ user }) => {
@@ -97,8 +89,7 @@ const SimpleDashboard = ({ user }) => {
                                 <Typography
                                     variant="body2"
                                     color={trend > 0 ? "success.main" : "error.main"}
-                                    sx={{ ml: 0.5 }}
-                                >
+                                    sx={{ ml: 0.5 }}>
                                     {Math.abs(trend)}%
                                 </Typography>
                             </Box>
@@ -172,10 +163,10 @@ const SimpleDashboard = ({ user }) => {
                                                         <Typography variant="body1">
                                                             <strong>Email:</strong> {user.email}
                                                         </Typography>
-                                                        <Chip 
-                                                            label={user.role === 'admin' ? 'Super Admin' : 'Modérateur'} 
-                                                            color={user.role === 'admin' ? 'error' : 'warning'} 
-                                                            size="small" 
+                                                        <Chip
+                                                            label={user.role === "admin" ? "Super Admin" : "Modérateur"}
+                                                            color={user.role === "admin" ? "error" : "warning"}
+                                                            size="small"
                                                         />
                                                     </Box>
                                                 </CardContent>
@@ -190,9 +181,7 @@ const SimpleDashboard = ({ user }) => {
             case 1:
                 return (
                     <Box>
-                        <Alert severity="info">
-                            Section statistiques détaillées - À développer
-                        </Alert>
+                        <Alert severity="info">Section statistiques détaillées - À développer</Alert>
                     </Box>
                 );
             default:
@@ -212,19 +201,13 @@ const SimpleDashboard = ({ user }) => {
             </Box>
 
             <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
-                <Tabs 
-                    value={activeTab} 
+                <Tabs
+                    value={activeTab}
                     onChange={(e, newValue) => setActiveTab(newValue)}
                     variant="scrollable"
-                    scrollButtons="auto"
-                >
+                    scrollButtons="auto">
                     {tabs.map((tab, index) => (
-                        <Tab
-                            key={index}
-                            icon={tab.icon}
-                            label={tab.label}
-                            iconPosition="start"
-                        />
+                        <Tab key={index} icon={tab.icon} label={tab.label} iconPosition="start" />
                     ))}
                 </Tabs>
             </Box>

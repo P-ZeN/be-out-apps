@@ -34,7 +34,7 @@ const requireAdmin = async (req, res, next) => {
                 }
             };
 
-            checkAdminRole().catch(err => {
+            checkAdminRole().catch((err) => {
                 console.error("Admin role check error:", err);
                 res.status(500).json({ error: "Admin authentication failed" });
             });
