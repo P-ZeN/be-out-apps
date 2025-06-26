@@ -1,0 +1,36 @@
+{
+  "buttons": {
+    "getStarted": "Get Started",
+    "goToProfile": "Go to Profile",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "profile": "Profile",
+    "buyNow": "Buy Now",
+    "viewDetails": "View Details",
+    "favorite": "Add to Favorites",
+    "share": "Share",
+    "filter": "Filter",
+    "search": "Search"
+  },
+  "messages": {
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success"
+  },
+  "form": {
+    "email": "Email Address",
+    "password": "Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "bio": "Bio",
+    "required": "This field is required"
+  },
+  "footer": {
+    "copyright": "© 2025 Be-Out App. All rights reserved.",
+    "language": "Language:"
+  }
+}

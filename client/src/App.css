@@ -1,10 +1,35 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Roboto", Arial, sans-serif;
+}
+
+/* Add top padding to main content to avoid being hidden under AppBar */
+/* Add bottom padding to account for fixed footer */
+.main-content {
+    max-width: 1280px;
+    padding: 64px 0 80px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 600px) {
+    .main-content {
+        padding: 56px 0 70px 0;
+    }
+}
+
+/* Social login buttons - consider moving these to theme.js components override */
 .social-login {
     margin-top: 20px;
 }
@@ -18,6 +43,7 @@
     cursor: pointer;
 }
 
+/* TODO: Move these colors to theme.js for consistency */
 .google {
     background-color: #db4437;
 }
@@ -25,3 +51,6 @@
 .facebook {
     background-color: #4267b2;
 }
+
+/* Remove conflicting footer styles - now handled by Material-UI theme */
+/* Footer positioning and layout should be handled by the component itself */

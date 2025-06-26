@@ -6,6 +6,9 @@ import passport from "passport";
 import setupRoutes from "./routes/setup.js";
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
+import eventsRoutes from "./routes/events.js";
+import bookingsRoutes from "./routes/bookings.js";
+import adminRoutes from "./routes/admin.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 
@@ -31,6 +34,9 @@ const port = process.env.PORT || 3000;
 app.use("/", setupRoutes);
 app.use("/auth", authRoutes);
 app.use("/user", profileRoutes);
+app.use("/api/events", eventsRoutes);
+app.use("/api/bookings", bookingsRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Google Auth Routes
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));

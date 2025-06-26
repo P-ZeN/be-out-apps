@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:colors": "findstr /S /N /R /I \"color.*[\\\"\\'][^\\\"\\']*(white|black|grey|gray|red|blue|green|yellow|#[0-9a-fA-F])\" src\\*.jsx src\\*.js || echo No hardcoded colors found!",
     "preview": "vite preview",
     "tauri": "tauri"
   },
@@ -16,8 +17,12 @@
     "@mui/icons-material": "^7.1.2",
     "@mui/material": "^7.1.2",
     "@tauri-apps/api": "^1.5.2",
+    "i18next": "^25.2.1",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "i18next-http-backend": "^3.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-i18next": "^15.5.3",
     "react-router-dom": "^7.6.2"
   },
   "devDependencies": {

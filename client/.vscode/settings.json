@@ -1,0 +1,25 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.validate": ["javascript", "javascriptreact"],
+    "emmet.includeLanguages": {
+        "javascript": "javascriptreact"
+    },
+    "editor.snippets.codeActions.enabled": true,
+    "typescript.suggest.autoImports": true,
+    "javascript.suggest.autoImports": true,
+    "editor.quickSuggestions": {
+        "strings": true
+    },
+    // MUI and theme-specific settings
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    }
+}

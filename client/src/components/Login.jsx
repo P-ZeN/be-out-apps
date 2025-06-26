@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import { useAuth } from "../context/AuthContext";
-import { Button, TextField, Container, Typography, Box, Alert, Divider } from '@mui/material';
-import { Google, Facebook } from '@mui/icons-material';
+import { useTranslation } from "react-i18next";
+import { Button, TextField, Container, Typography, Box, Alert, Divider } from "@mui/material";
+import { Google, Facebook } from "@mui/icons-material";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ const Login = () => {
     const [error, setError] = useState("");
     const { login } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation(["auth", "common"]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -20,10 +22,10 @@ const Login = () => {
         try {
             const response = await authService.login({ email, password });
             login(response); // Pass the whole response to login
-            setMessage("Login successful");
-            navigate("/profile");
+            setMessage(t("auth:login.success"));
+            navigate("/");
         } catch (error) {
-            setError("Login failed");
+            setError(t("auth:login.failed"));
         }
     };
 
@@ -32,13 +34,12 @@ const Login = () => {
             <Box
                 sx={{
                     marginTop: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}
-            >
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                }}>
                 <Typography component="h1" variant="h5">
-                    Login
+                    {t("auth:login.title")}
                 </Typography>
                 <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
                     <TextField
@@ -46,7 +47,7 @@ const Login = () => {
                         required
                         fullWidth
                         id="email"
-                        label="Email Address"
+                        label={t("common:form.email")}
                         name="email"
                         autoComplete="email"
                         autoFocus
@@ -58,42 +59,43 @@ const Login = () => {
                         required
                         fullWidth
                         name="password"
-                        label="Password"
+                        label={t("common:form.password")}
                         type="password"
                         id="password"
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                    >
-                        Login
+                    <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+                        {t("auth:login.title")}
                     </Button>
                 </Box>
             </Box>
-            {message && <Alert severity="success" sx={{ mt: 2 }}>{message}</Alert>}
-            {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+            {message && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                    {message}
+                </Alert>
+            )}
+            {error && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                    {error}
+                </Alert>
+            )}
 
-            <Divider sx={{ my: 2 }}>Or login with</Divider>
+            <Divider sx={{ my: 2 }}>{t("auth:login.orLoginWith")}</Divider>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <Button
                     variant="outlined"
                     startIcon={<Google />}
-                    onClick={() => (window.location.href = "http://localhost:3000/auth/google")}
-                >
-                    Login with Google
+                    onClick={() => (window.location.href = "http://localhost:3000/auth/google")}>
+                    {t("auth:login.loginWithGoogle")}
                 </Button>
                 <Button
                     variant="outlined"
                     startIcon={<Facebook />}
-                    onClick={() => (window.location.href = "http://localhost:3000/auth/facebook")}
-                >
-                    Login with Facebook
+                    onClick={() => (window.location.href = "http://localhost:3000/auth/facebook")}>
+                    {t("auth:login.loginWithFacebook")}
                 </Button>
             </Box>
         </Container>

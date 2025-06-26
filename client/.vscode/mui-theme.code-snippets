@@ -1,0 +1,105 @@
+{
+    "Theme - useTheme hook": {
+        "prefix": "usetheme",
+        "body": [
+            "const theme = useTheme();"
+        ],
+        "description": "Import and use Material-UI theme"
+    },
+    "Theme - import useTheme": {
+        "prefix": "importtheme",
+        "body": [
+            "import { useTheme } from \"@mui/material/styles\";"
+        ],
+        "description": "Import useTheme hook"
+    },
+    "Theme - primary color": {
+        "prefix": "tprimary",
+        "body": [
+            "theme.palette.primary.main"
+        ],
+        "description": "Theme primary color"
+    },
+    "Theme - secondary color": {
+        "prefix": "tsecondary",
+        "body": [
+            "theme.palette.secondary.main"
+        ],
+        "description": "Theme secondary color"
+    },
+    "Theme - background paper": {
+        "prefix": "tbgpaper",
+        "body": [
+            "theme.palette.background.paper"
+        ],
+        "description": "Theme background paper"
+    },
+    "Theme - background default": {
+        "prefix": "tbgdefault",
+        "body": [
+            "theme.palette.background.default"
+        ],
+        "description": "Theme background default"
+    },
+    "Theme - text primary": {
+        "prefix": "ttextprimary",
+        "body": [
+            "theme.palette.text.primary"
+        ],
+        "description": "Theme text primary"
+    },
+    "Theme - text secondary": {
+        "prefix": "ttextsecondary",
+        "body": [
+            "theme.palette.text.secondary"
+        ],
+        "description": "Theme text secondary"
+    },
+    "Theme - footer background": {
+        "prefix": "tfooterbg",
+        "body": [
+            "theme.palette.footer.background"
+        ],
+        "description": "Theme footer background"
+    },
+    "Theme - footer text": {
+        "prefix": "tfootertext",
+        "body": [
+            "theme.palette.footer.text"
+        ],
+        "description": "Theme footer text"
+    },
+    "Theme - footer text secondary": {
+        "prefix": "tfootertextsec",
+        "body": [
+            "theme.palette.footer.textSecondary"
+        ],
+        "description": "Theme footer text secondary"
+    },
+    "MUI Box with theme colors": {
+        "prefix": "boxtheme",
+        "body": [
+            "<Box",
+            "    sx={{",
+            "        backgroundColor: theme.palette.background.paper,",
+            "        color: theme.palette.text.primary,",
+            "        $0",
+            "    }}>",
+            "</Box>"
+        ],
+        "description": "MUI Box with theme colors"
+    },
+    "MUI Paper with theme": {
+        "prefix": "papertheme",
+        "body": [
+            "<Paper",
+            "    sx={{",
+            "        backgroundColor: theme.palette.background.paper,",
+            "        color: theme.palette.text.primary,",
+            "        $0",
+            "    }}>",
+            "</Paper>"
+        ],
+        "description": "MUI Paper with theme colors"
+    }
+}

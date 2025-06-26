@@ -3,10 +3,15 @@ import Login from "./Login";
 import Register from "./Register";
 import Profile from "./Profile";
 import PrivateRoute from "./PrivateRoute";
+import { Home, EventDetail, MapView, Bookings } from "../pages";
 
 const AppRoutes = () => {
     return (
         <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/map" element={<MapView />} />
+            <Route path="/event/:id" element={<EventDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
@@ -14,6 +19,14 @@ const AppRoutes = () => {
                 element={
                     <PrivateRoute>
                         <Profile />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/bookings"
+                element={
+                    <PrivateRoute>
+                        <Bookings />
                     </PrivateRoute>
                 }
             />

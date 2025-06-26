@@ -1,0 +1,52 @@
+{
+  "title": "Be Out",
+  "subtitle": "Discover last-minute deals on events near you",
+  "searchPlaceholder": "Search events, concerts, shows...",
+  "categories": {
+    "all": "All Events",
+    "music": "Music",
+    "sport": "Sports",
+    "theater": "Theater",
+    "food": "Food & Drinks"
+  },
+  "sections": {
+    "lastMinute": "⚡ Last Minute Deals",
+    "allEvents": "All Events",
+    "categoryEvents": "{{category}} Events",
+    "recommended": "Recommended for You",
+    "nearYou": "Near You"
+  },
+  "badges": {
+    "lastMinute": "Last Minute",
+    "hotDeal": "Hot Deal",
+    "newEvent": "New"
+  },
+  "ticketsAvailable": "tickets left",
+  "eventsFound": "events found",
+  "noEventsFound": "No events found matching your criteria",
+  "clearFilters": "Clear Filters",
+  "features": {
+    "discover": {
+      "title": "Discover",
+      "description": "Find amazing events and experiences at discounted prices."
+    },
+    "save": {
+      "title": "Save Money",
+      "description": "Get up to 70% off on last-minute tickets and special offers."
+    },
+    "enjoy": {
+      "title": "Enjoy",
+      "description": "Live unique moments and create unforgettable memories."
+    }
+  },
+  "cta": {
+    "title": "Ready to discover amazing events?",
+    "description": "Join thousands of users who save money on their favorite activities"
+  },
+  "filters": {
+    "price": "Price Range",
+    "date": "Date",
+    "distance": "Distance",
+    "category": "Category"
+  }
+}

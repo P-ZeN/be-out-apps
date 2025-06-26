@@ -33,7 +33,13 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
-    const value = { user, login, logout, loading };
+    const value = {
+        user,
+        login,
+        logout,
+        loading,
+        isAuthenticated: !!user,
+    };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

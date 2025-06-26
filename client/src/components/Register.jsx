@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import { useAuth } from "../context/AuthContext";
-import { Button, TextField, Container, Typography, Box, Alert } from '@mui/material';
+import { Button, TextField, Container, Typography, Box, Alert } from "@mui/material";
 
 const Register = () => {
     const [email, setEmail] = useState("");
@@ -23,7 +23,7 @@ const Register = () => {
             const response = await authService.register({ email, password, firstName, lastName, bio });
             login(response);
             setMessage("Registration successful");
-            navigate("/profile");
+            navigate("/");
         } catch (error) {
             setError("Registration failed");
         }
@@ -34,11 +34,10 @@ const Register = () => {
             <Box
                 sx={{
                     marginTop: 8,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                }}
-            >
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                }}>
                 <Typography component="h1" variant="h5">
                     Register
                 </Typography>
@@ -96,12 +95,7 @@ const Register = () => {
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
                     />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                    >
+                    <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
                         Register
                     </Button>
                 </Box>
