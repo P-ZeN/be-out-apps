@@ -1,0 +1,5 @@
+// In Dockploy container docker terminal:
+pg_dump -U beoutdbuser -d beout-db --schema-only --no-owner --no-privileges > /tmp/schema.sql
+
+// the on the actual machine:
+docker cp <docker database container>:/tmp/schema.sql ./schema.sql

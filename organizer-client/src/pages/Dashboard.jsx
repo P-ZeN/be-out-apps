@@ -214,16 +214,12 @@ const Dashboard = () => {
                             ) : (
                                 <List>
                                     {upcomingEvents.map((event) => (
-                                        <ListItem key={event.event_id} divider>
+                                        <ListItem key={event.event_id || event.id} divider>
                                             <ListItemText
-                                                primary={
-                                                    <Typography variant="subtitle1" fontWeight="bold">
-                                                        {event.title}
-                                                    </Typography>
-                                                }
+                                                primary={event.title}
                                                 secondary={
                                                     <Box>
-                                                        <Typography variant="body2" color="text.secondary">
+                                                        <Typography variant="body2" color="text.secondary" component="div">
                                                             {new Date(event.event_date).toLocaleDateString("fr-FR", {
                                                                 weekday: "long",
                                                                 year: "numeric",
@@ -233,26 +229,27 @@ const Dashboard = () => {
                                                                 minute: "2-digit",
                                                             })}
                                                         </Typography>
-                                                        <Typography variant="body2" color="text.secondary">
+                                                        <Typography variant="body2" color="text.secondary" component="div">
                                                             {event.venue_name}
                                                         </Typography>
                                                         <Box sx={{ mt: 1 }}>
                                                             <Chip
                                                                 size="small"
-                                                                label={`${event.total_bookings} réservations`}
+                                                                label={`${event.total_bookings || 0} réservations`}
                                                                 color="primary"
                                                                 variant="outlined"
                                                                 sx={{ mr: 1 }}
                                                             />
                                                             <Chip
                                                                 size="small"
-                                                                label={`${event.revenue}€`}
+                                                                label={`${event.revenue || 0}€`}
                                                                 color="success"
                                                                 variant="outlined"
                                                             />
                                                         </Box>
                                                     </Box>
                                                 }
+                                                secondaryTypographyProps={{ component: 'div' }}
                                             />
                                         </ListItem>
                                     ))}
@@ -285,26 +282,23 @@ const Dashboard = () => {
                             ) : (
                                 <List>
                                     {recentBookings.map((booking) => (
-                                        <ListItem key={booking.booking_id} divider>
+                                        <ListItem key={booking.booking_id || booking.id} divider>
                                             <ListItemText
-                                                primary={
-                                                    <Typography variant="subtitle1">
-                                                        {booking.customer_name || booking.customer_email}
-                                                    </Typography>
-                                                }
+                                                primary={booking.customer_name || booking.customer_email}
                                                 secondary={
                                                     <Box>
-                                                        <Typography variant="body2" color="text.secondary">
+                                                        <Typography variant="body2" color="text.secondary" component="div">
                                                             {booking.event_title}
                                                         </Typography>
-                                                        <Typography variant="body2" color="text.secondary">
+                                                        <Typography variant="body2" color="text.secondary" component="div">
                                                             {booking.quantity} billet(s) - {booking.total_price}€
                                                         </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
+                                                        <Typography variant="caption" color="text.secondary" component="div">
                                                             {new Date(booking.booking_date).toLocaleDateString("fr-FR")}
                                                         </Typography>
                                                     </Box>
                                                 }
+                                                secondaryTypographyProps={{ component: 'div' }}
                                             />
                                         </ListItem>
                                     ))}

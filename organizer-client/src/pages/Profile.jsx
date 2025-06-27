@@ -144,7 +144,7 @@ const Profile = () => {
 
             <Grid container spacing={3}>
                 {/* Account Information */}
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -169,7 +169,7 @@ const Profile = () => {
                 </Grid>
 
                 {/* Profile Form */}
-                <Grid item xs={12} md={8}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -190,7 +190,7 @@ const Profile = () => {
 
                             <form onSubmit={handleSubmit}>
                                 <Grid container spacing={3}>
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="Nom de l'entreprise"
@@ -204,7 +204,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="Personne de contact"
@@ -218,7 +218,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="Téléphone"
@@ -231,7 +231,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="Site web"
@@ -244,7 +244,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <TextField
                                             fullWidth
                                             label="Description de l'entreprise"
@@ -256,7 +256,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <Divider sx={{ my: 2 }}>
                                             <Typography variant="subtitle2" color="text.secondary">
                                                 Adresse
@@ -264,7 +264,7 @@ const Profile = () => {
                                         </Divider>
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <TextField
                                             fullWidth
                                             label="Adresse"
@@ -277,7 +277,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="Ville"
@@ -287,7 +287,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} sm={3}>
+                                    <Grid size={{ xs: 12, sm: 3 }}>
                                         <TextField
                                             fullWidth
                                             label="Code postal"
@@ -297,7 +297,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} sm={3}>
+                                    <Grid size={{ xs: 12, sm: 3 }}>
                                         <TextField
                                             fullWidth
                                             label="Pays"
@@ -307,7 +307,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <Divider sx={{ my: 2 }}>
                                             <Typography variant="subtitle2" color="text.secondary">
                                                 Informations légales
@@ -315,7 +315,7 @@ const Profile = () => {
                                         </Divider>
                                     </Grid>
 
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="SIRET"
@@ -325,7 +325,7 @@ const Profile = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12} sm={6}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="Numéro de TVA"
