@@ -1,0 +1,175 @@
+"TABLE_INFO"	"admin_actions"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"admin_actions"	"admin_user_id"	"uuid"		"YES"		2
+"TABLE_INFO"	"admin_actions"	"action_type"	"character varying"	100	"NO"		3
+"TABLE_INFO"	"admin_actions"	"target_type"	"character varying"	50	"NO"		4
+"TABLE_INFO"	"admin_actions"	"target_id"	"uuid"		"YES"		5
+"TABLE_INFO"	"admin_actions"	"description"	"text"		"YES"		6
+"TABLE_INFO"	"admin_actions"	"metadata"	"jsonb"		"YES"		7
+"TABLE_INFO"	"admin_actions"	"ip_address"	"inet"		"YES"		8
+"TABLE_INFO"	"admin_actions"	"user_agent"	"text"		"YES"		9
+"TABLE_INFO"	"admin_actions"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	10
+"TABLE_INFO"	"admin_actions_backup"	"id"	"uuid"		"YES"		1
+"TABLE_INFO"	"admin_actions_backup"	"admin_user_id"	"uuid"		"YES"		2
+"TABLE_INFO"	"admin_actions_backup"	"action_type"	"character varying"	100	"YES"		3
+"TABLE_INFO"	"admin_actions_backup"	"target_type"	"character varying"	50	"YES"		4
+"TABLE_INFO"	"admin_actions_backup"	"target_id"	"uuid"		"YES"		5
+"TABLE_INFO"	"admin_actions_backup"	"description"	"text"		"YES"		6
+"TABLE_INFO"	"admin_actions_backup"	"metadata"	"jsonb"		"YES"		7
+"TABLE_INFO"	"admin_actions_backup"	"ip_address"	"inet"		"YES"		8
+"TABLE_INFO"	"admin_actions_backup"	"user_agent"	"text"		"YES"		9
+"TABLE_INFO"	"admin_actions_backup"	"created_at"	"timestamp with time zone"		"YES"		10
+"TABLE_INFO"	"booking_tickets"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"booking_tickets"	"booking_id"	"uuid"		"YES"		2
+"TABLE_INFO"	"booking_tickets"	"ticket_number"	"character varying"	100	"NO"		3
+"TABLE_INFO"	"booking_tickets"	"ticket_status"	"character varying"	50	"YES"	"'valid'::character varying"	4
+"TABLE_INFO"	"booking_tickets"	"qr_code"	"text"		"YES"		5
+"TABLE_INFO"	"booking_tickets"	"seat_number"	"character varying"	50	"YES"		6
+"TABLE_INFO"	"booking_tickets"	"holder_name"	"character varying"	255	"YES"		7
+"TABLE_INFO"	"booking_tickets"	"holder_email"	"character varying"	255	"YES"		8
+"TABLE_INFO"	"booking_tickets"	"used_at"	"timestamp with time zone"		"YES"		9
+"TABLE_INFO"	"booking_tickets"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	10
+"TABLE_INFO"	"bookings"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"bookings"	"user_id"	"uuid"		"YES"		2
+"TABLE_INFO"	"bookings"	"event_id"	"uuid"		"YES"		3
+"TABLE_INFO"	"bookings"	"quantity"	"integer"		"NO"	"1"	4
+"TABLE_INFO"	"bookings"	"total_price"	"numeric"		"NO"		5
+"TABLE_INFO"	"bookings"	"booking_status"	"character varying"	20	"YES"	"'confirmed'::character varying"	6
+"TABLE_INFO"	"bookings"	"booking_date"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	7
+"TABLE_INFO"	"bookings"	"payment_status"	"character varying"	20	"YES"	"'pending'::character varying"	8
+"TABLE_INFO"	"bookings"	"unit_price"	"numeric"		"YES"		9
+"TABLE_INFO"	"bookings"	"payment_method"	"character varying"	50	"YES"		10
+"TABLE_INFO"	"bookings"	"transaction_id"	"character varying"	255	"YES"		11
+"TABLE_INFO"	"bookings"	"booking_reference"	"character varying"	50	"YES"		12
+"TABLE_INFO"	"bookings"	"customer_name"	"character varying"	255	"YES"		13
+"TABLE_INFO"	"bookings"	"customer_email"	"character varying"	255	"YES"		14
+"TABLE_INFO"	"bookings"	"customer_phone"	"character varying"	50	"YES"		15
+"TABLE_INFO"	"bookings"	"special_requests"	"text"		"YES"		16
+"TABLE_INFO"	"bookings"	"updated_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	17
+"TABLE_INFO"	"bookings"	"cancelled_at"	"timestamp with time zone"		"YES"		18
+"TABLE_INFO"	"bookings"	"cancellation_reason"	"text"		"YES"		19
+"TABLE_INFO"	"bookings"	"stripe_payment_intent_id"	"character varying"	255	"YES"		20
+"TABLE_INFO"	"categories"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"categories"	"name"	"character varying"	100	"NO"		2
+"TABLE_INFO"	"categories"	"description"	"text"		"YES"		3
+"TABLE_INFO"	"categories"	"icon"	"character varying"	50	"YES"		4
+"TABLE_INFO"	"categories"	"color"	"character varying"	7	"YES"		5
+"TABLE_INFO"	"categories"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	6
+"TABLE_INFO"	"event_categories"	"event_id"	"uuid"		"NO"		1
+"TABLE_INFO"	"event_categories"	"category_id"	"uuid"		"NO"		2
+"TABLE_INFO"	"events"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"events"	"title"	"character varying"	255	"NO"		2
+"TABLE_INFO"	"events"	"description"	"text"		"NO"		3
+"TABLE_INFO"	"events"	"short_description"	"character varying"	500	"YES"		4
+"TABLE_INFO"	"events"	"image_url"	"character varying"	500	"YES"		5
+"TABLE_INFO"	"events"	"venue_id"	"uuid"		"YES"		6
+"TABLE_INFO"	"events"	"organizer_id"	"uuid"		"YES"		7
+"TABLE_INFO"	"events"	"original_price"	"numeric"		"NO"		8
+"TABLE_INFO"	"events"	"discounted_price"	"numeric"		"NO"		9
+"TABLE_INFO"	"events"	"discount_percentage"	"integer"		"YES"		10
+"TABLE_INFO"	"events"	"total_tickets"	"integer"		"NO"	"0"	11
+"TABLE_INFO"	"events"	"available_tickets"	"integer"		"NO"	"0"	12
+"TABLE_INFO"	"events"	"event_date"	"timestamp with time zone"		"NO"		13
+"TABLE_INFO"	"events"	"booking_deadline"	"timestamp with time zone"		"YES"		14
+"TABLE_INFO"	"events"	"is_last_minute"	"boolean"		"YES"	"false"	15
+"TABLE_INFO"	"events"	"is_featured"	"boolean"		"YES"	"false"	16
+"TABLE_INFO"	"events"	"status"	"character varying"	20	"YES"	"'active'::character varying"	17
+"TABLE_INFO"	"events"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	18
+"TABLE_INFO"	"events"	"updated_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	19
+"TABLE_INFO"	"events"	"admin_notes"	"text"		"YES"		20
+"TABLE_INFO"	"events"	"moderation_status"	"character varying"	50	"YES"	"'approved'::character varying"	21
+"TABLE_INFO"	"events"	"approved_by"	"uuid"		"YES"		22
+"TABLE_INFO"	"events"	"approved_at"	"timestamp with time zone"		"YES"		23
+"TABLE_INFO"	"events"	"favorites_count"	"integer"		"NO"	"0"	24
+"TABLE_INFO"	"organizer_accounts"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"organizer_accounts"	"user_id"	"uuid"		"YES"		2
+"TABLE_INFO"	"organizer_accounts"	"stripe_account_id"	"character varying"	255	"NO"		3
+"TABLE_INFO"	"organizer_accounts"	"account_type"	"character varying"	50	"YES"	"'express'::character varying"	4
+"TABLE_INFO"	"organizer_accounts"	"country"	"character varying"	2	"YES"	"'FR'::character varying"	5
+"TABLE_INFO"	"organizer_accounts"	"business_type"	"character varying"	50	"YES"		6
+"TABLE_INFO"	"organizer_accounts"	"onboarding_completed"	"boolean"		"YES"	"false"	7
+"TABLE_INFO"	"organizer_accounts"	"payouts_enabled"	"boolean"		"YES"	"false"	8
+"TABLE_INFO"	"organizer_accounts"	"charges_enabled"	"boolean"		"YES"	"false"	9
+"TABLE_INFO"	"organizer_accounts"	"details_submitted"	"boolean"		"YES"	"false"	10
+"TABLE_INFO"	"organizer_accounts"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	11
+"TABLE_INFO"	"organizer_accounts"	"updated_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	12
+"TABLE_INFO"	"payment_disputes"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"payment_disputes"	"stripe_charge_id"	"character varying"	255	"NO"		2
+"TABLE_INFO"	"payment_disputes"	"amount"	"numeric"		"NO"		3
+"TABLE_INFO"	"payment_disputes"	"currency"	"character varying"	3	"YES"	"'EUR'::character varying"	4
+"TABLE_INFO"	"payment_disputes"	"reason"	"character varying"	100	"YES"		5
+"TABLE_INFO"	"payment_disputes"	"status"	"character varying"	50	"NO"		6
+"TABLE_INFO"	"payment_disputes"	"evidence_due_by"	"timestamp with time zone"		"YES"		7
+"TABLE_INFO"	"payment_disputes"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	8
+"TABLE_INFO"	"payment_disputes"	"updated_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	9
+"TABLE_INFO"	"payment_refunds"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"payment_refunds"	"payment_transaction_id"	"uuid"		"YES"		2
+"TABLE_INFO"	"payment_refunds"	"stripe_refund_id"	"character varying"	255	"NO"		3
+"TABLE_INFO"	"payment_refunds"	"amount"	"numeric"		"NO"		4
+"TABLE_INFO"	"payment_refunds"	"currency"	"character varying"	3	"YES"	"'EUR'::character varying"	5
+"TABLE_INFO"	"payment_refunds"	"reason"	"character varying"	100	"YES"		6
+"TABLE_INFO"	"payment_refunds"	"status"	"character varying"	50	"NO"		7
+"TABLE_INFO"	"payment_refunds"	"metadata"	"jsonb"		"YES"		8
+"TABLE_INFO"	"payment_refunds"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	9
+"TABLE_INFO"	"payment_refunds"	"updated_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	10
+"TABLE_INFO"	"payment_transactions"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"payment_transactions"	"booking_id"	"uuid"		"NO"		2
+"TABLE_INFO"	"payment_transactions"	"stripe_payment_intent_id"	"character varying"	255	"NO"		3
+"TABLE_INFO"	"payment_transactions"	"amount"	"numeric"		"NO"		4
+"TABLE_INFO"	"payment_transactions"	"currency"	"character varying"	3	"YES"	"'EUR'::character varying"	5
+"TABLE_INFO"	"payment_transactions"	"status"	"character varying"	50	"NO"		6
+"TABLE_INFO"	"payment_transactions"	"payment_method_type"	"character varying"	50	"YES"		7
+"TABLE_INFO"	"payment_transactions"	"metadata"	"jsonb"		"YES"		8
+"TABLE_INFO"	"payment_transactions"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	9
+"TABLE_INFO"	"payment_transactions"	"updated_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	10
+"TABLE_INFO"	"revenue_splits"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"revenue_splits"	"booking_id"	"uuid"		"NO"		2
+"TABLE_INFO"	"revenue_splits"	"payment_transaction_id"	"uuid"		"YES"		3
+"TABLE_INFO"	"revenue_splits"	"total_amount"	"numeric"		"NO"		4
+"TABLE_INFO"	"revenue_splits"	"platform_fee"	"numeric"		"NO"		5
+"TABLE_INFO"	"revenue_splits"	"platform_fee_percentage"	"numeric"		"YES"	"5.00"	6
+"TABLE_INFO"	"revenue_splits"	"organizer_amount"	"numeric"		"NO"		7
+"TABLE_INFO"	"revenue_splits"	"organizer_account_id"	"uuid"		"YES"		8
+"TABLE_INFO"	"revenue_splits"	"transfer_status"	"character varying"	50	"YES"	"'pending'::character varying"	9
+"TABLE_INFO"	"revenue_splits"	"stripe_transfer_id"	"character varying"	255	"YES"		10
+"TABLE_INFO"	"revenue_splits"	"transferred_at"	"timestamp with time zone"		"YES"		11
+"TABLE_INFO"	"revenue_splits"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	12
+"TABLE_INFO"	"reviews"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"reviews"	"user_id"	"uuid"		"YES"		2
+"TABLE_INFO"	"reviews"	"event_id"	"uuid"		"YES"		3
+"TABLE_INFO"	"reviews"	"booking_id"	"uuid"		"YES"		4
+"TABLE_INFO"	"reviews"	"rating"	"integer"		"NO"		5
+"TABLE_INFO"	"reviews"	"comment"	"text"		"YES"		6
+"TABLE_INFO"	"reviews"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	7
+"TABLE_INFO"	"user_favorites"	"id"	"uuid"		"NO"	"gen_random_uuid()"	1
+"TABLE_INFO"	"user_favorites"	"user_id"	"uuid"		"NO"		2
+"TABLE_INFO"	"user_favorites"	"event_id"	"uuid"		"NO"		3
+"TABLE_INFO"	"user_favorites"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	4
+"TABLE_INFO"	"user_favorites"	"updated_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	5
+"TABLE_INFO"	"user_profiles"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"user_profiles"	"user_id"	"uuid"		"NO"		2
+"TABLE_INFO"	"user_profiles"	"first_name"	"character varying"	255	"YES"		3
+"TABLE_INFO"	"user_profiles"	"last_name"	"character varying"	255	"YES"		4
+"TABLE_INFO"	"user_profiles"	"bio"	"text"		"YES"		5
+"TABLE_INFO"	"user_profiles"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	6
+"TABLE_INFO"	"user_profiles"	"updated_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	7
+"TABLE_INFO"	"user_profiles"	"profile_picture"	"text"		"YES"		8
+"TABLE_INFO"	"user_profiles"	"phone"	"character varying"	20	"YES"		9
+"TABLE_INFO"	"user_profiles"	"date_of_birth"	"date"		"YES"		10
+"TABLE_INFO"	"users"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"users"	"email"	"character varying"	255	"NO"		2
+"TABLE_INFO"	"users"	"password"	"character varying"	255	"YES"		3
+"TABLE_INFO"	"users"	"role"	"character varying"	50	"NO"	"'user'::character varying"	4
+"TABLE_INFO"	"users"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	5
+"TABLE_INFO"	"users"	"provider"	"character varying"	50	"NO"	"'email'::character varying"	6
+"TABLE_INFO"	"users"	"provider_id"	"character varying"	255	"YES"		7
+"TABLE_INFO"	"users"	"is_active"	"boolean"		"YES"	"true"	8
+"TABLE_INFO"	"venues"	"id"	"uuid"		"NO"	"uuid_generate_v4()"	1
+"TABLE_INFO"	"venues"	"name"	"character varying"	255	"NO"		2
+"TABLE_INFO"	"venues"	"address"	"text"		"NO"		3
+"TABLE_INFO"	"venues"	"city"	"character varying"	100	"NO"		4
+"TABLE_INFO"	"venues"	"postal_code"	"character varying"	20	"YES"		5
+"TABLE_INFO"	"venues"	"country"	"character varying"	100	"YES"	"'France'::character varying"	6
+"TABLE_INFO"	"venues"	"latitude"	"numeric"		"YES"		7
+"TABLE_INFO"	"venues"	"longitude"	"numeric"		"YES"		8
+"TABLE_INFO"	"venues"	"capacity"	"integer"		"YES"		9
+"TABLE_INFO"	"venues"	"created_at"	"timestamp with time zone"		"YES"	"CURRENT_TIMESTAMP"	10

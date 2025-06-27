@@ -12,6 +12,7 @@ import adminRoutes from "./routes/admin.js";
 import favoritesRoutes from "./routes/favorites.js";
 import paymentsRoutes from "./routes/payments.js";
 import webhooksRoutes from "./routes/webhooks.js";
+import organizerRoutes from "./routes/organizer.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 
@@ -36,10 +37,12 @@ const port = process.env.PORT || 3000;
 
 app.use("/", setupRoutes);
 app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/user", profileRoutes);
 app.use("/api/events", eventsRoutes);
 app.use("/api/bookings", bookingsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/organizer", organizerRoutes);
 app.use("/api/favorites", favoritesRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/webhooks", webhooksRoutes);
