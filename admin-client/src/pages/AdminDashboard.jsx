@@ -7,8 +7,6 @@ import {
     Card,
     CardContent,
     Paper,
-    Tabs,
-    Tab,
     Alert,
     CircularProgress,
     Chip,
@@ -30,14 +28,9 @@ import {
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import AdminService from "../services/adminService";
-import AdminEvents from "./AdminEvents";
-import AdminUsers from "./AdminUsers";
-import AdminBookings from "./AdminBookings";
-import AdminLogs from "./AdminLogs";
 
 const AdminDashboard = ({ user }) => {
     const theme = useTheme();
-    const [activeTab, setActiveTab] = useState(0);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -46,28 +39,21 @@ const AdminDashboard = ({ user }) => {
         if (user && AdminService.isAdmin(user)) {
             loadDashboardStats();
         }
-    }, [user]);
+    }, [user?.id, user?.role]);
 
     const loadDashboardStats = async () => {
         try {
             setLoading(true);
             setError("");
-            const statsData = await AdminService.getDashboardStats(user.id);
+            const statsData = await AdminService.getDashboardStats();
             setStats(statsData);
         } catch (err) {
-            setError(err.message);
+            console.error("Dashboard stats error:", err);
+            setError(err.message || "Failed to load dashboard statistics");
         } finally {
             setLoading(false);
         }
     };
-
-    const tabs = [
-        { label: "Tableau de bord", icon: <Dashboard /> },
-        { label: "Événements", icon: <Event /> },
-        { label: "Utilisateurs", icon: <People /> },
-        { label: "Réservations", icon: <Receipt /> },
-        { label: "Journaux", icon: <History /> },
-    ];
 
     if (!user) {
         return (
@@ -282,40 +268,10 @@ const AdminDashboard = ({ user }) => {
         </Box>
     );
 
-    const renderTabContent = () => {
-        switch (activeTab) {
-            case 0:
-                return renderOverview();
-            case 1:
-                return <AdminEvents />;
-            case 2:
-                return <AdminUsers />;
-            case 3:
-                return <AdminBookings />;
-            case 4:
-                return <AdminLogs />;
-            default:
-                return renderOverview();
-        }
-    };
-
     return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
-            {/* Tab Navigation */}
-            <Paper sx={{ mb: 3 }}>
-                <Tabs
-                    value={activeTab}
-                    onChange={(e, newValue) => setActiveTab(newValue)}
-                    variant="scrollable"
-                    scrollButtons="auto">
-                    {tabs.map((tab, index) => (
-                        <Tab key={index} label={tab.label} icon={tab.icon} iconPosition="start" />
-                    ))}
-                </Tabs>
-            </Paper>
-
-            {/* Tab Content */}
-            {renderTabContent()}
+            {/* Dashboard Overview Only */}
+            {renderOverview()}
         </Container>
     );
 };

@@ -49,14 +49,11 @@ import {
     Download,
     Refresh,
 } from "@mui/icons-material";
-import { useAuth } from "../context/AuthContext";
 import AdminService from "../services/adminService";
-import { useTranslation } from "react-i18next";
 
-const AdminLogs = () => {
-    const { t } = useTranslation();
-    const { user } = useAuth();
+const AdminLogs = ({ user }) => {
     const [logs, setLogs] = useState([]);
+    const [totalLogs, setTotalLogs] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [page, setPage] = useState(0);
@@ -67,25 +64,37 @@ const AdminLogs = () => {
     const [uniqueAdmins, setUniqueAdmins] = useState([]);
 
     useEffect(() => {
-        loadLogs();
-    }, []);
+        if (user && user.id) {
+            loadLogs();
+        }
+    }, [user?.id]);
 
     const loadLogs = async () => {
+        if (!user || !user.id) {
+            setError("User not authenticated");
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             setError("");
-            const data = await AdminService.getAdminLogs(user.id);
-            setLogs(data);
+            const data = await AdminService.getAdminLogs();
+            const logsArray = data.logs || [];
+            setLogs(logsArray);
+
+            // Set total count from pagination data
+            setTotalLogs(data.pagination?.total || logsArray.length);
 
             // Extract unique admins for filter
-            const admins = [
-                ...new Set(
-                    data.map((log) => ({
-                        id: log.admin_id,
-                        email: log.admin_email,
-                    }))
-                ).values(),
-            ];
+            const uniqueAdminIds = [...new Set(logsArray.map((log) => log.admin_user_id).filter(Boolean))];
+            const admins = uniqueAdminIds.map((adminId) => {
+                const logWithAdmin = logsArray.find((log) => log.admin_user_id === adminId);
+                return {
+                    id: adminId,
+                    email: logWithAdmin?.admin_email || "Unknown",
+                };
+            });
             setUniqueAdmins(admins);
         } catch (err) {
             setError(err.message);
@@ -109,15 +118,16 @@ const AdminLogs = () => {
         setPage(0);
     };
 
-    const filteredLogs = logs.filter((log) => {
+    const filteredLogs = (Array.isArray(logs) ? logs : []).filter((log) => {
         const matchesSearch =
             !searchTerm ||
-            log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.admin_email.toLowerCase().includes(searchTerm.toLowerCase());
+            (log.action && log.action.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (log.details && log.details.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (log.admin_email && log.admin_email.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const matchesAction = actionFilter === "all" || log.action === actionFilter;
-        const matchesAdmin = adminFilter === "all" || log.admin_id.toString() === adminFilter;
+        const matchesAdmin =
+            adminFilter === "all" || (log.admin_user_id && log.admin_user_id.toString() === adminFilter);
 
         return matchesSearch && matchesAction && matchesAdmin;
     });
@@ -187,6 +197,7 @@ const AdminLogs = () => {
     };
 
     const getActionSeverity = (action) => {
+        if (!action || typeof action !== "string") return "normal";
         if (action.includes("delete") || action.includes("suspend")) return "high";
         if (action.includes("reject") || action.includes("moderate")) return "medium";
         if (action.includes("view")) return "low";
@@ -277,7 +288,7 @@ const AdminLogs = () => {
                                         Total d'actions
                                     </Typography>
                                     <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                                        {filteredLogs.length}
+                                        {totalLogs}
                                     </Typography>
                                 </Box>
                                 <History color="primary" />
@@ -410,81 +421,101 @@ const AdminLogs = () => {
 
             {/* Logs Table */}
             {!loading && (
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Horodatage</TableCell>
-                                <TableCell>Administrateur</TableCell>
-                                <TableCell>Action</TableCell>
-                                <TableCell>Détails</TableCell>
-                                <TableCell>Gravité</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {paginatedLogs.map((log) => (
-                                <TableRow key={log.id} hover>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                                            <Schedule sx={{ mr: 1, fontSize: "0.875rem", color: "text.secondary" }} />
-                                            <Typography variant="body2">{formatDate(log.created_at)}</Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                                            <Avatar sx={{ mr: 1, width: 32, height: 32 }}>
-                                                <AdminPanelSettings />
-                                            </Avatar>
-                                            <Typography variant="body2">{log.admin_email}</Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            icon={getActionIcon(log.action)}
-                                            label={getActionDisplayName(log.action)}
-                                            color={getActionColor(log.action)}
-                                            size="small"
-                                            variant="outlined"
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2" sx={{ maxWidth: 300 }}>
-                                            {log.details.length > 100
-                                                ? `${log.details.substring(0, 100)}...`
-                                                : log.details}
-                                        </Typography>
-                                        {log.target_type && log.target_id && (
-                                            <Typography
-                                                variant="body2"
-                                                color="text.secondary"
-                                                sx={{ fontSize: "0.75rem", mt: 0.5 }}>
-                                                {log.target_type} ID: {log.target_id}
-                                            </Typography>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Tooltip title={`Gravité: ${getActionSeverity(log.action)}`}>
-                                            {getSeverityIcon(log.action)}
-                                        </Tooltip>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                    <TablePagination
-                        component="div"
-                        count={filteredLogs.length}
-                        page={page}
-                        onPageChange={(e, newPage) => setPage(newPage)}
-                        rowsPerPage={rowsPerPage}
-                        onRowsPerPageChange={(e) => {
-                            setRowsPerPage(parseInt(e.target.value, 10));
-                            setPage(0);
-                        }}
-                        rowsPerPageOptions={[5, 10, 25, 50]}
-                        labelRowsPerPage="Lignes par page:"
-                    />
-                </TableContainer>
+                <>
+                    {filteredLogs.length === 0 ? (
+                        <Paper sx={{ p: 6, textAlign: "center" }}>
+                            <History sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
+                            <Typography variant="h6" gutterBottom>
+                                Aucun journal d'activité
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {logs.length === 0
+                                    ? "Aucune action d'administrateur n'a encore été enregistrée."
+                                    : "Aucun journal ne correspond aux filtres sélectionnés."}
+                            </Typography>
+                        </Paper>
+                    ) : (
+                        <TableContainer component={Paper}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Horodatage</TableCell>
+                                        <TableCell>Administrateur</TableCell>
+                                        <TableCell>Action</TableCell>
+                                        <TableCell>Détails</TableCell>
+                                        <TableCell>Gravité</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {paginatedLogs.map((log) => (
+                                        <TableRow key={log.id} hover>
+                                            <TableCell>
+                                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                                    <Schedule
+                                                        sx={{ mr: 1, fontSize: "0.875rem", color: "text.secondary" }}
+                                                    />
+                                                    <Typography variant="body2">
+                                                        {formatDate(log.created_at)}
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box sx={{ display: "flex", alignItems: "center" }}>
+                                                    <Avatar sx={{ mr: 1, width: 32, height: 32 }}>
+                                                        <AdminPanelSettings />
+                                                    </Avatar>
+                                                    <Typography variant="body2">{log.admin_email}</Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    icon={getActionIcon(log.action)}
+                                                    label={getActionDisplayName(log.action)}
+                                                    color={getActionColor(log.action)}
+                                                    size="small"
+                                                    variant="outlined"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" sx={{ maxWidth: 300 }}>
+                                                    {log.details.length > 100
+                                                        ? `${log.details.substring(0, 100)}...`
+                                                        : log.details}
+                                                </Typography>
+                                                {log.target_type && log.target_id && (
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                        sx={{ fontSize: "0.75rem", mt: 0.5 }}>
+                                                        {log.target_type} ID: {log.target_id}
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Tooltip title={`Gravité: ${getActionSeverity(log.action)}`}>
+                                                    {getSeverityIcon(log.action)}
+                                                </Tooltip>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            <TablePagination
+                                component="div"
+                                count={filteredLogs.length}
+                                page={page}
+                                onPageChange={(e, newPage) => setPage(newPage)}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={(e) => {
+                                    setRowsPerPage(parseInt(e.target.value, 10));
+                                    setPage(0);
+                                }}
+                                rowsPerPageOptions={[5, 10, 25, 50]}
+                                labelRowsPerPage="Lignes par page:"
+                            />
+                        </TableContainer>
+                    )}
+                </>
             )}
         </Box>
     );

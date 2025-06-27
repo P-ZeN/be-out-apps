@@ -1,0 +1,295 @@
+/* Payment Modal Styles */
+.payment-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.payment-modal {
+    background: #ffffff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.payment-content {
+    padding: 0;
+}
+
+.payment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 0 24px;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 24px;
+}
+
+.payment-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    font-weight: 300;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.event-details {
+    padding: 0 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+    margin-left: 24px;
+    margin-right: 24px;
+    padding: 20px;
+}
+
+.event-details h3 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #212529;
+}
+
+.event-date,
+.event-location,
+.event-price {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.event-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: #28a745;
+}
+
+/* Success State */
+.payment-success {
+    padding: 40px 24px;
+    text-align: center;
+}
+
+.success-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.payment-success h2 {
+    margin: 0 0 16px 0;
+    color: #28a745;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.payment-success p {
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    color: #6c757d;
+}
+
+.booking-details {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 24px 0;
+    text-align: left;
+}
+
+.booking-details p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #495057;
+}
+
+.booking-details strong {
+    color: #212529;
+}
+
+/* Error State */
+.payment-error {
+    padding: 40px 24px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.payment-error h2 {
+    margin: 0 0 16px 0;
+    color: #dc3545;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.payment-error p {
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    color: #6c757d;
+}
+
+.error-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.error-actions .btn {
+    min-width: 120px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .payment-modal-overlay {
+        padding: 12px;
+    }
+
+    .payment-modal {
+        max-height: 95vh;
+    }
+
+    .payment-header {
+        padding: 20px 20px 0 20px;
+    }
+
+    .payment-header h2 {
+        font-size: 20px;
+    }
+
+    .event-details {
+        margin-left: 20px;
+        margin-right: 20px;
+        padding: 16px;
+    }
+
+    .payment-success,
+    .payment-error {
+        padding: 32px 20px;
+    }
+
+    .success-icon,
+    .error-icon {
+        font-size: 48px;
+    }
+
+    .payment-success h2,
+    .payment-error h2 {
+        font-size: 24px;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+
+    .error-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Animation */
+.payment-modal {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .payment-modal {
+        background: #1a1a1a;
+        color: #ffffff;
+    }
+
+    .payment-header {
+        border-bottom-color: #404040;
+    }
+
+    .payment-header h2 {
+        color: #ffffff;
+    }
+
+    .close-btn {
+        color: #adb5bd;
+    }
+
+    .close-btn:hover {
+        background: #2d2d2d;
+        color: #ffffff;
+    }
+
+    .event-details {
+        background: #2d2d2d;
+        border-color: #404040;
+    }
+
+    .event-details h3 {
+        color: #ffffff;
+    }
+
+    .event-date,
+    .event-location {
+        color: #adb5bd;
+    }
+
+    .booking-details {
+        background: #2d2d2d;
+        border-color: #404040;
+    }
+
+    .booking-details p {
+        color: #adb5bd;
+    }
+
+    .booking-details strong {
+        color: #ffffff;
+    }
+}

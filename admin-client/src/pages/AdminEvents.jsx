@@ -48,13 +48,9 @@ import {
     Warning,
     Block,
 } from "@mui/icons-material";
-import { useAuth } from "../context/AuthContext";
 import AdminService from "../services/adminService";
-import { useTranslation } from "react-i18next";
 
-const AdminEvents = () => {
-    const { t } = useTranslation();
-    const { user } = useAuth();
+const AdminEvents = ({ user }) => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -72,16 +68,27 @@ const AdminEvents = () => {
     });
 
     useEffect(() => {
-        loadEvents();
-    }, []);
+        if (user && user.id) {
+            loadEvents();
+        } else {
+            setLoading(false);
+        }
+    }, [user?.id]);
 
     const loadEvents = async () => {
+        if (!user || !user.id) {
+            setError("User not authenticated");
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             setError("");
-            const data = await AdminService.getEvents(user.id);
-            setEvents(data);
+            const data = await AdminService.getEvents();
+            setEvents(data.events || []); // Extract events from response
         } catch (err) {
+            console.error("Events loading error:", err);
             setError(err.message);
         } finally {
             setLoading(false);

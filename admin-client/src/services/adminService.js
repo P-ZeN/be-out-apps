@@ -4,7 +4,7 @@ const API_BASE_URL = "http://localhost:3000";
 class AdminService {
     // Helper method to get admin headers with JWT token
     static getAdminHeaders() {
-        const token = localStorage.getItem("admin_token");
+        const token = localStorage.getItem("adminToken");
         if (!token) {
             throw new Error("No authentication token found");
         }
@@ -17,7 +17,7 @@ class AdminService {
 
     static async getDashboardStats() {
         try {
-            const token = localStorage.getItem("admin_token");
+            const token = localStorage.getItem("adminToken");
             if (!token) {
                 throw new Error("No authentication token found");
             }
@@ -186,6 +186,24 @@ class AdminService {
         }
     }
 
+    static async getProfile() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/profile`, {
+                headers: this.getAdminHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error fetching admin profile:", error);
+            throw error;
+        }
+    }
+
     // Helper methods for formatting data
     static formatCurrency(amount) {
         return new Intl.NumberFormat("fr-FR", {
@@ -255,7 +273,6 @@ class AdminService {
         return labels[type]?.[status] || status;
     }
 
-    // Check if user has admin permissions
     static isAdmin(user) {
         return user && (user.role === "admin" || user.role === "moderator");
     }

@@ -51,13 +51,9 @@ import {
     Email,
     Edit,
 } from "@mui/icons-material";
-import { useAuth } from "../context/AuthContext";
 import AdminService from "../services/adminService";
-import { useTranslation } from "react-i18next";
 
-const AdminBookings = () => {
-    const { t } = useTranslation();
-    const { user } = useAuth();
+const AdminBookings = ({ user }) => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -74,15 +70,23 @@ const AdminBookings = () => {
     });
 
     useEffect(() => {
-        loadBookings();
-    }, []);
+        if (user && user.id) {
+            loadBookings();
+        }
+    }, [user?.id]);
 
     const loadBookings = async () => {
+        if (!user || !user.id) {
+            setError("User not authenticated");
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             setError("");
-            const data = await AdminService.getBookings(user.id);
-            setBookings(data);
+            const data = await AdminService.getBookings();
+            setBookings(data.bookings || []); // Extract bookings array from response
         } catch (err) {
             setError(err.message);
         } finally {

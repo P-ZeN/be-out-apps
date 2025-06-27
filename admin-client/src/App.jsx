@@ -5,8 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { theme } from "./theme";
 import AuthService from "./services/authService";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import AdminLayout from "./components/AdminLayout";
+import AdminMainLayout from "./components/AdminMainLayout";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -76,9 +75,7 @@ function App() {
                         path="/*"
                         element={
                             user ? (
-                                <AdminLayout user={user} onLogout={handleLogout}>
-                                    <Dashboard user={user} />
-                                </AdminLayout>
+                                <AdminMainLayout user={user} onLogout={handleLogout} />
                             ) : (
                                 <Navigate to="/login" replace />
                             )

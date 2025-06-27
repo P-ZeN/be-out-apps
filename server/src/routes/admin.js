@@ -45,6 +45,33 @@ const requireAdmin = async (req, res, next) => {
     }
 };
 
+// Get admin profile
+router.get("/profile", requireAdmin, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            const result = await client.query(
+                `SELECT u.id, u.email, u.role, up.first_name, up.last_name
+                 FROM users u
+                 LEFT JOIN user_profiles up ON u.id = up.user_id
+                 WHERE u.id = $1`,
+                [req.user.userId]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ error: "Admin profile not found" });
+            }
+
+            res.json(result.rows[0]);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error fetching admin profile:", error);
+        res.status(500).json({ error: "Failed to fetch admin profile" });
+    }
+});
+
 // Get admin dashboard statistics
 router.get("/dashboard/stats", requireAdmin, async (req, res) => {
     const client = await pool.connect();
@@ -252,7 +279,6 @@ router.get("/users", requireAdmin, async (req, res) => {
                 up.first_name,
                 up.last_name,
                 up.phone,
-                up.date_of_birth,
                 COUNT(DISTINCT b.id) as total_bookings,
                 SUM(b.total_price) FILTER (WHERE b.booking_status = 'confirmed') as total_spent,
                 COUNT(DISTINCT e.id) as events_created,
@@ -263,7 +289,7 @@ router.get("/users", requireAdmin, async (req, res) => {
             LEFT JOIN events e ON u.id = e.organizer_id
             LEFT JOIN reviews r ON u.id = r.user_id
             ${whereClause}
-            GROUP BY u.id, up.user_id
+            GROUP BY u.id, up.user_id, up.first_name, up.last_name, up.phone
             ORDER BY u.${sortBy === "created_at" ? "created_at" : "email"} DESC
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
@@ -452,14 +478,24 @@ router.get("/logs", requireAdmin, async (req, res) => {
 
         const query = `
             SELECT
-                aa.*,
+                aa.id,
+                aa.admin_user_id,
+                aa.action_type as action,
+                aa.target_type,
+                aa.target_id,
+                aa.description as details,
+                aa.metadata,
+                aa.ip_address,
+                aa.user_agent,
+                aa.created_at,
                 u.email as admin_email,
                 up.first_name as admin_first_name,
                 up.last_name as admin_last_name
             FROM admin_actions aa
             LEFT JOIN users u ON aa.admin_user_id = u.id
             LEFT JOIN user_profiles up ON u.id = up.user_id
-            ${whereClause}
+            WHERE u.role = 'admin'  -- Only show actions by actual admin users
+            ${whereConditions.length > 0 ? ` AND ${whereConditions.join(" AND ")}` : ""}
             ORDER BY aa.created_at DESC
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
@@ -471,7 +507,9 @@ router.get("/logs", requireAdmin, async (req, res) => {
         const countQuery = `
             SELECT COUNT(*) as total
             FROM admin_actions aa
-            ${whereClause}
+            LEFT JOIN users u ON aa.admin_user_id = u.id
+            WHERE u.role = 'admin'  -- Only count actions by actual admin users
+            ${whereConditions.length > 0 ? ` AND ${whereConditions.join(" AND ")}` : ""}
         `;
         const countResult = await client.query(countQuery, queryParams.slice(0, -2));
 

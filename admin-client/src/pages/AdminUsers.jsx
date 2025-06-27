@@ -48,13 +48,9 @@ import {
     Assignment,
     SupervisorAccount,
 } from "@mui/icons-material";
-import { useAuth } from "../context/AuthContext";
 import AdminService from "../services/adminService";
-import { useTranslation } from "react-i18next";
 
-const AdminUsers = () => {
-    const { t } = useTranslation();
-    const { user } = useAuth();
+const AdminUsers = ({ user }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -72,15 +68,23 @@ const AdminUsers = () => {
     });
 
     useEffect(() => {
-        loadUsers();
-    }, []);
+        if (user && user.id) {
+            loadUsers();
+        }
+    }, [user?.id]);
 
     const loadUsers = async () => {
+        if (!user || !user.id) {
+            setError("User not authenticated");
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             setError("");
-            const data = await AdminService.getUsers(user.id);
-            setUsers(data);
+            const data = await AdminService.getUsers();
+            setUsers(data.users || []); // Extract users from response
         } catch (err) {
             setError(err.message);
         } finally {

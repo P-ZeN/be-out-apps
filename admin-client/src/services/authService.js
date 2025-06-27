@@ -20,7 +20,7 @@ class AuthService {
             const data = await response.json();
 
             // Store token
-            localStorage.setItem("admin_token", data.token);
+            localStorage.setItem("adminToken", data.token);
 
             // Fetch user profile to get role information
             const profile = await this.getProfile();
@@ -66,13 +66,13 @@ class AuthService {
     }
 
     static logout() {
-        localStorage.removeItem("admin_token");
+        localStorage.removeItem("adminToken");
         localStorage.removeItem("admin_user");
         window.location.href = "/";
     }
 
     static getToken() {
-        return localStorage.getItem("admin_token");
+        return localStorage.getItem("adminToken");
     }
 
     static getCurrentUser() {
