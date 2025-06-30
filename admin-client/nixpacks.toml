@@ -1,0 +1,7 @@
+# Tell Nixpacks how to build the application
+[phases.build]
+cmds = ["npm run build"]
+
+# Tell Nixpacks how to start the application
+[start]
+cmd = "npx serve -s dist -l 80"
