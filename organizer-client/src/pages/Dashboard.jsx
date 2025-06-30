@@ -219,7 +219,10 @@ const Dashboard = () => {
                                                 primary={event.title}
                                                 secondary={
                                                     <Box>
-                                                        <Typography variant="body2" color="text.secondary" component="div">
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            component="div">
                                                             {new Date(event.event_date).toLocaleDateString("fr-FR", {
                                                                 weekday: "long",
                                                                 year: "numeric",
@@ -229,7 +232,10 @@ const Dashboard = () => {
                                                                 minute: "2-digit",
                                                             })}
                                                         </Typography>
-                                                        <Typography variant="body2" color="text.secondary" component="div">
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            component="div">
                                                             {event.venue_name}
                                                         </Typography>
                                                         <Box sx={{ mt: 1 }}>
@@ -249,7 +255,7 @@ const Dashboard = () => {
                                                         </Box>
                                                     </Box>
                                                 }
-                                                secondaryTypographyProps={{ component: 'div' }}
+                                                secondaryTypographyProps={{ component: "div" }}
                                             />
                                         </ListItem>
                                     ))}
@@ -287,18 +293,27 @@ const Dashboard = () => {
                                                 primary={booking.customer_name || booking.customer_email}
                                                 secondary={
                                                     <Box>
-                                                        <Typography variant="body2" color="text.secondary" component="div">
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            component="div">
                                                             {booking.event_title}
                                                         </Typography>
-                                                        <Typography variant="body2" color="text.secondary" component="div">
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            component="div">
                                                             {booking.quantity} billet(s) - {booking.total_price}€
                                                         </Typography>
-                                                        <Typography variant="caption" color="text.secondary" component="div">
+                                                        <Typography
+                                                            variant="caption"
+                                                            color="text.secondary"
+                                                            component="div">
                                                             {new Date(booking.booking_date).toLocaleDateString("fr-FR")}
                                                         </Typography>
                                                     </Box>
                                                 }
-                                                secondaryTypographyProps={{ component: 'div' }}
+                                                secondaryTypographyProps={{ component: "div" }}
                                             />
                                         </ListItem>
                                     ))}
