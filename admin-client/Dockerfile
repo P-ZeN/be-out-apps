@@ -9,8 +9,8 @@ RUN npm install
 # Copy all source files
 COPY . .
 
-# Build only the admin-client app using vite directly
-RUN npx vite build
+# Build only the admin-client app using the locally installed vite
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine
