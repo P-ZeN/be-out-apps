@@ -23,7 +23,7 @@ import AuthService from "../services/authService";
 const AdminDebugPanel = () => {
     const [testResults, setTestResults] = useState({});
     const [loading, setLoading] = useState(false);
-    const [customUrl, setCustomUrl] = useState("http://localhost:3000");
+    const [customUrl, setCustomUrl] = useState(import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || "http://localhost:3000");
 
     const runTests = async () => {
         setLoading(true);
@@ -177,7 +177,7 @@ const AdminDebugPanel = () => {
                                 </Typography>
                                 <ul>
                                     <li>Vérifiez que le serveur backend est démarré</li>
-                                    <li>Vérifiez l'URL (par défaut: http://localhost:3000)</li>
+                                    <li>Vérifiez l'URL (par défaut: {import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || "http://localhost:3000"})</li>
                                     <li>Vérifiez les règles CORS du serveur</li>
                                 </ul>
 

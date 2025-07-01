@@ -1,5 +1,6 @@
 // Event service for API calls
-const API_BASE_URL = "http://localhost:3000/api";
+// API base URL - use environment variable or fallback to development default
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 class EventService {
     static async getAllEvents(params = {}) {

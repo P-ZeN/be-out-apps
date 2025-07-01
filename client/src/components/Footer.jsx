@@ -19,6 +19,7 @@ const Footer = () => {
                 py: 4,
                 mt: 6,
                 mx: 0,
+                width: "100%",
             }}>
             <Container maxWidth="lg">
                 <Grid container spacing={4}>

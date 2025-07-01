@@ -1,10 +1,9 @@
 // Enhanced category service with multi-language support
-import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Typography, TextField, Autocomplete, CircularProgress } from "@mui/material";
+import { useState, useEffect, useCallback } from "react";
 
-// API base URL
-const API_BASE_URL = "http://localhost:3000/api";
+// API base URL - use environment variable or fallback to development default
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 // Base service functions
 export const categoryService = {

@@ -1,4 +1,6 @@
-const API_URL = "http://localhost:3000/auth";
+// API base URL - use environment variable or fallback to development default
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_URL = `${API_BASE_URL.replace('/api', '')}/auth`;
 
 const register = async (userData) => {
     const response = await fetch(`${API_URL}/register`, {

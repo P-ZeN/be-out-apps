@@ -1,5 +1,7 @@
 // Simple auth service for admin app
-const API_BASE_URL = "http://localhost:3000";
+// API base URL - use environment variable or fallback to development default
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_URL = API_BASE_URL.replace('/api', '');
 
 class AuthService {
     static async login(email, password) {
