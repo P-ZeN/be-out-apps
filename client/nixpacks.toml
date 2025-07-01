@@ -1,4 +1,7 @@
 # Tell Nixpacks how to build the application
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
 [phases.build]
 cmds = ["npm run build"]
 
