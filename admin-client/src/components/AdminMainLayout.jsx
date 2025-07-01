@@ -38,6 +38,7 @@ import AdminUsers from "../pages/AdminUsers";
 import AdminBookings from "../pages/AdminBookings";
 import AdminPayments from "../pages/AdminPayments";
 import AdminLogs from "../pages/AdminLogs";
+import AdminSettings from "../pages/AdminSettings";
 
 const drawerWidth = 280;
 
@@ -84,6 +85,12 @@ const AdminMainLayout = ({ user, onLogout }) => {
             icon: <Analytics />,
             path: "/logs",
             component: AdminLogs,
+        },
+        {
+            text: "Paramètres",
+            icon: <Settings />,
+            path: "/settings",
+            component: AdminSettings,
         },
     ];
 
@@ -216,6 +223,7 @@ const AdminMainLayout = ({ user, onLogout }) => {
                     <Route path="/bookings" element={<AdminBookings user={user} />} />
                     <Route path="/payments" element={<AdminPayments user={user} />} />
                     <Route path="/logs" element={<AdminLogs user={user} />} />
+                    <Route path="/settings" element={<AdminSettings user={user} />} />
                 </Routes>
             </Box>
         </Box>

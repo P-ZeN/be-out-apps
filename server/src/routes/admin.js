@@ -1,6 +1,7 @@
 import { Router } from "express";
 import pool from "../db.js";
 import authenticateToken from "../middleware/authenticateToken.js";
+import { CategoryService } from "../services/categoryService.js";
 
 const router = Router();
 
@@ -529,5 +530,97 @@ router.get("/logs", requireAdmin, async (req, res) => {
         client.release();
     }
 });
+
+// === CATEGORY MANAGEMENT ROUTES ===
+
+// Get all categories with translations (for admin management)
+router.get("/categories", requireAdmin, async (req, res) => {
+    try {
+        const categories = await CategoryService.getAllCategoriesWithTranslations();
+        res.json(categories);
+    } catch (err) {
+        console.error("Error fetching categories:", err);
+        res.status(500).json({ error: "Failed to fetch categories" });
+    }
+});
+
+// Get single category by ID
+router.get("/categories/:id", requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const category = await CategoryService.getCategoryById(id);
+
+        if (!category) {
+            return res.status(404).json({ error: "Category not found" });
+        }
+
+        res.json(category);
+    } catch (err) {
+        console.error("Error fetching category:", err);
+        res.status(500).json({ error: "Failed to fetch category" });
+    }
+});
+
+// Create new category with translations
+router.post("/categories", requireAdmin, async (req, res) => {
+    try {
+        const categoryData = req.body;
+
+        // Validate required fields
+        if (!categoryData.name_fr && !categoryData.name_en && !categoryData.name_es) {
+            return res.status(400).json({
+                error: "At least one name translation is required",
+            });
+        }
+
+        const newCategory = await CategoryService.createCategory(categoryData);
+        res.status(201).json(newCategory);
+    } catch (err) {
+        console.error("Error creating category:", err);
+        res.status(500).json({ error: "Failed to create category" });
+    }
+});
+
+// Update category translations
+router.put("/categories/:id", requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const categoryData = req.body;
+
+        const updatedCategory = await CategoryService.updateCategory(id, categoryData);
+
+        if (!updatedCategory) {
+            return res.status(404).json({ error: "Category not found" });
+        }
+
+        res.json(updatedCategory);
+    } catch (err) {
+        console.error("Error updating category:", err);
+        res.status(500).json({ error: "Failed to update category" });
+    }
+});
+
+// Delete category
+router.delete("/categories/:id", requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedCategory = await CategoryService.deleteCategory(id);
+
+        if (!deletedCategory) {
+            return res.status(404).json({ error: "Category not found" });
+        }
+
+        res.json({ message: "Category deleted successfully", category: deletedCategory });
+    } catch (err) {
+        console.error("Error deleting category:", err);
+        if (err.message.includes("in use")) {
+            res.status(400).json({ error: err.message });
+        } else {
+            res.status(500).json({ error: "Failed to delete category" });
+        }
+    }
+});
+
+// === END CATEGORY MANAGEMENT ROUTES ===
 
 export default router;

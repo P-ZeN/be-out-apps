@@ -196,15 +196,38 @@ router.get("/:id", async (req, res) => {
 router.get("/meta/categories", async (req, res) => {
     const client = await pool.connect();
     try {
+        const { lang = "fr" } = req.query; // Default to French
+
+        // Determine which name column to use based on language
+        const nameColumn =
+            lang === "en"
+                ? "COALESCE(c.name_en, c.name_fr, c.name)"
+                : lang === "es"
+                ? "COALESCE(c.name_es, c.name_fr, c.name)"
+                : "COALESCE(c.name_fr, c.name)";
+
+        const descriptionColumn =
+            lang === "en"
+                ? "COALESCE(c.description_en, c.description_fr, c.description)"
+                : lang === "es"
+                ? "COALESCE(c.description_es, c.description_fr, c.description)"
+                : "COALESCE(c.description_fr, c.description)";
+
         const query = `
             SELECT
-                c.*,
+                c.id,
+                ${nameColumn} as name,
+                ${descriptionColumn} as description,
+                c.icon,
+                c.color,
+                c.created_at,
                 COUNT(DISTINCT e.id) as event_count
             FROM categories c
             LEFT JOIN event_categories ec ON c.id = ec.category_id
             LEFT JOIN events e ON ec.event_id = e.id AND e.status = 'active' AND e.event_date > NOW()
-            GROUP BY c.id
-            ORDER BY c.name
+            GROUP BY c.id, c.name, c.description, c.name_fr, c.name_en, c.name_es,
+                     c.description_fr, c.description_en, c.description_es, c.icon, c.color, c.created_at
+            ORDER BY ${nameColumn}
         `;
 
         const result = await client.query(query);
