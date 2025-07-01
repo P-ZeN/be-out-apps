@@ -1,9 +1,15 @@
 # Build stage
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Copy package.json from organizer-client specifically
 COPY package*.json ./
 RUN npm install
+
+# Copy all source files
 COPY . .
+
+# Build only the organizer-client app
 RUN npm run build
 
 # Production stage
