@@ -9,7 +9,8 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "lint:colors": "findstr /S /N /R /I \"color.*[\\\"\\'][^\\\"\\']*(white|black|grey|gray|red|blue|green|yellow|#[0-9a-fA-F])\" src\\*.jsx src\\*.js || echo No hardcoded colors found!",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "start": "serve -s dist"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
