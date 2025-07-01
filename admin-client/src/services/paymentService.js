@@ -1,6 +1,6 @@
 // Payment monitoring service for admin
 // API base URL - use environment variable or fallback to development default
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 class PaymentService {
     static getAdminHeaders() {
@@ -21,7 +21,7 @@ class PaymentService {
                 }
             });
 
-            const url = `${API_BASE_URL}/payments/admin/stats?${searchParams.toString()}`;
+            const url = `${API_BASE_URL}/api/payments/admin/stats?${searchParams.toString()}`;
             const response = await fetch(url, {
                 headers: this.getAdminHeaders(),
             });
@@ -48,7 +48,7 @@ class PaymentService {
                 }
             });
 
-            const url = `${API_BASE_URL}/payments/admin/transactions?${searchParams.toString()}`;
+            const url = `${API_BASE_URL}/api/payments/admin/transactions?${searchParams.toString()}`;
             const response = await fetch(url, {
                 headers: this.getAdminHeaders(),
             });
@@ -75,7 +75,7 @@ class PaymentService {
                 }
             });
 
-            const url = `${API_BASE_URL}/payments/admin/revenue?${searchParams.toString()}`;
+            const url = `${API_BASE_URL}/api/payments/admin/revenue?${searchParams.toString()}`;
             const response = await fetch(url, {
                 headers: this.getAdminHeaders(),
             });
@@ -95,7 +95,7 @@ class PaymentService {
     // Process refund
     static async processRefund(paymentId, amount, reason) {
         try {
-            const response = await fetch(`${API_BASE_URL}/payments/admin/refund`, {
+            const response = await fetch(`${API_BASE_URL}/api/payments/admin/refund`, {
                 method: "POST",
                 headers: this.getAdminHeaders(),
                 body: JSON.stringify({
@@ -127,7 +127,7 @@ class PaymentService {
                 }
             });
 
-            const url = `${API_BASE_URL}/payments/admin/failed?${searchParams.toString()}`;
+            const url = `${API_BASE_URL}/api/payments/admin/failed?${searchParams.toString()}`;
             const response = await fetch(url, {
                 headers: this.getAdminHeaders(),
             });
@@ -154,7 +154,7 @@ class PaymentService {
                 }
             });
 
-            const url = `${API_BASE_URL}/payments/admin/disputes?${searchParams.toString()}`;
+            const url = `${API_BASE_URL}/api/payments/admin/disputes?${searchParams.toString()}`;
             const response = await fetch(url, {
                 headers: this.getAdminHeaders(),
             });

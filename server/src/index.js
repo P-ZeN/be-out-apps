@@ -39,6 +39,7 @@ app.use("/", setupRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/user", profileRoutes);
+app.use("/api/user", profileRoutes);
 app.use("/api/events", eventsRoutes);
 app.use("/api/bookings", bookingsRoutes);
 app.use("/api/admin", adminRoutes);

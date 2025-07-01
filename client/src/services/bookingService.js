@@ -1,11 +1,11 @@
 // Booking service for API calls
 // API base URL - use environment variable or fallback to development default
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 class BookingService {
     static async createBooking(bookingData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/bookings`, {
+            const response = await fetch(`${API_BASE_URL}/api/bookings`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -27,7 +27,7 @@ class BookingService {
 
     static async getBookingByReference(reference) {
         try {
-            const response = await fetch(`${API_BASE_URL}/bookings/reference/${reference}`);
+            const response = await fetch(`${API_BASE_URL}/api/bookings/reference/${reference}`);
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -69,7 +69,7 @@ class BookingService {
 
     static async confirmBooking(bookingId, paymentData = {}) {
         try {
-            const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/confirm`, {
+            const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/confirm`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -91,7 +91,7 @@ class BookingService {
 
     static async cancelBooking(bookingId, reason = "") {
         try {
-            const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {
+            const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -113,7 +113,7 @@ class BookingService {
 
     static async getBookingStats() {
         try {
-            const response = await fetch(`${API_BASE_URL}/bookings/stats/overview`);
+            const response = await fetch(`${API_BASE_URL}/api/bookings/stats/overview`);
 
             if (!response.ok) {
                 const errorData = await response.json();

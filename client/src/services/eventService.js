@@ -1,6 +1,6 @@
 // Event service for API calls
 // API base URL - use environment variable or fallback to development default
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 class EventService {
     static async getAllEvents(params = {}) {
@@ -19,7 +19,7 @@ class EventService {
                 searchParams.append("lang", "fr");
             }
 
-            const url = `${API_BASE_URL}/events?${searchParams.toString()}`;
+            const url = `${API_BASE_URL}/api/events?${searchParams.toString()}`;
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -35,7 +35,7 @@ class EventService {
 
     static async getEventById(id, lang = "fr") {
         try {
-            const response = await fetch(`${API_BASE_URL}/events/${id}?lang=${lang}`);
+            const response = await fetch(`${API_BASE_URL}/api/events/${id}?lang=${lang}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -50,7 +50,7 @@ class EventService {
 
     static async getStats() {
         try {
-            const response = await fetch(`${API_BASE_URL}/events/meta/stats`);
+            const response = await fetch(`${API_BASE_URL}/api/events/meta/stats`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

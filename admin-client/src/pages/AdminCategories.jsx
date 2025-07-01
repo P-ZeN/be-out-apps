@@ -34,14 +34,14 @@ import IconSelector from "../components/IconSelector";
 
 // API Base URL - should match your backend
 // API base URL - use environment variable or fallback to development default
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const API_URL = API_BASE_URL.replace('/api', '');
 
 // Service functions for API calls with authentication
 const categoryService = {
     getAllCategories: async () => {
         const token = AuthService.getToken();
-        const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/categories`, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -53,7 +53,7 @@ const categoryService = {
 
     createCategory: async (categoryData) => {
         const token = AuthService.getToken();
-        const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/categories`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -67,7 +67,7 @@ const categoryService = {
 
     updateCategory: async (id, categoryData) => {
         const token = AuthService.getToken();
-        const response = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/categories/${id}`, {
             method: "PUT",
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ const categoryService = {
 
     deleteCategory: async (id) => {
         const token = AuthService.getToken();
-        const response = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/categories/${id}`, {
             method: "DELETE",
             headers: {
                 Authorization: `Bearer ${token}`,

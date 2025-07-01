@@ -1,12 +1,12 @@
 // Simple auth service for admin app
 // API base URL - use environment variable or fallback to development default
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
-const API_URL = API_BASE_URL.replace('/api', '');
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const SERVER_BASE_URL = API_BASE_URL; // http://localhost:3000
 
 class AuthService {
     static async login(email, password) {
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            const response = await fetch(`${SERVER_BASE_URL}/api/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -39,7 +39,7 @@ class AuthService {
             const token = this.getToken();
             if (!token) throw new Error("No token found");
 
-            const response = await fetch(`${API_BASE_URL}/user/profile`, {
+            const response = await fetch(`${SERVER_BASE_URL}/api/user/profile`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",

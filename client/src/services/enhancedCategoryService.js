@@ -3,14 +3,14 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
 
 // API base URL - use environment variable or fallback to development default
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Base service functions
 export const categoryService = {
     // Fetch categories with language parameter
     getCategories: async (language = "fr") => {
         try {
-            const response = await fetch(`${API_BASE_URL}/events/meta/categories?lang=${language}`, {
+            const response = await fetch(`${API_BASE_URL}/api/events/meta/categories?lang=${language}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -31,7 +31,7 @@ export const categoryService = {
     // Get all categories with all translations (admin only)
     getAllCategoriesWithTranslations: async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/categories`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
