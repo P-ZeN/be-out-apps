@@ -40,7 +40,7 @@ const EventDetail = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const { user, isAuthenticated } = useAuth();
-    const { t } = useTranslation(["home", "common"]);
+    const { t, i18n } = useTranslation(["home", "common"]);
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -52,7 +52,7 @@ const EventDetail = () => {
             try {
                 setLoading(true);
                 setError(null);
-                const eventData = await EventService.getEventById(id);
+                const eventData = await EventService.getEventById(id, i18n.language);
                 const formattedEvent = EventService.formatEvent(eventData);
                 setEvent(formattedEvent);
             } catch (err) {
@@ -66,7 +66,7 @@ const EventDetail = () => {
         if (id) {
             loadEvent();
         }
-    }, [id]);
+    }, [id, i18n.language]);
 
     // Loading state
     if (loading) {

@@ -20,16 +20,20 @@ import { Close, FilterList } from "@mui/icons-material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const FilterDrawer = ({ open, onClose, filters, onFiltersChange }) => {
+const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = [] }) => {
     const { t } = useTranslation(["home", "common"]);
     const [localFilters, setLocalFilters] = useState(filters);
 
-    const categories = [
+    // Fallback categories if none provided
+    const defaultCategories = [
         { key: "music", label: t("home:categories.music") },
         { key: "sport", label: t("home:categories.sport") },
         { key: "theater", label: t("home:categories.theater") },
         { key: "food", label: t("home:categories.food") },
     ];
+
+    // Use provided categories or fallback to defaults
+    const categoryOptions = categories.length > 0 ? categories : defaultCategories;
 
     const sortOptions = [
         { key: "date", label: "Date" },
@@ -159,7 +163,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange }) => {
                     Catégories
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    {categories.map((category) => (
+                    {categoryOptions.map((category) => (
                         <Chip
                             key={category.key}
                             label={category.label}

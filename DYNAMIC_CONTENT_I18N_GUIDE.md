@@ -224,14 +224,103 @@ If you see this error in the admin interface, follow these steps:
 - Verify the CategoryService is imported in admin routes
 - Check server logs for routing errors
 
-### Icon Rendering Issues (Fixed)
+### Common Implementation Issues & Solutions
 
-If you encounter console warnings about Grid syntax when using the icon selector:
+#### API Connection Issues
 
-**Problem**: MUI Grid v7+ requires modern syntax
-**Solution**: Always use `size={{ xs: value }}` instead of `item xs={value}`
+##### Issue: "Error fetching categories: SyntaxError: Unexpected token '<', '<!DOCTYPE'... is not valid JSON"
 
-See `MUI_GRID_SYNTAX_REMINDER.md` for detailed syntax requirements.
+**Cause**: This error occurs when the frontend is making API calls to relative URLs instead of absolute URLs to the backend server.
+
+**Solution**: Ensure all API calls use the correct base URL.
+
+**Fix Applied**: Updated `client/src/services/enhancedCategoryService.js` to include:
+```javascript
+// API base URL
+const API_BASE_URL = "http://localhost:3000/api";
+
+// Use absolute URLs in all fetch calls
+const response = await fetch(`${API_BASE_URL}/events/meta/categories?lang=${language}`);
+```
+
+##### Issue: Network/Connection Errors
+
+**Troubleshooting Steps**:
+
+1. **Verify Backend Server**: Ensure server is running on port 3000
+   ```powershell
+   # Test API endpoint directly
+   Invoke-WebRequest -Uri "http://localhost:3000/api/events/meta/categories?lang=fr" -Method GET
+   ```
+
+2. **Check Console Errors**: Look for detailed error messages in browser developer console
+
+3. **Verify CORS Configuration**: Ensure server allows cross-origin requests from client
+
+4. **Check Network Tab**: Inspect actual HTTP requests and responses in browser dev tools
+
+##### Issue: Authentication Errors for Admin Endpoints
+
+**Solution**: Ensure proper token authentication:
+```javascript
+headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+}
+```
+
+#### Database Migration Issues
+
+##### Issue: Categories Not Found or Missing Translation Columns
+
+**Solution**: Run the migration script:
+```sql
+-- Apply the migration
+\i CATEGORIES_I18N_MIGRATION.sql
+
+-- Verify columns exist
+\d categories
+```
+
+##### Issue: Existing Data Not Migrated
+
+**Solution**: Ensure data migration completed:
+```sql
+-- Check if French columns have data
+SELECT name_fr, name_en, name_es FROM categories LIMIT 5;
+
+-- Re-run migration if needed
+UPDATE categories SET name_fr = name WHERE name_fr IS NULL;
+```
+
+#### Client Integration Issues
+
+##### Issue: Category Tabs Not Updating When Language Changes
+
+**Solution**: Verify dependency arrays include `i18n.language`:
+```javascript
+useEffect(() => {
+    loadEvents();
+}, [selectedCategory, searchQuery, filters, categoriesLoading, i18n.language]);
+```
+
+##### Issue: Components Not Re-rendering on Language Change
+
+**Solution**: Ensure `i18n` object is properly destructured:
+```javascript
+const { t, i18n } = useTranslation(["home", "common"]);
+```
+
+#### Performance Issues
+
+##### Issue: Slow Category Loading
+
+**Solutions**:
+1. **Check Database Indexes**: Ensure indexes exist on language columns
+2. **Optimize Queries**: Review `COALESCE` usage in complex queries
+3. **Cache Strategy**: Implement client-side caching for frequently accessed categories
+
+---
 
 ## Benefits of This Solution
 
@@ -329,3 +418,179 @@ The system is production-ready! Admins can now:
 - Debug issues using the built-in tools
 
 Categories will automatically display in the correct language throughout your application, with proper fallbacks when translations are missing.
+
+---
+
+## Client App Integration
+
+### Overview
+
+The client application has been fully integrated with the multi-language category system. All category displays throughout the app now show translated names based on the user's selected language.
+
+### Enhanced EventService
+
+The `EventService` has been updated to support language parameters:
+
+```javascript
+// client/src/services/eventService.js
+
+// Enhanced methods with language support
+static async getAllEvents(params = {}) {
+    // Automatically includes language parameter
+    if (!params.lang) {
+        searchParams.append('lang', 'fr');
+    }
+    // ... rest of implementation
+}
+
+static async getEventById(id, lang = 'fr') {
+    const response = await fetch(`${API_BASE_URL}/events/${id}?lang=${lang}`);
+    // ... rest of implementation
+}
+```
+
+### Updated Components
+
+#### 1. Home Page (`client/src/pages/Home.jsx`)
+
+- **Language-aware Event Loading**: Events load with current language
+- **Translated Category Tabs**: Category tabs show translated names
+- **Dynamic Updates**: Automatically reloads when language changes
+
+```javascript
+const { t, i18n } = useTranslation(["home", "common"]);
+
+// Load events with current language
+const params = {
+    // ... other params
+    lang: i18n.language, // Current language included
+};
+
+// Reload when language changes
+useEffect(() => {
+    loadEvents();
+}, [selectedCategory, searchQuery, filters, categoriesLoading, i18n.language]);
+```
+
+#### 2. EventDetail Page (`client/src/pages/EventDetail.jsx`)
+
+- **Language-aware Event Data**: Event details load with current language
+- **Translated Category Chips**: Category chips show translated names
+- **Automatic Refresh**: Reloads when language changes
+
+```javascript
+const { t, i18n } = useTranslation(["home", "common"]);
+
+useEffect(() => {
+    const loadEvent = async () => {
+        // Load event with current language
+        const eventData = await EventService.getEventById(id, i18n.language);
+        // ... rest of implementation
+    };
+}, [id, i18n.language]); // Depends on language changes
+```
+
+#### 3. FilterDrawer Component (`client/src/components/FilterDrawer.jsx`)
+
+- **Dynamic Categories**: Accepts categories as props instead of hardcoded
+- **Translated Options**: Shows translated category names in filters
+- **Fallback Support**: Maintains defaults when no categories provided
+
+```javascript
+const FilterDrawer = ({
+    open,
+    onClose,
+    filters,
+    onFiltersChange,
+    categories = [] // New prop for translated categories
+}) => {
+    // Uses provided translated categories or fallback
+    const categoryOptions = categories.length > 0 ? categories : defaultCategories;
+    // ... rest of implementation
+};
+```
+
+### Translation Flow
+
+#### Category Display Sources
+
+1. **Category Tabs (Home Page)**
+   - Source: `enhancedCategoryService.js` → Backend API with lang parameter
+   - Shows: Translated category names for navigation
+
+2. **Event Category Chips**
+   - Source: Backend API `/api/events` with lang parameter
+   - Shows: Translated category names on event cards and detail pages
+
+3. **Filter Options**
+   - Source: Passed from Home page (translated categories)
+   - Shows: Translated category names in filter drawer
+
+#### Automatic Language Updates
+
+When user changes language:
+
+1. **Event Lists**: Reload with new language parameter
+2. **Event Details**: Reload with new language parameter
+3. **Category Tabs**: Update via enhanced category service
+4. **Filter Options**: Update via passed categories prop
+
+All updates happen automatically without manual refresh needed.
+
+### Affected Pages & Components
+
+#### Pages with Category Translation
+- **Home**: Category tabs and event cards
+- **EventDetail**: Category chips
+- **Favorites**: Category chips (automatic via API)
+
+#### Components with Category Translation
+- **FilterDrawer**: Filter category options
+- **Event Cards**: Category chips
+- **Category Navigation**: Tabs and pills
+
+### Testing the Integration
+
+#### Manual Testing Checklist
+
+1. **Category Tabs Translation**
+   - [ ] Switch language and verify category tabs change
+   - [ ] Verify "All Categories" tab translates
+   - [ ] Check category navigation works in all languages
+
+2. **Event Category Display**
+   - [ ] Event cards show translated category chips
+   - [ ] Event detail page shows translated categories
+   - [ ] Favorites page shows translated categories
+
+3. **Filter Integration**
+   - [ ] Filter drawer shows translated category options
+   - [ ] Category filtering works with translated names
+   - [ ] Filter state persists across language changes
+
+4. **Language Switching**
+   - [ ] All category displays update when language changes
+   - [ ] No manual refresh required
+   - [ ] Fallbacks work for missing translations
+
+#### Expected Behavior
+
+- **Immediate Updates**: All category displays change instantly when language is switched
+- **Consistent Naming**: Same category shows same translated name everywhere
+- **Graceful Fallbacks**: Missing translations fall back to available languages
+- **Performance**: Language changes don't cause unnecessary API calls
+
+### Performance Considerations
+
+#### Optimizations Implemented
+
+1. **Efficient API Calls**: Language parameter included in existing API calls
+2. **Smart Caching**: Enhanced category service handles caching and deduplication
+3. **Minimal Re-renders**: Components only re-render when language actually changes
+4. **Fallback Strategy**: Reduces failed requests for missing translations
+
+#### Load Impact
+
+- **Initial Load**: No additional requests (language included in existing calls)
+- **Language Switch**: Single API call per active component
+- **Memory Usage**: Minimal additional overhead for language tracking

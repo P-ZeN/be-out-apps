@@ -36,16 +36,16 @@ import { useTheme } from "@mui/material/styles";
 import FilterDrawer from "../components/FilterDrawer";
 import FavoriteButton from "../components/FavoriteButton";
 import EventService from "../services/eventService";
+import { useCategories } from "../services/enhancedCategoryService";
 
 const Home = () => {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
-    const { t } = useTranslation(["home", "common"]);
+    const { t, i18n } = useTranslation(["home", "common"]);
     const theme = useTheme();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [events, setEvents] = useState([]);
-    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -58,30 +58,32 @@ const Home = () => {
         availableOnly: true,
     });
 
-    // Load events and categories from API
+    // Use the enhanced categories hook for multi-language support
+    const { categories: categoriesData, loading: categoriesLoading, error: categoriesError } = useCategories();
+
+    // Format categories for the UI
+    const categories = [
+        { key: "all", label: t("home:categories.all"), name: "all" },
+        ...categoriesData.map((cat) => ({
+            key: cat.name.toLowerCase(),
+            label: cat.name,
+            name: cat.name,
+            event_count: cat.event_count,
+        })),
+    ];
+
+    // Load events from API
     useEffect(() => {
-        const loadData = async () => {
+        const loadEvents = async () => {
             try {
                 setLoading(true);
                 setError(null);
-
-                // Load categories
-                const categoriesData = await EventService.getCategories();
-                const formattedCategories = [
-                    { key: "all", label: t("home:categories.all"), name: "all" },
-                    ...categoriesData.map((cat) => ({
-                        key: cat.name.toLowerCase(),
-                        label: cat.name,
-                        name: cat.name,
-                        event_count: cat.event_count,
-                    })),
-                ];
-                setCategories(formattedCategories);
 
                 // Load events
                 const params = {
                     limit: 12,
                     sortBy: filters.sortBy,
+                    lang: i18n.language, // Include current language
                     ...(selectedCategory !== "all" && { category: selectedCategory }),
                     ...(searchQuery && { search: searchQuery }),
                     ...(filters.lastMinuteOnly && { lastMinute: true }),
@@ -93,15 +95,18 @@ const Home = () => {
                 const formattedData = EventService.formatEvents(eventsData);
                 setEvents(formattedData.events);
             } catch (err) {
-                console.error("Error loading data:", err);
+                console.error("Error loading events:", err);
                 setError("Failed to load events. Please try again.");
             } finally {
                 setLoading(false);
             }
         };
 
-        loadData();
-    }, [selectedCategory, searchQuery, filters, t]);
+        // Only load events if categories are available or not needed
+        if (!categoriesLoading) {
+            loadEvents();
+        }
+    }, [selectedCategory, searchQuery, filters, categoriesLoading, i18n.language]);
 
     // Since filtering is now done on the server side via API calls,
     // we can use the events directly from state
@@ -214,17 +219,17 @@ const Home = () => {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             {/* Loading State */}
-            {loading && (
+            {(loading || categoriesLoading) && (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
                     <Typography variant="h6">Loading events...</Typography>
                 </Box>
             )}
 
             {/* Error State */}
-            {error && (
+            {(error || categoriesError) && (
                 <Box sx={{ textAlign: "center", py: 8 }}>
                     <Typography variant="h6" color="error" gutterBottom>
-                        {error}
+                        {error || categoriesError}
                     </Typography>
                     <Button variant="contained" onClick={() => window.location.reload()}>
                         Retry
@@ -233,7 +238,7 @@ const Home = () => {
             )}
 
             {/* Main Content */}
-            {!loading && !error && (
+            {!loading && !categoriesLoading && !error && !categoriesError && (
                 <>
                     {/* Hero Section */}
                     <Paper
@@ -382,6 +387,7 @@ const Home = () => {
                         onClose={() => setFilterDrawerOpen(false)}
                         filters={filters}
                         onFiltersChange={setFilters}
+                        categories={categories.filter((cat) => cat.key !== "all")} // Exclude 'all' category for filter drawer
                     />
                 </>
             )}

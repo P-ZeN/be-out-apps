@@ -1,12 +1,17 @@
 // Enhanced category service with multi-language support
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Box, Typography, TextField, Autocomplete, CircularProgress } from "@mui/material";
+
+// API base URL
+const API_BASE_URL = "http://localhost:3000/api";
 
 // Base service functions
 export const categoryService = {
     // Fetch categories with language parameter
     getCategories: async (language = "fr") => {
         try {
-            const response = await fetch(`/api/events/meta/categories?lang=${language}`, {
+            const response = await fetch(`${API_BASE_URL}/events/meta/categories?lang=${language}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -27,7 +32,7 @@ export const categoryService = {
     // Get all categories with all translations (admin only)
     getAllCategoriesWithTranslations: async () => {
         try {
-            const response = await fetch("/api/admin/categories", {
+            const response = await fetch(`${API_BASE_URL}/admin/categories`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -77,69 +82,4 @@ export const useCategories = () => {
         error,
         refetch: fetchCategories,
     };
-};
-
-// Example usage in a component
-export const CategoryFilter = () => {
-    const { categories, loading, error } = useCategories();
-    const [selectedCategory, setSelectedCategory] = useState("");
-
-    if (loading) return <div>Chargement des catégories...</div>;
-    if (error) return <div>Erreur: {error}</div>;
-
-    return (
-        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-            <option value="">Toutes les catégories</option>
-            {categories.map((category) => (
-                <option key={category.id} value={category.name}>
-                    {category.name} ({category.event_count} événements)
-                </option>
-            ))}
-        </select>
-    );
-};
-
-// Example for Material-UI Autocomplete
-export const CategoryAutocomplete = ({ value, onChange, ...props }) => {
-    const { categories, loading } = useCategories();
-
-    return (
-        <Autocomplete
-            options={categories}
-            getOptionLabel={(option) => option.name}
-            loading={loading}
-            value={value}
-            onChange={(event, newValue) => onChange(newValue)}
-            renderInput={(params) => (
-                <TextField
-                    {...params}
-                    label="Catégorie"
-                    placeholder="Choisissez une catégorie"
-                    InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                            <>
-                                {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                {params.InputProps.endAdornment}
-                            </>
-                        ),
-                    }}
-                />
-            )}
-            renderOption={(props, option) => (
-                <Box component="li" {...props}>
-                    {option.icon && <span style={{ marginRight: 8 }}>{option.icon}</span>}
-                    <Box>
-                        <Typography variant="body1">{option.name}</Typography>
-                        {option.description && (
-                            <Typography variant="body2" color="text.secondary">
-                                {option.description}
-                            </Typography>
-                        )}
-                    </Box>
-                </Box>
-            )}
-            {...props}
-        />
-    );
 };

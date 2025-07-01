@@ -13,6 +13,11 @@ class EventService {
                 }
             });
 
+            // Default language if not provided
+            if (!params.lang) {
+                searchParams.append("lang", "fr");
+            }
+
             const url = `${API_BASE_URL}/events?${searchParams.toString()}`;
             const response = await fetch(url);
 
@@ -27,9 +32,9 @@ class EventService {
         }
     }
 
-    static async getEventById(id) {
+    static async getEventById(id, lang = "fr") {
         try {
-            const response = await fetch(`${API_BASE_URL}/events/${id}`);
+            const response = await fetch(`${API_BASE_URL}/events/${id}?lang=${lang}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -38,21 +43,6 @@ class EventService {
             return await response.json();
         } catch (error) {
             console.error("Error fetching event:", error);
-            throw error;
-        }
-    }
-
-    static async getCategories() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/events/meta/categories`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error("Error fetching categories:", error);
             throw error;
         }
     }

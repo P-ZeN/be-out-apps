@@ -18,6 +18,7 @@ router.get("/", async (req, res) => {
             lastMinute,
             featured,
             sortBy = "event_date",
+            lang = "fr", // Language parameter for translations
         } = req.query;
 
         const offset = (page - 1) * limit;
@@ -82,6 +83,20 @@ router.get("/", async (req, res) => {
                 break;
         }
 
+        // Build category name selection based on language
+        let categoryNameSelect;
+        switch (lang) {
+            case "en":
+                categoryNameSelect = "COALESCE(cat.name_en, cat.name_fr, cat.name)";
+                break;
+            case "es":
+                categoryNameSelect = "COALESCE(cat.name_es, cat.name_fr, cat.name)";
+                break;
+            default: // 'fr' or any other language defaults to French
+                categoryNameSelect = "COALESCE(cat.name_fr, cat.name)";
+                break;
+        }
+
         const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
 
         const query = `
@@ -103,7 +118,7 @@ router.get("/", async (req, res) => {
                 v.name as venue_name,
                 v.city as venue_city,
                 v.address as venue_address,
-                ARRAY_AGG(DISTINCT cat.name) as categories
+                ARRAY_AGG(DISTINCT ${categoryNameSelect}) as categories
             FROM events e
             LEFT JOIN venues v ON e.venue_id = v.id
             LEFT JOIN event_categories ec ON e.id = ec.event_id
