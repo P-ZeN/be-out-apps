@@ -6,10 +6,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy all source files
-COPY . .
+# Copy source files (exclude node_modules and other apps)
+COPY src ./src
+COPY public ./public
+COPY index.html ./
+COPY vite.config.js ./
+COPY nginx.conf ./
 
-# Build only the admin-client app using the locally installed vite
+# Build the admin-client app
 RUN npm run build
 
 # Production stage
