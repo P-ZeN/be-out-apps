@@ -17,7 +17,30 @@ import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 
 const app = express();
-app.use(cors());
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' 
+        ? [
+            'https://pro.be-out-app.dedibox2.philippezenone.net',        // Organizer client
+            'https://admin.be-out-app.dedibox2.philippezenone.net',     // Admin client  
+            'https://client.be-out-app.dedibox2.philippezenone.net',    // Main client
+            'https://be-out-app.dedibox2.philippezenone.net',           // Main domain
+        ]
+        : [
+            'http://localhost:5173',                                     // Local dev - client
+            'http://localhost:5174',                                     // Local dev - admin
+            'http://localhost:5175',                                     // Local dev - organizer
+            'https://pro.be-out-app.dedibox2.philippezenone.net',      // Production testing
+            'https://admin.be-out-app.dedibox2.philippezenone.net',
+            'https://client.be-out-app.dedibox2.philippezenone.net',
+        ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json()); // Middleware to parse JSON bodies
 
 // Session middleware
