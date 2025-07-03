@@ -6,12 +6,12 @@ const router = Router();
 
 router.get("/profile", authenticateToken, async (req, res) => {
     try {
-        console.log("Profile request - req.user:", req.user); // Debug log
+        //console.log("Profile request - req.user:", req.user); // Debug log
 
         const client = await pool.connect();
         try {
             const userId = req.user.userId || req.user.id; // Try both field names
-            console.log("Looking for user with ID:", userId); // Debug log
+            //console.log("Looking for user with ID:", userId); // Debug log
 
             const result = await client.query(
                 `
@@ -32,11 +32,11 @@ router.get("/profile", authenticateToken, async (req, res) => {
                 [userId]
             );
 
-            console.log("Query result:", result.rows); // Debug log
+            // console.log("Query result:", result.rows); // Debug log
 
             const userProfile = result.rows[0];
             if (!userProfile) {
-                console.log("No user found with ID:", userId); // Debug log
+                //console.log("No user found with ID:", userId); // Debug log
                 return res.status(404).json({ error: "Profile not found" });
             }
             res.json(userProfile);
