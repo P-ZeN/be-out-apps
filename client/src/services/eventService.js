@@ -1,7 +1,7 @@
 // Event service for API calls
 // API base URL - TEMPORARILY HARDCODED FOR TESTING
-const API_BASE_URL = "https://server.be-out-app.dedibox2.philippezenone.net:3000";
-// const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+// const API_BASE_URL = "https://server.be-out-app.dedibox2.philippezenone.net";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 class EventService {
     static async getAllEvents(params = {}) {
