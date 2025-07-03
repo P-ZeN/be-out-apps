@@ -16,6 +16,17 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
+    // Add at the top of main.jsx
+    console.log("🔍 Environment Debug:");
+    console.log("All env vars:", import.meta.env);
+    console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
+    console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+    console.log("Is production?:", import.meta.env.PROD);
+
+    // Add alert for quick verification
+    if (import.meta.env.VITE_API_URL?.includes("localhost")) {
+        alert("🚨 Still using localhost API URL!");
+    }
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
