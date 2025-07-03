@@ -13,6 +13,11 @@ COPY index.html ./
 COPY vite.config.js ./
 COPY nginx.conf ./
 
+ARG VITE_API_URL
+ARG VITE_API_BASE_URL
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # Build the admin-client app
 RUN npm run build
 
