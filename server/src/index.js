@@ -41,7 +41,7 @@ app.use(express.json()); // Middleware to parse JSON bodies
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get('Origin')}`);
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get("Origin")}`);
     next();
 });
 
@@ -92,11 +92,11 @@ app.get("/", (req, res) => {
 });
 
 app.get("/test", (req, res) => {
-    res.json({ 
+    res.json({
         message: "Test endpoint working",
         timestamp: new Date().toISOString(),
-        origin: req.get('Origin'),
-        userAgent: req.get('User-Agent')
+        origin: req.get("Origin"),
+        userAgent: req.get("User-Agent"),
     });
 });
 
