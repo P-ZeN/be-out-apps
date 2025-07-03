@@ -18,7 +18,8 @@ ARG VITE_API_URL
 ARG VITE_API_BASE_URL
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-
+RUN echo "VITE_API_URL is set to $VITE_API_URL"
+RUN echo "VITE_API_BASE_URL is set to $VITE_API_BASE_URL"
 
 # Build the organizer-client app
 RUN npm run build
