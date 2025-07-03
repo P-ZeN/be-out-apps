@@ -177,7 +177,10 @@ const AdminDebugPanel = () => {
                                 </Typography>
                                 <ul>
                                     <li>Vérifiez que le serveur backend est démarré</li>
-                                    <li>Vérifiez l'URL (par défaut: {import.meta.env.VITE_API_URL || "http://localhost:3000"})</li>
+                                    <li>
+                                        Vérifiez l'URL (par défaut:{" "}
+                                        {import.meta.env.VITE_API_URL || "http://localhost:3000"})
+                                    </li>
                                     <li>Vérifiez les règles CORS du serveur</li>
                                 </ul>
 

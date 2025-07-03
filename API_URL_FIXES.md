@@ -54,7 +54,7 @@ The three applications use different but valid patterns for API URL configuratio
 
 #### **Client & Admin-Client** (Fixed)
 - **Variable**: `VITE_API_BASE_URL=http://localhost:3000/api`
-- **Pattern**: `${API_BASE_URL}/endpoint` 
+- **Pattern**: `${API_BASE_URL}/endpoint`
 - **Example**: `http://localhost:3000/api/favorites/check/123`
 
 #### **Organizer-Client** (Already Correct)

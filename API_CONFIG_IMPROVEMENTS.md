@@ -24,7 +24,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000
 
 #### Client Application (`client/`)
 - `src/services/enhancedCategoryService.js` - ✅ Fixed
-- `src/services/eventService.js` - ✅ Fixed  
+- `src/services/eventService.js` - ✅ Fixed
 - `src/services/bookingService.js` - ✅ Fixed
 - `src/services/userService.js` - ✅ Fixed
 - `src/services/paymentService.js` - ✅ Fixed
@@ -71,7 +71,7 @@ VITE_NODE_ENV=development
 
 **Admin Client (`.env` and `.env.example`):**
 ```env
-# API Base URL - Backend server endpoint  
+# API Base URL - Backend server endpoint
 VITE_API_BASE_URL=http://localhost:3000/api
 
 # Development settings
@@ -132,7 +132,7 @@ const { categories, loading, error } = useCategories();
 - [x] All services use environment variables
 - [x] Fallbacks ensure app works without .env files
 
-### 🔄 Staging/Production  
+### 🔄 Staging/Production
 - [ ] Set `VITE_API_BASE_URL` to appropriate staging/production URL
 - [ ] Verify all API calls use the configured URL
 - [ ] Test environment variable loading
