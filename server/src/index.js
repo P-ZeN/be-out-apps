@@ -39,6 +39,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json()); // Middleware to parse JSON bodies
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get('Origin')}`);
+    next();
+});
+
 // Session middleware
 app.use(
     session({
@@ -83,6 +89,15 @@ app.get("/auth/facebook/callback", passport.authenticate("facebook", { failureRe
 
 app.get("/", (req, res) => {
     res.send("Hello from the server! huhuhu");
+});
+
+app.get("/test", (req, res) => {
+    res.json({ 
+        message: "Test endpoint working",
+        timestamp: new Date().toISOString(),
+        origin: req.get('Origin'),
+        userAgent: req.get('User-Agent')
+    });
 });
 
 app.get("/db", async (req, res) => {
