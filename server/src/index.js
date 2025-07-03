@@ -18,26 +18,22 @@ import "./passport-setup.js"; // Import passport setup
 
 const app = express();
 
-// CORS configuration
+// CORS configuration - More permissive for testing
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' 
-        ? [
-            'https://pro.be-out-app.dedibox2.philippezenone.net',        // Organizer client
-            'https://admin.be-out-app.dedibox2.philippezenone.net',     // Admin client  
-            'https://client.be-out-app.dedibox2.philippezenone.net',    // Main client
-            'https://be-out-app.dedibox2.philippezenone.net',           // Main domain
-        ]
-        : [
-            'http://localhost:5173',                                     // Local dev - client
-            'http://localhost:5174',                                     // Local dev - admin
-            'http://localhost:5175',                                     // Local dev - organizer
-            'https://pro.be-out-app.dedibox2.philippezenone.net',      // Production testing
-            'https://admin.be-out-app.dedibox2.philippezenone.net',
-            'https://client.be-out-app.dedibox2.philippezenone.net',
-        ],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Allow all subdomains of your domain
+        if (origin.includes("be-out-app.dedibox2.philippezenone.net") || origin.includes("localhost")) {
+            return callback(null, true);
+        }
+
+        callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
