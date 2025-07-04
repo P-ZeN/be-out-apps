@@ -25,7 +25,7 @@ const corsOptions = {
         if (!origin) return callback(null, true);
 
         // Allow all subdomains of your domain
-        if (origin.includes("be-out-app.dedibox2.philippezenone.net") || origin.includes("localhost")) {
+        if (origin.includes("dedibox2.philippezenone.net") || origin.includes("localhost")) {
             return callback(null, true);
         }
 
