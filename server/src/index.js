@@ -41,7 +41,7 @@ app.use(express.json()); // Middleware to parse JSON bodies
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get("Origin")}`);
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Referer: ${req.get("referer")}`);
     next();
 });
 
