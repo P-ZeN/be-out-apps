@@ -1,27 +1,15 @@
 // Enhanced category service with multi-language support
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
-
-// API base URL - use environment variable or fallback to development default
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { apiRequest, API_BASE_URL } from "../utils/apiUtils.js";
 
 // Base service functions
 export const categoryService = {
     // Fetch categories with language parameter
     getCategories: async (language = "fr") => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/events/meta/categories?lang=${language}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
+            const response = await apiRequest(`${API_BASE_URL}/api/events/meta/categories?lang=${language}`);
+            return response;
         } catch (error) {
             console.error("Error fetching categories:", error);
             throw error;

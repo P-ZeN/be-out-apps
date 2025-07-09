@@ -18,22 +18,33 @@ import "./passport-setup.js"; // Import passport setup
 
 const app = express();
 
-// CORS configuration - More permissive for testing
+// CORS configuration
 const corsOptions = {
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
 
-        // Allow all subdomains of your domain
-        if (origin.includes("dedibox2.philippezenone.net") || origin.includes("localhost")) {
+        // Allow localhost variations and production domains
+        const allowedOrigins = [
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:5175",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
+            "http://127.0.0.1:5175",
+        ];
+
+        if (allowedOrigins.includes(origin) || (origin && origin.includes("dedibox2.philippezenone.net"))) {
             return callback(null, true);
         }
 
+        // For debugging
+        console.log("CORS rejected origin:", origin);
         callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Origin", "Accept"],
 };
 
 app.use(cors(corsOptions));
@@ -45,12 +56,18 @@ app.use((req, res, next) => {
     next();
 });
 
-// Session middleware
+// Session middleware with better configuration for OAuth
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
         resave: false,
-        saveUninitialized: true,
+        saveUninitialized: false, // Changed to false for better security
+        cookie: {
+            secure: false, // Set to true in production with HTTPS
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+            sameSite: "lax", // Important for OAuth redirects
+        },
     })
 );
 
@@ -73,19 +90,80 @@ app.use("/api/favorites", favoritesRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/webhooks", webhooksRoutes);
 
-// Google Auth Routes
+// Helper function to determine redirect URL based on environment and user role
+const getRedirectUrl = (user, req) => {
+    const isProduction = process.env.NODE_ENV === "production";
+
+    // Use environment variables for URLs
+    const urls = {
+        development: {
+            client: process.env.CLIENT_URL_DEV || "http://localhost:5173",
+            admin: process.env.ADMIN_URL_DEV || "http://localhost:5174",
+            organizer: process.env.ORGANIZER_URL_DEV || "http://localhost:5175",
+        },
+        production: {
+            client: process.env.CLIENT_URL_PROD || "https://app.dedibox2.philippezenone.net",
+            admin: process.env.ADMIN_URL_PROD || "https://admin.dedibox2.philippezenone.net",
+            organizer: process.env.ORGANIZER_URL_PROD || "https://organizer.dedibox2.philippezenone.net",
+        },
+    };
+
+    const environment = isProduction ? "production" : "development";
+    const currentUrls = urls[environment];
+
+    // Determine redirect based on user role
+    switch (user.role) {
+        case "admin":
+            return currentUrls.admin;
+        case "organizer":
+            return currentUrls.organizer;
+        case "user":
+        default:
+            return currentUrls.client;
+    }
+};
+
+// Google Auth Routes - These should be direct navigations, not AJAX requests
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-app.get("/auth/google/callback", passport.authenticate("google", { failureRedirect: "/login" }), (req, res) => {
-    // Successful authentication, redirect home.
-    res.redirect("/");
-});
+app.get(
+    "/auth/google/callback",
+    passport.authenticate("google", {
+        failureRedirect: process.env.CLIENT_URL_DEV || "http://localhost:5173",
+    }),
+    (req, res) => {
+        try {
+            // Successful authentication, redirect based on user role and environment
+            const redirectUrl = getRedirectUrl(req.user, req);
+            console.log(`Redirecting user ${req.user.email} (${req.user.role}) to: ${redirectUrl}`);
+
+            res.redirect(redirectUrl);
+        } catch (error) {
+            console.error("Error in Google callback:", error);
+            res.redirect(process.env.CLIENT_URL_DEV || "http://localhost:5173");
+        }
+    }
+);
 
 // Facebook Auth Routes
 app.get("/auth/facebook", passport.authenticate("facebook"));
-app.get("/auth/facebook/callback", passport.authenticate("facebook", { failureRedirect: "/login" }), (req, res) => {
-    // Successful authentication, redirect home.
-    res.redirect("/");
-});
+app.get(
+    "/auth/facebook/callback",
+    passport.authenticate("facebook", {
+        failureRedirect: process.env.CLIENT_URL_DEV || "http://localhost:5173",
+    }),
+    (req, res) => {
+        try {
+            // Successful authentication, redirect based on user role and environment
+            const redirectUrl = getRedirectUrl(req.user, req);
+            console.log(`Redirecting user ${req.user.email} (${req.user.role}) to: ${redirectUrl}`);
+
+            res.redirect(redirectUrl);
+        } catch (error) {
+            console.error("Error in Facebook callback:", error);
+            res.redirect(process.env.CLIENT_URL_DEV || "http://localhost:5173");
+        }
+    }
+);
 
 app.get("/", (req, res) => {
     res.send("Hello from the server! huhuhu");

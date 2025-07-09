@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import { useAuth } from "../context/AuthContext";
-import { Button, TextField, Container, Typography, Box, Alert } from "@mui/material";
+import { useTranslation } from "react-i18next";
+import { Button, TextField, Container, Typography, Box, Alert, Divider } from "@mui/material";
+import { Google, Facebook } from "@mui/icons-material";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const Register = () => {
     const [email, setEmail] = useState("");
@@ -14,6 +18,7 @@ const Register = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const { login } = useAuth();
+    const t = useTranslation(["auth", "common"]).t;
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -100,6 +105,24 @@ const Register = () => {
                     </Button>
                 </Box>
             </Box>
+
+            <Divider sx={{ my: 2 }}>{t("auth:login.orLoginWith")}</Divider>
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Button
+                    variant="outlined"
+                    startIcon={<Google />}
+                    onClick={() => (window.location.href = `${API_BASE_URL}/auth/google`)}>
+                    {t("auth:login.loginWithGoogle")}
+                </Button>
+                <Button
+                    variant="outlined"
+                    startIcon={<Facebook />}
+                    onClick={() => (window.location.href = `${API_BASE_URL}/auth/facebook`)}>
+                    {t("auth:login.loginWithFacebook")}
+                </Button>
+            </Box>
+
             {message && <Alert severity="success">{message}</Alert>}
             {error && <Alert severity="error">{error}</Alert>}
         </Container>

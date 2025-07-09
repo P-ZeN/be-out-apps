@@ -1,7 +1,5 @@
 // Event service for API calls
-// API base URL - TEMPORARILY HARDCODED FOR TESTING
-// const API_BASE_URL = "https://server.be-out-app.dedibox2.philippezenone.net";
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { apiRequest, API_BASE_URL } from "../utils/apiUtils.js";
 
 class EventService {
     static async getAllEvents(params = {}) {
@@ -21,13 +19,8 @@ class EventService {
             }
 
             const url = `${API_BASE_URL}/api/events?${searchParams.toString()}`;
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
+            const response = await apiRequest(url);
+            return response;
         } catch (error) {
             console.error("Error fetching events:", error);
             throw error;

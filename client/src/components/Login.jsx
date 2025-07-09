@@ -6,6 +6,8 @@ import { useTranslation } from "react-i18next";
 import { Button, TextField, Container, Typography, Box, Alert, Divider } from "@mui/material";
 import { Google, Facebook } from "@mui/icons-material";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -88,13 +90,13 @@ const Login = () => {
                 <Button
                     variant="outlined"
                     startIcon={<Google />}
-                    onClick={() => (window.location.href = "http://localhost:3000/auth/google")}>
+                    onClick={() => (window.location.href = `${API_BASE_URL}/auth/google`)}>
                     {t("auth:login.loginWithGoogle")}
                 </Button>
                 <Button
                     variant="outlined"
                     startIcon={<Facebook />}
-                    onClick={() => (window.location.href = "http://localhost:3000/auth/facebook")}>
+                    onClick={() => (window.location.href = `${API_BASE_URL}/auth/facebook`)}>
                     {t("auth:login.loginWithFacebook")}
                 </Button>
             </Box>
