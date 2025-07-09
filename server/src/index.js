@@ -3,6 +3,7 @@ import "dotenv/config";
 import cors from "cors";
 import session from "express-session";
 import passport from "passport";
+import jwt from "jsonwebtoken";
 import setupRoutes from "./routes/setup.js";
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
@@ -133,10 +134,25 @@ app.get(
     (req, res) => {
         try {
             // Successful authentication, redirect based on user role and environment
-            const redirectUrl = getRedirectUrl(req.user, req);
-            console.log(`Redirecting user ${req.user.email} (${req.user.role}) to: ${redirectUrl}`);
-
-            res.redirect(redirectUrl);
+            const user = req.user;
+            console.log(`User authenticated: ${user.email} (${user.role})`);
+            
+            // Generate JWT token for the user
+            const token = jwt.sign(
+                { 
+                    userId: user.id, 
+                    email: user.email, 
+                    role: user.role 
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+            
+            const redirectUrl = getRedirectUrl(user, req);
+            console.log(`Redirecting user ${user.email} (${user.role}) to: ${redirectUrl}`);
+            
+            // Redirect to frontend with token in URL parameters
+            res.redirect(`${redirectUrl}?token=${token}`);
         } catch (error) {
             console.error("Error in Google callback:", error);
             res.redirect(process.env.CLIENT_URL_DEV || "http://localhost:5173");
@@ -154,10 +170,25 @@ app.get(
     (req, res) => {
         try {
             // Successful authentication, redirect based on user role and environment
-            const redirectUrl = getRedirectUrl(req.user, req);
-            console.log(`Redirecting user ${req.user.email} (${req.user.role}) to: ${redirectUrl}`);
-
-            res.redirect(redirectUrl);
+            const user = req.user;
+            console.log(`User authenticated: ${user.email} (${user.role})`);
+            
+            // Generate JWT token for the user
+            const token = jwt.sign(
+                { 
+                    userId: user.id, 
+                    email: user.email, 
+                    role: user.role 
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+            
+            const redirectUrl = getRedirectUrl(user, req);
+            console.log(`Redirecting user ${user.email} (${user.role}) to: ${redirectUrl}`);
+            
+            // Redirect to frontend with token in URL parameters
+            res.redirect(`${redirectUrl}?token=${token}`);
         } catch (error) {
             console.error("Error in Facebook callback:", error);
             res.redirect(process.env.CLIENT_URL_DEV || "http://localhost:5173");
