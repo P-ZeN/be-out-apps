@@ -23,9 +23,8 @@ const Login = () => {
         setError("");
         try {
             const response = await authService.login({ email, password });
-            login(response); // Pass the whole response to login
+            login(response); // AuthContext will handle navigation based on onboarding status
             setMessage(t("auth:login.success"));
-            navigate("/");
         } catch (error) {
             setError(t("auth:login.failed"));
         }

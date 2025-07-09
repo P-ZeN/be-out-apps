@@ -7,7 +7,7 @@ const router = Router();
 
 // Register route
 router.post("/register", async (req, res) => {
-    const { email, password, firstName, lastName, bio } = req.body;
+    const { email, password } = req.body;
 
     if (!email || !password) {
         return res.status(400).send("Email and password are required");
@@ -24,15 +24,13 @@ router.post("/register", async (req, res) => {
             );
             const user = userResult.rows[0];
 
-            await client.query(
-                "INSERT INTO user_profiles (user_id, first_name, last_name, bio) VALUES ($1, $2, $3, $4)",
-                [user.id, firstName, lastName, bio]
-            );
+            // Create minimal user profile - onboarding will complete it
+            await client.query("INSERT INTO user_profiles (user_id) VALUES ($1)", [user.id]);
 
             await client.query("COMMIT");
 
             const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
-            res.status(201).send({ token, email: user.email });
+            res.status(201).send({ token, email: user.email, onboarding_complete: false });
         } catch (err) {
             await client.query("ROLLBACK");
             console.error(err);
@@ -75,7 +73,7 @@ router.post("/login", async (req, res) => {
             }
 
             const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
-            res.send({ token });
+            res.send({ token, onboarding_complete: user.onboarding_complete });
         } finally {
             client.release();
         }

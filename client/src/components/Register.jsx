@@ -11,9 +11,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const Register = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [bio, setBio] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
@@ -25,10 +22,11 @@ const Register = () => {
         setMessage("");
         setError("");
         try {
-            const response = await authService.register({ email, password, firstName, lastName, bio });
+            const response = await authService.register({ email, password });
             login(response);
             setMessage("Registration successful");
-            navigate("/");
+            // Redirect to onboarding instead of home
+            navigate("/onboarding");
         } catch (error) {
             setError("Registration failed");
         }
@@ -70,35 +68,6 @@ const Register = () => {
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <TextField
-                        margin="normal"
-                        fullWidth
-                        name="firstName"
-                        label="First Name"
-                        id="firstName"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                    />
-                    <TextField
-                        margin="normal"
-                        fullWidth
-                        name="lastName"
-                        label="Last Name"
-                        id="lastName"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                    />
-                    <TextField
-                        margin="normal"
-                        fullWidth
-                        name="bio"
-                        label="Bio"
-                        id="bio"
-                        multiline
-                        rows={4}
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
                     />
                     <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
                         Register

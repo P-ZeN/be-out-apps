@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./Login";
 import Register from "./Register";
 import Profile from "./Profile";
+import Onboarding from "./Onboarding";
 import PrivateRoute from "./PrivateRoute";
 import { Home, EventDetail, MapView, Bookings, Favorites } from "../pages";
 
@@ -14,6 +15,14 @@ const AppRoutes = () => {
             <Route path="/event/:id" element={<EventDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route
+                path="/onboarding"
+                element={
+                    <PrivateRoute>
+                        <Onboarding />
+                    </PrivateRoute>
+                }
+            />
             <Route
                 path="/profile"
                 element={

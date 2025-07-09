@@ -254,7 +254,7 @@ const Footer = () => {
                                 mt: { xs: 1, md: 0 },
                             }}>
                             <Typography variant="body2" sx={{ color: theme.palette.footer.textSecondary }}>
-                                Inspiré par Too Good To Go
+                                @ZeN
                             </Typography>
                         </Box>
                     </Grid>

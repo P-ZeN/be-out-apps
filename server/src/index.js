@@ -136,21 +136,21 @@ app.get(
             // Successful authentication, redirect based on user role and environment
             const user = req.user;
             console.log(`User authenticated: ${user.email} (${user.role})`);
-            
+
             // Generate JWT token for the user
             const token = jwt.sign(
-                { 
-                    userId: user.id, 
-                    email: user.email, 
-                    role: user.role 
+                {
+                    userId: user.id,
+                    email: user.email,
+                    role: user.role,
                 },
                 process.env.JWT_SECRET,
-                { expiresIn: '24h' }
+                { expiresIn: "24h" }
             );
-            
+
             const redirectUrl = getRedirectUrl(user, req);
             console.log(`Redirecting user ${user.email} (${user.role}) to: ${redirectUrl}`);
-            
+
             // Redirect to frontend with token in URL parameters
             res.redirect(`${redirectUrl}?token=${token}`);
         } catch (error) {
@@ -172,21 +172,21 @@ app.get(
             // Successful authentication, redirect based on user role and environment
             const user = req.user;
             console.log(`User authenticated: ${user.email} (${user.role})`);
-            
+
             // Generate JWT token for the user
             const token = jwt.sign(
-                { 
-                    userId: user.id, 
-                    email: user.email, 
-                    role: user.role 
+                {
+                    userId: user.id,
+                    email: user.email,
+                    role: user.role,
                 },
                 process.env.JWT_SECRET,
-                { expiresIn: '24h' }
+                { expiresIn: "24h" }
             );
-            
+
             const redirectUrl = getRedirectUrl(user, req);
             console.log(`Redirecting user ${user.email} (${user.role}) to: ${redirectUrl}`);
-            
+
             // Redirect to frontend with token in URL parameters
             res.redirect(`${redirectUrl}?token=${token}`);
         } catch (error) {

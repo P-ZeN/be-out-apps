@@ -2,19 +2,34 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Common headers for all API requests
-const getCommonHeaders = (additionalHeaders = {}) => ({
-    "Content-Type": "application/json",
-    ...additionalHeaders,
-});
+const getCommonHeaders = (additionalHeaders = {}) => {
+    const token = localStorage.getItem("token");
+    const baseHeaders = {
+        "Content-Type": "application/json",
+        ...additionalHeaders,
+    };
+
+    if (token) {
+        baseHeaders.Authorization = `Bearer ${token}`;
+    }
+
+    return baseHeaders;
+};
 
 // Enhanced fetch function with common headers
 export const apiRequest = async (url, options = {}) => {
+    // Ensure we use the full API URL
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    
+    // Merge headers properly - common headers first, then any additional headers
+    const headers = getCommonHeaders(options.headers || {});
+    
     const defaultOptions = {
-        headers: getCommonHeaders(options.headers),
         ...options,
+        headers,
     };
 
-    const response = await fetch(url, defaultOptions);
+    const response = await fetch(fullUrl, defaultOptions);
 
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
