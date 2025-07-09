@@ -19,11 +19,11 @@ const getCommonHeaders = (additionalHeaders = {}) => {
 // Enhanced fetch function with common headers
 export const apiRequest = async (url, options = {}) => {
     // Ensure we use the full API URL
-    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
-    
+    const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+
     // Merge headers properly - common headers first, then any additional headers
     const headers = getCommonHeaders(options.headers || {});
-    
+
     const defaultOptions = {
         ...options,
         headers,

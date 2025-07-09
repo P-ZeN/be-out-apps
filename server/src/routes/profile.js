@@ -25,7 +25,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
                     up.first_name,
                     up.last_name,
                     up.phone,
-                    up.date_of_birth,
+                    up.date_of_birth::text as date_of_birth,
                     up.street_number,
                     up.street_name,
                     up.postal_code,
@@ -149,12 +149,11 @@ router.post("/complete-onboarding", authenticateToken, async (req, res) => {
     }
 });
 
-// Note: Profile updates are now handled through the onboarding completion process
-// Users complete their profile during onboarding, and updates should be handled through support
-// This endpoint is kept for backwards compatibility but bio field has been removed
-
+// Update user profile
 router.put("/profile", authenticateToken, async (req, res) => {
-    const { first_name, last_name } = req.body;
+    const { first_name, last_name, phone, date_of_birth, street_number, street_name, postal_code, city, country } =
+        req.body;
+
     try {
         const client = await pool.connect();
         try {
@@ -165,16 +164,45 @@ router.put("/profile", authenticateToken, async (req, res) => {
 
             let result;
             if (checkResult.rows.length === 0) {
-                // Create new profile (minimal - should not happen with new onboarding flow)
+                // Create new profile
                 result = await client.query(
-                    "INSERT INTO user_profiles (user_id, first_name, last_name, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *",
-                    [req.user.userId, first_name, last_name]
+                    `INSERT INTO user_profiles (user_id, first_name, last_name, phone, date_of_birth,
+                     street_number, street_name, postal_code, city, country, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+                     RETURNING *, date_of_birth::text as date_of_birth`,
+                    [
+                        req.user.userId,
+                        first_name,
+                        last_name,
+                        phone,
+                        date_of_birth,
+                        street_number,
+                        street_name,
+                        postal_code,
+                        city,
+                        country,
+                    ]
                 );
             } else {
-                // Update existing profile (only basic fields)
+                // Update existing profile
                 result = await client.query(
-                    "UPDATE user_profiles SET first_name = $1, last_name = $2, updated_at = NOW() WHERE user_id = $3 RETURNING *",
-                    [first_name, last_name, req.user.userId]
+                    `UPDATE user_profiles SET
+                     first_name = $1, last_name = $2, phone = $3, date_of_birth = $4,
+                     street_number = $5, street_name = $6, postal_code = $7, city = $8, country = $9,
+                     updated_at = NOW()
+                     WHERE user_id = $10 RETURNING *, date_of_birth::text as date_of_birth`,
+                    [
+                        first_name,
+                        last_name,
+                        phone,
+                        date_of_birth,
+                        street_number,
+                        street_name,
+                        postal_code,
+                        city,
+                        country,
+                        req.user.userId,
+                    ]
                 );
             }
             res.json(result.rows[0]);

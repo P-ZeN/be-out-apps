@@ -17,13 +17,14 @@ import {
 } from "@mui/material";
 import { AccountCircle, Home, Phone } from "@mui/icons-material";
 import { apiPost } from "../utils/apiUtils";
+import { formatDateForInput, formatDateForServer } from "../utils/dateUtils";
 
 const Onboarding = () => {
     const [activeStep, setActiveStep] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    
+
     // Form data - always includes all fields
     const [formData, setFormData] = useState({
         firstName: "",
@@ -43,23 +44,17 @@ const Onboarding = () => {
 
     // All steps are always visible
     const steps = [
-        { 
-            label: "Personal Information", 
-            icon: <AccountCircle />, 
-            fields: ['firstName', 'lastName'],
-            id: 'personal'
+        {
+            label: "Personal Information",
+            icon: <AccountCircle />,
+            fields: ["firstName", "lastName", "phone", "dateOfBirth"],
+            id: "personal",
         },
-        { 
-            label: "Contact & Birth", 
-            icon: <Phone />, 
-            fields: ['phone', 'dateOfBirth'],
-            id: 'contact'
-        },
-        { 
-            label: "Address", 
-            icon: <Home />, 
-            fields: ['streetNumber', 'streetName', 'postalCode', 'city', 'country'],
-            id: 'address'
+        {
+            label: "Address",
+            icon: <Home />,
+            fields: ["streetNumber", "streetName", "postalCode", "city", "country"],
+            id: "address",
         },
     ];
 
@@ -70,7 +65,7 @@ const Onboarding = () => {
                 firstName: user.first_name || "",
                 lastName: user.last_name || "",
                 phone: user.phone || "",
-                dateOfBirth: user.date_of_birth || "",
+                dateOfBirth: formatDateForInput(user.date_of_birth) || "",
                 streetNumber: user.street_number || "",
                 streetName: user.street_name || "",
                 postalCode: user.postal_code || "",
@@ -89,8 +84,8 @@ const Onboarding = () => {
 
     const validateStep = (stepIndex) => {
         const currentStep = steps[stepIndex];
-        return currentStep.fields.every(field => {
-            return formData[field] && formData[field].trim() !== '';
+        return currentStep.fields.every((field) => {
+            return formData[field] && formData[field].trim() !== "";
         });
     };
 
@@ -113,8 +108,14 @@ const Onboarding = () => {
         setError("");
 
         try {
-            await apiPost("/api/user/complete-onboarding", formData);
-            
+            // Format data for server
+            const serverData = {
+                ...formData,
+                dateOfBirth: formatDateForServer(formData.dateOfBirth),
+            };
+
+            await apiPost("/api/user/complete-onboarding", serverData);
+
             // Update user state in AuthContext to include onboarding_complete: true
             const updatedUser = {
                 ...user,
@@ -129,10 +130,10 @@ const Onboarding = () => {
                 city: formData.city,
                 country: formData.country,
             };
-            
+
             updateUser(updatedUser);
             setSuccess("Onboarding completed successfully!");
-            
+
             // Redirect to home after a brief delay
             setTimeout(() => {
                 navigate("/");
@@ -156,9 +157,9 @@ const Onboarding = () => {
 
     const renderStepContent = (stepIndex) => {
         const currentStep = steps[stepIndex];
-        
+
         switch (currentStep.id) {
-            case 'personal':
+            case "personal":
                 return (
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12 }}>
@@ -166,7 +167,7 @@ const Onboarding = () => {
                                 Personal Information
                             </Typography>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Please complete your name information
+                                Please complete your personal details
                             </Typography>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
@@ -187,21 +188,7 @@ const Onboarding = () => {
                                 onChange={handleInputChange("lastName")}
                             />
                         </Grid>
-                    </Grid>
-                );
-
-            case 'contact':
-                return (
-                    <Grid container spacing={2}>
-                        <Grid size={{ xs: 12 }}>
-                            <Typography variant="h6" gutterBottom>
-                                Contact Information
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Please provide your contact details
-                            </Typography>
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 required
                                 fullWidth
@@ -212,7 +199,7 @@ const Onboarding = () => {
                                 placeholder="+33 1 23 45 67 89"
                             />
                         </Grid>
-                        <Grid size={{ xs: 12 }}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 required
                                 fullWidth
@@ -228,7 +215,7 @@ const Onboarding = () => {
                     </Grid>
                 );
 
-            case 'address':
+            case "address":
                 return (
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12 }}>
@@ -300,10 +287,8 @@ const Onboarding = () => {
     if (authLoading) {
         return (
             <Container maxWidth="md">
-                <Box sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
-                    <Typography variant="h6">
-                        Authenticating...
-                    </Typography>
+                <Box sx={{ mt: 4, mb: 4, textAlign: "center" }}>
+                    <Typography variant="h6">Authenticating...</Typography>
                 </Box>
             </Container>
         );
