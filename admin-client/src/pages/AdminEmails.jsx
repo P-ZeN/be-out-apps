@@ -9,7 +9,8 @@ const AdminEmails = () => {
                 Email Management
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                Manage email templates, view delivery logs, and configure email settings.
+                Gérez les modèles d'e-mails, affichez les journaux de livraison et configurez les paramètres de
+                messagerie.
             </Typography>
 
             <Paper elevation={1} sx={{ p: 0, borderRadius: 2 }}>
