@@ -14,6 +14,7 @@ import favoritesRoutes from "./routes/favorites.js";
 import paymentsRoutes from "./routes/payments.js";
 import webhooksRoutes from "./routes/webhooks.js";
 import organizerRoutes from "./routes/organizer.js";
+import addressesRoutes from "./routes/addresses.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 
@@ -90,6 +91,7 @@ app.use("/api/organizer", organizerRoutes);
 app.use("/api/favorites", favoritesRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/webhooks", webhooksRoutes);
+app.use("/api", addressesRoutes);
 
 // Helper function to determine redirect URL based on environment and user role
 const getRedirectUrl = (user, req) => {

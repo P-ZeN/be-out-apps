@@ -58,22 +58,12 @@ router.get("/profile", authenticateToken, async (req, res) => {
 
 // Complete onboarding endpoint
 router.post("/complete-onboarding", authenticateToken, async (req, res) => {
-    const { firstName, lastName, phone, dateOfBirth, streetNumber, streetName, postalCode, city, country } = req.body;
+    const { firstName, lastName, phone, dateOfBirth } = req.body;
 
-    // Validate required fields
-    if (
-        !firstName ||
-        !lastName ||
-        !phone ||
-        !dateOfBirth ||
-        !streetNumber ||
-        !streetName ||
-        !postalCode ||
-        !city ||
-        !country
-    ) {
+    // Validate required fields (addresses are now handled separately)
+    if (!firstName || !lastName || !phone || !dateOfBirth) {
         return res.status(400).json({
-            error: "All fields are required for onboarding completion",
+            error: "Personal information fields (firstName, lastName, phone, dateOfBirth) are required for onboarding completion",
         });
     }
 
@@ -88,43 +78,20 @@ router.post("/complete-onboarding", authenticateToken, async (req, res) => {
             const checkResult = await client.query("SELECT user_id FROM user_profiles WHERE user_id = $1", [userId]);
 
             if (checkResult.rows.length === 0) {
-                // Create new profile with all onboarding data
+                // Create new profile with personal information only (addresses handled separately)
                 await client.query(
                     `INSERT INTO user_profiles
-                    (user_id, first_name, last_name, phone, date_of_birth, street_number, street_name, postal_code, city, country, created_at, updated_at)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
-                    [
-                        userId,
-                        firstName,
-                        lastName,
-                        phone,
-                        dateOfBirth,
-                        streetNumber,
-                        streetName,
-                        postalCode,
-                        city,
-                        country,
-                    ]
+                    (user_id, first_name, last_name, phone, date_of_birth, created_at, updated_at)
+                    VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+                    [userId, firstName, lastName, phone, dateOfBirth]
                 );
             } else {
-                // Update existing profile with all onboarding data
+                // Update existing profile with personal information only (addresses handled separately)
                 await client.query(
                     `UPDATE user_profiles
-                    SET first_name = $2, last_name = $3, phone = $4, date_of_birth = $5,
-                        street_number = $6, street_name = $7, postal_code = $8, city = $9, country = $10, updated_at = NOW()
+                    SET first_name = $2, last_name = $3, phone = $4, date_of_birth = $5, updated_at = NOW()
                     WHERE user_id = $1`,
-                    [
-                        userId,
-                        firstName,
-                        lastName,
-                        phone,
-                        dateOfBirth,
-                        streetNumber,
-                        streetName,
-                        postalCode,
-                        city,
-                        country,
-                    ]
+                    [userId, firstName, lastName, phone, dateOfBirth]
                 );
             }
 

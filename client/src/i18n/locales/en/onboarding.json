@@ -20,11 +20,18 @@
     "lastName": "Last Name",
     "phone": "Phone Number",
     "dateOfBirth": "Date of Birth",
-    "streetNumber": "Number",
-    "streetName": "Street Name",
-    "postalCode": "Postal Code",
+    "addressLine1": "Address Line 1",
+    "addressLine1Help": "Street number and name",
+    "addressLine2": "Address Line 2 (Optional)",
+    "addressLine2Help": "Apartment, suite, unit, building, floor, etc.",
     "city": "City",
-    "country": "Country"
+    "locality": "City",
+    "administrativeArea": "State/Province/Region",
+    "administrativeAreaHelp": "State, province, or region",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "addressLabel": "Address Label",
+    "addressLabelHelp": "A name for this address (e.g., Home, Work)"
   },
   "errors": {
     "fillFields": "Please fill in all required fields",

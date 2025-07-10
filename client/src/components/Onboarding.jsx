@@ -14,9 +14,15 @@ import {
     Stepper,
     Step,
     StepLabel,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Autocomplete,
+    Chip,
 } from "@mui/material";
-import { AccountCircle, Home, Phone } from "@mui/icons-material";
-import { apiPost } from "../utils/apiUtils";
+import { AccountCircle, Home, Phone, LocationOn } from "@mui/icons-material";
+import { apiPost, apiGet, apiPut } from "../utils/apiUtils";
 import { formatDateForInput, formatDateForServer } from "../utils/dateUtils";
 
 const Onboarding = () => {
@@ -24,23 +30,44 @@ const Onboarding = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [addressSuggestions, setAddressSuggestions] = useState([]);
+    const [addressLoading, setAddressLoading] = useState(false);
 
-    // Form data - always includes all fields
+    // Form data - includes all fields for personal info and address
     const [formData, setFormData] = useState({
+        // Personal information
         firstName: "",
         lastName: "",
         phone: "",
         dateOfBirth: "",
-        streetNumber: "",
-        streetName: "",
+
+        // Address information following international standards
+        addressLine1: "",
+        addressLine2: "",
+        locality: "",
+        administrativeArea: "",
         postalCode: "",
-        city: "",
-        country: "France",
+        countryCode: "FR",
+        addressType: "home",
+        addressLabel: "Home Address",
     });
 
     const { user, updateUser, logout, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     const { t, i18n } = useTranslation(["onboarding", "common"]);
+
+    // Country options with ISO codes
+    const countryOptions = [
+        { code: "FR", name: "France" },
+        { code: "BE", name: "Belgium" },
+        { code: "CH", name: "Switzerland" },
+        { code: "DE", name: "Germany" },
+        { code: "ES", name: "Spain" },
+        { code: "IT", name: "Italy" },
+        { code: "GB", name: "United Kingdom" },
+        { code: "US", name: "United States" },
+        { code: "CA", name: "Canada" },
+    ];
 
     // All steps are always visible
     const steps = [
@@ -52,34 +79,119 @@ const Onboarding = () => {
         },
         {
             label: t("steps.address.label", { ns: "onboarding" }),
-            icon: <Home />,
-            fields: ["streetNumber", "streetName", "postalCode", "city", "country"],
+            icon: <LocationOn />,
+            fields: ["addressLine1", "locality", "postalCode", "countryCode"],
             id: "address",
         },
     ];
 
     // Load existing profile data and pre-fill form
     useEffect(() => {
-        if (user && user.id) {
-            setFormData({
-                firstName: user.first_name || "",
-                lastName: user.last_name || "",
-                phone: user.phone || "",
-                dateOfBirth: formatDateForInput(user.date_of_birth) || "",
-                streetNumber: user.street_number || "",
-                streetName: user.street_name || "",
-                postalCode: user.postal_code || "",
-                city: user.city || "",
-                country: user.country || "France",
-            });
-        }
+        const loadUserData = async () => {
+            if (user && user.id) {
+                // Load user profile data
+                setFormData((prevData) => ({
+                    ...prevData,
+                    firstName: user.first_name || "",
+                    lastName: user.last_name || "",
+                    phone: user.phone || "",
+                    dateOfBirth: formatDateForInput(user.date_of_birth) || "",
+                }));
+
+                // Load existing address if any - try multiple approaches
+                try {
+                    // First try to get primary address
+                    const primaryAddress = await apiGet(`/api/users/${user.id}/primary-address`);
+                    if (primaryAddress) {
+                        setFormData((prevData) => ({
+                            ...prevData,
+                            addressLine1: primaryAddress.address_line_1 || "",
+                            addressLine2: primaryAddress.address_line_2 || "",
+                            locality: primaryAddress.locality || "",
+                            administrativeArea: primaryAddress.administrative_area || "",
+                            postalCode: primaryAddress.postal_code || "",
+                            countryCode: primaryAddress.country_code || "FR",
+                            addressLabel: primaryAddress.label || "Home Address",
+                        }));
+                    }
+                } catch (primaryError) {
+                    // If primary address fails, try to get any address for this user
+                    try {
+                        const addresses = await apiGet(`/api/users/${user.id}/addresses`);
+                        if (addresses && addresses.length > 0) {
+                            const address =
+                                addresses.find((addr) => addr.is_primary || addr.relationship_type === "primary") ||
+                                addresses[0];
+                            setFormData((prevData) => ({
+                                ...prevData,
+                                addressLine1: address.address_line_1 || "",
+                                addressLine2: address.address_line_2 || "",
+                                locality: address.locality || "",
+                                administrativeArea: address.administrative_area || "",
+                                postalCode: address.postal_code || "",
+                                countryCode: address.country_code || "FR",
+                                addressLabel: address.label || "Home Address",
+                            }));
+                        }
+                    } catch (allAddressesError) {
+                        // Neither endpoint worked - this is fine for new users or users with no addresses
+                        console.info("No existing addresses found - user can enter new address");
+                    }
+                }
+            }
+        };
+
+        loadUserData();
     }, [user]);
 
+    // Address autocomplete functionality
+    const handleAddressSearch = async (searchText) => {
+        if (searchText.length < 3) {
+            setAddressSuggestions([]);
+            return;
+        }
+
+        setAddressLoading(true);
+        try {
+            // This would integrate with a geocoding service like Google Places API
+            // For now, we'll simulate with a local search
+            const response = await apiGet(
+                `/api/geocoding/search?q=${encodeURIComponent(searchText)}&country=${formData.countryCode}`
+            );
+            setAddressSuggestions(response.suggestions || []);
+        } catch (error) {
+            console.warn("Address search failed:", error);
+            setAddressSuggestions([]);
+        } finally {
+            setAddressLoading(false);
+        }
+    };
+
+    const handleAddressSelect = (selectedAddress) => {
+        if (selectedAddress) {
+            setFormData((prevData) => ({
+                ...prevData,
+                addressLine1: selectedAddress.address_line_1 || "",
+                addressLine2: selectedAddress.address_line_2 || "",
+                locality: selectedAddress.locality || "",
+                administrativeArea: selectedAddress.administrative_area || "",
+                postalCode: selectedAddress.postal_code || "",
+                countryCode: selectedAddress.country_code || prevData.countryCode,
+            }));
+        }
+    };
+
     const handleInputChange = (field) => (event) => {
+        const value = event.target.value;
         setFormData({
             ...formData,
-            [field]: event.target.value,
+            [field]: value,
         });
+
+        // Trigger address search for address line 1
+        if (field === "addressLine1") {
+            handleAddressSearch(value);
+        }
     };
 
     const validateStep = (stepIndex) => {
@@ -108,15 +220,107 @@ const Onboarding = () => {
         setError("");
 
         try {
-            // Format data for server
-            const serverData = {
-                ...formData,
-                dateOfBirth: formatDateForServer(formData.dateOfBirth),
-            };
+            // Robust address handling - try multiple approaches
+            let addressResponse;
+            let addressCreated = false;
 
-            await apiPost("/api/user/complete-onboarding", serverData);
+            // Try to get existing primary address first
+            try {
+                const existingAddress = await apiGet(`/api/users/${user.id}/primary-address`);
 
-            // Update user state in AuthContext to include onboarding_complete: true
+                // User has an existing primary address, update it
+                const addressData = {
+                    address_line_1: formData.addressLine1,
+                    address_line_2: formData.addressLine2 || null,
+                    locality: formData.locality,
+                    administrative_area: formData.administrativeArea || null,
+                    postal_code: formData.postalCode || null,
+                    country_code: formData.countryCode,
+                    address_type: formData.addressType,
+                    label: formData.addressLabel,
+                    is_primary: true,
+                };
+
+                addressResponse = await apiPut(`/api/addresses/${existingAddress.id}`, addressData);
+                console.log("Updated existing primary address");
+            } catch (primaryError) {
+                // No primary address found, try to get any user address
+                try {
+                    const addresses = await apiGet(`/api/users/${user.id}/addresses`);
+                    if (addresses && addresses.length > 0) {
+                        // User has addresses but no primary - update the first one and make it primary
+                        const firstAddress = addresses[0];
+                        const addressData = {
+                            address_line_1: formData.addressLine1,
+                            address_line_2: formData.addressLine2 || null,
+                            locality: formData.locality,
+                            administrative_area: formData.administrativeArea || null,
+                            postal_code: formData.postalCode || null,
+                            country_code: formData.countryCode,
+                            address_type: formData.addressType,
+                            label: formData.addressLabel,
+                            is_primary: true,
+                        };
+
+                        addressResponse = await apiPut(`/api/addresses/${firstAddress.id}`, addressData);
+                        console.log("Updated existing address and made it primary");
+                    } else {
+                        // No addresses at all - create new one
+                        throw new Error("No addresses found, will create new one");
+                    }
+                } catch (allAddressesError) {
+                    // User has no addresses at all - create new address and relationship
+                    const addressData = {
+                        address_line_1: formData.addressLine1,
+                        address_line_2: formData.addressLine2 || null,
+                        locality: formData.locality,
+                        administrative_area: formData.administrativeArea || null,
+                        postal_code: formData.postalCode || null,
+                        country_code: formData.countryCode,
+                        address_type: formData.addressType,
+                        label: formData.addressLabel,
+                        is_primary: true,
+                    };
+
+                    addressResponse = await apiPost("/api/addresses", addressData);
+                    addressCreated = true;
+                    console.log("Created new address");
+                }
+            }
+
+            // If we created a new address, we need to create the relationship
+            if (addressCreated && addressResponse && addressResponse.id) {
+                try {
+                    await apiPost("/api/address-relationships", {
+                        address_id: addressResponse.id,
+                        entity_type: "user",
+                        entity_id: user.id,
+                        relationship_type: "primary",
+                    });
+                    console.log("Created address relationship");
+                } catch (relationshipError) {
+                    console.warn("Address created but relationship creation failed:", relationshipError);
+                    // Don't fail the entire onboarding - the address exists, relationship can be fixed later
+                }
+            }
+
+            // Continue with profile update regardless of address success/failure
+            try {
+                const profileData = {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    phone: formData.phone,
+                    dateOfBirth: formatDateForServer(formData.dateOfBirth),
+                };
+
+                await apiPost("/api/user/complete-onboarding", profileData);
+                console.log("Profile updated successfully");
+            } catch (profileError) {
+                console.error("Profile update failed:", profileError);
+                // Don't fail onboarding completely - user can update profile later
+            }
+
+            // Update user state in AuthContext
             const updatedUser = {
                 ...user,
                 onboarding_complete: true,
@@ -124,11 +328,6 @@ const Onboarding = () => {
                 last_name: formData.lastName,
                 phone: formData.phone,
                 date_of_birth: formData.dateOfBirth,
-                street_number: formData.streetNumber,
-                street_name: formData.streetName,
-                postal_code: formData.postalCode,
-                city: formData.city,
-                country: formData.country,
             };
 
             updateUser(updatedUser);
@@ -140,7 +339,17 @@ const Onboarding = () => {
             }, 2000);
         } catch (error) {
             console.error("Onboarding error:", error);
-            setError(t("errors.failed", { ns: "onboarding" }));
+
+            // Provide user-friendly error messages
+            let errorMessage = t("errors.failed", { ns: "onboarding" });
+
+            if (error.message.includes("401") || error.message.includes("403")) {
+                errorMessage = "Authentication failed. Please try logging in again.";
+            } else if (error.message.includes("network") || error.message.includes("fetch")) {
+                errorMessage = "Network error. Please check your connection and try again.";
+            }
+
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -226,26 +435,105 @@ const Onboarding = () => {
                                 {t("steps.address.description", { ns: "onboarding" })}
                             </Typography>
                         </Grid>
-                        <Grid size={{ xs: 3 }}>
+
+                        <Grid size={{ xs: 12 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>{t("fields.country", { ns: "onboarding" })}</InputLabel>
+                                <Select
+                                    value={formData.countryCode}
+                                    onChange={handleInputChange("countryCode")}
+                                    label={t("fields.country", { ns: "onboarding" })}>
+                                    {countryOptions.map((country) => (
+                                        <MenuItem key={country.code} value={country.code}>
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                <span>{country.code}</span>
+                                                <span>{country.name}</span>
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        <Grid size={{ xs: 12 }}>
+                            <Autocomplete
+                                freeSolo
+                                options={addressSuggestions}
+                                loading={addressLoading}
+                                getOptionLabel={(option) =>
+                                    typeof option === "string"
+                                        ? option
+                                        : option.formatted_address || option.address_line_1
+                                }
+                                onInputChange={(event, newInputValue) => {
+                                    setFormData((prev) => ({ ...prev, addressLine1: newInputValue }));
+                                    handleAddressSearch(newInputValue);
+                                }}
+                                onChange={(event, newValue) => handleAddressSelect(newValue)}
+                                value={formData.addressLine1}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        required
+                                        fullWidth
+                                        label={t("fields.addressLine1", { ns: "onboarding" })}
+                                        placeholder="123 Rue de la Paix"
+                                        helperText={t("fields.addressLine1Help", { ns: "onboarding" })}
+                                    />
+                                )}
+                                renderOption={(props, option) => {
+                                    const { key, ...otherProps } = props;
+                                    return (
+                                        <li key={key} {...otherProps}>
+                                            <Box>
+                                                <Typography variant="body1">
+                                                    {option.formatted_address || option.address_line_1}
+                                                </Typography>
+                                                {option.locality && (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {option.locality}, {option.country_code}
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        </li>
+                                    );
+                                }}
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12 }}>
+                            <TextField
+                                fullWidth
+                                label={t("fields.addressLine2", { ns: "onboarding" })}
+                                value={formData.addressLine2}
+                                onChange={handleInputChange("addressLine2")}
+                                placeholder="Appartement, étage, bâtiment..."
+                                helperText={t("fields.addressLine2Help", { ns: "onboarding" })}
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 required
                                 fullWidth
-                                label={t("fields.streetNumber", { ns: "onboarding" })}
-                                value={formData.streetNumber}
-                                onChange={handleInputChange("streetNumber")}
-                                placeholder="123"
+                                label={t("fields.city", { ns: "onboarding" })}
+                                value={formData.locality}
+                                onChange={handleInputChange("locality")}
+                                placeholder="Paris"
                             />
                         </Grid>
-                        <Grid size={{ xs: 9 }}>
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
-                                required
                                 fullWidth
-                                label={t("fields.streetName", { ns: "onboarding" })}
-                                value={formData.streetName}
-                                onChange={handleInputChange("streetName")}
-                                placeholder="Rue de la Paix"
+                                label={t("fields.administrativeArea", { ns: "onboarding" })}
+                                value={formData.administrativeArea}
+                                onChange={handleInputChange("administrativeArea")}
+                                placeholder="Île-de-France"
+                                helperText={t("fields.administrativeAreaHelp", { ns: "onboarding" })}
                             />
                         </Grid>
+
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 required
@@ -256,23 +544,15 @@ const Onboarding = () => {
                                 placeholder="75001"
                             />
                         </Grid>
+
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
-                                required
                                 fullWidth
-                                label={t("fields.city", { ns: "onboarding" })}
-                                value={formData.city}
-                                onChange={handleInputChange("city")}
-                                placeholder="Paris"
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                            <TextField
-                                required
-                                fullWidth
-                                label={t("fields.country", { ns: "onboarding" })}
-                                value={formData.country}
-                                onChange={handleInputChange("country")}
+                                label={t("fields.addressLabel", { ns: "onboarding" })}
+                                value={formData.addressLabel}
+                                onChange={handleInputChange("addressLabel")}
+                                placeholder="Home Address"
+                                helperText={t("fields.addressLabelHelp", { ns: "onboarding" })}
                             />
                         </Grid>
                     </Grid>
@@ -314,7 +594,7 @@ const Onboarding = () => {
                     <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
                         {steps.map((step, index) => (
                             <Step key={step.id}>
-                                <StepLabel>{step.label}</StepLabel>
+                                <StepLabel icon={step.icon}>{step.label}</StepLabel>
                             </Step>
                         ))}
                     </Stepper>

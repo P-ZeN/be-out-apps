@@ -31,6 +31,34 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 
 --
+-- Name: format_address(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.format_address(p_address_id uuid) RETURNS text
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    result TEXT;
+BEGIN
+    SELECT CONCAT_WS(', ', 
+        a.address_line_1,
+        NULLIF(a.address_line_2, ''),
+        NULLIF(a.address_line_3, ''),
+        a.locality,
+        NULLIF(a.administrative_area, ''),
+        NULLIF(a.postal_code, ''),
+        a.country_code
+    )
+    INTO result
+    FROM addresses a
+    WHERE a.id = p_address_id;
+    
+    RETURN result;
+END;
+$$;
+
+
+--
 -- Name: generate_booking_reference(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -66,6 +94,43 @@ CREATE FUNCTION public.get_daily_revenue(start_date date, end_date date) RETURNS
     GROUP BY pt.created_at::DATE
     ORDER BY date DESC;
                 END;
+$$;
+
+
+--
+-- Name: get_entity_addresses(character varying, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_entity_addresses(p_entity_type character varying, p_entity_id uuid) RETURNS TABLE(id uuid, address_line_1 character varying, address_line_2 character varying, address_line_3 character varying, locality character varying, administrative_area character varying, postal_code character varying, country_code character, latitude numeric, longitude numeric, address_type character varying, label character varying, is_primary boolean, is_verified boolean, formatted_address text, relationship_type character varying, created_at timestamp with time zone)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        a.id,
+        a.address_line_1,
+        a.address_line_2,
+        a.address_line_3,
+        a.locality,
+        a.administrative_area,
+        a.postal_code,
+        a.country_code,
+        a.latitude,
+        a.longitude,
+        a.address_type,
+        a.label,
+        a.is_primary,
+        a.is_verified,
+        COALESCE(a.formatted_address, format_address(a.id)) as formatted_address,
+        ar.relationship_type,
+        a.created_at
+    FROM addresses a
+    JOIN address_relationships ar ON a.id = ar.address_id
+    WHERE ar.entity_type = p_entity_type 
+    AND ar.entity_id = p_entity_id
+    AND ar.is_active = true
+    ORDER BY a.is_primary DESC, a.created_at ASC;
+END;
 $$;
 
 
@@ -185,6 +250,32 @@ $$;
 
 
 --
+-- Name: get_primary_address(character varying, uuid, character varying); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_primary_address(p_entity_type character varying, p_entity_id uuid, p_relationship_type character varying DEFAULT 'primary'::character varying) RETURNS TABLE(id uuid, formatted_address text, latitude numeric, longitude numeric)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        a.id,
+        COALESCE(a.formatted_address, format_address(a.id)) as formatted_address,
+        a.latitude,
+        a.longitude
+    FROM addresses a
+    JOIN address_relationships ar ON a.id = ar.address_id
+    WHERE ar.entity_type = p_entity_type 
+    AND ar.entity_id = p_entity_id
+    AND ar.relationship_type = p_relationship_type
+    AND ar.is_active = true
+    ORDER BY a.is_primary DESC, a.created_at ASC
+    LIMIT 1;
+END;
+$$;
+
+
+--
 -- Name: log_admin_action(uuid, character varying, character varying, uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -255,6 +346,52 @@ BEGIN
         NEW.booking_reference := generate_booking_reference();
     END IF;
     NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: set_primary_address(character varying, uuid, uuid, character varying); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_primary_address(p_entity_type character varying, p_entity_id uuid, p_address_id uuid, p_relationship_type character varying DEFAULT 'primary'::character varying) RETURNS boolean
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- First, unset all primary flags for this entity/relationship type
+    UPDATE addresses 
+    SET is_primary = FALSE
+    FROM address_relationships ar
+    WHERE addresses.id = ar.address_id
+    AND ar.entity_type = p_entity_type
+    AND ar.entity_id = p_entity_id
+    AND ar.relationship_type = p_relationship_type;
+    
+    -- Then set the new primary
+    UPDATE addresses 
+    SET is_primary = TRUE
+    FROM address_relationships ar
+    WHERE addresses.id = ar.address_id
+    AND addresses.id = p_address_id
+    AND ar.entity_type = p_entity_type
+    AND ar.entity_id = p_entity_id
+    AND ar.relationship_type = p_relationship_type;
+    
+    RETURN FOUND;
+END;
+$$;
+
+
+--
+-- Name: update_address_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_address_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$;
@@ -390,6 +527,142 @@ $$;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: address_relationships; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.address_relationships (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    address_id uuid NOT NULL,
+    entity_type character varying(50) NOT NULL,
+    entity_id uuid NOT NULL,
+    relationship_type character varying(50) NOT NULL,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT valid_entity_type CHECK (((entity_type)::text = ANY ((ARRAY['user'::character varying, 'organizer'::character varying, 'venue'::character varying, 'event'::character varying])::text[]))),
+    CONSTRAINT valid_relationship_type CHECK (((relationship_type)::text = ANY ((ARRAY['primary'::character varying, 'billing'::character varying, 'shipping'::character varying, 'business'::character varying, 'venue_location'::character varying, 'event_location'::character varying])::text[])))
+);
+
+
+--
+-- Name: TABLE address_relationships; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.address_relationships IS 'Links addresses to various entities (users, organizers, venues, events)';
+
+
+--
+-- Name: addresses; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.addresses (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    address_line_1 character varying(255) NOT NULL,
+    address_line_2 character varying(255),
+    address_line_3 character varying(255),
+    locality character varying(100) NOT NULL,
+    administrative_area character varying(100),
+    postal_code character varying(20),
+    country_code character(2) DEFAULT 'FR'::bpchar NOT NULL,
+    latitude numeric(10,8),
+    longitude numeric(11,8),
+    address_type character varying(50) NOT NULL,
+    label character varying(100),
+    is_primary boolean DEFAULT false,
+    is_verified boolean DEFAULT false,
+    formatted_address text,
+    place_id character varying(255),
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT valid_address_type CHECK (((address_type)::text = ANY ((ARRAY['home'::character varying, 'business'::character varying, 'billing'::character varying, 'shipping'::character varying, 'venue'::character varying, 'event'::character varying])::text[]))),
+    CONSTRAINT valid_country_code CHECK ((country_code ~ '^[A-Z]{2}$'::text))
+);
+
+
+--
+-- Name: TABLE addresses; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.addresses IS 'Centralized address storage following international standards';
+
+
+--
+-- Name: COLUMN addresses.address_line_1; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.address_line_1 IS 'Primary address line - street number and name';
+
+
+--
+-- Name: COLUMN addresses.address_line_2; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.address_line_2 IS 'Secondary address line - apartment, suite, unit, etc.';
+
+
+--
+-- Name: COLUMN addresses.locality; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.locality IS 'City, town, or village name';
+
+
+--
+-- Name: COLUMN addresses.administrative_area; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.administrative_area IS 'State, province, or region';
+
+
+--
+-- Name: COLUMN addresses.country_code; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.country_code IS 'ISO 3166-1 alpha-2 country code (e.g., FR, US, DE)';
+
+
+--
+-- Name: COLUMN addresses.address_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.address_type IS 'Category of address: home, business, billing, shipping, venue, event';
+
+
+--
+-- Name: COLUMN addresses.label; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.label IS 'User-friendly label for the address';
+
+
+--
+-- Name: COLUMN addresses.is_primary; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.is_primary IS 'Whether this is the primary address for its type';
+
+
+--
+-- Name: COLUMN addresses.is_verified; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.is_verified IS 'Whether the address has been verified through postal service or geocoding';
+
+
+--
+-- Name: COLUMN addresses.formatted_address; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.formatted_address IS 'Pre-formatted address string for display purposes';
+
+
+--
+-- Name: COLUMN addresses.place_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.addresses.place_id IS 'External service place ID (Google Places, etc.) for validation and autocomplete';
+
 
 --
 -- Name: admin_actions; Type: TABLE; Schema: public; Owner: -
@@ -561,27 +834,6 @@ CREATE TABLE public.organizer_accounts (
 
 
 --
--- Name: organizer_analytics; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.organizer_analytics (
-    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
-    organizer_id uuid NOT NULL,
-    period_type character varying(20) NOT NULL,
-    period_start date NOT NULL,
-    period_end date NOT NULL,
-    total_events integer DEFAULT 0,
-    total_bookings integer DEFAULT 0,
-    total_revenue numeric(10,2) DEFAULT 0,
-    total_tickets_sold integer DEFAULT 0,
-    avg_ticket_price numeric(10,2) DEFAULT 0,
-    top_event_id uuid,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT organizer_analytics_period_type_check CHECK (((period_type)::text = ANY ((ARRAY['daily'::character varying, 'weekly'::character varying, 'monthly'::character varying])::text[])))
-);
-
-
---
 -- Name: organizer_profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -625,6 +877,62 @@ CREATE TABLE public.users (
     is_active boolean DEFAULT true,
     onboarding_complete boolean DEFAULT false,
     CONSTRAINT users_role_check CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'admin'::character varying, 'moderator'::character varying, 'organizer'::character varying])::text[])))
+);
+
+
+--
+-- Name: organizer_addresses; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.organizer_addresses AS
+ SELECT op.id AS organizer_id,
+    op.company_name,
+    u.email,
+    a.id,
+    a.address_line_1,
+    a.address_line_2,
+    a.address_line_3,
+    a.locality,
+    a.administrative_area,
+    a.postal_code,
+    a.country_code,
+    a.latitude,
+    a.longitude,
+    a.address_type,
+    a.label,
+    a.is_primary,
+    a.is_verified,
+    a.formatted_address,
+    a.place_id,
+    a.created_at,
+    a.updated_at,
+    ar.relationship_type,
+    ar.is_active
+   FROM (((public.organizer_profiles op
+     JOIN public.users u ON ((u.id = op.user_id)))
+     JOIN public.address_relationships ar ON (((ar.entity_id = op.id) AND ((ar.entity_type)::text = 'organizer'::text))))
+     JOIN public.addresses a ON ((a.id = ar.address_id)))
+  WHERE (ar.is_active = true);
+
+
+--
+-- Name: organizer_analytics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.organizer_analytics (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    organizer_id uuid NOT NULL,
+    period_type character varying(20) NOT NULL,
+    period_start date NOT NULL,
+    period_end date NOT NULL,
+    total_events integer DEFAULT 0,
+    total_bookings integer DEFAULT 0,
+    total_revenue numeric(10,2) DEFAULT 0,
+    total_tickets_sold integer DEFAULT 0,
+    avg_ticket_price numeric(10,2) DEFAULT 0,
+    top_event_id uuid,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT organizer_analytics_period_type_check CHECK (((period_type)::text = ANY ((ARRAY['daily'::character varying, 'weekly'::character varying, 'monthly'::character varying])::text[])))
 );
 
 
@@ -807,6 +1115,39 @@ CREATE TABLE public.reviews (
 
 
 --
+-- Name: user_addresses; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.user_addresses AS
+ SELECT u.id AS user_id,
+    u.email,
+    a.id,
+    a.address_line_1,
+    a.address_line_2,
+    a.address_line_3,
+    a.locality,
+    a.administrative_area,
+    a.postal_code,
+    a.country_code,
+    a.latitude,
+    a.longitude,
+    a.address_type,
+    a.label,
+    a.is_primary,
+    a.is_verified,
+    a.formatted_address,
+    a.place_id,
+    a.created_at,
+    a.updated_at,
+    ar.relationship_type,
+    ar.is_active
+   FROM ((public.users u
+     JOIN public.address_relationships ar ON (((ar.entity_id = u.id) AND ((ar.entity_type)::text = 'user'::text))))
+     JOIN public.addresses a ON ((a.id = ar.address_id)))
+  WHERE (ar.is_active = true);
+
+
+--
 -- Name: user_favorites; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -857,6 +1198,63 @@ CREATE TABLE public.venues (
     capacity integer,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
+
+
+--
+-- Name: venue_addresses; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.venue_addresses AS
+ SELECT v.id AS venue_id,
+    v.name AS venue_name,
+    a.id,
+    a.address_line_1,
+    a.address_line_2,
+    a.address_line_3,
+    a.locality,
+    a.administrative_area,
+    a.postal_code,
+    a.country_code,
+    a.latitude,
+    a.longitude,
+    a.address_type,
+    a.label,
+    a.is_primary,
+    a.is_verified,
+    a.formatted_address,
+    a.place_id,
+    a.created_at,
+    a.updated_at,
+    ar.relationship_type,
+    ar.is_active
+   FROM ((public.venues v
+     JOIN public.address_relationships ar ON (((ar.entity_id = v.id) AND ((ar.entity_type)::text = 'venue'::text))))
+     JOIN public.addresses a ON ((a.id = ar.address_id)))
+  WHERE (ar.is_active = true);
+
+
+--
+-- Name: address_relationships address_relationships_entity_type_entity_id_relationship_ty_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.address_relationships
+    ADD CONSTRAINT address_relationships_entity_type_entity_id_relationship_ty_key UNIQUE (entity_type, entity_id, relationship_type);
+
+
+--
+-- Name: address_relationships address_relationships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.address_relationships
+    ADD CONSTRAINT address_relationships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: addresses addresses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.addresses
+    ADD CONSTRAINT addresses_pkey PRIMARY KEY (id);
 
 
 --
@@ -1089,6 +1487,62 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.venues
     ADD CONSTRAINT venues_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: idx_address_relationships_address; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_address_relationships_address ON public.address_relationships USING btree (address_id);
+
+
+--
+-- Name: idx_address_relationships_entity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_address_relationships_entity ON public.address_relationships USING btree (entity_type, entity_id);
+
+
+--
+-- Name: idx_address_relationships_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_address_relationships_type ON public.address_relationships USING btree (relationship_type);
+
+
+--
+-- Name: idx_addresses_coordinates; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_addresses_coordinates ON public.addresses USING btree (latitude, longitude) WHERE ((latitude IS NOT NULL) AND (longitude IS NOT NULL));
+
+
+--
+-- Name: idx_addresses_country_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_addresses_country_code ON public.addresses USING btree (country_code);
+
+
+--
+-- Name: idx_addresses_locality; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_addresses_locality ON public.addresses USING btree (locality);
+
+
+--
+-- Name: idx_addresses_postal_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_addresses_postal_code ON public.addresses USING btree (postal_code);
+
+
+--
+-- Name: idx_addresses_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_addresses_type ON public.addresses USING btree (address_type);
 
 
 --
@@ -1526,6 +1980,13 @@ CREATE INDEX idx_venues_city ON public.venues USING btree (city);
 
 
 --
+-- Name: addresses trigger_addresses_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_addresses_updated_at BEFORE UPDATE ON public.addresses FOR EACH ROW EXECUTE FUNCTION public.update_address_updated_at();
+
+
+--
 -- Name: bookings trigger_set_booking_reference; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -1565,6 +2026,14 @@ CREATE TRIGGER trigger_update_favorites_count_insert AFTER INSERT ON public.user
 --
 
 CREATE TRIGGER trigger_update_organizer_analytics AFTER INSERT ON public.bookings FOR EACH ROW WHEN (((new.booking_status)::text = 'confirmed'::text)) EXECUTE FUNCTION public.update_organizer_analytics();
+
+
+--
+-- Name: address_relationships address_relationships_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.address_relationships
+    ADD CONSTRAINT address_relationships_address_id_fkey FOREIGN KEY (address_id) REFERENCES public.addresses(id) ON DELETE CASCADE;
 
 
 --

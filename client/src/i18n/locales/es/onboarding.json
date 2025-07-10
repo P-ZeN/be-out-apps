@@ -20,11 +20,18 @@
     "lastName": "Apellido",
     "phone": "Número de Teléfono",
     "dateOfBirth": "Fecha de Nacimiento",
-    "streetNumber": "Número",
-    "streetName": "Nombre de Calle",
-    "postalCode": "Código Postal",
+    "addressLine1": "Dirección Línea 1",
+    "addressLine1Help": "Número y nombre de calle",
+    "addressLine2": "Dirección Línea 2 (Opcional)",
+    "addressLine2Help": "Apartamento, suite, unidad, edificio, piso, etc.",
     "city": "Ciudad",
-    "country": "País"
+    "locality": "Ciudad",
+    "administrativeArea": "Estado/Provincia/Región",
+    "administrativeAreaHelp": "Estado, provincia o región",
+    "postalCode": "Código Postal",
+    "country": "País",
+    "addressLabel": "Etiqueta de Dirección",
+    "addressLabelHelp": "Un nombre para esta dirección (ej: Casa, Trabajo)"
   },
   "errors": {
     "fillFields": "Por favor, completa todos los campos requeridos",
