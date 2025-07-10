@@ -1,0 +1,36 @@
+{
+  "welcome": "Welcome to Be-Out! 🎉",
+  "description": "Let's set up your profile to get started",
+  "completing": "Completing...",
+  "complete": "Complete Setup",
+  "steps": {
+    "personal": {
+      "label": "Personal Information",
+      "title": "Personal Information",
+      "description": "Please complete your personal details"
+    },
+    "address": {
+      "label": "Address",
+      "title": "Your Address",
+      "description": "This helps us show you nearby events"
+    }
+  },
+  "fields": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phone": "Phone Number",
+    "dateOfBirth": "Date of Birth",
+    "streetNumber": "Number",
+    "streetName": "Street Name",
+    "postalCode": "Postal Code",
+    "city": "City",
+    "country": "Country"
+  },
+  "errors": {
+    "fillFields": "Please fill in all required fields",
+    "failed": "Failed to complete onboarding. Please try again."
+  },
+  "success": {
+    "completed": "Onboarding completed successfully!"
+  }
+}

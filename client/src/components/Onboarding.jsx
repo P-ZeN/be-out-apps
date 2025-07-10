@@ -40,18 +40,18 @@ const Onboarding = () => {
 
     const { user, updateUser, logout, loading: authLoading } = useAuth();
     const navigate = useNavigate();
-    const { t } = useTranslation(["auth", "common"]);
+    const { t, i18n } = useTranslation(["onboarding", "common"]);
 
     // All steps are always visible
     const steps = [
         {
-            label: "Personal Information",
+            label: t("steps.personal.label", { ns: "onboarding" }),
             icon: <AccountCircle />,
             fields: ["firstName", "lastName", "phone", "dateOfBirth"],
             id: "personal",
         },
         {
-            label: "Address",
+            label: t("steps.address.label", { ns: "onboarding" }),
             icon: <Home />,
             fields: ["streetNumber", "streetName", "postalCode", "city", "country"],
             id: "address",
@@ -94,7 +94,7 @@ const Onboarding = () => {
             setActiveStep((prevStep) => prevStep + 1);
             setError("");
         } else {
-            setError("Please fill in all required fields");
+            setError(t("errors.fillFields", { ns: "onboarding" }));
         }
     };
 
@@ -132,7 +132,7 @@ const Onboarding = () => {
             };
 
             updateUser(updatedUser);
-            setSuccess("Onboarding completed successfully!");
+            setSuccess(t("success.completed", { ns: "onboarding" }));
 
             // Redirect to home after a brief delay
             setTimeout(() => {
@@ -140,7 +140,7 @@ const Onboarding = () => {
             }, 2000);
         } catch (error) {
             console.error("Onboarding error:", error);
-            setError("Failed to complete onboarding. Please try again.");
+            setError(t("errors.failed", { ns: "onboarding" }));
         } finally {
             setLoading(false);
         }
@@ -148,7 +148,7 @@ const Onboarding = () => {
 
     const handleSubmit = async () => {
         if (!validateStep(activeStep)) {
-            setError("Please fill in all required fields");
+            setError(t("errors.fillFields", { ns: "onboarding" }));
             return;
         }
 
@@ -164,17 +164,17 @@ const Onboarding = () => {
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12 }}>
                             <Typography variant="h6" gutterBottom>
-                                Personal Information
+                                {t("steps.personal.title", { ns: "onboarding" })}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Please complete your personal details
+                                {t("steps.personal.description", { ns: "onboarding" })}
                             </Typography>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 required
                                 fullWidth
-                                label="First Name"
+                                label={t("fields.firstName", { ns: "onboarding" })}
                                 value={formData.firstName}
                                 onChange={handleInputChange("firstName")}
                             />
@@ -183,7 +183,7 @@ const Onboarding = () => {
                             <TextField
                                 required
                                 fullWidth
-                                label="Last Name"
+                                label={t("fields.lastName", { ns: "onboarding" })}
                                 value={formData.lastName}
                                 onChange={handleInputChange("lastName")}
                             />
@@ -192,7 +192,7 @@ const Onboarding = () => {
                             <TextField
                                 required
                                 fullWidth
-                                label="Phone Number"
+                                label={t("fields.phone", { ns: "onboarding" })}
                                 type="tel"
                                 value={formData.phone}
                                 onChange={handleInputChange("phone")}
@@ -203,7 +203,7 @@ const Onboarding = () => {
                             <TextField
                                 required
                                 fullWidth
-                                label="Date of Birth"
+                                label={t("fields.dateOfBirth", { ns: "onboarding" })}
                                 type="date"
                                 value={formData.dateOfBirth}
                                 onChange={handleInputChange("dateOfBirth")}
@@ -220,17 +220,17 @@ const Onboarding = () => {
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12 }}>
                             <Typography variant="h6" gutterBottom>
-                                Your Address
+                                {t("steps.address.title", { ns: "onboarding" })}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" gutterBottom>
-                                This helps us show you nearby events
+                                {t("steps.address.description", { ns: "onboarding" })}
                             </Typography>
                         </Grid>
                         <Grid size={{ xs: 3 }}>
                             <TextField
                                 required
                                 fullWidth
-                                label="Number"
+                                label={t("fields.streetNumber", { ns: "onboarding" })}
                                 value={formData.streetNumber}
                                 onChange={handleInputChange("streetNumber")}
                                 placeholder="123"
@@ -240,7 +240,7 @@ const Onboarding = () => {
                             <TextField
                                 required
                                 fullWidth
-                                label="Street Name"
+                                label={t("fields.streetName", { ns: "onboarding" })}
                                 value={formData.streetName}
                                 onChange={handleInputChange("streetName")}
                                 placeholder="Rue de la Paix"
@@ -250,7 +250,7 @@ const Onboarding = () => {
                             <TextField
                                 required
                                 fullWidth
-                                label="Postal Code"
+                                label={t("fields.postalCode", { ns: "onboarding" })}
                                 value={formData.postalCode}
                                 onChange={handleInputChange("postalCode")}
                                 placeholder="75001"
@@ -260,7 +260,7 @@ const Onboarding = () => {
                             <TextField
                                 required
                                 fullWidth
-                                label="City"
+                                label={t("fields.city", { ns: "onboarding" })}
                                 value={formData.city}
                                 onChange={handleInputChange("city")}
                                 placeholder="Paris"
@@ -270,7 +270,7 @@ const Onboarding = () => {
                             <TextField
                                 required
                                 fullWidth
-                                label="Country"
+                                label={t("fields.country", { ns: "onboarding" })}
                                 value={formData.country}
                                 onChange={handleInputChange("country")}
                             />
@@ -288,7 +288,7 @@ const Onboarding = () => {
         return (
             <Container maxWidth="md">
                 <Box sx={{ mt: 4, mb: 4, textAlign: "center" }}>
-                    <Typography variant="h6">Authenticating...</Typography>
+                    <Typography variant="h6">{t("common.loading")}</Typography>
                 </Box>
             </Container>
         );
@@ -304,10 +304,10 @@ const Onboarding = () => {
         <Container maxWidth="md">
             <Box sx={{ mt: 4, mb: 4 }}>
                 <Typography variant="h4" align="center" gutterBottom>
-                    Welcome to Be-Out! 🎉
+                    {t("welcome", { ns: "onboarding" })}
                 </Typography>
                 <Typography variant="body1" align="center" color="text.secondary" sx={{ mb: 4 }}>
-                    Let's set up your profile to get started
+                    {t("description", { ns: "onboarding" })}
                 </Typography>
 
                 <Paper elevation={3} sx={{ p: 4 }}>
@@ -335,21 +335,23 @@ const Onboarding = () => {
 
                             <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
                                 <Button disabled={activeStep === 0} onClick={handleBack} variant="outlined">
-                                    Back
+                                    {t("back", { ns: "common" })}
                                 </Button>
 
                                 <Box sx={{ display: "flex", gap: 2 }}>
                                     <Button onClick={logout} variant="text" color="error">
-                                        Logout
+                                        {t("logout", { ns: "common" })}
                                     </Button>
 
                                     {activeStep === steps.length - 1 ? (
                                         <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-                                            {loading ? "Completing..." : "Complete Setup"}
+                                            {loading
+                                                ? t("completing", { ns: "onboarding" })
+                                                : t("complete", { ns: "onboarding" })}
                                         </Button>
                                     ) : (
                                         <Button onClick={handleNext} variant="contained">
-                                            Next
+                                            {t("next", { ns: "common" })}
                                         </Button>
                                     )}
                                 </Box>

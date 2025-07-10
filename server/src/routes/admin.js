@@ -623,4 +623,307 @@ router.delete("/categories/:id", requireAdmin, async (req, res) => {
 
 // === END CATEGORY MANAGEMENT ROUTES ===
 
+// === TRANSLATION MANAGEMENT ROUTES ===
+import fs from "fs/promises";
+import path from "path";
+import multer from "multer";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure multer for file uploads
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === "application/json") {
+            cb(null, true);
+        } else {
+            cb(new Error("Only JSON files are allowed"), false);
+        }
+    },
+});
+
+// Helper function to get translation file path
+const getTranslationFilePath = (language, namespace) => {
+    return path.join(__dirname, `../../../client/src/i18n/locales/${language}/${namespace}.json`);
+};
+
+// Helper function to ensure directory exists
+const ensureDirectoryExists = async (filePath) => {
+    const dir = path.dirname(filePath);
+    try {
+        await fs.access(dir);
+    } catch {
+        await fs.mkdir(dir, { recursive: true });
+    }
+};
+
+// Get translation file
+router.get("/translations/:language/:namespace", requireAdmin, async (req, res) => {
+    try {
+        const { language, namespace } = req.params;
+        const filePath = getTranslationFilePath(language, namespace);
+
+        try {
+            const fileContent = await fs.readFile(filePath, "utf-8");
+            const translations = JSON.parse(fileContent);
+            res.json(translations);
+        } catch (error) {
+            if (error.code === "ENOENT") {
+                // File doesn't exist, return empty object
+                res.json({});
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        console.error("Error reading translation file:", error);
+        res.status(500).json({ error: "Failed to read translation file" });
+    }
+});
+
+// Save translation file
+router.put("/translations/:language/:namespace", requireAdmin, async (req, res) => {
+    try {
+        const { language, namespace } = req.params;
+        const { translations } = req.body;
+
+        if (!translations || typeof translations !== "object") {
+            return res.status(400).json({ error: "Invalid translations data" });
+        }
+
+        const filePath = getTranslationFilePath(language, namespace);
+        await ensureDirectoryExists(filePath);
+
+        const formattedContent = JSON.stringify(translations, null, 2);
+        await fs.writeFile(filePath, formattedContent, "utf-8");
+
+        res.json({
+            message: "Translations saved successfully",
+            keysCount: Object.keys(translations).length,
+        });
+    } catch (error) {
+        console.error("Error saving translation file:", error);
+        res.status(500).json({ error: "Failed to save translation file" });
+    }
+});
+
+// Get available languages
+router.get("/translations/languages", requireAdmin, async (req, res) => {
+    try {
+        const localesPath = path.join(__dirname, "../../../client/src/i18n/locales");
+        const languages = await fs.readdir(localesPath);
+
+        // Filter out any non-directory items
+        const validLanguages = [];
+        for (const lang of languages) {
+            const langPath = path.join(localesPath, lang);
+            const stat = await fs.stat(langPath);
+            if (stat.isDirectory()) {
+                validLanguages.push(lang);
+            }
+        }
+
+        res.json(validLanguages);
+    } catch (error) {
+        console.error("Error reading languages:", error);
+        res.status(500).json({ error: "Failed to read available languages" });
+    }
+});
+
+// Get available namespaces for a language
+router.get("/translations/:language/namespaces", requireAdmin, async (req, res) => {
+    try {
+        const { language } = req.params;
+        const languagePath = path.join(__dirname, `../../../client/src/i18n/locales/${language}`);
+
+        try {
+            const files = await fs.readdir(languagePath);
+            const namespaces = files.filter((file) => file.endsWith(".json")).map((file) => file.replace(".json", ""));
+
+            res.json(namespaces);
+        } catch (error) {
+            if (error.code === "ENOENT") {
+                res.json([]);
+            } else {
+                throw error;
+            }
+        }
+    } catch (error) {
+        console.error("Error reading namespaces:", error);
+        res.status(500).json({ error: "Failed to read available namespaces" });
+    }
+});
+
+// Create new namespace
+router.post("/translations/:language/:namespace", requireAdmin, async (req, res) => {
+    try {
+        const { language, namespace } = req.params;
+        const { translations = {} } = req.body;
+
+        const filePath = getTranslationFilePath(language, namespace);
+
+        // Check if file already exists
+        try {
+            await fs.access(filePath);
+            return res.status(400).json({ error: "Namespace already exists" });
+        } catch {
+            // File doesn't exist, proceed with creation
+        }
+
+        await ensureDirectoryExists(filePath);
+        const formattedContent = JSON.stringify(translations, null, 2);
+        await fs.writeFile(filePath, formattedContent, "utf-8");
+
+        res.json({
+            message: "Namespace created successfully",
+            language,
+            namespace,
+        });
+    } catch (error) {
+        console.error("Error creating namespace:", error);
+        res.status(500).json({ error: "Failed to create namespace" });
+    }
+});
+
+// Delete namespace
+router.delete("/translations/:language/:namespace", requireAdmin, async (req, res) => {
+    try {
+        const { language, namespace } = req.params;
+        const filePath = getTranslationFilePath(language, namespace);
+
+        await fs.unlink(filePath);
+        res.json({ message: "Namespace deleted successfully" });
+    } catch (error) {
+        if (error.code === "ENOENT") {
+            return res.status(404).json({ error: "Namespace not found" });
+        }
+        console.error("Error deleting namespace:", error);
+        res.status(500).json({ error: "Failed to delete namespace" });
+    }
+});
+
+// Upload translation file
+router.post("/translations/upload", requireAdmin, upload.single("file"), async (req, res) => {
+    try {
+        const { language, namespace } = req.body;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+
+        if (!language || !namespace) {
+            return res.status(400).json({ error: "Language and namespace are required" });
+        }
+
+        const fileContent = file.buffer.toString("utf-8");
+        const translations = JSON.parse(fileContent);
+
+        const filePath = getTranslationFilePath(language, namespace);
+        await ensureDirectoryExists(filePath);
+
+        const formattedContent = JSON.stringify(translations, null, 2);
+        await fs.writeFile(filePath, formattedContent, "utf-8");
+
+        res.json({
+            message: "Translation file uploaded successfully",
+            keysTotal: Object.keys(translations).length,
+            language,
+            namespace,
+        });
+    } catch (error) {
+        console.error("Error uploading translation file:", error);
+        if (error instanceof SyntaxError) {
+            res.status(400).json({ error: "Invalid JSON file format" });
+        } else {
+            res.status(500).json({ error: "Failed to upload translation file" });
+        }
+    }
+});
+
+// Export translation file
+router.get("/translations/:language/:namespace/export", requireAdmin, async (req, res) => {
+    try {
+        const { language, namespace } = req.params;
+        const filePath = getTranslationFilePath(language, namespace);
+
+        const fileContent = await fs.readFile(filePath, "utf-8");
+        const translations = JSON.parse(fileContent);
+
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Content-Disposition", `attachment; filename="${language}-${namespace}.json"`);
+        res.send(JSON.stringify(translations, null, 2));
+    } catch (error) {
+        if (error.code === "ENOENT") {
+            return res.status(404).json({ error: "Translation file not found" });
+        }
+        console.error("Error exporting translation file:", error);
+        res.status(500).json({ error: "Failed to export translation file" });
+    }
+});
+
+// Get translation statistics
+router.get("/translations/stats", requireAdmin, async (req, res) => {
+    try {
+        const localesPath = path.join(__dirname, "../../../client/src/i18n/locales");
+        const languages = await fs.readdir(localesPath);
+
+        const stats = {};
+
+        for (const lang of languages) {
+            const langPath = path.join(localesPath, lang);
+            const stat = await fs.stat(langPath);
+
+            if (stat.isDirectory()) {
+                const files = await fs.readdir(langPath);
+                const namespaces = files.filter((file) => file.endsWith(".json"));
+
+                stats[lang] = {
+                    namespaces: namespaces.length,
+                    totalKeys: 0,
+                    lastModified: null,
+                };
+
+                for (const file of namespaces) {
+                    const filePath = path.join(langPath, file);
+                    const fileContent = await fs.readFile(filePath, "utf-8");
+                    const translations = JSON.parse(fileContent);
+
+                    // Flatten nested objects to count all keys
+                    const flattenObject = (obj, prefix = "") => {
+                        let keys = 0;
+                        for (const [key, value] of Object.entries(obj)) {
+                            if (typeof value === "object" && value !== null) {
+                                keys += flattenObject(value, `${prefix}${key}.`);
+                            } else {
+                                keys += 1;
+                            }
+                        }
+                        return keys;
+                    };
+
+                    stats[lang].totalKeys += flattenObject(translations);
+
+                    const fileStats = await fs.stat(filePath);
+                    if (!stats[lang].lastModified || fileStats.mtime > stats[lang].lastModified) {
+                        stats[lang].lastModified = fileStats.mtime;
+                    }
+                }
+            }
+        }
+
+        res.json(stats);
+    } catch (error) {
+        console.error("Error getting translation stats:", error);
+        res.status(500).json({ error: "Failed to get translation statistics" });
+    }
+});
+
+// === END TRANSLATION MANAGEMENT ROUTES ===
+
 export default router;

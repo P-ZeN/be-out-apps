@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Card, CardContent, TextField, Button, Typography, Alert, Link, Container, Grid } from "@mui/material";
 import { Business, Email, Lock, Person, Phone } from "@mui/icons-material";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import organizerService from "../services/organizerService";
 
 const Register = () => {
@@ -17,6 +18,7 @@ const Register = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const handleChange = (e) => {
         setFormData({
@@ -31,7 +33,7 @@ const Register = () => {
         setError("");
 
         if (formData.password !== formData.confirmPassword) {
-            setError("Les mots de passe ne correspondent pas");
+            setError(t("register.errors.passwordMismatch"));
             setLoading(false);
             return;
         }
@@ -43,7 +45,7 @@ const Register = () => {
                 navigate("/login");
             }, 3000);
         } catch (error) {
-            setError(error.message || "Erreur lors de l'inscription");
+            setError(error.message || t("register.errors.failed"));
         } finally {
             setLoading(false);
         }
@@ -64,14 +66,13 @@ const Register = () => {
                         <CardContent sx={{ p: 4, textAlign: "center" }}>
                             <Business sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
                             <Typography variant="h5" fontWeight="bold" gutterBottom>
-                                Inscription réussie !
+                                {t("register.success.title")}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                                Votre demande d'inscription a été envoyée. Un administrateur va examiner votre profil et
-                                vous serez notifié par email une fois votre compte approuvé.
+                                {t("register.success.message")}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Redirection vers la page de connexion...
+                                {t("register.success.redirecting")}
                             </Typography>
                         </CardContent>
                     </Card>
@@ -108,10 +109,10 @@ const Register = () => {
                                 }}
                             />
                             <Typography variant="h4" fontWeight="bold" gutterBottom>
-                                Devenir organisateur
+                                {t("register.title")}
                             </Typography>
                             <Typography variant="body1" color="text.secondary">
-                                Créez votre compte pour commencer à organiser des événements
+                                {t("register.subtitle")}
                             </Typography>
                         </Box>
 
@@ -120,7 +121,7 @@ const Register = () => {
                                 <Grid size={{ xs: 12 }}>
                                     <TextField
                                         fullWidth
-                                        label="Email"
+                                        label={t("email")}
                                         name="email"
                                         type="email"
                                         value={formData.email}
@@ -136,7 +137,7 @@ const Register = () => {
                                 <Grid size={{ xs: 12, sm: 6 }}>
                                     <TextField
                                         fullWidth
-                                        label="Mot de passe"
+                                        label={t("password")}
                                         name="password"
                                         type="password"
                                         value={formData.password}
@@ -152,7 +153,7 @@ const Register = () => {
                                 <Grid size={{ xs: 12, sm: 6 }}>
                                     <TextField
                                         fullWidth
-                                        label="Confirmer le mot de passe"
+                                        label={t("register.confirmPassword")}
                                         name="confirmPassword"
                                         type="password"
                                         value={formData.confirmPassword}
@@ -168,7 +169,7 @@ const Register = () => {
                                 <Grid size={{ xs: 12 }}>
                                     <TextField
                                         fullWidth
-                                        label="Nom de l'entreprise"
+                                        label={t("register.companyName")}
                                         name="company_name"
                                         value={formData.company_name}
                                         onChange={handleChange}
@@ -183,7 +184,7 @@ const Register = () => {
                                 <Grid size={{ xs: 12, sm: 6 }}>
                                     <TextField
                                         fullWidth
-                                        label="Personne de contact"
+                                        label={t("register.contactPerson")}
                                         name="contact_person"
                                         value={formData.contact_person}
                                         onChange={handleChange}
@@ -198,7 +199,7 @@ const Register = () => {
                                 <Grid size={{ xs: 12, sm: 6 }}>
                                     <TextField
                                         fullWidth
-                                        label="Téléphone"
+                                        label={t("register.phone")}
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
@@ -229,14 +230,14 @@ const Register = () => {
                                     mt: 4,
                                     mb: 3,
                                 }}>
-                                {loading ? "Inscription..." : "S'inscrire"}
+                                {loading ? t("register.registering") : t("register")}
                             </Button>
 
                             <Box sx={{ textAlign: "center" }}>
                                 <Typography variant="body2" color="text.secondary">
-                                    Déjà inscrit ?{" "}
+                                    {t("register.alreadyHaveAccount")}{" "}
                                     <Link component={RouterLink} to="/login" color="primary" fontWeight="bold">
-                                        Se connecter
+                                        {t("login")}
                                     </Link>
                                 </Typography>
                             </Box>

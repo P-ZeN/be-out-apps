@@ -32,5 +32,9 @@
   "footer": {
     "copyright": "© 2025 Be-Out App. Tous droits réservés.",
     "language": "Langue:"
-  }
+  },
+  "loading": "Chargement...",
+  "back": "Retour",
+  "next": "Suivant",
+  "logout": "Déconnexion"
 }

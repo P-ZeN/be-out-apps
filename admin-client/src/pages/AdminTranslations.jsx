@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
     Box,
-    Paper,
     Typography,
+    Paper,
     Tabs,
     Tab,
-    Divider,
-    Chip,
     Select,
     MenuItem,
     FormControl,
@@ -15,66 +13,41 @@ import {
     Alert,
     Snackbar,
     CircularProgress,
+    Chip,
     Grid,
     Card,
     CardContent,
     CardActions,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
     TextField,
     IconButton,
     Tooltip,
     Stack,
 } from "@mui/material";
 import {
-    Category as CategoryIcon,
-    Language as LanguageIcon,
-    Settings as SettingsIcon,
-    Palette as PaletteIcon,
-    NotificationsActive as NotificationIcon,
-    BugReport as BugReportIcon,
+    Language,
     Edit,
     Save,
+    Cancel,
+    Add,
+    Delete,
     FileUpload,
+    FileDownload,
     Search,
     Refresh,
 } from "@mui/icons-material";
-
-// Import category management component
-import AdminCategories from "./AdminCategories";
-import AdminDebugPanel from "../components/AdminDebugPanel";
-
-// Import translation management components
+import { useTranslation } from "react-i18next";
+import translationService from "../services/translationService";
 import TranslationEditor from "../components/TranslationEditor";
 import TranslationFileUpload from "../components/TranslationFileUpload";
 import TranslationExport from "../components/TranslationExport";
-import translationService from "../services/translationService";
 
-// Placeholder components for future settings sections
-const GeneralSettings = () => (
-    <Box sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-            Paramètres généraux
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-            Configuration générale de l'application
-        </Typography>
-
-        {/* Placeholder for future general settings */}
-        <Box sx={{ mt: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
-                Fonctionnalités à venir :
-            </Typography>
-            <ul style={{ color: "#666" }}>
-                <li>Configuration du nom de l'application</li>
-                <li>URL de base de l'application</li>
-                <li>Paramètres de timezone</li>
-                <li>Maintenance mode</li>
-                <li>Limites de fichiers upload</li>
-            </ul>
-        </Box>
-    </Box>
-);
-
-const LanguageSettings = () => {
+const AdminTranslations = () => {
+    const { t } = useTranslation();
+    const [currentTab, setCurrentTab] = useState(0);
     const [selectedLanguage, setSelectedLanguage] = useState("en");
     const [selectedNamespace, setSelectedNamespace] = useState("common");
     const [translations, setTranslations] = useState({});
@@ -83,7 +56,13 @@ const LanguageSettings = () => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const [currentSubTab, setCurrentSubTab] = useState(0);
+    const [languages, setLanguages] = useState([]);
+    const [namespaces, setNamespaces] = useState([]);
+    const [editingKey, setEditingKey] = useState(null);
+    const [addKeyDialog, setAddKeyDialog] = useState(false);
+    const [newKey, setNewKey] = useState("");
+    const [newValue, setNewValue] = useState("");
+    const [deleteDialog, setDeleteDialog] = useState(null);
 
     // Available languages and namespaces
     const availableLanguages = [
@@ -106,6 +85,8 @@ const LanguageSettings = () => {
 
     useEffect(() => {
         loadTranslations();
+        loadAvailableLanguages();
+        loadAvailableNamespaces();
     }, [selectedLanguage, selectedNamespace]);
 
     const loadTranslations = async () => {
@@ -118,6 +99,24 @@ const LanguageSettings = () => {
             console.error("Error loading translations:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadAvailableLanguages = async () => {
+        try {
+            const langs = await translationService.getAvailableLanguages();
+            setLanguages(langs);
+        } catch (err) {
+            console.error("Error loading languages:", err);
+        }
+    };
+
+    const loadAvailableNamespaces = async () => {
+        try {
+            const ns = await translationService.getAvailableNamespaces(selectedLanguage);
+            setNamespaces(ns);
+        } catch (err) {
+            console.error("Error loading namespaces:", err);
         }
     };
 
@@ -142,14 +141,43 @@ const LanguageSettings = () => {
         }));
     };
 
+    const handleAddKey = async () => {
+        if (!newKey.trim() || !newValue.trim()) return;
+
+        try {
+            const updatedTranslations = {
+                ...translations,
+                [newKey]: newValue,
+            };
+            setTranslations(updatedTranslations);
+            setAddKeyDialog(false);
+            setNewKey("");
+            setNewValue("");
+            setSuccess("Key added successfully!");
+        } catch (err) {
+            setError("Failed to add key");
+        }
+    };
+
+    const handleDeleteKey = async (key) => {
+        try {
+            const updatedTranslations = { ...translations };
+            delete updatedTranslations[key];
+            setTranslations(updatedTranslations);
+            setDeleteDialog(null);
+            setSuccess("Key deleted successfully!");
+        } catch (err) {
+            setError("Failed to delete key");
+        }
+    };
+
     const getFilteredTranslations = () => {
         if (!searchTerm) return translations;
 
         return Object.entries(translations).reduce((filtered, [key, value]) => {
-            const valueString = typeof value === "string" ? value : JSON.stringify(value);
             if (
                 key.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                valueString.toLowerCase().includes(searchTerm.toLowerCase())
+                value.toLowerCase().includes(searchTerm.toLowerCase())
             ) {
                 filtered[key] = value;
             }
@@ -157,61 +185,40 @@ const LanguageSettings = () => {
         }, {});
     };
 
-    const subTabsData = [
+    const tabsData = [
         { label: "Edit Translations", icon: <Edit /> },
         { label: "Import/Export", icon: <FileUpload /> },
-        { label: "Statistics", icon: <LanguageIcon /> },
+        { label: "Statistics", icon: <Language /> },
     ];
 
     return (
         <Box sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-                Gestion des traductions
-            </Typography>
-            <Typography variant="body2" color="text.secondary" paragraph>
-                Modification des traductions existantes. Les clés de traduction sont gérées par les développeurs dans le
-                code.
-            </Typography>
-
-            <Alert severity="info" sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                    Fonctionnalités disponibles :
-                </Typography>
-                <ul style={{ margin: 0, paddingLeft: "20px" }}>
-                    <li>Modifier les valeurs de traduction existantes</li>
-                    <li>Importer/Exporter des fichiers de traduction</li>
-                    <li>Consulter les statistiques de traduction</li>
-                </ul>
-            </Alert>
-
             <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                    Langues actuellement supportées :
+                <Typography variant="h4" gutterBottom>
+                    Translation Management
                 </Typography>
-                <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-                    <Chip label="🇫🇷 Français (par défaut)" color="primary" />
-                    <Chip label="🇬🇧 English" />
-                    <Chip label="🇪🇸 Español" />
-                </Box>
+                <Typography variant="body1" color="text.secondary">
+                    Manage translations for all UI components across different languages
+                </Typography>
             </Box>
 
             <Paper sx={{ mb: 3 }}>
                 <Tabs
-                    value={currentSubTab}
-                    onChange={(e, newValue) => setCurrentSubTab(newValue)}
+                    value={currentTab}
+                    onChange={(e, newValue) => setCurrentTab(newValue)}
                     sx={{ borderBottom: 1, borderColor: "divider" }}>
-                    {subTabsData.map((tab, index) => (
+                    {tabsData.map((tab, index) => (
                         <Tab key={index} icon={tab.icon} label={tab.label} iconPosition="start" />
                     ))}
                 </Tabs>
             </Paper>
 
             {/* Edit Translations Tab */}
-            {currentSubTab === 0 && (
+            {currentTab === 0 && (
                 <Box>
                     <Paper sx={{ p: 3, mb: 3 }}>
                         <Grid container spacing={3} alignItems="center">
-                            <Grid size={{ xs: 12, md: 3 }}>
+                            <Grid item xs={12} md={3}>
                                 <FormControl fullWidth>
                                     <InputLabel>Language</InputLabel>
                                     <Select
@@ -229,7 +236,7 @@ const LanguageSettings = () => {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid size={{ xs: 12, md: 3 }}>
+                            <Grid item xs={12} md={3}>
                                 <FormControl fullWidth>
                                     <InputLabel>Namespace</InputLabel>
                                     <Select
@@ -244,7 +251,7 @@ const LanguageSettings = () => {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
+                            <Grid item xs={12} md={4}>
                                 <TextField
                                     fullWidth
                                     label="Search translations"
@@ -255,20 +262,19 @@ const LanguageSettings = () => {
                                     }}
                                 />
                             </Grid>
-                            <Grid size={{ xs: 12, md: 2 }}>
+                            <Grid item xs={12} md={2}>
                                 <Stack direction="row" spacing={1}>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<Add />}
+                                        onClick={() => setAddKeyDialog(true)}>
+                                        Add Key
+                                    </Button>
                                     <Tooltip title="Refresh">
                                         <IconButton onClick={loadTranslations}>
                                             <Refresh />
                                         </IconButton>
                                     </Tooltip>
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<Save />}
-                                        onClick={handleSaveTranslations}
-                                        disabled={saving}>
-                                        {saving ? "Saving..." : "Save Changes"}
-                                    </Button>
                                 </Stack>
                             </Grid>
                         </Grid>
@@ -282,6 +288,7 @@ const LanguageSettings = () => {
                         <TranslationEditor
                             translations={getFilteredTranslations()}
                             onUpdateKey={handleUpdateKey}
+                            onDeleteKey={(key) => setDeleteDialog(key)}
                             language={selectedLanguage}
                             namespace={selectedNamespace}
                         />
@@ -300,17 +307,17 @@ const LanguageSettings = () => {
             )}
 
             {/* Import/Export Tab */}
-            {currentSubTab === 1 && (
+            {currentTab === 1 && (
                 <Box>
                     <Grid container spacing={3}>
-                        <Grid size={{ xs: 12, md: 6 }}>
+                        <Grid item xs={12} md={6}>
                             <TranslationFileUpload
                                 onUploadComplete={loadTranslations}
                                 selectedLanguage={selectedLanguage}
                                 selectedNamespace={selectedNamespace}
                             />
                         </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
+                        <Grid item xs={12} md={6}>
                             <TranslationExport
                                 selectedLanguage={selectedLanguage}
                                 selectedNamespace={selectedNamespace}
@@ -321,11 +328,11 @@ const LanguageSettings = () => {
             )}
 
             {/* Statistics Tab */}
-            {currentSubTab === 2 && (
+            {currentTab === 2 && (
                 <Box>
                     <Grid container spacing={3}>
                         {availableLanguages.map((lang) => (
-                            <Grid size={{ xs: 12, md: 4 }} key={lang.code}>
+                            <Grid item xs={12} md={4} key={lang.code}>
                                 <Card>
                                     <CardContent>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
@@ -343,7 +350,53 @@ const LanguageSettings = () => {
                 </Box>
             )}
 
-            {/* Snackbars */}
+            {/* Add Key Dialog */}
+            <Dialog open={addKeyDialog} onClose={() => setAddKeyDialog(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Add Translation Key</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ pt: 2 }}>
+                        <TextField
+                            fullWidth
+                            label="Key"
+                            value={newKey}
+                            onChange={(e) => setNewKey(e.target.value)}
+                            sx={{ mb: 2 }}
+                            placeholder="e.g., buttons.submit"
+                        />
+                        <TextField
+                            fullWidth
+                            label="Value"
+                            value={newValue}
+                            onChange={(e) => setNewValue(e.target.value)}
+                            multiline
+                            rows={3}
+                            placeholder="Enter translation value"
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setAddKeyDialog(false)}>Cancel</Button>
+                    <Button onClick={handleAddKey} variant="contained">
+                        Add Key
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!deleteDialog} onClose={() => setDeleteDialog(null)}>
+                <DialogTitle>Delete Translation Key</DialogTitle>
+                <DialogContent>
+                    <Typography>Are you sure you want to delete the key "{deleteDialog}"?</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialog(null)}>Cancel</Button>
+                    <Button onClick={() => handleDeleteKey(deleteDialog)} color="error">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Success/Error Snackbars */}
             <Snackbar open={!!success} autoHideDuration={4000} onClose={() => setSuccess(null)}>
                 <Alert severity="success" onClose={() => setSuccess(null)}>
                     {success}
@@ -359,151 +412,4 @@ const LanguageSettings = () => {
     );
 };
 
-const ThemeSettings = () => (
-    <Box sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-            Thème et apparence
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-            Personnalisation de l'apparence de l'application
-        </Typography>
-
-        <Box sx={{ mt: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
-                Fonctionnalités à venir :
-            </Typography>
-            <ul style={{ color: "#666" }}>
-                <li>Couleurs primaires et secondaires</li>
-                <li>Logo de l'application</li>
-                <li>Mode sombre/clair</li>
-                <li>Personnalisation des emails</li>
-                <li>Thèmes personnalisés pour les événements</li>
-            </ul>
-        </Box>
-    </Box>
-);
-
-const NotificationSettings = () => (
-    <Box sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-            Notifications
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-            Configuration des notifications et alertes
-        </Typography>
-
-        <Box sx={{ mt: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
-                Fonctionnalités à venir :
-            </Typography>
-            <ul style={{ color: "#666" }}>
-                <li>Templates d'emails</li>
-                <li>Configuration SMTP</li>
-                <li>Notifications push</li>
-                <li>Alertes d'administration</li>
-                <li>Fréquence des notifications</li>
-            </ul>
-        </Box>
-    </Box>
-);
-
-const AdminSettings = ({ user }) => {
-    const [currentTab, setCurrentTab] = useState(0);
-
-    const settingsTabs = [
-        {
-            label: "🔧 Debug",
-            icon: <BugReportIcon />,
-            component: <AdminDebugPanel />,
-            description: "Panel de debug pour diagnostiquer les problèmes d'API",
-        },
-        {
-            label: "Catégories",
-            icon: <CategoryIcon />,
-            component: <AdminCategories />,
-            description: "Gestion des catégories d'événements et leurs traductions",
-        },
-        {
-            label: "Général",
-            icon: <SettingsIcon />,
-            component: <GeneralSettings />,
-            description: "Paramètres généraux de l'application",
-        },
-        {
-            label: "Langues",
-            icon: <LanguageIcon />,
-            component: <LanguageSettings />,
-            description: "Configuration des langues et traductions",
-        },
-        {
-            label: "Thème",
-            icon: <PaletteIcon />,
-            component: <ThemeSettings />,
-            description: "Personnalisation de l'apparence",
-        },
-        {
-            label: "Notifications",
-            icon: <NotificationIcon />,
-            component: <NotificationSettings />,
-            description: "Configuration des notifications",
-        },
-    ];
-
-    const handleTabChange = (event, newValue) => {
-        setCurrentTab(newValue);
-    };
-
-    return (
-        <Box>
-            {/* Header */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Paramètres
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Configuration et gestion des paramètres de l'application
-                </Typography>
-            </Box>
-
-            <Paper sx={{ width: "100%" }}>
-                {/* Tabs Navigation */}
-                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-                    <Tabs
-                        value={currentTab}
-                        onChange={handleTabChange}
-                        variant="scrollable"
-                        scrollButtons="auto"
-                        sx={{ px: 2 }}>
-                        {settingsTabs.map((tab, index) => (
-                            <Tab
-                                key={index}
-                                icon={tab.icon}
-                                label={tab.label}
-                                iconPosition="start"
-                                sx={{
-                                    minHeight: 64,
-                                    textTransform: "none",
-                                    fontWeight: currentTab === index ? 600 : 400,
-                                }}
-                            />
-                        ))}
-                    </Tabs>
-                </Box>
-
-                {/* Tab Description */}
-                <Box sx={{ px: 3, py: 2, bgcolor: "grey.50" }}>
-                    <Typography variant="body2" color="text.secondary">
-                        {settingsTabs[currentTab]?.description}
-                    </Typography>
-                </Box>
-
-                <Divider />
-
-                {/* Tab Content */}
-                <Box>{settingsTabs[currentTab]?.component}</Box>
-            </Paper>
-        </Box>
-    );
-};
-
-export default AdminSettings;
+export default AdminTranslations;

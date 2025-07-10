@@ -1,0 +1,36 @@
+{
+  "welcome": "¡Bienvenido a Be-Out! 🎉",
+  "description": "Configuremos tu perfil para comenzar",
+  "completing": "Completando...",
+  "complete": "Completar Configuración",
+  "steps": {
+    "personal": {
+      "label": "Información Personal",
+      "title": "Información Personal",
+      "description": "Por favor, completa tus datos personales"
+    },
+    "address": {
+      "label": "Dirección",
+      "title": "Tu Dirección",
+      "description": "Esto nos ayuda a mostrarte eventos cercanos"
+    }
+  },
+  "fields": {
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "phone": "Número de Teléfono",
+    "dateOfBirth": "Fecha de Nacimiento",
+    "streetNumber": "Número",
+    "streetName": "Nombre de Calle",
+    "postalCode": "Código Postal",
+    "city": "Ciudad",
+    "country": "País"
+  },
+  "errors": {
+    "fillFields": "Por favor, completa todos los campos requeridos",
+    "failed": "Error al completar el registro. Por favor, inténtalo de nuevo."
+  },
+  "success": {
+    "completed": "¡Registro completado exitosamente!"
+  }
+}

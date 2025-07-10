@@ -70,6 +70,121 @@ $$;
 
 
 --
+-- Name: get_organizer_recent_bookings(uuid, integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_organizer_recent_bookings(organizer_id uuid, period_days integer DEFAULT 30, limit_count integer DEFAULT 10) RETURNS TABLE(id uuid, event_title character varying, event_date timestamp with time zone, customer_email character varying, quantity integer, total_price numeric, booking_status character varying, booking_date timestamp with time zone, payment_status character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        b.id,
+        e.title as event_title,
+        e.event_date,     -- Now correctly TIMESTAMP WITH TIME ZONE
+        u.email as customer_email,
+        b.quantity,
+        b.total_price,
+        b.booking_status,
+        b.booking_date,   -- Now correctly TIMESTAMP WITH TIME ZONE
+        COALESCE(b.payment_status, 'pending')::VARCHAR as payment_status
+    FROM bookings b
+    JOIN events e ON b.event_id = e.id
+    JOIN users u ON b.user_id = u.id
+    WHERE e.organizer_id = get_organizer_recent_bookings.organizer_id
+    AND b.booking_date >= CURRENT_DATE - INTERVAL '1 day' * period_days
+    ORDER BY b.booking_date DESC
+    LIMIT limit_count;
+END;
+$$;
+
+
+--
+-- Name: get_organizer_stats(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_organizer_stats(organizer_id uuid, period_days integer DEFAULT 30) RETURNS TABLE(total_events bigint, total_bookings bigint, total_revenue numeric, total_tickets_sold bigint, pending_payouts numeric, avg_rating numeric)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        -- Total events by organizer
+        (SELECT COUNT(*)::BIGINT 
+         FROM events e 
+         WHERE e.organizer_id = get_organizer_stats.organizer_id
+         AND e.created_at >= CURRENT_DATE - INTERVAL '1 day' * period_days) as total_events,
+        
+        -- Total bookings for organizer's events
+        (SELECT COUNT(*)::BIGINT
+         FROM bookings b
+         JOIN events e ON b.event_id = e.id
+         WHERE e.organizer_id = get_organizer_stats.organizer_id
+         AND b.booking_date >= CURRENT_DATE - INTERVAL '1 day' * period_days
+         AND b.booking_status = 'confirmed') as total_bookings,
+        
+        -- Total revenue from confirmed bookings
+        (SELECT COALESCE(SUM(b.total_price), 0)::NUMERIC
+         FROM bookings b
+         JOIN events e ON b.event_id = e.id
+         WHERE e.organizer_id = get_organizer_stats.organizer_id
+         AND b.booking_date >= CURRENT_DATE - INTERVAL '1 day' * period_days
+         AND b.booking_status = 'confirmed') as total_revenue,
+        
+        -- Total tickets sold
+        (SELECT COALESCE(SUM(b.quantity), 0)::BIGINT
+         FROM bookings b
+         JOIN events e ON b.event_id = e.id
+         WHERE e.organizer_id = get_organizer_stats.organizer_id
+         AND b.booking_date >= CURRENT_DATE - INTERVAL '1 day' * period_days
+         AND b.booking_status = 'confirmed') as total_tickets_sold,
+        
+        -- Pending payouts (simplified - would be more complex in real app)
+        (SELECT COALESCE(SUM(b.total_price * 0.95), 0)::NUMERIC
+         FROM bookings b
+         JOIN events e ON b.event_id = e.id
+         WHERE e.organizer_id = get_organizer_stats.organizer_id
+         AND b.booking_status = 'confirmed'
+         AND b.booking_date >= CURRENT_DATE - INTERVAL '7 days') as pending_payouts,
+        
+        -- Average rating (placeholder - would need reviews table)
+        4.3::NUMERIC as avg_rating;
+END;
+$$;
+
+
+--
+-- Name: get_organizer_upcoming_events(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_organizer_upcoming_events(organizer_id uuid, limit_count integer DEFAULT 10) RETURNS TABLE(id uuid, title character varying, description text, event_date timestamp with time zone, venue_name character varying, total_bookings bigint, revenue numeric, tickets_sold bigint, status character varying)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        e.id,
+        e.title,
+        e.description,
+        e.event_date,  -- This is now correctly TIMESTAMP WITH TIME ZONE
+        v.name as venue_name,
+        COUNT(DISTINCT b.id)::BIGINT as total_bookings,
+        COALESCE(SUM(b.total_price), 0)::NUMERIC as revenue,
+        COALESCE(SUM(b.quantity), 0)::BIGINT as tickets_sold,
+        e.status::VARCHAR as status
+    FROM events e
+    LEFT JOIN venues v ON e.venue_id = v.id
+    LEFT JOIN bookings b ON e.id = b.event_id AND b.booking_status = 'confirmed'
+    WHERE e.organizer_id = get_organizer_upcoming_events.organizer_id
+    AND e.event_date >= CURRENT_TIMESTAMP
+    GROUP BY e.id, e.title, e.description, e.event_date, v.name, e.status
+    ORDER BY e.event_date ASC
+    LIMIT limit_count;
+END;
+$$;
+
+
+--
 -- Name: log_admin_action(uuid, character varying, character varying, uuid, text, jsonb); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -371,7 +486,13 @@ CREATE TABLE public.categories (
     description text,
     icon character varying(50),
     color character varying(7),
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    name_fr character varying(100),
+    name_en character varying(100),
+    name_es character varying(100),
+    description_fr text,
+    description_en text,
+    description_es text
 );
 
 
@@ -502,6 +623,7 @@ CREATE TABLE public.users (
     provider character varying(50) DEFAULT 'email'::character varying NOT NULL,
     provider_id character varying(255),
     is_active boolean DEFAULT true,
+    onboarding_complete boolean DEFAULT false,
     CONSTRAINT users_role_check CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'admin'::character varying, 'moderator'::character varying, 'organizer'::character varying])::text[])))
 );
 
@@ -706,12 +828,16 @@ CREATE TABLE public.user_profiles (
     user_id uuid NOT NULL,
     first_name character varying(255),
     last_name character varying(255),
-    bio text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     profile_picture text,
     phone character varying(20),
-    date_of_birth date
+    date_of_birth date,
+    street_number character varying(10),
+    street_name character varying(255),
+    postal_code character varying(20),
+    city character varying(100),
+    country character varying(100) DEFAULT 'France'::character varying
 );
 
 
@@ -1096,6 +1222,27 @@ CREATE INDEX idx_bookings_user ON public.bookings USING btree (user_id);
 --
 
 CREATE INDEX idx_bookings_user_id ON public.bookings USING btree (user_id);
+
+
+--
+-- Name: idx_categories_name_en; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_categories_name_en ON public.categories USING btree (name_en);
+
+
+--
+-- Name: idx_categories_name_es; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_categories_name_es ON public.categories USING btree (name_es);
+
+
+--
+-- Name: idx_categories_name_fr; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_categories_name_fr ON public.categories USING btree (name_fr);
 
 
 --

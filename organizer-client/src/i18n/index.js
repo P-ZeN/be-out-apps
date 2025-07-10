@@ -19,6 +19,28 @@ const resources = {
             email: "Email",
             password: "Mot de passe",
 
+            // Registration
+            register: {
+                title: "Devenir organisateur",
+                subtitle: "Créez votre compte pour commencer à organiser des événements",
+                confirmPassword: "Confirmer le mot de passe",
+                companyName: "Nom de l'entreprise",
+                contactPerson: "Personne de contact",
+                phone: "Téléphone",
+                registering: "Inscription...",
+                alreadyHaveAccount: "Déjà inscrit ?",
+                success: {
+                    title: "Inscription réussie !",
+                    message:
+                        "Votre demande d'inscription a été envoyée. Un administrateur va examiner votre profil et vous serez notifié par email une fois votre compte approuvé.",
+                    redirecting: "Redirection vers la page de connexion...",
+                },
+                errors: {
+                    passwordMismatch: "Les mots de passe ne correspondent pas",
+                    failed: "Erreur lors de l'inscription",
+                },
+            },
+
             // Common
             loading: "Chargement...",
             save: "Enregistrer",
@@ -52,6 +74,28 @@ const resources = {
             register: "Register",
             email: "Email",
             password: "Password",
+
+            // Registration
+            register: {
+                title: "Become an Organizer",
+                subtitle: "Create your account to start organizing events",
+                confirmPassword: "Confirm Password",
+                companyName: "Company Name",
+                contactPerson: "Contact Person",
+                phone: "Phone",
+                registering: "Registering...",
+                alreadyHaveAccount: "Already have an account?",
+                success: {
+                    title: "Registration Successful!",
+                    message:
+                        "Your registration request has been sent. An administrator will review your profile and you will be notified by email once your account is approved.",
+                    redirecting: "Redirecting to login page...",
+                },
+                errors: {
+                    passwordMismatch: "Passwords do not match",
+                    failed: "Registration failed",
+                },
+            },
 
             // Common
             loading: "Loading...",
