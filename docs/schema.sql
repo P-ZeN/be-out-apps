@@ -524,6 +524,20 @@ END;
 $$;
 
 
+--
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -766,6 +780,58 @@ CREATE TABLE public.categories (
     description_fr text,
     description_en text,
     description_es text
+);
+
+
+--
+-- Name: email_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.email_logs (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    recipient character varying(255) NOT NULL,
+    template_name character varying(255),
+    subject text,
+    status character varying(50) NOT NULL,
+    error_message text,
+    message_id character varying(255),
+    created_at timestamp without time zone DEFAULT now(),
+    opened_at timestamp without time zone,
+    clicked_at timestamp without time zone
+);
+
+
+--
+-- Name: email_settings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.email_settings (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    setting_key character varying(255) NOT NULL,
+    setting_value text NOT NULL,
+    description text,
+    updated_at timestamp without time zone DEFAULT now(),
+    updated_by uuid
+);
+
+
+--
+-- Name: email_templates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.email_templates (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying(255) NOT NULL,
+    subject text NOT NULL,
+    body text NOT NULL,
+    description text,
+    variables jsonb DEFAULT '{}'::jsonb,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    created_by uuid,
+    updated_by uuid,
+    language character varying(10) DEFAULT 'en'::character varying NOT NULL
 );
 
 
@@ -1314,6 +1380,46 @@ ALTER TABLE ONLY public.categories
 
 
 --
+-- Name: email_logs email_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_logs
+    ADD CONSTRAINT email_logs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: email_settings email_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_settings
+    ADD CONSTRAINT email_settings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: email_settings email_settings_setting_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_settings
+    ADD CONSTRAINT email_settings_setting_key_key UNIQUE (setting_key);
+
+
+--
+-- Name: email_templates email_templates_name_language_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_templates
+    ADD CONSTRAINT email_templates_name_language_key UNIQUE (name, language);
+
+
+--
+-- Name: email_templates email_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_templates
+    ADD CONSTRAINT email_templates_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: event_categories event_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1700,6 +1806,69 @@ CREATE INDEX idx_categories_name_fr ON public.categories USING btree (name_fr);
 
 
 --
+-- Name: idx_email_logs_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_logs_created_at ON public.email_logs USING btree (created_at);
+
+
+--
+-- Name: idx_email_logs_recipient; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_logs_recipient ON public.email_logs USING btree (recipient);
+
+
+--
+-- Name: idx_email_logs_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_logs_status ON public.email_logs USING btree (status);
+
+
+--
+-- Name: idx_email_logs_template; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_logs_template ON public.email_logs USING btree (template_name);
+
+
+--
+-- Name: idx_email_settings_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_settings_key ON public.email_settings USING btree (setting_key);
+
+
+--
+-- Name: idx_email_templates_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_templates_active ON public.email_templates USING btree (is_active);
+
+
+--
+-- Name: idx_email_templates_language; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_templates_language ON public.email_templates USING btree (language);
+
+
+--
+-- Name: idx_email_templates_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_templates_name ON public.email_templates USING btree (name);
+
+
+--
+-- Name: idx_email_templates_name_language; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_templates_name_language ON public.email_templates USING btree (name, language);
+
+
+--
 -- Name: idx_events_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2029,6 +2198,20 @@ CREATE TRIGGER trigger_update_organizer_analytics AFTER INSERT ON public.booking
 
 
 --
+-- Name: email_settings update_email_settings_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_email_settings_updated_at BEFORE UPDATE ON public.email_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: email_templates update_email_templates_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_email_templates_updated_at BEFORE UPDATE ON public.email_templates FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
 -- Name: address_relationships address_relationships_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2066,6 +2249,30 @@ ALTER TABLE ONLY public.bookings
 
 ALTER TABLE ONLY public.bookings
     ADD CONSTRAINT bookings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: email_settings email_settings_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_settings
+    ADD CONSTRAINT email_settings_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id);
+
+
+--
+-- Name: email_templates email_templates_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_templates
+    ADD CONSTRAINT email_templates_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
+
+
+--
+-- Name: email_templates email_templates_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_templates
+    ADD CONSTRAINT email_templates_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id);
 
 
 --

@@ -25,6 +25,7 @@ import {
     Payment,
     Analytics,
     Settings,
+    Email,
     ExitToApp,
     MenuOpen,
     Menu,
@@ -39,6 +40,7 @@ import AdminBookings from "../pages/AdminBookings";
 import AdminPayments from "../pages/AdminPayments";
 import AdminLogs from "../pages/AdminLogs";
 import AdminSettings from "../pages/AdminSettings";
+import AdminEmails from "../pages/AdminEmails";
 
 const drawerWidth = 280;
 
@@ -79,6 +81,12 @@ const AdminMainLayout = ({ user, onLogout }) => {
             icon: <Payment />,
             path: "/payments",
             component: AdminPayments,
+        },
+        {
+            text: "Emails",
+            icon: <Email />,
+            path: "/emails",
+            component: AdminEmails,
         },
         {
             text: "Logs",
@@ -222,6 +230,7 @@ const AdminMainLayout = ({ user, onLogout }) => {
                     <Route path="/users" element={<AdminUsers user={user} />} />
                     <Route path="/bookings" element={<AdminBookings user={user} />} />
                     <Route path="/payments" element={<AdminPayments user={user} />} />
+                    <Route path="/emails" element={<AdminEmails user={user} />} />
                     <Route path="/logs" element={<AdminLogs user={user} />} />
                     <Route path="/settings" element={<AdminSettings user={user} />} />
                 </Routes>

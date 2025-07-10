@@ -9,11 +9,6 @@ import { theme } from "./theme";
 import "./App.css";
 
 function App() {
-    console.log("🔍 Environment Debugbug bug bug bugbug bug bug bugbug bug bug bug:");
-    console.log("All env vars:", import.meta.env);
-    console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
-    console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
-    console.log("Is production?:", import.meta.env.PROD);
     return (
         <Router>
             <AuthProvider>

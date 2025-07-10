@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import pool from "../db.js";
+import emailNotificationService from "../services/emailNotificationService.js";
 
 const router = Router();
 
@@ -28,6 +29,14 @@ router.post("/register", async (req, res) => {
             await client.query("INSERT INTO user_profiles (user_id) VALUES ($1)", [user.id]);
 
             await client.query("COMMIT");
+
+            // Send welcome email
+            try {
+                await emailNotificationService.sendWelcomeEmail(user.id, user.email, user.email);
+            } catch (error) {
+                console.error("Failed to send welcome email:", error);
+                // Don't fail registration if email fails
+            }
 
             const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
             res.status(201).send({ token, email: user.email, onboarding_complete: false });

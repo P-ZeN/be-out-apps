@@ -1,6 +1,7 @@
 import { Router } from "express";
 import pool from "../db.js";
 import crypto from "crypto";
+import emailNotificationService from "../services/emailNotificationService.js";
 
 const router = Router();
 
@@ -119,6 +120,14 @@ router.post("/", async (req, res) => {
         }
 
         await client.query("COMMIT");
+
+        // Send booking confirmation email
+        try {
+            await emailNotificationService.sendBookingConfirmation(booking.id);
+        } catch (error) {
+            console.error("Failed to send booking confirmation email:", error);
+            // Don't fail the booking if email fails
+        }
 
         res.status(201).json({
             booking,
