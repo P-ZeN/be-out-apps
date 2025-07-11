@@ -22,11 +22,11 @@
     "success": "Success"
   },
   "form": {
-    "email": "Email Address",
+    "email": "Email address",
     "password": "Password",
-    "firstName": "First Name",
-    "lastName": "Last Name",
-    "bio": "Bio",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "bio": "Biography",
     "required": "This field is required"
   },
   "footer": {
@@ -38,5 +38,5 @@
   "next": "Next",
   "logout": "Logout",
   "view": "View",
-  "lastMinute": "Last minute"
+  "lastMinute": "Last Minute"
 }
