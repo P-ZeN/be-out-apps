@@ -1,18 +1,9 @@
 import React from "react";
-import {
-    Box,
-    Typography,
-    Card,
-    CardContent,
-    Grid,
-    TextField,
-} from "@mui/material";
+import { Box, Typography, Card, CardContent, Grid, TextField } from "@mui/material";
 
 const SettingsTab = ({ settings, setSettings }) => {
     const handleSettingChange = (settingId, value) => {
-        const newSettings = settings.map((s) =>
-            s.id === settingId ? { ...s, setting_value: value } : s
-        );
+        const newSettings = settings.map((s) => (s.id === settingId ? { ...s, setting_value: value } : s));
         setSettings(newSettings);
     };
 

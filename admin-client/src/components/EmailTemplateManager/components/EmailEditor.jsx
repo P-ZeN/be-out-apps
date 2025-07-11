@@ -10,9 +10,9 @@ import {
     Toolbar,
     Tooltip,
 } from "@mui/material";
-import { 
-    Visibility, 
-    Code, 
+import {
+    Visibility,
+    Code,
     Preview,
     FormatBold,
     FormatItalic,
@@ -29,17 +29,17 @@ import {
  */
 const WysiwygToolbar = ({ onCommand, disabled }) => {
     const commands = [
-        { command: 'bold', icon: <FormatBold />, tooltip: 'Gras' },
-        { command: 'italic', icon: <FormatItalic />, tooltip: 'Italique' },
-        { command: 'underline', icon: <FormatUnderlined />, tooltip: 'Souligné' },
-        { command: 'insertUnorderedList', icon: <FormatListBulleted />, tooltip: 'Liste à puces' },
-        { command: 'insertOrderedList', icon: <FormatListNumbered />, tooltip: 'Liste numérotée' },
-        { command: 'createLink', icon: <Link />, tooltip: 'Insérer un lien' },
+        { command: "bold", icon: <FormatBold />, tooltip: "Gras" },
+        { command: "italic", icon: <FormatItalic />, tooltip: "Italique" },
+        { command: "underline", icon: <FormatUnderlined />, tooltip: "Souligné" },
+        { command: "insertUnorderedList", icon: <FormatListBulleted />, tooltip: "Liste à puces" },
+        { command: "insertOrderedList", icon: <FormatListNumbered />, tooltip: "Liste numérotée" },
+        { command: "createLink", icon: <Link />, tooltip: "Insérer un lien" },
     ];
 
     const handleCommand = (command) => {
-        if (command === 'createLink') {
-            const url = prompt('Entrez l\'URL du lien:');
+        if (command === "createLink") {
+            const url = prompt("Entrez l'URL du lien:");
             if (url) {
                 document.execCommand(command, false, url);
                 onCommand();
@@ -51,15 +51,14 @@ const WysiwygToolbar = ({ onCommand, disabled }) => {
     };
 
     return (
-        <Toolbar variant="dense" sx={{ minHeight: 42, px: 1, borderBottom: '1px solid #e0e0e0' }}>
+        <Toolbar variant="dense" sx={{ minHeight: 42, px: 1, borderBottom: "1px solid #e0e0e0" }}>
             {commands.map(({ command, icon, tooltip }) => (
                 <Tooltip key={command} title={tooltip}>
                     <IconButton
                         size="small"
                         onClick={() => handleCommand(command)}
                         disabled={disabled}
-                        sx={{ mx: 0.25 }}
-                    >
+                        sx={{ mx: 0.25 }}>
                         {icon}
                     </IconButton>
                 </Tooltip>
@@ -77,7 +76,7 @@ const ModernWysiwygEditor = ({ value, onChange, height, placeholder }) => {
 
     useEffect(() => {
         if (editorRef.current && editorRef.current.innerHTML !== value) {
-            editorRef.current.innerHTML = value || '';
+            editorRef.current.innerHTML = value || "";
         }
     }, [value]);
 
@@ -93,7 +92,7 @@ const ModernWysiwygEditor = ({ value, onChange, height, placeholder }) => {
     };
 
     return (
-        <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 1, height }}>
+        <Box sx={{ border: "1px solid #e0e0e0", borderRadius: 1, height }}>
             <WysiwygToolbar onCommand={handleToolbarCommand} disabled={false} />
             <Box
                 ref={editorRef}
@@ -104,21 +103,21 @@ const ModernWysiwygEditor = ({ value, onChange, height, placeholder }) => {
                 sx={{
                     height: `calc(${height} - 42px)`,
                     p: 2,
-                    overflow: 'auto',
-                    outline: 'none',
+                    overflow: "auto",
+                    outline: "none",
                     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-                    fontSize: '14px',
+                    fontSize: "14px",
                     lineHeight: 1.5,
-                    '&:empty::before': {
+                    "&:empty::before": {
                         content: `"${placeholder}"`,
-                        color: '#aaa',
-                        fontStyle: 'italic',
+                        color: "#aaa",
+                        fontStyle: "italic",
                     },
-                    '& p': {
-                        margin: '0 0 1em 0',
+                    "& p": {
+                        margin: "0 0 1em 0",
                     },
-                    '& ul, & ol': {
-                        paddingLeft: '2em',
+                    "& ul, & ol": {
+                        paddingLeft: "2em",
                     },
                 }}
             />
@@ -128,23 +127,18 @@ const ModernWysiwygEditor = ({ value, onChange, height, placeholder }) => {
 
 /**
  * EmailEditor - A multi-mode email content editor component
- * 
+ *
  * Supports three editing modes:
  * - WYSIWYG: Modern contentEditable-based rich text editor (no deprecated React patterns)
  * - Code: Raw HTML editor with monospace font
  * - Preview: Live preview of the email content
- * 
+ *
  * @param {string} value - The current email content
  * @param {function} onChange - Callback fired when content changes
  * @param {string} height - Editor height (CSS value, default: "300px")
  * @param {boolean} showWysiwyg - Whether to start in WYSIWYG mode (default: false)
  */
-const EmailEditor = ({ 
-    value = "", 
-    onChange, 
-    height = "300px", 
-    showWysiwyg = false 
-}) => {
+const EmailEditor = ({ value = "", onChange, height = "300px", showWysiwyg = false }) => {
     const [editorMode, setEditorMode] = useState(showWysiwyg ? "wysiwyg" : "code");
     const [localValue, setLocalValue] = useState(value);
 
@@ -222,8 +216,8 @@ const EmailEditor = ({
                             border: "1px solid #ddd",
                             minHeight: "200px",
                         }}
-                        dangerouslySetInnerHTML={{ 
-                            __html: localValue || "<p>Aucun contenu à prévisualiser</p>" 
+                        dangerouslySetInnerHTML={{
+                            __html: localValue || "<p>Aucun contenu à prévisualiser</p>",
                         }}
                     />
                 </Box>

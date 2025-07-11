@@ -8,18 +8,21 @@ import enAuth from "./locales/en/auth.json";
 import enHome from "./locales/en/home.json";
 import enNavigation from "./locales/en/navigation.json";
 import enOnboarding from "./locales/en/onboarding.json";
+import enMap from "./locales/en/map.json";
 
 import frCommon from "./locales/fr/common.json";
 import frAuth from "./locales/fr/auth.json";
 import frHome from "./locales/fr/home.json";
 import frNavigation from "./locales/fr/navigation.json";
 import frOnboarding from "./locales/fr/onboarding.json";
+import frMap from "./locales/fr/map.json";
 
 import esCommon from "./locales/es/common.json";
 import esAuth from "./locales/es/auth.json";
 import esHome from "./locales/es/home.json";
 import esNavigation from "./locales/es/navigation.json";
 import esOnboarding from "./locales/es/onboarding.json";
+import esMap from "./locales/es/map.json";
 
 const resources = {
     fr: {
@@ -28,6 +31,7 @@ const resources = {
         home: frHome,
         navigation: frNavigation,
         onboarding: frOnboarding,
+        map: frMap,
     },
     es: {
         common: esCommon,
@@ -35,6 +39,7 @@ const resources = {
         home: esHome,
         navigation: esNavigation,
         onboarding: esOnboarding,
+        map: esMap,
     },
     en: {
         common: enCommon,
@@ -42,6 +47,7 @@ const resources = {
         home: enHome,
         navigation: enNavigation,
         onboarding: enOnboarding,
+        map: enMap,
     },
 };
 
@@ -51,7 +57,7 @@ i18n.use(LanguageDetector)
         resources,
         fallbackLng: "fr", // French as main language
         lng: "fr", // Default language
-        debug: process.env.NODE_ENV === "development",
+        debug: false, // Disable debug logging to reduce console verbosity
 
         // Detection options
         detection: {
@@ -65,7 +71,7 @@ i18n.use(LanguageDetector)
 
         // Namespace configuration
         defaultNS: "common",
-        ns: ["common", "auth", "home", "navigation", "onboarding"],
+        ns: ["common", "auth", "home", "navigation", "onboarding", "map"],
     });
 
 export default i18n;

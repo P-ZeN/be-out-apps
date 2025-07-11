@@ -36,5 +36,7 @@
   "loading": "Cargando...",
   "back": "Atrás",
   "next": "Siguiente",
-  "logout": "Cerrar Sesión"
+  "logout": "Cerrar Sesión",
+  "view": "Ver",
+  "lastMinute": "Última hora"
 }

@@ -22,7 +22,7 @@ import {
 import { Edit, Save, Cancel, ExpandMore, Key as KeyIcon, Translate, DataObject } from "@mui/icons-material";
 import JsonEditorModal from "./JsonEditorModal";
 
-const TranslationEditor = ({ translations, onUpdateKey, language, namespace }) => {
+const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namespace }) => {
     const [editingKeys, setEditingKeys] = useState(new Set());
     const [editValues, setEditValues] = useState({});
     const [jsonModalOpen, setJsonModalOpen] = useState(false);
@@ -79,7 +79,7 @@ const TranslationEditor = ({ translations, onUpdateKey, language, namespace }) =
         });
     };
 
-    const saveEdit = (key) => {
+    const saveEdit = async (key) => {
         let valueToSave = editValues[key];
 
         // Try to parse as JSON if it looks like JSON, otherwise keep as string
@@ -91,17 +91,34 @@ const TranslationEditor = ({ translations, onUpdateKey, language, namespace }) =
             }
         }
 
+        // Update local state
         onUpdateKey(key, valueToSave);
+
+        // Create updated translations object for saving
+        const updatedTranslations = {
+            ...translations,
+            [key]: valueToSave,
+        };
+
         setEditingKeys((prev) => {
             const newSet = new Set(prev);
             newSet.delete(key);
             return newSet;
         });
         setEditValues((prev) => {
-            const newValues = { ...prev };
-            delete newValues[key];
-            return newValues;
+            const newPrev = { ...prev };
+            delete newPrev[key];
+            return newPrev;
         });
+
+        // Trigger auto-save with the updated translations
+        if (onSave) {
+            try {
+                await onSave(updatedTranslations);
+            } catch (error) {
+                console.error("Error auto-saving translation:", error);
+            }
+        }
     };
 
     const handleValueChange = (key, value) => {

@@ -36,5 +36,7 @@
   "loading": "Loading...",
   "back": "Back",
   "next": "Next",
-  "logout": "Logout"
+  "logout": "Logout",
+  "view": "View",
+  "lastMinute": "Last minute"
 }

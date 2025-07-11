@@ -697,10 +697,15 @@ router.put("/translations/:language/:namespace", requireAdmin, async (req, res) 
         }
 
         const filePath = getTranslationFilePath(language, namespace);
+
         await ensureDirectoryExists(filePath);
 
         const formattedContent = JSON.stringify(translations, null, 2);
+
         await fs.writeFile(filePath, formattedContent, "utf-8");
+
+        // Verify the file was written by reading it back
+        const verifyContent = await fs.readFile(filePath, "utf-8");
 
         res.json({
             message: "Translations saved successfully",

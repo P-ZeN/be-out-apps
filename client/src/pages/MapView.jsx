@@ -11,125 +11,246 @@ import {
     IconButton,
     TextField,
     InputAdornment,
+    Alert,
+    Snackbar,
 } from "@mui/material";
-import { Search, MyLocation, LocationOn, Schedule, LocalOffer } from "@mui/icons-material";
-import { useState } from "react";
+import { Search, MyLocation, LocationOn, Schedule, LocalOffer, FilterList } from "@mui/icons-material";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import MapComponent from "../components/MapComponent";
+import AddressSearch from "../components/AddressSearch";
+import { GeocodingService } from "../services/geocodingService";
+import EventService from "../services/eventService";
 
 const MapView = () => {
-    const { t } = useTranslation(["home", "common"]);
+    const { t } = useTranslation(["map", "common"]);
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedEventId, setSelectedEventId] = useState(null);
+    const [mapCenter, setMapCenter] = useState({ lat: 48.8566, lng: 2.3522 });
+    const [mapZoom, setMapZoom] = useState(12);
+    const [userLocation, setUserLocation] = useState(null);
+    const [filteredEvents, setFilteredEvents] = useState([]);
+    const [realEvents, setRealEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
-    // Mock events for map view
-    const nearbyEvents = [
-        {
-            id: 1,
-            title: "Concert Jazz au Sunset",
-            category: "music",
-            discountedPrice: 25,
-            originalPrice: 45,
-            discount: 44,
-            distance: "2.5 km",
-            location: "Paris 18e",
-            isLastMinute: true,
-            lat: 48.8566,
-            lng: 2.3522,
-        },
-        {
-            id: 2,
-            title: "Match PSG vs OM",
-            category: "sport",
-            discountedPrice: 60,
-            originalPrice: 80,
-            discount: 25,
-            distance: "5.2 km",
-            location: "Parc des Princes",
-            isLastMinute: false,
-            lat: 48.8414,
-            lng: 2.253,
-        },
-        {
-            id: 3,
-            title: "Spectacle Comédie Française",
-            category: "theater",
-            discountedPrice: 18,
-            originalPrice: 35,
-            discount: 49,
-            distance: "3.8 km",
-            location: "1er arrondissement",
-            isLastMinute: true,
-            lat: 48.8634,
-            lng: 2.3365,
-        },
-    ];
+    const loadRealEvents = async () => {
+        try {
+            setLoading(true);
+            const response = await EventService.getAllEvents({
+                limit: 50,
+                lang: "fr",
+            });
+
+            if (response && response.events) {
+                // First try to geocode events without coordinates
+                const eventsWithGeocodedCoords = await geocodeEventsWithoutCoords(response.events);
+
+                // Transform API events to map format and filter out events without coordinates
+                const mapEvents = eventsWithGeocodedCoords
+                    .filter((event) => event.venue_latitude && event.venue_longitude) // Only events with real coordinates
+                    .map((event) => ({
+                        id: event.id,
+                        title: event.title,
+                        category: event.categories?.[0]?.toLowerCase() || "default",
+                        discountedPrice: event.discounted_price,
+                        originalPrice: event.original_price,
+                        discount: event.discount_percentage,
+                        distance: "0 km", // Will be calculated based on user location
+                        location: `${event.venue_name || ""}, ${event.venue_city || ""}`.trim(),
+                        isLastMinute: event.is_last_minute,
+                        lat: parseFloat(event.venue_latitude),
+                        lng: parseFloat(event.venue_longitude),
+                        venue_name: event.venue_name,
+                        venue_address: event.venue_address,
+                        venue_city: event.venue_city,
+                    }));
+
+                if (mapEvents.length > 0) {
+                    setRealEvents(mapEvents);
+                    setFilteredEvents(mapEvents);
+
+                    // Center map on the average location of all events
+                    const avgLat = mapEvents.reduce((sum, event) => sum + event.lat, 0) / mapEvents.length;
+                    const avgLng = mapEvents.reduce((sum, event) => sum + event.lng, 0) / mapEvents.length;
+                    setMapCenter({ lat: avgLat, lng: avgLng });
+
+                    setSnackbar({
+                        open: true,
+                        message: t("eventsLoaded", { count: mapEvents.length }),
+                        severity: "success",
+                    });
+                } else {
+                    // No events with coordinates
+                    setFilteredEvents([]);
+                    setSnackbar({
+                        open: true,
+                        message: t("noEventsWithLocation"),
+                        severity: "info",
+                    });
+                }
+            } else {
+                // API returned no events
+                setFilteredEvents([]);
+                setSnackbar({
+                    open: true,
+                    message: t("noEventsFromAPI"),
+                    severity: "info",
+                });
+            }
+        } catch (error) {
+            console.error("Error loading events:", error);
+            // API error - show empty state
+            setFilteredEvents([]);
+            setSnackbar({
+                open: true,
+                message: t("errorLoadingEvents"),
+                severity: "error",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Geocode events that don't have coordinates
+    const geocodeEventsWithoutCoords = async (events) => {
+        const eventsToGeocode = events.filter((event) => !event.venue_latitude || !event.venue_longitude);
+
+        if (eventsToGeocode.length === 0) return events;
+
+        const geocodedEvents = await Promise.all(
+            eventsToGeocode.map(async (event) => {
+                try {
+                    // Create search query from venue information
+                    const searchQuery = [event.venue_address, event.venue_name, event.venue_city, "France"]
+                        .filter(Boolean)
+                        .join(", ");
+
+                    if (searchQuery.length > 5) {
+                        // Only search if we have meaningful data
+                        const results = await GeocodingService.searchPlaces(searchQuery, {
+                            country: "fr",
+                            limit: 1,
+                        });
+
+                        if (results.length > 0) {
+                            return {
+                                ...event,
+                                venue_latitude: results[0].center[1],
+                                venue_longitude: results[0].center[0],
+                            };
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`Failed to geocode event ${event.id}:`, error);
+                }
+                return event; // Return original event if geocoding fails
+            })
+        );
+
+        // Merge geocoded events back with events that already had coordinates
+        const eventsWithCoords = events.filter((event) => event.venue_latitude && event.venue_longitude);
+        return [...eventsWithCoords, ...geocodedEvents];
+    };
 
     const handleEventClick = (eventId) => {
+        setSelectedEventId(eventId);
         navigate(`/event/${eventId}`);
     };
+
+    const handleEventSelect = (eventId) => {
+        // Select event on map without navigating
+        setSelectedEventId(eventId);
+        if (eventId) {
+            const event = filteredEvents.find((e) => e.id === eventId);
+            if (event) {
+                setMapCenter({ lat: event.lat, lng: event.lng });
+                setMapZoom(15);
+            }
+        }
+    };
+
+    const handleLocationSelect = (location) => {
+        setMapCenter({ lat: location.latitude, lng: location.longitude });
+        setMapZoom(14);
+
+        // Calculate distances and update events
+        if (realEvents.length > 0) {
+            const eventsWithDistance = realEvents.map((event) => ({
+                ...event,
+                distance: GeocodingService.formatDistance(
+                    GeocodingService.calculateDistance(location.latitude, location.longitude, event.lat, event.lng)
+                ),
+            }));
+
+            setFilteredEvents(eventsWithDistance);
+        }
+
+        setSnackbar({
+            open: true,
+            message: t("locationUpdated", { address: location.address }),
+            severity: "success",
+        });
+    };
+
+    const handleCurrentLocation = async () => {
+        try {
+            const location = await GeocodingService.getCurrentLocation();
+            handleLocationSelect(location);
+            setUserLocation(location);
+        } catch (error) {
+            setSnackbar({
+                open: true,
+                message: t("locationError"),
+                severity: "error",
+            });
+        }
+    };
+
+    // Initialize with real events or fallback to mock
+    useEffect(() => {
+        loadRealEvents();
+    }, []);
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             {/* Header */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: "bold" }}>
-                    🗺️ Carte des Événements
+                    {t("title")}
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                    Découvrez les événements près de chez vous
+                    {t("subtitle")}
                 </Typography>
 
                 {/* Search Bar */}
-                <TextField
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Rechercher par lieu ou adresse..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                <AddressSearch
+                    onLocationSelect={handleLocationSelect}
+                    onCurrentLocation={handleCurrentLocation}
+                    placeholder={t("searchPlaceholder")}
                     sx={{ maxWidth: "500px" }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <Search />
-                            </InputAdornment>
-                        ),
-                        endAdornment: (
-                            <InputAdornment position="end">
-                                <IconButton>
-                                    <MyLocation />
-                                </IconButton>
-                            </InputAdornment>
-                        ),
-                    }}
                 />
             </Box>
 
             <Grid container spacing={3}>
-                {/* Map Placeholder */}
+                {/* Interactive Map */}
                 <Grid size={{ xs: 12, md: 8 }}>
                     <Paper
                         sx={{
                             height: "600px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "grey.100",
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23c3c3c3' fill-opacity='0.1'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
                             borderRadius: 2,
+                            overflow: "hidden",
                         }}>
-                        <Box sx={{ textAlign: "center" }}>
-                            <LocationOn sx={{ fontSize: "4rem", color: "grey.400", mb: 2 }} />
-                            <Typography variant="h6" color="text.secondary" gutterBottom>
-                                Carte Interactive
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                La carte interactive sera intégrée ici
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-                                (Google Maps, Mapbox ou autre solution de cartographie)
-                            </Typography>
-                        </Box>
+                        <MapComponent
+                            events={filteredEvents}
+                            onEventClick={handleEventClick}
+                            onEventSelect={handleEventSelect}
+                            selectedEventId={selectedEventId}
+                            center={mapCenter}
+                            zoom={mapZoom}
+                        />
                     </Paper>
                 </Grid>
 
@@ -137,24 +258,26 @@ const MapView = () => {
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Box sx={{ mb: 2 }}>
                         <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-                            Événements à proximité ({nearbyEvents.length})
+                            {t("nearbyEvents", { count: filteredEvents.length })}
                         </Typography>
                     </Box>
 
                     <Box sx={{ maxHeight: "600px", overflowY: "auto" }}>
-                        {nearbyEvents.map((event) => (
+                        {filteredEvents.map((event) => (
                             <Card
                                 key={event.id}
                                 sx={{
                                     mb: 2,
                                     cursor: "pointer",
-                                    transition: "transform 0.2s",
+                                    transition: "all 0.2s",
+                                    border: selectedEventId === event.id ? "2px solid" : "1px solid",
+                                    borderColor: selectedEventId === event.id ? "primary.main" : "divider",
                                     "&:hover": {
                                         transform: "translateY(-2px)",
                                         boxShadow: 2,
                                     },
                                 }}
-                                onClick={() => handleEventClick(event.id)}>
+                                onClick={() => handleEventSelect(event.id)}>
                                 <CardContent sx={{ p: 2 }}>
                                     <Box
                                         sx={{
@@ -167,7 +290,12 @@ const MapView = () => {
                                             {event.title}
                                         </Typography>
                                         {event.isLastMinute && (
-                                            <Chip label="Dernière minute" size="small" color="error" sx={{ ml: 1 }} />
+                                            <Chip
+                                                label={t("lastMinute", { ns: "common" })}
+                                                size="small"
+                                                color="error"
+                                                sx={{ ml: 1 }}
+                                            />
                                         )}
                                     </Box>
 
@@ -184,15 +312,28 @@ const MapView = () => {
                                             <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
                                                 {event.discountedPrice}€
                                             </Typography>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{ textDecoration: "line-through", color: "text.secondary" }}>
-                                                {event.originalPrice}€
-                                            </Typography>
-                                            <Chip label={`-${event.discount}%`} size="small" color="success" />
+                                            {event.originalPrice !== event.discountedPrice && (
+                                                <>
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            textDecoration: "line-through",
+                                                            color: "text.secondary",
+                                                        }}>
+                                                        {event.originalPrice}€
+                                                    </Typography>
+                                                    <Chip label={`-${event.discount}%`} size="small" color="success" />
+                                                </>
+                                            )}
                                         </Box>
-                                        <Button size="small" variant="outlined">
-                                            Voir
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEventClick(event.id);
+                                            }}>
+                                            {t("view", { ns: "common" })}
                                         </Button>
                                     </Box>
                                 </CardContent>
@@ -201,10 +342,23 @@ const MapView = () => {
                     </Box>
 
                     <Button variant="outlined" fullWidth sx={{ mt: 2 }} onClick={() => navigate("/")}>
-                        Voir tous les événements
+                        {t("viewAllEvents")}
                     </Button>
                 </Grid>
             </Grid>
+
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                <Alert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    sx={{ width: "100%" }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 };

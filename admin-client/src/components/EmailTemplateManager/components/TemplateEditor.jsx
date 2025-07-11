@@ -19,14 +19,7 @@ import QuickVariables from "./QuickVariables";
 import TemplateGallery from "./TemplateGallery";
 import { availableLanguages } from "../constants";
 
-const TemplateEditor = ({ 
-    open, 
-    onClose, 
-    template, 
-    selectedLanguage, 
-    templates = [],
-    onSave 
-}) => {
+const TemplateEditor = ({ open, onClose, template, selectedLanguage, templates = [], onSave }) => {
     const [formData, setFormData] = useState({
         name: "",
         language: "fr",
@@ -47,9 +40,10 @@ const TemplateEditor = ({
                 subject: template.subject,
                 body: template.body,
                 description: template.description || "",
-                variables: typeof template.variables === 'string' 
-                    ? template.variables 
-                    : JSON.stringify(template.variables || {}, null, 2),
+                variables:
+                    typeof template.variables === "string"
+                        ? template.variables
+                        : JSON.stringify(template.variables || {}, null, 2),
                 is_active: template.is_active,
             });
         } else {
@@ -87,29 +81,28 @@ const TemplateEditor = ({
     };
 
     const handleVariableInsert = (variable) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            body: prev.body + " " + variable.value
+            body: prev.body + " " + variable.value,
         }));
     };
 
     const handleTemplateLoad = (templateHtml) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            body: templateHtml
+            body: templateHtml,
         }));
     };
 
     return (
-        <Dialog 
-            open={open} 
-            onClose={onClose} 
-            maxWidth="lg" 
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="lg"
             fullWidth
             disableRestoreFocus
             disableEnforceFocus
-            keepMounted={false}
-        >
+            keepMounted={false}>
             <DialogTitle>{isEditing ? "Modifier Template" : "Créer Template"}</DialogTitle>
             <DialogContent>
                 <Box sx={{ mt: 2 }}>
@@ -179,10 +172,12 @@ const TemplateEditor = ({
                                 showWysiwyg={true}
                             />
                             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                                💡 Utilisez le mode visuel pour un formatage facile, ou basculez vers le code HTML
-                                pour une édition avancée. Les variables comme {"{"}{"{"} userName {"}"}{"}"} seront remplacées lors de l'envoi des emails.
+                                💡 Utilisez le mode visuel pour un formatage facile, ou basculez vers le code HTML pour
+                                une édition avancée. Les variables comme {"{"}
+                                {"{"} userName {"}"}
+                                {"}"} seront remplacées lors de l'envoi des emails.
                             </Typography>
-                            
+
                             <QuickVariables onVariableInsert={handleVariableInsert} />
                             <TemplateGallery templates={templates} onTemplateLoad={handleTemplateLoad} />
                         </Grid>
@@ -236,12 +231,14 @@ TemplateEditor.propTypes = {
         status: PropTypes.string,
     }),
     selectedLanguage: PropTypes.string.isRequired,
-    templates: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-        name: PropTypes.string.isRequired,
-        body: PropTypes.string.isRequired,
-        status: PropTypes.string, // Not required - may be undefined
-    })),
+    templates: PropTypes.arrayOf(
+        PropTypes.shape({
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+            name: PropTypes.string.isRequired,
+            body: PropTypes.string.isRequired,
+            status: PropTypes.string, // Not required - may be undefined
+        })
+    ),
     onSave: PropTypes.func.isRequired,
 };
 

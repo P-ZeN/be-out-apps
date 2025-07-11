@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    TextField,
-    Typography,
-    Box,
-} from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography, Box } from "@mui/material";
 import { Send } from "@mui/icons-material";
 
 const TestEmailDialog = ({ open, onClose, template, onSendTest }) => {
@@ -40,15 +31,14 @@ const TestEmailDialog = ({ open, onClose, template, onSendTest }) => {
     };
 
     return (
-        <Dialog 
-            open={open} 
-            onClose={handleClose} 
-            maxWidth="sm" 
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="sm"
             fullWidth
             disableRestoreFocus
             disableEnforceFocus
-            keepMounted={false}
-        >
+            keepMounted={false}>
             <DialogTitle>Tester Template Email</DialogTitle>
             <DialogContent>
                 <Box sx={{ mt: 2 }}>
@@ -80,8 +70,8 @@ const TestEmailDialog = ({ open, onClose, template, onSendTest }) => {
                         }}
                     />
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                        Fournissez des données de test au format JSON pour prévisualiser comment les variables
-                        seront remplacées dans l'email.
+                        Fournissez des données de test au format JSON pour prévisualiser comment les variables seront
+                        remplacées dans l'email.
                     </Typography>
                 </Box>
             </DialogContent>

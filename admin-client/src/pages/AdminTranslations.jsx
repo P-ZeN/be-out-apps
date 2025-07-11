@@ -77,6 +77,7 @@ const AdminTranslations = () => {
         { key: "home", name: "Home Page" },
         { key: "navigation", name: "Navigation" },
         { key: "onboarding", name: "Onboarding" },
+        { key: "map", name: "Map & Events" },
         { key: "profile", name: "User Profile" },
         { key: "events", name: "Events" },
         { key: "bookings", name: "Bookings" },
@@ -86,7 +87,8 @@ const AdminTranslations = () => {
     useEffect(() => {
         loadTranslations();
         loadAvailableLanguages();
-        loadAvailableNamespaces();
+        // Temporarily disable dynamic namespace loading to test
+        // loadAvailableNamespaces();
     }, [selectedLanguage, selectedNamespace]);
 
     const loadTranslations = async () => {
@@ -96,7 +98,6 @@ const AdminTranslations = () => {
             setTranslations(data);
         } catch (err) {
             setError("Failed to load translations");
-            console.error("Error loading translations:", err);
         } finally {
             setLoading(false);
         }
@@ -123,14 +124,26 @@ const AdminTranslations = () => {
     const handleSaveTranslations = async () => {
         try {
             setSaving(true);
-            await translationService.saveTranslations(selectedLanguage, selectedNamespace, translations);
+            const result = await translationService.saveTranslations(selectedLanguage, selectedNamespace, translations);
             setSuccess("Translations saved successfully!");
             await loadTranslations();
         } catch (err) {
             setError("Failed to save translations");
-            console.error("Error saving translations:", err);
         } finally {
             setSaving(false);
+        }
+    };
+
+    // Auto-save function for field-level saves (doesn't reload)
+    const handleAutoSave = async (updatedTranslations) => {
+        try {
+            // Use the provided translations or fall back to current state
+            const translationsToSave = updatedTranslations || translations;
+            await translationService.saveTranslations(selectedLanguage, selectedNamespace, translationsToSave);
+            setSuccess("Translation saved!");
+        } catch (err) {
+            setError("Failed to save translation");
+            console.error("Error auto-saving translation:", err);
         }
     };
 
@@ -289,6 +302,7 @@ const AdminTranslations = () => {
                             translations={getFilteredTranslations()}
                             onUpdateKey={handleUpdateKey}
                             onDeleteKey={(key) => setDeleteDialog(key)}
+                            onSave={handleAutoSave}
                             language={selectedLanguage}
                             namespace={selectedNamespace}
                         />

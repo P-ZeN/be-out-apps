@@ -98,6 +98,7 @@ const LanguageSettings = () => {
         { key: "home", name: "Home Page" },
         { key: "navigation", name: "Navigation" },
         { key: "onboarding", name: "Onboarding" },
+        { key: "map", name: "Map & Events" },
         { key: "profile", name: "User Profile" },
         { key: "events", name: "Events" },
         { key: "bookings", name: "Bookings" },
@@ -132,6 +133,19 @@ const LanguageSettings = () => {
             console.error("Error saving translations:", err);
         } finally {
             setSaving(false);
+        }
+    };
+
+    // Auto-save function for field-level saves (doesn't reload)
+    const handleAutoSave = async (updatedTranslations) => {
+        try {
+            // Use the provided translations or fall back to current state
+            const translationsToSave = updatedTranslations || translations;
+            await translationService.saveTranslations(selectedLanguage, selectedNamespace, translationsToSave);
+            setSuccess("Translation saved!");
+        } catch (err) {
+            setError("Failed to save translation");
+            console.error("Error auto-saving translation:", err);
         }
     };
 
@@ -282,6 +296,7 @@ const LanguageSettings = () => {
                         <TranslationEditor
                             translations={getFilteredTranslations()}
                             onUpdateKey={handleUpdateKey}
+                            onSave={handleAutoSave}
                             language={selectedLanguage}
                             namespace={selectedNamespace}
                         />

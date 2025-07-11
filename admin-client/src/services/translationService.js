@@ -84,7 +84,7 @@ class TranslationService {
         } catch (error) {
             console.error("Error fetching namespaces:", error);
             // Return default namespaces if API fails
-            return ["common", "auth", "home", "navigation"];
+            return ["common", "auth", "home", "navigation", "onboarding", "map"];
         }
     }
 

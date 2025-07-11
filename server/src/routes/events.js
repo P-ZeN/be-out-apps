@@ -118,6 +118,8 @@ router.get("/", async (req, res) => {
                 v.name as venue_name,
                 v.city as venue_city,
                 v.address as venue_address,
+                v.latitude as venue_latitude,
+                v.longitude as venue_longitude,
                 ARRAY_AGG(DISTINCT ${categoryNameSelect}) as categories
             FROM events e
             LEFT JOIN venues v ON e.venue_id = v.id
