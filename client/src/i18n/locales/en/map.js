@@ -1,0 +1,20 @@
+// English translations - Map
+export default {
+    title: "🗺️ Events Map",
+    subtitle: "Discover events near you",
+    searchPlaceholder: "Search by location or address...",
+    nearbyEvents: "Nearby events ({{count}})",
+    viewAllEvents: "View all events",
+    eventsLoaded: "{{count}} events loaded with location",
+    noEventsWithLocation: "No events with location available",
+    noEventsFromAPI: "No events available at the moment",
+    errorLoadingEvents: "Error loading events",
+    locationUpdated: "Location updated: {{address}}",
+    locationError: "Unable to get your location",
+    mapUnavailable: "Map temporarily unavailable",
+    checkMapboxToken: "Please check your Mapbox token or internet connection",
+    eventsAvailable: "{{count}} event(s) available",
+    viewEventDetails: "View event details",
+    atDistance: "{{distance}} from your location",
+    yourLocation: "Your location",
+};
