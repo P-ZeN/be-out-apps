@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN =
-    import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
+    //import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
     "pk.eyJ1IjoicGhpbGlwcGV6ZW5vbmUiLCJhIjoiY21jeXQyemdpMHRwazJsc2JkdG9vZzViaCJ9.0h5JWCXgM5nY6hrDtj-vsw"; // Replace with your token
 
 // Fallback component if Mapbox fails to load
