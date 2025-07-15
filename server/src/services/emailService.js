@@ -9,10 +9,15 @@ class EmailService {
         // Initialize SendGrid
         if (process.env.SENDGRID_API_KEY) {
             sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+            console.log("SendGrid initialized with API key:", process.env.SENDGRID_API_KEY.substring(0, 10) + "...");
+        } else {
+            console.warn("WARNING: SENDGRID_API_KEY not found in environment variables");
         }
 
         this.defaultFrom = process.env.DEFAULT_FROM_EMAIL || "noreply@beout.app";
         this.templateCache = new Map();
+
+        console.log("Email service initialized with default from:", this.defaultFrom);
     }
 
     /**
@@ -38,17 +43,14 @@ class EmailService {
 
             const msg = {
                 to,
-                from: options.from || this.defaultFrom,
+                from: options.from || this.defaultFrom, // Use .env DEFAULT_FROM_EMAIL
                 subject,
                 html: htmlBody,
                 ...options,
             };
 
-            if (process.env.NODE_ENV === "development") {
-                console.log("Email would be sent:", { to, subject, templateName, language });
-                console.log("HTML Preview:", htmlBody);
-                return { success: true, messageId: "dev-mode" };
-            }
+            console.log("Attempting to send email:", { to, subject, from: msg.from });
+            console.log("SendGrid API Key present:", !!process.env.SENDGRID_API_KEY);
 
             const result = await sgMail.send(msg);
 
@@ -58,6 +60,17 @@ class EmailService {
             return { success: true, messageId: result[0].headers["x-message-id"] };
         } catch (error) {
             console.error("Email sending failed:", error);
+            console.error("Error details:", {
+                message: error.message,
+                code: error.code,
+                response: error.response?.body || error.response,
+            });
+
+            // Log specific SendGrid error details
+            if (error.response?.body?.errors) {
+                console.error("SendGrid specific errors:", error.response.body.errors);
+            }
+
             await this.logEmailSent(to, templateName, "", "failed", error.message);
             throw error;
         }

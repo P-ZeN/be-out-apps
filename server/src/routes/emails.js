@@ -210,7 +210,8 @@ router.post("/templates/:id/test", requireAdmin, async (req, res) => {
 
         // Send test email
         await emailService.sendTemplatedEmail(template.name, email, variables || {}, {
-            from: `Test <${req.adminUser.email}>`,
+            language: template.language,
+            isTest: true,
         });
 
         res.json({ message: "Test email sent successfully" });
