@@ -5,6 +5,16 @@
         <link rel="icon" type="image/svg+xml" href="/vite.svg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Be Out - Des offres de dernière minute sur les événements près de chez vous</title>
+
+        <!-- Environment variables placeholder for Docker/runtime injection -->
+        <meta name="mapbox-token" content="%VITE_MAPBOX_ACCESS_TOKEN%" />
+
+        <!-- Runtime environment variables -->
+        <script>
+            window.ENV = {
+                VITE_MAPBOX_ACCESS_TOKEN: "%VITE_MAPBOX_ACCESS_TOKEN%",
+            };
+        </script>
     </head>
     <body>
         <div id="root"></div>

@@ -5,9 +5,42 @@ import { LocationOn, LocalOffer, Close } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const MAPBOX_TOKEN =
-    //import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
-    "pk.eyJ1IjoicGhpbGlwcGV6ZW5vbmUiLCJhIjoiY21jeXQyemdpMHRwazJsc2JkdG9vZzViaCJ9.0h5JWCXgM5nY6hrDtj-vsw"; // Replace with your token
+// Function to get Mapbox token with multiple fallback strategies
+const getMapboxToken = () => {
+    // Strategy 1: Vite build-time environment variable
+    const buildTimeToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+    if (buildTimeToken && buildTimeToken !== "%VITE_MAPBOX_ACCESS_TOKEN%" && !buildTimeToken.includes("undefined")) {
+        console.log("Using build-time Mapbox token");
+        return buildTimeToken;
+    }
+
+    // Strategy 2: Runtime environment variable (for Docker/server environments)
+    if (typeof window !== "undefined" && window.ENV && window.ENV.VITE_MAPBOX_ACCESS_TOKEN) {
+        const runtimeToken = window.ENV.VITE_MAPBOX_ACCESS_TOKEN;
+        if (runtimeToken !== "%VITE_MAPBOX_ACCESS_TOKEN%" && !runtimeToken.includes("undefined")) {
+            console.log("Using runtime window.ENV Mapbox token");
+            return runtimeToken;
+        }
+    }
+
+    // Strategy 3: Check if running in production and try to get from meta tag
+    if (typeof document !== "undefined") {
+        const metaToken = document.querySelector('meta[name="mapbox-token"]');
+        if (metaToken) {
+            const tokenContent = metaToken.getAttribute("content");
+            if (tokenContent && tokenContent !== "%VITE_MAPBOX_ACCESS_TOKEN%" && !tokenContent.includes("undefined")) {
+                console.log("Using meta tag Mapbox token");
+                return tokenContent;
+            }
+        }
+    }
+
+    // Strategy 4: Fallback token (your current hardcoded token)
+    console.log("Using fallback Mapbox token");
+    return "pk.eyJ1IjoicGhpbGlwcGV6ZW5vbmUiLCJhIjoiY21jeXQyemdpMHRwazJsc2JkdG9vZzViaCJ9.0h5JWCXgM5nY6hrDtj-vsw";
+};
+
+const MAPBOX_TOKEN = getMapboxToken();
 
 // Fallback component if Mapbox fails to load
 const MapFallback = ({ events, onEventClick, t }) => (

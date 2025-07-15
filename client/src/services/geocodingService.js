@@ -1,7 +1,37 @@
 // Mapbox Geocoding Service
-const MAPBOX_TOKEN =
-    import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
-    "pk.eyJ1IjoiYmVvdXQiLCJhIjoiY2x0ZXhzZHl6MGNjYjJqbzJudjJkOWNiZiJ9.example";
+
+// Function to get Mapbox token with multiple fallback strategies
+const getMapboxToken = () => {
+    // Strategy 1: Vite build-time environment variable
+    const buildTimeToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+    if (buildTimeToken && buildTimeToken !== "%VITE_MAPBOX_ACCESS_TOKEN%" && !buildTimeToken.includes("undefined")) {
+        return buildTimeToken;
+    }
+
+    // Strategy 2: Runtime environment variable (for Docker/server environments)
+    if (typeof window !== "undefined" && window.ENV && window.ENV.VITE_MAPBOX_ACCESS_TOKEN) {
+        const runtimeToken = window.ENV.VITE_MAPBOX_ACCESS_TOKEN;
+        if (runtimeToken !== "%VITE_MAPBOX_ACCESS_TOKEN%" && !runtimeToken.includes("undefined")) {
+            return runtimeToken;
+        }
+    }
+
+    // Strategy 3: Check if running in production and try to get from meta tag
+    if (typeof document !== "undefined") {
+        const metaToken = document.querySelector('meta[name="mapbox-token"]');
+        if (metaToken) {
+            const tokenContent = metaToken.getAttribute("content");
+            if (tokenContent && tokenContent !== "%VITE_MAPBOX_ACCESS_TOKEN%" && !tokenContent.includes("undefined")) {
+                return tokenContent;
+            }
+        }
+    }
+
+    // Strategy 4: Fallback token
+    return "pk.eyJ1IjoicGhpbGlwcGV6ZW5vbmUiLCJhIjoiY21jeXQyemdpMHRwazJrc2JkdG9vZzViaCJ9.0h5JWCXgM5nY6hrDtj-vsw";
+};
+
+const MAPBOX_TOKEN = getMapboxToken();
 const GEOCODING_API_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places";
 
 export class GeocodingService {
