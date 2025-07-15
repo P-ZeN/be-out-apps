@@ -31,6 +31,21 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 
 --
+-- Name: cleanup_event_files(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.cleanup_event_files() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Delete gallery entries (files will be cleaned up by cleanup_orphaned_files function)
+    DELETE FROM event_gallery WHERE event_id = OLD.id;
+    RETURN OLD;
+END;
+$$;
+
+
+--
 -- Name: format_address(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -132,6 +147,51 @@ BEGIN
     ORDER BY a.is_primary DESC, a.created_at ASC;
 END;
 $$;
+
+
+--
+-- Name: get_event_with_images(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_event_with_images(event_uuid uuid) RETURNS json
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    result JSON;
+BEGIN
+    SELECT json_build_object(
+        'event', row_to_json(e),
+        'cover_image', e.image_url,
+        'gallery', COALESCE(
+            (SELECT json_agg(
+                json_build_object(
+                    'id', eg.id,
+                    'file_url', uf.file_url,
+                    'filename', uf.filename,
+                    'caption', eg.caption,
+                    'display_order', eg.display_order,
+                    'is_cover', eg.is_cover_image
+                ) ORDER BY eg.display_order
+            )
+            FROM event_gallery eg
+            JOIN uploaded_files uf ON eg.file_id = uf.id
+            WHERE eg.event_id = event_uuid
+            ), '[]'::json
+        )
+    ) INTO result
+    FROM events e
+    WHERE e.id = event_uuid;
+    
+    RETURN result;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_event_with_images(event_uuid uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_event_with_images(event_uuid uuid) IS 'Returns event data with all associated images';
 
 
 --
@@ -250,6 +310,39 @@ $$;
 
 
 --
+-- Name: get_organizer_venues(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_organizer_venues(p_organizer_id uuid) RETURNS TABLE(id uuid, name character varying, capacity integer, organizer_id uuid, created_at timestamp with time zone, address_line_1 character varying, address_line_2 character varying, locality character varying, administrative_area character varying, postal_code character varying, country_code character, latitude numeric, longitude numeric, formatted_address text)
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        v.id,
+        v.name,
+        v.capacity,
+        v.organizer_id,
+        v.created_at,
+        a.address_line_1,
+        a.address_line_2,
+        a.locality,
+        a.administrative_area,
+        a.postal_code,
+        a.country_code,
+        a.latitude,
+        a.longitude,
+        format_address(a.id) as formatted_address
+    FROM venues v
+    LEFT JOIN address_relationships ar ON (ar.entity_type = 'venue' AND ar.entity_id = v.id)
+    LEFT JOIN addresses a ON a.id = ar.address_id
+    WHERE v.organizer_id = p_organizer_id
+    ORDER BY v.created_at DESC;
+END;
+$$;
+
+
+--
 -- Name: get_primary_address(character varying, uuid, character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -330,6 +423,64 @@ BEGIN
             )::TEXT
         );
     END IF;
+END;
+$$;
+
+
+--
+-- Name: migrate_existing_event_images(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.migrate_existing_event_images() RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    event_record RECORD;
+    file_record uploaded_files%ROWTYPE;
+    migrated_count INTEGER := 0;
+BEGIN
+    -- Loop through events that have image_url but no corresponding uploaded_files entry
+    FOR event_record IN 
+        SELECT id, image_url, organizer_id, created_at
+        FROM events 
+        WHERE image_url IS NOT NULL 
+        AND image_url != ''
+        AND image_filename IS NULL
+    LOOP
+        -- Create a record in uploaded_files for existing images
+        INSERT INTO uploaded_files (
+            filename,
+            original_name,
+            file_path,
+            file_url,
+            file_size,
+            mime_type,
+            folder,
+            is_public,
+            uploaded_by,
+            created_at
+        ) VALUES (
+            'migrated_' || event_record.id || '.jpg',
+            'migrated_image.jpg',
+            'events/migrated_' || event_record.id || '.jpg',
+            event_record.image_url,
+            0, -- Unknown size for migrated files
+            'image/jpeg',
+            'events',
+            true,
+            event_record.organizer_id,
+            event_record.created_at
+        ) RETURNING * INTO file_record;
+        
+        -- Update event with filename
+        UPDATE events 
+        SET image_filename = file_record.filename
+        WHERE id = event_record.id;
+        
+        migrated_count := migrated_count + 1;
+    END LOOP;
+    
+    RETURN migrated_count;
 END;
 $$;
 
@@ -533,6 +684,20 @@ CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
     AS $$
 BEGIN
     NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: update_venues_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_venues_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$;
@@ -846,6 +1011,28 @@ CREATE TABLE public.event_categories (
 
 
 --
+-- Name: event_gallery; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.event_gallery (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    event_id uuid,
+    file_id uuid,
+    display_order integer DEFAULT 0,
+    is_cover_image boolean DEFAULT false,
+    caption text,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE event_gallery; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.event_gallery IS 'Stores multiple images for each event, including cover image and gallery images';
+
+
+--
 -- Name: events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -874,8 +1061,40 @@ CREATE TABLE public.events (
     approved_by uuid,
     approved_at timestamp with time zone,
     favorites_count integer DEFAULT 0 NOT NULL,
+    image_filename text,
+    gallery_images jsonb DEFAULT '[]'::jsonb,
+    requirements text,
+    cancellation_policy text,
     CONSTRAINT events_moderation_status_check CHECK (((moderation_status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'flagged'::character varying])::text[]))),
     CONSTRAINT events_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'active'::character varying, 'sold_out'::character varying, 'cancelled'::character varying, 'completed'::character varying])::text[])))
+);
+
+
+--
+-- Name: COLUMN events.image_filename; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.events.image_filename IS 'Filename of the main event image for file management';
+
+
+--
+-- Name: COLUMN events.gallery_images; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.events.gallery_images IS 'DEPRECATED: Use event_gallery table instead';
+
+
+--
+-- Name: file_settings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.file_settings (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    setting_key character varying(100) NOT NULL,
+    setting_value text NOT NULL,
+    description text,
+    updated_by uuid,
+    updated_at timestamp without time zone DEFAULT now()
 );
 
 
@@ -1034,6 +1253,56 @@ CREATE VIEW public.organizer_dashboard_view AS
      LEFT JOIN public.bookings b ON (((e.id = b.event_id) AND ((b.booking_status)::text = 'confirmed'::text))))
   WHERE ((u.role)::text = 'organizer'::text)
   GROUP BY u.id, u.email, op.company_name, op.status, oa.onboarding_completed, oa.payouts_enabled;
+
+
+--
+-- Name: uploaded_files; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.uploaded_files (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    filename character varying(255) NOT NULL,
+    original_name character varying(255) NOT NULL,
+    file_path text NOT NULL,
+    file_url text,
+    file_size integer NOT NULL,
+    mime_type character varying(100) NOT NULL,
+    folder character varying(100) DEFAULT 'uploads'::character varying NOT NULL,
+    is_public boolean DEFAULT true,
+    uploaded_by uuid,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE uploaded_files; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.uploaded_files IS 'Central file tracking table for all uploaded files in the system';
+
+
+--
+-- Name: organizer_events_with_files; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.organizer_events_with_files AS
+ SELECT e.id,
+    e.title,
+    e.description,
+    e.image_url AS cover_image,
+    e.organizer_id,
+    e.created_at,
+    e.updated_at,
+    COALESCE(gallery_stats.image_count, (0)::bigint) AS gallery_image_count,
+    COALESCE(gallery_stats.total_size, (0)::bigint) AS gallery_total_size
+   FROM (public.events e
+     LEFT JOIN ( SELECT eg.event_id,
+            count(*) AS image_count,
+            sum(uf.file_size) AS total_size
+           FROM (public.event_gallery eg
+             JOIN public.uploaded_files uf ON ((eg.file_id = uf.id)))
+          GROUP BY eg.event_id) gallery_stats ON ((e.id = gallery_stats.event_id)));
 
 
 --
@@ -1255,15 +1524,32 @@ CREATE TABLE public.user_profiles (
 CREATE TABLE public.venues (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying(255) NOT NULL,
-    address text NOT NULL,
-    city character varying(100) NOT NULL,
-    postal_code character varying(20),
-    country character varying(100) DEFAULT 'France'::character varying,
-    latitude numeric(10,8),
-    longitude numeric(11,8),
     capacity integer,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    organizer_id uuid NOT NULL,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
+
+
+--
+-- Name: TABLE venues; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.venues IS 'Venues table now uses the standardized address system via address_relationships. No legacy address columns.';
+
+
+--
+-- Name: COLUMN venues.organizer_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.venues.organizer_id IS 'Each venue must have a unique owner (organizer). No shared venues allowed.';
+
+
+--
+-- Name: COLUMN venues.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.venues.updated_at IS 'Automatically updated timestamp when venue record is modified';
 
 
 --
@@ -1428,11 +1714,35 @@ ALTER TABLE ONLY public.event_categories
 
 
 --
+-- Name: event_gallery event_gallery_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_gallery
+    ADD CONSTRAINT event_gallery_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: events events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.events
     ADD CONSTRAINT events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: file_settings file_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file_settings
+    ADD CONSTRAINT file_settings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: file_settings file_settings_setting_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file_settings
+    ADD CONSTRAINT file_settings_setting_key_key UNIQUE (setting_key);
 
 
 --
@@ -1537,6 +1847,14 @@ ALTER TABLE ONLY public.reviews
 
 ALTER TABLE ONLY public.reviews
     ADD CONSTRAINT reviews_user_id_event_id_key UNIQUE (user_id, event_id);
+
+
+--
+-- Name: uploaded_files uploaded_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.uploaded_files
+    ADD CONSTRAINT uploaded_files_pkey PRIMARY KEY (id);
 
 
 --
@@ -1869,6 +2187,27 @@ CREATE INDEX idx_email_templates_name_language ON public.email_templates USING b
 
 
 --
+-- Name: idx_event_gallery_cover; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_event_gallery_cover ON public.event_gallery USING btree (event_id, is_cover_image);
+
+
+--
+-- Name: idx_event_gallery_event; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_event_gallery_event ON public.event_gallery USING btree (event_id);
+
+
+--
+-- Name: idx_event_gallery_order; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_event_gallery_order ON public.event_gallery USING btree (event_id, display_order);
+
+
+--
 -- Name: idx_events_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2121,6 +2460,34 @@ CREATE INDEX idx_reviews_event ON public.reviews USING btree (event_id);
 
 
 --
+-- Name: idx_uploaded_files_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_uploaded_files_created_at ON public.uploaded_files USING btree (created_at);
+
+
+--
+-- Name: idx_uploaded_files_folder; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_uploaded_files_folder ON public.uploaded_files USING btree (folder);
+
+
+--
+-- Name: idx_uploaded_files_public; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_uploaded_files_public ON public.uploaded_files USING btree (is_public);
+
+
+--
+-- Name: idx_uploaded_files_uploaded_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_uploaded_files_uploaded_by ON public.uploaded_files USING btree (uploaded_by);
+
+
+--
 -- Name: idx_user_favorites_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2142,10 +2509,17 @@ CREATE INDEX idx_user_favorites_user_id ON public.user_favorites USING btree (us
 
 
 --
--- Name: idx_venues_city; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_venues_organizer_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_venues_city ON public.venues USING btree (city);
+CREATE INDEX idx_venues_organizer_id ON public.venues USING btree (organizer_id);
+
+
+--
+-- Name: events cleanup_event_files_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER cleanup_event_files_trigger BEFORE DELETE ON public.events FOR EACH ROW EXECUTE FUNCTION public.cleanup_event_files();
 
 
 --
@@ -2209,6 +2583,13 @@ CREATE TRIGGER update_email_settings_updated_at BEFORE UPDATE ON public.email_se
 --
 
 CREATE TRIGGER update_email_templates_updated_at BEFORE UPDATE ON public.email_templates FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: venues venues_updated_at_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER venues_updated_at_trigger BEFORE UPDATE ON public.venues FOR EACH ROW EXECUTE FUNCTION public.update_venues_updated_at();
 
 
 --
@@ -2292,6 +2673,22 @@ ALTER TABLE ONLY public.event_categories
 
 
 --
+-- Name: event_gallery event_gallery_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_gallery
+    ADD CONSTRAINT event_gallery_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
+
+
+--
+-- Name: event_gallery event_gallery_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_gallery
+    ADD CONSTRAINT event_gallery_file_id_fkey FOREIGN KEY (file_id) REFERENCES public.uploaded_files(id);
+
+
+--
 -- Name: events events_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2313,6 +2710,14 @@ ALTER TABLE ONLY public.events
 
 ALTER TABLE ONLY public.events
     ADD CONSTRAINT events_venue_id_fkey FOREIGN KEY (venue_id) REFERENCES public.venues(id) ON DELETE SET NULL;
+
+
+--
+-- Name: file_settings file_settings_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file_settings
+    ADD CONSTRAINT file_settings_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.users(id);
 
 
 --
@@ -2428,6 +2833,14 @@ ALTER TABLE ONLY public.reviews
 
 
 --
+-- Name: uploaded_files uploaded_files_uploaded_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.uploaded_files
+    ADD CONSTRAINT uploaded_files_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES public.users(id);
+
+
+--
 -- Name: user_favorites user_favorites_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2449,6 +2862,14 @@ ALTER TABLE ONLY public.user_favorites
 
 ALTER TABLE ONLY public.user_profiles
     ADD CONSTRAINT user_profiles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: venues venues_organizer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.venues
+    ADD CONSTRAINT venues_organizer_id_fkey FOREIGN KEY (organizer_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --

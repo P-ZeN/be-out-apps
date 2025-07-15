@@ -228,6 +228,248 @@ router.get("/events", verifyOrganizerToken, async (req, res) => {
     }
 });
 
+// Get single event
+router.get("/events/:id", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            // Get event with venue information
+            const eventResult = await client.query(
+                `SELECT e.*, v.name as venue_name,
+                        a.address_line_1 as venue_address,
+                        a.locality as venue_city,
+                        a.postal_code as venue_postal_code,
+                        a.country_code as venue_country
+                 FROM events e
+                 LEFT JOIN venues v ON e.venue_id = v.id
+                 LEFT JOIN address_relationships ar ON ar.entity_type = 'venue' AND ar.entity_id = v.id
+                 LEFT JOIN addresses a ON ar.address_id = a.id
+                 WHERE e.id = $1 AND e.organizer_id = $2`,
+                [req.params.id, req.user.id]
+            );
+
+            if (eventResult.rows.length === 0) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            const event = eventResult.rows[0];
+
+            // Get the first category for this event (assuming one category per event for now)
+            const categoryResult = await client.query(
+                `SELECT c.id, c.name
+                 FROM categories c
+                 JOIN event_categories ec ON c.id = ec.category_id
+                 WHERE ec.event_id = $1
+                 LIMIT 1`,
+                [req.params.id]
+            );
+
+            // Add category information to the event
+            if (categoryResult.rows.length > 0) {
+                event.category_id = categoryResult.rows[0].id;
+                event.category_name = categoryResult.rows[0].name;
+            }
+
+            res.json(event);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error fetching event:", error);
+        res.status(500).json({ message: "Error fetching event" });
+    }
+});
+
+// Create new event
+router.post("/events", verifyOrganizerToken, async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            event_date,
+            venue_id,
+            category_id,
+            price,
+            max_participants,
+            requirements,
+            cancellation_policy,
+        } = req.body;
+
+        // Validation
+        if (!title || !description || !event_date || !venue_id || !category_id || price === undefined) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Create the event
+            const eventResult = await client.query(
+                `INSERT INTO events (
+                    title, description, event_date, venue_id, organizer_id,
+                    original_price, discounted_price, total_tickets, available_tickets,
+                    is_featured, requirements, cancellation_policy
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                RETURNING *`,
+                [
+                    title,
+                    description,
+                    event_date,
+                    venue_id,
+                    req.user.id,
+                    price, // original_price
+                    price, // discounted_price (same as original for now)
+                    max_participants || 100, // total_tickets
+                    max_participants || 100, // available_tickets
+                    false, // is_featured
+                    requirements || null, // requirements
+                    cancellation_policy || null, // cancellation_policy
+                ]
+            );
+
+            const eventId = eventResult.rows[0].id;
+
+            // Link the event to the category
+            await client.query("INSERT INTO event_categories (event_id, category_id) VALUES ($1, $2)", [
+                eventId,
+                category_id,
+            ]);
+
+            await client.query("COMMIT");
+            res.status(201).json(eventResult.rows[0]);
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error creating event:", error);
+        res.status(500).json({ message: "Error creating event" });
+    }
+});
+
+// Update event
+router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            event_date,
+            venue_id,
+            category_id,
+            price,
+            max_participants,
+            requirements,
+            cancellation_policy,
+        } = req.body;
+
+        // Validation
+        if (!title || !description || !event_date || !venue_id || !category_id) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Check if event exists and belongs to organizer
+            const checkResult = await client.query("SELECT id FROM events WHERE id = $1 AND organizer_id = $2", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            // Update the event
+            const eventResult = await client.query(
+                `UPDATE events SET
+                    title = $1, description = $2, event_date = $3, venue_id = $4,
+                    original_price = $5, discounted_price = $6, total_tickets = $7,
+                    available_tickets = $8, requirements = $9, cancellation_policy = $10,
+                    updated_at = NOW()
+                WHERE id = $11 AND organizer_id = $12
+                RETURNING *`,
+                [
+                    title,
+                    description,
+                    event_date,
+                    venue_id,
+                    price, // original_price
+                    price, // discounted_price
+                    max_participants || 100, // total_tickets
+                    max_participants || 100, // available_tickets
+                    requirements || null, // requirements
+                    cancellation_policy || null, // cancellation_policy
+                    req.params.id,
+                    req.user.id,
+                ]
+            );
+
+            // Update category relationship
+            // First, remove existing category relationships
+            await client.query("DELETE FROM event_categories WHERE event_id = $1", [req.params.id]);
+
+            // Then add the new category relationship
+            await client.query("INSERT INTO event_categories (event_id, category_id) VALUES ($1, $2)", [
+                req.params.id,
+                category_id,
+            ]);
+
+            await client.query("COMMIT");
+            res.json(eventResult.rows[0]);
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error updating event:", error);
+        res.status(500).json({ message: "Error updating event" });
+    }
+});
+
+// Delete event
+router.delete("/events/:id", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            // Check if event has bookings
+            const bookingsCheck = await client.query(
+                "SELECT COUNT(*) as booking_count FROM bookings WHERE event_id = $1",
+                [req.params.id]
+            );
+
+            if (parseInt(bookingsCheck.rows[0].booking_count) > 0) {
+                return res.status(400).json({
+                    message: "Cannot delete event with existing bookings. Please cancel all bookings first.",
+                });
+            }
+
+            // Delete the event
+            const result = await client.query("DELETE FROM events WHERE id = $1 AND organizer_id = $2 RETURNING *", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            res.json({ message: "Event deleted successfully" });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error deleting event:", error);
+        res.status(500).json({ message: "Error deleting event" });
+    }
+});
+
 // Get all bookings for organizer's events
 router.get("/bookings", verifyOrganizerToken, async (req, res) => {
     try {
@@ -249,6 +491,283 @@ router.get("/bookings", verifyOrganizerToken, async (req, res) => {
     } catch (error) {
         console.error("Error fetching bookings:", error);
         res.status(500).json({ message: "Error fetching bookings" });
+    }
+});
+
+// VENUE MANAGEMENT
+
+// Get organizer's venues
+router.get("/venues", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            const result = await client.query("SELECT * FROM get_organizer_venues($1)", [req.user.id]);
+
+            res.json(result.rows);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error fetching venues:", error);
+        res.status(500).json({ message: "Error fetching venues" });
+    }
+});
+
+// Get single venue
+router.get("/venues/:id", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            const result = await client.query(
+                `SELECT v.*, a.address_line_1, a.address_line_2, a.locality,
+                        a.administrative_area, a.postal_code, a.country_code,
+                        a.latitude, a.longitude
+                 FROM venues v
+                 LEFT JOIN address_relationships ar ON (ar.entity_type = 'venue' AND ar.entity_id = v.id)
+                 LEFT JOIN addresses a ON a.id = ar.address_id
+                 WHERE v.id = $1 AND v.organizer_id = $2`,
+                [req.params.id, req.user.id]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ message: "Venue not found" });
+            }
+
+            res.json(result.rows[0]);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error fetching venue:", error);
+        res.status(500).json({ message: "Error fetching venue" });
+    }
+});
+
+// Create new venue
+router.post("/venues", verifyOrganizerToken, async (req, res) => {
+    try {
+        const {
+            name,
+            capacity,
+            address_line_1,
+            address_line_2,
+            locality,
+            administrative_area,
+            postal_code,
+            country_code,
+            latitude,
+            longitude,
+        } = req.body;
+
+        // Validation
+        if (!name || !address_line_1 || !locality || !country_code) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Create the address
+            const addressResult = await client.query(
+                `INSERT INTO addresses (
+                    address_line_1, address_line_2, locality, administrative_area,
+                    postal_code, country_code, latitude, longitude,
+                    address_type, label, is_verified
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                RETURNING id`,
+                [
+                    address_line_1,
+                    address_line_2 || null,
+                    locality,
+                    administrative_area || null,
+                    postal_code || null,
+                    country_code,
+                    latitude || null,
+                    longitude || null,
+                    "venue",
+                    name,
+                    false,
+                ]
+            );
+
+            const addressId = addressResult.rows[0].id;
+
+            // Create the venue
+            const venueResult = await client.query(
+                `INSERT INTO venues (name, capacity, organizer_id)
+                 VALUES ($1, $2, $3)
+                 RETURNING *`,
+                [name, capacity || null, req.user.id]
+            );
+
+            const venueId = venueResult.rows[0].id;
+
+            // Link venue to address
+            await client.query(
+                `INSERT INTO address_relationships (address_id, entity_type, entity_id, relationship_type, is_active)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [addressId, "venue", venueId, "venue_location", true]
+            );
+
+            await client.query("COMMIT");
+
+            // Return the venue with address information
+            const fullResult = await client.query(
+                `SELECT v.*, a.address_line_1, a.address_line_2, a.locality,
+                        a.administrative_area, a.postal_code, a.country_code,
+                        a.latitude, a.longitude
+                 FROM venues v
+                 LEFT JOIN address_relationships ar ON (ar.entity_type = 'venue' AND ar.entity_id = v.id)
+                 LEFT JOIN addresses a ON a.id = ar.address_id
+                 WHERE v.id = $1`,
+                [venueId]
+            );
+
+            res.status(201).json(fullResult.rows[0]);
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error creating venue:", error);
+        res.status(500).json({ message: "Error creating venue" });
+    }
+});
+
+// Update venue
+router.put("/venues/:id", verifyOrganizerToken, async (req, res) => {
+    try {
+        const {
+            name,
+            capacity,
+            address_line_1,
+            address_line_2,
+            locality,
+            administrative_area,
+            postal_code,
+            country_code,
+            latitude,
+            longitude,
+        } = req.body;
+
+        // Validation
+        if (!name || !address_line_1 || !locality || !country_code) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Check if venue exists and belongs to organizer
+            const checkResult = await client.query("SELECT id FROM venues WHERE id = $1 AND organizer_id = $2", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: "Venue not found" });
+            }
+
+            // Update venue
+            await client.query(
+                `UPDATE venues SET name = $1, capacity = $2
+                 WHERE id = $3 AND organizer_id = $4`,
+                [name, capacity || null, req.params.id, req.user.id]
+            );
+
+            // Update address
+            await client.query(
+                `UPDATE addresses SET
+                    address_line_1 = $1, address_line_2 = $2, locality = $3,
+                    administrative_area = $4, postal_code = $5, country_code = $6,
+                    latitude = $7, longitude = $8, updated_at = NOW()
+                 WHERE id IN (
+                     SELECT ar.address_id FROM address_relationships ar
+                     WHERE ar.entity_type = 'venue' AND ar.entity_id = $9
+                 )`,
+                [
+                    address_line_1,
+                    address_line_2 || null,
+                    locality,
+                    administrative_area || null,
+                    postal_code || null,
+                    country_code,
+                    latitude || null,
+                    longitude || null,
+                    req.params.id,
+                ]
+            );
+
+            await client.query("COMMIT");
+
+            // Return updated venue with address
+            const result = await client.query(
+                `SELECT v.*, a.address_line_1, a.address_line_2, a.locality,
+                        a.administrative_area, a.postal_code, a.country_code,
+                        a.latitude, a.longitude
+                 FROM venues v
+                 LEFT JOIN address_relationships ar ON (ar.entity_type = 'venue' AND ar.entity_id = v.id)
+                 LEFT JOIN addresses a ON a.id = ar.address_id
+                 WHERE v.id = $1`,
+                [req.params.id]
+            );
+
+            res.json(result.rows[0]);
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error updating venue:", error);
+        res.status(500).json({ message: "Error updating venue" });
+    }
+});
+
+// Delete venue
+router.delete("/venues/:id", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Check if venue has events
+            const eventsCheck = await client.query("SELECT COUNT(*) as count FROM events WHERE venue_id = $1", [
+                req.params.id,
+            ]);
+
+            if (parseInt(eventsCheck.rows[0].count) > 0) {
+                return res.status(400).json({
+                    message: "Cannot delete venue with existing events",
+                });
+            }
+
+            // Delete venue (this will cascade to address_relationships)
+            const result = await client.query("DELETE FROM venues WHERE id = $1 AND organizer_id = $2 RETURNING *", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ message: "Venue not found" });
+            }
+
+            await client.query("COMMIT");
+            res.json({ message: "Venue deleted successfully" });
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error deleting venue:", error);
+        res.status(500).json({ message: "Error deleting venue" });
     }
 });
 

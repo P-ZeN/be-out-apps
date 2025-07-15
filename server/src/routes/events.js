@@ -40,7 +40,7 @@ router.get("/", async (req, res) => {
         }
 
         if (city) {
-            whereConditions.push(`v.city ILIKE $${paramIndex}`);
+            whereConditions.push(`a.locality ILIKE $${paramIndex}`);
             queryParams.push(`%${city}%`);
             paramIndex++;
         }
@@ -116,18 +116,20 @@ router.get("/", async (req, res) => {
                 e.is_last_minute,
                 e.is_featured,
                 v.name as venue_name,
-                v.city as venue_city,
-                v.address as venue_address,
-                v.latitude as venue_latitude,
-                v.longitude as venue_longitude,
+                a.locality as venue_city,
+                a.address_line_1 as venue_address,
+                a.latitude as venue_latitude,
+                a.longitude as venue_longitude,
                 ARRAY_AGG(DISTINCT ${categoryNameSelect}) as categories
             FROM events e
             LEFT JOIN venues v ON e.venue_id = v.id
+            LEFT JOIN address_relationships ar ON ar.entity_type = 'venue' AND ar.entity_id = v.id
+            LEFT JOIN addresses a ON ar.address_id = a.id
             LEFT JOIN event_categories ec ON e.id = ec.event_id
             LEFT JOIN categories cat ON ec.category_id = cat.id
             LEFT JOIN categories c ON ec.category_id = c.id
             ${whereClause}
-            GROUP BY e.id, v.id
+            GROUP BY e.id, v.id, a.id
             ORDER BY ${orderBy}
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
@@ -141,6 +143,8 @@ router.get("/", async (req, res) => {
             SELECT COUNT(DISTINCT e.id) as total
             FROM events e
             LEFT JOIN venues v ON e.venue_id = v.id
+            LEFT JOIN address_relationships ar ON ar.entity_type = 'venue' AND ar.entity_id = v.id
+            LEFT JOIN addresses a ON ar.address_id = a.id
             LEFT JOIN event_categories ec ON e.id = ec.event_id
             LEFT JOIN categories c ON ec.category_id = c.id
             ${whereClause}
@@ -176,22 +180,24 @@ router.get("/:id", async (req, res) => {
             SELECT
                 e.*,
                 v.name as venue_name,
-                v.address as venue_address,
-                v.city as venue_city,
-                v.postal_code as venue_postal_code,
-                v.latitude as venue_latitude,
-                v.longitude as venue_longitude,
+                a.address_line_1 as venue_address,
+                a.locality as venue_city,
+                a.postal_code as venue_postal_code,
+                a.latitude as venue_latitude,
+                a.longitude as venue_longitude,
                 v.capacity as venue_capacity,
                 ARRAY_AGG(DISTINCT cat.name) as categories,
                 COALESCE(AVG(r.rating), 0) as average_rating,
                 COUNT(DISTINCT r.id) as review_count
             FROM events e
             LEFT JOIN venues v ON e.venue_id = v.id
+            LEFT JOIN address_relationships ar ON ar.entity_type = 'venue' AND ar.entity_id = v.id
+            LEFT JOIN addresses a ON ar.address_id = a.id
             LEFT JOIN event_categories ec ON e.id = ec.event_id
             LEFT JOIN categories cat ON ec.category_id = cat.id
             LEFT JOIN reviews r ON e.id = r.event_id
             WHERE e.id = $1
-            GROUP BY e.id, v.id
+            GROUP BY e.id, v.id, a.id
         `;
 
         const result = await client.query(query, [id]);
@@ -278,6 +284,35 @@ router.get("/meta/stats", async (req, res) => {
     } catch (err) {
         console.error("Error fetching stats:", err);
         res.status(500).json({ error: "Failed to fetch statistics" });
+    } finally {
+        client.release();
+    }
+});
+
+// Get all venues
+router.get("/meta/venues", async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const query = `
+            SELECT
+                v.id,
+                v.name,
+                a.address_line_1 as address,
+                a.locality as city,
+                a.country_code as country,
+                v.capacity,
+                v.created_at
+            FROM venues v
+            LEFT JOIN address_relationships ar ON ar.entity_type = 'venue' AND ar.entity_id = v.id
+            LEFT JOIN addresses a ON ar.address_id = a.id
+            ORDER BY v.name ASC
+        `;
+
+        const result = await client.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Error fetching venues:", err);
+        res.status(500).json({ error: "Failed to fetch venues" });
     } finally {
         client.release();
     }

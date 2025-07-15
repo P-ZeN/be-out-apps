@@ -34,6 +34,7 @@ import {
     Add,
     Settings,
     Business,
+    LocationOn,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -77,6 +78,11 @@ const OrganizerMainLayout = ({ children }) => {
             text: "Mes événements",
             icon: <Event />,
             path: "/events",
+        },
+        {
+            text: "Mes lieux",
+            icon: <LocationOn />,
+            path: "/venues",
         },
         {
             text: "Réservations",

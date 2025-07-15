@@ -235,9 +235,20 @@ class OrganizerService {
         return response.json();
     }
 
+    // Categories
+    async getCategories(lang = "fr") {
+        const response = await fetch(`${API_BASE_URL}/api/events/meta/categories?lang=${lang}`);
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch categories");
+        }
+
+        return response.json();
+    }
+
     // Venues
     async getVenues() {
-        const response = await fetch(`${API_BASE_URL}/api/venues`, {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/venues`, {
             headers: this.getAuthHeaders(),
         });
 
@@ -248,14 +259,57 @@ class OrganizerService {
         return response.json();
     }
 
-    // Categories
-    async getCategories() {
-        const response = await fetch(`${API_BASE_URL}/api/categories`, {
+    async getVenue(id) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/venues/${id}`, {
             headers: this.getAuthHeaders(),
         });
 
         if (!response.ok) {
-            throw new Error("Failed to fetch categories");
+            throw new Error("Failed to fetch venue");
+        }
+
+        return response.json();
+    }
+
+    async createVenue(venueData) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/venues`, {
+            method: "POST",
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify(venueData),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to create venue");
+        }
+
+        return response.json();
+    }
+
+    async updateVenue(id, venueData) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/venues/${id}`, {
+            method: "PUT",
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify(venueData),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to update venue");
+        }
+
+        return response.json();
+    }
+
+    async deleteVenue(id) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/venues/${id}`, {
+            method: "DELETE",
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to delete venue");
         }
 
         return response.json();
