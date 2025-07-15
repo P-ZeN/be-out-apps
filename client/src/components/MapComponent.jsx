@@ -7,7 +7,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN =
     import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
-    "pk.eyJ1IjoiYmVvdXQiLCJhIjoiY2x0ZXhzZHl6MGNjYjJqbzJudjJkOWNiZiJ9.example"; // Replace with your token
+    "pk.eyJ1IjoicGhpbGlwcGV6ZW5vbmUiLCJhIjoiY21jeXQyemdpMHRwazJsc2JkdG9vZzViaCJ9.0h5JWCXgM5nY6hrDtj-vsw"; // Replace with your token
 
 // Fallback component if Mapbox fails to load
 const MapFallback = ({ events, onEventClick, t }) => (

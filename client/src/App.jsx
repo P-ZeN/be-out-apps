@@ -8,6 +8,9 @@ import { AuthProvider } from "./context/AuthContext";
 import { theme } from "./theme";
 import "./App.css";
 
+// Build timestamp for deployment verification
+console.log("App build timestamp:", "2025-07-11-18:00");
+
 function App() {
     return (
         <Router>
