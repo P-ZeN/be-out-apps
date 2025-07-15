@@ -12,11 +12,14 @@ RUN npm install
 COPY src ./src
 COPY . .
 
+# Create uploads directory
+RUN mkdir -p uploads/public/avatars uploads/public/events uploads/public/thumbnails uploads/private/documents uploads/private/temp
+
 # Create a non-root user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
-# Change ownership of the app directory
+# Change ownership of the app directory (including uploads)
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 

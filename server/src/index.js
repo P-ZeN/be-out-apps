@@ -4,6 +4,7 @@ import cors from "cors";
 import session from "express-session";
 import passport from "passport";
 import jwt from "jsonwebtoken";
+import path from "path";
 import setupRoutes from "./routes/setup.js";
 import authRoutes from "./routes/auth.js";
 import profileRoutes from "./routes/profile.js";
@@ -16,6 +17,7 @@ import webhooksRoutes from "./routes/webhooks.js";
 import organizerRoutes from "./routes/organizer.js";
 import addressesRoutes from "./routes/addresses.js";
 import emailsRoutes from "./routes/emails.js";
+import filesRoutes from "./routes/files.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 
@@ -78,6 +80,28 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Serve static files from uploads directory with optimized headers
+const uploadsPath = process.env.UPLOAD_PATH || path.join(process.cwd(), "uploads");
+app.use(
+    "/uploads",
+    express.static(uploadsPath, {
+        setHeaders: (res, path) => {
+            // Add CORS headers for file access
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET");
+
+            // Cache images for 1 year
+            if (path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+                res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+            }
+
+            // Security headers
+            res.setHeader("X-Content-Type-Options", "nosniff");
+            res.setHeader("X-Frame-Options", "DENY");
+        },
+    })
+);
+
 const port = process.env.PORT || 3000;
 
 app.use("/", setupRoutes);
@@ -93,6 +117,7 @@ app.use("/api/favorites", favoritesRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/webhooks", webhooksRoutes);
 app.use("/api/emails", emailsRoutes);
+app.use("/api/files", filesRoutes);
 app.use("/api", addressesRoutes);
 
 // Helper function to determine redirect URL based on environment and user role
