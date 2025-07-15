@@ -1,35 +1,74 @@
-# ✅ File Storage Setup Complete
+# 🔧 Dockploy Nginx Configuration Guide
+# How to serve uploaded files in Dockploy
 
-## 🎉 No Additional Configuration Needed
+## 🤔 Where to Configure Nginx in Dockploy?
 
-Your Node.js server already has static file serving built-in. The file storage system is ready to use!
+Dockploy handles nginx differently depending on your setup. Here are the options:
 
-## 🚀 What You Need to Do in Dockploy
+## Option 1: Dockploy's Built-in Reverse Proxy
 
-### 1. Add Environment Variables to Your Server App
-```env
-UPLOAD_PATH=/app/uploads
-PUBLIC_FILES_URL=https://api.yourdomain.com/uploads
-MAX_FILE_SIZE=10485760
-ALLOWED_IMAGE_TYPES=image/jpeg,image/png,image/webp,image/gif
+If you're using Dockploy's built-in reverse proxy:
+
+1. **Go to your app in Dockploy**
+2. **Look for "Domains" or "Routing" section**
+3. **Add a new route for static files:**
+   - Path: `/uploads/*`
+   - Target: File serving (if available)
+
+## Option 2: Custom Nginx Container
+
+If you need more control, add a separate nginx service:
+
+1. **Create a new "Generic" app in Dockploy**
+2. **Use this simple nginx setup:**
+
+```dockerfile
+FROM nginx:alpine
+COPY nginx.conf /etc/nginx/nginx.conf
 ```
 
-### 2. Add Volume Mount to Your Server App
-- **Container Path**: `/app/uploads`
-- **Volume Name**: `beout_uploads`
-- **Access Mode**: Read/Write
+3. **Mount the same volume as your server**
 
-### 3. Redeploy Your Server App
-Click "Redeploy" in Dockploy and wait for completion.
+## Option 3: Simple Solution - Serve Files from Node.js
 
-## 🎯 Ready to Use
+**EASIEST APPROACH:** Let your Node.js server serve the files directly!
 
-### File URLs
-- **Upload**: `POST https://api.yourdomain.com/api/files/event-image`
-- **Access**: `GET https://api.yourdomain.com/uploads/public/events/filename.jpg`
+### Update your server code:
 
-### Supported by
-- ✅ Organizer-client (event image uploads)
-- ✅ Admin-client (event image management)
-- ✅ Files persist across container rebuilds
-- ✅ Automatic CORS and caching headers
+```javascript
+// Add this to your server/src/index.js
+import express from 'express';
+import path from 'path';
+
+const app = express();
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+    setHeaders: (res, path) => {
+        // Add CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET');
+
+        // Cache images for 1 year
+        if (path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+    }
+}));
+
+// Your existing routes...
+```
+
+## Option 4: Check Dockploy Documentation
+
+Different Dockploy versions have different nginx configuration methods:
+
+1. **Look for "Proxy" or "Routing" in your app settings**
+2. **Check if there's a "Custom nginx config" option**
+3. **Look for "Static files" or "File serving" options**
+
+## 🎯 Recommended: Use Node.js Static Serving
+
+Since you already have a Node.js server, the simplest approach is to serve files directly from Node.js. This works with any Dockploy setup and requires no nginx configuration.
+
+Would you like me to show you how to update your server code to serve static files?

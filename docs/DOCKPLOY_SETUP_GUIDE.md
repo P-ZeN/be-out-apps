@@ -44,7 +44,7 @@ location /uploads/ {
 
 ## ✅ What This Achieves:
 - ✅ Event images uploaded via organizer-client persist
-- ✅ Event images uploaded via admin-client persist  
+- ✅ Event images uploaded via admin-client persist
 - ✅ Files survive container rebuilds and redeployments
 - ✅ Your existing setup remains unchanged
 - ✅ Zero downtime for your running apps
