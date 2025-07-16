@@ -390,6 +390,48 @@ $$;
 
 
 --
+-- Name: log_event_status_change(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.log_event_status_change() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Only log if status or moderation_status changed
+    IF (OLD.status IS DISTINCT FROM NEW.status) OR (OLD.moderation_status IS DISTINCT FROM NEW.moderation_status) THEN
+        INSERT INTO event_status_history (
+            event_id,
+            old_status,
+            new_status,
+            old_moderation_status,
+            new_moderation_status,
+            changed_by,
+            change_reason,
+            admin_notes
+        ) VALUES (
+            NEW.id,
+            OLD.status,
+            NEW.status,
+            OLD.moderation_status,
+            NEW.moderation_status,
+            NEW.status_changed_by,
+            CASE 
+                WHEN OLD.status IS DISTINCT FROM NEW.status THEN 'Status changed from ' || COALESCE(OLD.status, 'null') || ' to ' || NEW.status
+                ELSE 'Moderation status changed from ' || COALESCE(OLD.moderation_status, 'null') || ' to ' || NEW.moderation_status
+            END,
+            NEW.admin_notes
+        );
+        
+        -- Update status_changed_at
+        NEW.status_changed_at = CURRENT_TIMESTAMP;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: log_favorite_action(uuid, uuid, character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -481,6 +523,92 @@ BEGIN
     END LOOP;
     
     RETURN migrated_count;
+END;
+$$;
+
+
+--
+-- Name: notify_event_status_change(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.notify_event_status_change() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    organizer_user_id UUID;
+    notification_title VARCHAR(255);
+    notification_message TEXT;
+    notification_type VARCHAR(50) := 'event_status';
+BEGIN
+    -- Get organizer user_id
+    SELECT organizer_id INTO organizer_user_id FROM events WHERE id = NEW.event_id;
+    
+    -- Determine notification content based on status change
+    IF NEW.new_moderation_status IS DISTINCT FROM NEW.old_moderation_status THEN
+        notification_type := 'event_approval';
+        CASE NEW.new_moderation_status
+            WHEN 'under_review' THEN
+                notification_title := 'Événement en cours de révision';
+                notification_message := 'Votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '" est maintenant en cours de révision par notre équipe.';
+            WHEN 'approved' THEN
+                notification_title := 'Événement approuvé';
+                notification_message := 'Félicitations ! Votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '" a été approuvé et peut maintenant être publié.';
+            WHEN 'rejected' THEN
+                notification_title := 'Événement rejeté';
+                notification_message := 'Votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '" a été rejeté. Veuillez consulter les notes de l''administrateur pour plus de détails.';
+            WHEN 'revision_requested' THEN
+                notification_title := 'Révision demandée';
+                notification_message := 'Des modifications sont requises pour votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '". Veuillez consulter les commentaires de l''administrateur.';
+            ELSE
+                notification_title := 'Statut de modération mis à jour';
+                notification_message := 'Le statut de modération de votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '" a été mis à jour.';
+        END CASE;
+    ELSE
+        CASE NEW.new_status
+            WHEN 'candidate' THEN
+                notification_title := 'Événement soumis pour révision';
+                notification_message := 'Votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '" a été soumis pour révision. Nous vous tiendrons informé du statut.';
+            WHEN 'active' THEN
+                notification_title := 'Événement activé';
+                notification_message := 'Votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '" est maintenant actif et visible par le public.';
+            WHEN 'suspended' THEN
+                notification_title := 'Événement suspendu';
+                notification_message := 'Votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '" a été suspendu temporairement.';
+            ELSE
+                notification_title := 'Statut d''événement mis à jour';
+                notification_message := 'Le statut de votre événement "' || (SELECT title FROM events WHERE id = NEW.event_id) || '" a été mis à jour.';
+        END CASE;
+    END IF;
+    
+    -- Insert notification
+    INSERT INTO organizer_notifications (
+        organizer_id,
+        type,
+        title,
+        message,
+        data,
+        priority
+    ) VALUES (
+        organizer_user_id,
+        notification_type,
+        notification_title,
+        notification_message,
+        jsonb_build_object(
+            'event_id', NEW.event_id,
+            'old_status', NEW.old_status,
+            'new_status', NEW.new_status,
+            'old_moderation_status', NEW.old_moderation_status,
+            'new_moderation_status', NEW.new_moderation_status,
+            'change_reason', NEW.change_reason
+        ),
+        CASE 
+            WHEN NEW.new_moderation_status IN ('rejected', 'revision_requested') THEN 'high'
+            WHEN NEW.new_moderation_status = 'approved' THEN 'normal'
+            ELSE 'normal'
+        END
+    );
+    
+    RETURN NEW;
 END;
 $$;
 
@@ -1033,6 +1161,31 @@ COMMENT ON TABLE public.event_gallery IS 'Stores multiple images for each event,
 
 
 --
+-- Name: event_status_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.event_status_history (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    event_id uuid NOT NULL,
+    old_status character varying(50),
+    new_status character varying(50) NOT NULL,
+    old_moderation_status character varying(50),
+    new_moderation_status character varying(50),
+    changed_by uuid,
+    change_reason text,
+    admin_notes text,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE event_status_history; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.event_status_history IS 'Tracks all status changes for events';
+
+
+--
 -- Name: events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1065,8 +1218,11 @@ CREATE TABLE public.events (
     gallery_images jsonb DEFAULT '[]'::jsonb,
     requirements text,
     cancellation_policy text,
-    CONSTRAINT events_moderation_status_check CHECK (((moderation_status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'flagged'::character varying])::text[]))),
-    CONSTRAINT events_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'active'::character varying, 'sold_out'::character varying, 'cancelled'::character varying, 'completed'::character varying])::text[])))
+    is_published boolean DEFAULT false,
+    status_changed_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    status_changed_by uuid,
+    CONSTRAINT events_moderation_status_check CHECK (((moderation_status)::text = ANY (ARRAY[('pending'::character varying)::text, ('under_review'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('flagged'::character varying)::text, ('revision_requested'::character varying)::text]))),
+    CONSTRAINT events_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('candidate'::character varying)::text, ('active'::character varying)::text, ('sold_out'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('suspended'::character varying)::text])))
 );
 
 
@@ -1082,6 +1238,27 @@ COMMENT ON COLUMN public.events.image_filename IS 'Filename of the main event im
 --
 
 COMMENT ON COLUMN public.events.gallery_images IS 'DEPRECATED: Use event_gallery table instead';
+
+
+--
+-- Name: COLUMN events.is_published; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.events.is_published IS 'Whether the event is published and visible to the public';
+
+
+--
+-- Name: COLUMN events.status_changed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.events.status_changed_at IS 'Timestamp when the status was last changed';
+
+
+--
+-- Name: COLUMN events.status_changed_by; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.events.status_changed_by IS 'User who changed the status';
 
 
 --
@@ -1322,7 +1499,7 @@ CREATE TABLE public.organizer_notifications (
     expires_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT organizer_notifications_priority_check CHECK (((priority)::text = ANY ((ARRAY['low'::character varying, 'normal'::character varying, 'high'::character varying, 'urgent'::character varying])::text[]))),
-    CONSTRAINT organizer_notifications_type_check CHECK (((type)::text = ANY ((ARRAY['booking'::character varying, 'payment'::character varying, 'dispute'::character varying, 'system'::character varying, 'marketing'::character varying])::text[])))
+    CONSTRAINT organizer_notifications_type_check CHECK (((type)::text = ANY (ARRAY[('booking'::character varying)::text, ('payment'::character varying)::text, ('dispute'::character varying)::text, ('system'::character varying)::text, ('marketing'::character varying)::text, ('event_status'::character varying)::text, ('event_approval'::character varying)::text])))
 );
 
 
@@ -1720,6 +1897,14 @@ ALTER TABLE ONLY public.event_categories
 
 ALTER TABLE ONLY public.event_gallery
     ADD CONSTRAINT event_gallery_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: event_status_history event_status_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_status_history
+    ADD CONSTRAINT event_status_history_pkey PRIMARY KEY (id);
 
 
 --
@@ -2209,6 +2394,20 @@ CREATE INDEX idx_event_gallery_order ON public.event_gallery USING btree (event_
 
 
 --
+-- Name: idx_event_status_history_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_event_status_history_created_at ON public.event_status_history USING btree (created_at DESC);
+
+
+--
+-- Name: idx_event_status_history_event_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_event_status_history_event_id ON public.event_status_history USING btree (event_id);
+
+
+--
 -- Name: idx_events_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2237,6 +2436,13 @@ CREATE INDEX idx_events_last_minute ON public.events USING btree (is_last_minute
 
 
 --
+-- Name: idx_events_moderation_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_events_moderation_status ON public.events USING btree (moderation_status);
+
+
+--
 -- Name: idx_events_organizer_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2262,6 +2468,20 @@ CREATE INDEX idx_events_organizer_status ON public.events USING btree (organizer
 --
 
 CREATE INDEX idx_events_status ON public.events USING btree (status);
+
+
+--
+-- Name: idx_events_status_changed_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_events_status_changed_at ON public.events USING btree (status_changed_at);
+
+
+--
+-- Name: idx_events_status_published; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_events_status_published ON public.events USING btree (status, is_published);
 
 
 --
@@ -2531,6 +2751,20 @@ CREATE TRIGGER trigger_addresses_updated_at BEFORE UPDATE ON public.addresses FO
 
 
 --
+-- Name: events trigger_log_event_status_change; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_log_event_status_change BEFORE UPDATE ON public.events FOR EACH ROW EXECUTE FUNCTION public.log_event_status_change();
+
+
+--
+-- Name: event_status_history trigger_notify_event_status_change; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_notify_event_status_change AFTER INSERT ON public.event_status_history FOR EACH ROW EXECUTE FUNCTION public.notify_event_status_change();
+
+
+--
 -- Name: bookings trigger_set_booking_reference; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -2697,6 +2931,22 @@ ALTER TABLE ONLY public.event_gallery
 
 
 --
+-- Name: event_status_history event_status_history_changed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_status_history
+    ADD CONSTRAINT event_status_history_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES public.users(id);
+
+
+--
+-- Name: event_status_history event_status_history_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.event_status_history
+    ADD CONSTRAINT event_status_history_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events(id) ON DELETE CASCADE;
+
+
+--
 -- Name: events events_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2710,6 +2960,14 @@ ALTER TABLE ONLY public.events
 
 ALTER TABLE ONLY public.events
     ADD CONSTRAINT events_organizer_id_fkey FOREIGN KEY (organizer_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: events events_status_changed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_status_changed_by_fkey FOREIGN KEY (status_changed_by) REFERENCES public.users(id);
 
 
 --
