@@ -683,8 +683,8 @@ CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
+    NEW.updated_at = CURRENT_TIMESTAMP;
+RETURN NEW;
 END;
 $$;
 
@@ -1161,6 +1161,7 @@ CREATE TABLE public.users (
     provider_id character varying(255),
     is_active boolean DEFAULT true,
     onboarding_complete boolean DEFAULT false,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT users_role_check CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'admin'::character varying, 'moderator'::character varying, 'organizer'::character varying])::text[])))
 );
 
@@ -2583,6 +2584,13 @@ CREATE TRIGGER update_email_settings_updated_at BEFORE UPDATE ON public.email_se
 --
 
 CREATE TRIGGER update_email_templates_updated_at BEFORE UPDATE ON public.email_templates FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: users update_users_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --

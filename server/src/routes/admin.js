@@ -149,7 +149,8 @@ router.get("/events", requireAdmin, async (req, res) => {
             SELECT
                 e.*,
                 v.name as venue_name,
-                v.city as venue_city,
+                va.locality as venue_city,
+                va.formatted_address as venue_address,
                 uc.email as creator_email,
                 ua.email as approved_by_email,
                 COUNT(DISTINCT b.id) as total_bookings,
@@ -158,12 +159,14 @@ router.get("/events", requireAdmin, async (req, res) => {
                 AVG(r.rating) as average_rating
             FROM events e
             LEFT JOIN venues v ON e.venue_id = v.id
+            LEFT JOIN address_relationships var ON v.id = var.entity_id AND var.entity_type = 'venue' AND var.relationship_type = 'venue_location' AND var.is_active = true
+            LEFT JOIN addresses va ON var.address_id = va.id
             LEFT JOIN users uc ON e.organizer_id = uc.id
             LEFT JOIN users ua ON e.approved_by = ua.id
             LEFT JOIN bookings b ON e.id = b.event_id
             LEFT JOIN reviews r ON e.id = r.event_id
             ${whereClause}
-            GROUP BY e.id, v.id, uc.id, ua.id
+            GROUP BY e.id, v.id, va.id, uc.id, ua.id
             ORDER BY e.${sortBy === "created_at" ? "created_at" : "title"} DESC
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
@@ -247,6 +250,53 @@ router.patch("/events/:id/status", requireAdmin, async (req, res) => {
     }
 });
 
+// Delete event
+router.delete("/events/:id", requireAdmin, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        const { id } = req.params;
+
+        // First check if event exists
+        const eventCheck = await client.query("SELECT * FROM events WHERE id = $1", [id]);
+
+        if (eventCheck.rows.length === 0) {
+            await client.query("ROLLBACK");
+            return res.status(404).json({ error: "Event not found" });
+        }
+
+        const event = eventCheck.rows[0];
+
+        // Delete related records in order to maintain referential integrity
+        await client.query("DELETE FROM favorites WHERE event_id = $1", [id]);
+        await client.query("DELETE FROM event_categories WHERE event_id = $1", [id]);
+        await client.query("DELETE FROM address_relationships WHERE entity_type = 'event' AND entity_id = $1", [id]);
+
+        // Delete the event itself
+        await client.query("DELETE FROM events WHERE id = $1", [id]);
+
+        // Log admin action
+        await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+            req.adminUser.id,
+            "delete_event",
+            "event",
+            id,
+            `Deleted event: ${event.title}`,
+            JSON.stringify({ event_data: event }),
+        ]);
+
+        await client.query("COMMIT");
+        res.json({ message: "Event deleted successfully", eventId: id });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Error deleting event:", err);
+        res.status(500).json({ error: "Failed to delete event" });
+    } finally {
+        client.release();
+    }
+});
+
 // Get all users for admin management
 router.get("/users", requireAdmin, async (req, res) => {
     const client = await pool.connect();
@@ -276,21 +326,45 @@ router.get("/users", requireAdmin, async (req, res) => {
 
         const query = `
             SELECT
-                u.*,
+                u.id,
+                u.email,
+                u.role,
+                u.is_active,
+                u.created_at,
                 up.first_name,
                 up.last_name,
                 up.phone,
-                COUNT(DISTINCT b.id) as total_bookings,
-                SUM(b.total_price) FILTER (WHERE b.booking_status = 'confirmed') as total_spent,
-                COUNT(DISTINCT e.id) as events_created,
-                COUNT(DISTINCT r.id) as reviews_written
+                up.date_of_birth,
+                up.profile_picture,
+                up.street_number,
+                up.street_name,
+                up.postal_code,
+                up.city,
+                up.country,
+                COALESCE(event_stats.events_count, 0) as events_count,
+                COALESCE(booking_stats.bookings_count, 0) as bookings_count,
+                COALESCE(booking_stats.total_spent, 0) as total_spent,
+                COALESCE(review_stats.reviews_count, 0) as reviews_written
             FROM users u
             LEFT JOIN user_profiles up ON u.id = up.user_id
-            LEFT JOIN bookings b ON u.id = b.user_id
-            LEFT JOIN events e ON u.id = e.organizer_id
-            LEFT JOIN reviews r ON u.id = r.user_id
+            LEFT JOIN (
+                SELECT organizer_id, COUNT(*) as events_count
+                FROM events
+                GROUP BY organizer_id
+            ) event_stats ON u.id = event_stats.organizer_id
+            LEFT JOIN (
+                SELECT user_id,
+                       COUNT(*) as bookings_count,
+                       SUM(total_price) FILTER (WHERE booking_status = 'confirmed') as total_spent
+                FROM bookings
+                GROUP BY user_id
+            ) booking_stats ON u.id = booking_stats.user_id
+            LEFT JOIN (
+                SELECT user_id, COUNT(*) as reviews_count
+                FROM reviews
+                GROUP BY user_id
+            ) review_stats ON u.id = review_stats.user_id
             ${whereClause}
-            GROUP BY u.id, up.user_id, up.first_name, up.last_name, up.phone
             ORDER BY u.${sortBy === "created_at" ? "created_at" : "email"} DESC
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;
@@ -377,76 +451,243 @@ router.patch("/users/:id/role", requireAdmin, async (req, res) => {
     }
 });
 
-// Get all bookings for admin management
-router.get("/bookings", requireAdmin, async (req, res) => {
+// Update user (full update)
+router.patch("/users/:id", requireAdmin, async (req, res) => {
     const client = await pool.connect();
     try {
-        const { page = 1, limit = 20, status, search, sortBy = "booking_date" } = req.query;
-        const offset = (page - 1) * limit;
+        await client.query("BEGIN");
 
-        let whereConditions = [];
-        let queryParams = [];
-        let paramIndex = 1;
+        const { id } = req.params;
+        const {
+            role,
+            is_active,
+            first_name,
+            last_name,
+            phone,
+            date_of_birth,
+            street_number,
+            street_name,
+            postal_code,
+            city,
+            country,
+            email,
+        } = req.body;
 
-        if (status) {
-            whereConditions.push(`b.booking_status = $${paramIndex}`);
-            queryParams.push(status);
-            paramIndex++;
+        // Validate role if provided
+        if (role && !["user", "admin", "moderator", "organizer"].includes(role)) {
+            return res.status(400).json({ error: "Invalid role" });
         }
 
-        if (search) {
-            whereConditions.push(
-                `(b.booking_reference ILIKE $${paramIndex} OR b.customer_email ILIKE $${paramIndex} OR e.title ILIKE $${paramIndex})`
-            );
-            queryParams.push(`%${search}%`);
-            paramIndex++;
+        // Don't allow non-admins to create admins
+        if (role === "admin" && req.adminUser.role !== "admin") {
+            return res.status(403).json({ error: "Only admins can grant admin role" });
         }
 
-        const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+        // Don't allow users to modify themselves
+        if (parseInt(id) === req.adminUser.id) {
+            return res.status(403).json({ error: "Cannot modify your own account" });
+        }
 
-        const query = `
-            SELECT
-                b.*,
-                e.title as event_title,
-                e.event_date,
-                v.name as venue_name,
-                u.email as user_email,
-                COUNT(bt.id) as ticket_count
-            FROM bookings b
-            LEFT JOIN events e ON b.event_id = e.id
-            LEFT JOIN venues v ON e.venue_id = v.id
-            LEFT JOIN users u ON b.user_id = u.id
-            LEFT JOIN booking_tickets bt ON b.id = bt.booking_id
-            ${whereClause}
-            GROUP BY b.id, e.id, v.id, u.id
-            ORDER BY b.${sortBy === "booking_date" ? "booking_date" : "total_price"} DESC
-            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        // Update users table
+        let userUpdateFields = [];
+        let userQueryParams = [];
+        let userParamIndex = 1;
+
+        if (role !== undefined) {
+            userUpdateFields.push(`role = $${userParamIndex}`);
+            userQueryParams.push(role);
+            userParamIndex++;
+        }
+
+        if (is_active !== undefined) {
+            userUpdateFields.push(`is_active = $${userParamIndex}`);
+            userQueryParams.push(is_active);
+            userParamIndex++;
+        }
+
+        if (email !== undefined) {
+            userUpdateFields.push(`email = $${userParamIndex}`);
+            userQueryParams.push(email);
+            userParamIndex++;
+        }
+
+        let userResult = null;
+        if (userUpdateFields.length > 0) {
+            userQueryParams.push(id);
+            const userQuery = `
+                UPDATE users
+                SET ${userUpdateFields.join(", ")}
+                WHERE id = $${userParamIndex}
+                RETURNING *
+            `;
+            userResult = await client.query(userQuery, userQueryParams);
+
+            if (userResult.rows.length === 0) {
+                await client.query("ROLLBACK");
+                return res.status(404).json({ error: "User not found" });
+            }
+        }
+
+        // Update user_profiles table
+        // Convert empty strings to null for date fields and handle other empty strings
+        const profileFields = {};
+
+        if (first_name !== undefined) profileFields.first_name = first_name === "" ? null : first_name;
+        if (last_name !== undefined) profileFields.last_name = last_name === "" ? null : last_name;
+        if (phone !== undefined) profileFields.phone = phone === "" ? null : phone;
+        if (date_of_birth !== undefined) profileFields.date_of_birth = date_of_birth === "" ? null : date_of_birth;
+        if (street_number !== undefined) profileFields.street_number = street_number === "" ? null : street_number;
+        if (street_name !== undefined) profileFields.street_name = street_name === "" ? null : street_name;
+        if (postal_code !== undefined) profileFields.postal_code = postal_code === "" ? null : postal_code;
+        if (city !== undefined) profileFields.city = city === "" ? null : city;
+        if (country !== undefined) profileFields.country = country === "" ? null : country;
+
+        const profileUpdateFields = Object.entries(profileFields)
+            .map(([key, value], index) => `${key} = $${index + 1}`)
+            .join(", ");
+
+        const profileValues = Object.entries(profileFields).map(([key, value]) => value);
+
+        let profileResult = null;
+        if (profileUpdateFields.length > 0) {
+            // Check if profile exists
+            const profileCheck = await client.query("SELECT id FROM user_profiles WHERE user_id = $1", [id]);
+
+            profileValues.push(id);
+
+            if (profileCheck.rows.length > 0) {
+                // Update existing profile
+                const profileQuery = `
+                    UPDATE user_profiles
+                    SET ${profileUpdateFields}
+                    WHERE user_id = $${profileValues.length}
+                    RETURNING *
+                `;
+                profileResult = await client.query(profileQuery, profileValues);
+            } else {
+                // Create new profile
+                const insertFields = Object.keys(profileFields).concat(["user_id"]);
+                const insertValues = Object.values(profileFields).concat([id]);
+
+                const placeholders = insertValues.map((_, index) => `$${index + 1}`).join(", ");
+
+                const profileQuery = `
+                    INSERT INTO user_profiles (${insertFields.join(", ")})
+                    VALUES (${placeholders})
+                    RETURNING *
+                `;
+                profileResult = await client.query(profileQuery, insertValues);
+            }
+        }
+
+        // Log admin action
+        await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+            req.adminUser.id,
+            "update_user_full",
+            "user",
+            id,
+            `Updated user account and profile`,
+            JSON.stringify({
+                updated_user_fields: Object.keys(req.body).filter(
+                    (key) => ["role", "is_active", "email"].includes(key) && req.body[key] !== undefined
+                ),
+                updated_profile_fields: Object.keys(profileFields).filter((key) => profileFields[key] !== undefined),
+                target_user_email: userResult?.rows[0]?.email || "unknown",
+            }),
+        ]);
+
+        await client.query("COMMIT");
+
+        // Return updated user data
+        const finalQuery = `
+            SELECT u.*, up.first_name, up.last_name, up.phone, up.date_of_birth,
+                   up.street_number, up.street_name, up.postal_code, up.city, up.country
+            FROM users u
+            LEFT JOIN user_profiles up ON u.id = up.user_id
+            WHERE u.id = $1
         `;
+        const finalResult = await client.query(finalQuery, [id]);
 
-        queryParams.push(parseInt(limit), offset);
-        const result = await client.query(query, queryParams);
+        res.json(finalResult.rows[0]);
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Error updating user:", err);
+        res.status(500).json({ error: "Failed to update user" });
+    } finally {
+        client.release();
+    }
+});
 
-        // Get total count
-        const countQuery = `
-            SELECT COUNT(DISTINCT b.id) as total
-            FROM bookings b
-            LEFT JOIN events e ON b.event_id = e.id
-            ${whereClause}
-        `;
-        const countResult = await client.query(countQuery, queryParams.slice(0, -2));
+// Delete user
+router.delete("/users/:id", requireAdmin, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
 
+        const { id } = req.params;
+
+        // Don't allow users to delete themselves
+        if (parseInt(id) === req.adminUser.id) {
+            return res.status(403).json({ error: "Cannot delete your own account" });
+        }
+
+        // Check if user exists and get their info for logging
+        const userCheck = await client.query("SELECT * FROM users WHERE id = $1", [id]);
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const userToDelete = userCheck.rows[0];
+
+        // Don't allow deleting the last admin
+        if (userToDelete.role === "admin") {
+            const adminCount = await client.query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
+            if (parseInt(adminCount.rows[0].count) <= 1) {
+                return res.status(403).json({ error: "Cannot delete the last admin user" });
+            }
+        }
+
+        // Delete related data first (due to foreign key constraints)
+        // Delete user bookings
+        await client.query("DELETE FROM bookings WHERE user_id = $1", [id]);
+
+        // Delete user reviews
+        await client.query("DELETE FROM reviews WHERE user_id = $1", [id]);
+
+        // Delete user events (set organizer_id to null or delete if needed)
+        await client.query("UPDATE events SET organizer_id = NULL WHERE organizer_id = $1", [id]);
+
+        // Delete user profile
+        await client.query("DELETE FROM user_profiles WHERE user_id = $1", [id]);
+
+        // Delete user favorites
+        await client.query("DELETE FROM user_favorites WHERE user_id = $1", [id]);
+
+        // Finally delete the user
+        const deleteResult = await client.query("DELETE FROM users WHERE id = $1 RETURNING *", [id]);
+
+        // Log admin action
+        await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+            req.adminUser.id,
+            "delete_user",
+            "user",
+            id,
+            `Deleted user account`,
+            JSON.stringify({
+                deleted_user_email: userToDelete.email,
+                deleted_user_role: userToDelete.role,
+            }),
+        ]);
+
+        await client.query("COMMIT");
         res.json({
-            bookings: result.rows,
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total: parseInt(countResult.rows[0].total),
-                pages: Math.ceil(countResult.rows[0].total / limit),
-            },
+            message: "User deleted successfully",
+            deleted_user: deleteResult.rows[0],
         });
     } catch (err) {
-        console.error("Error fetching admin bookings:", err);
-        res.status(500).json({ error: "Failed to fetch bookings" });
+        await client.query("ROLLBACK");
+        console.error("Error deleting user:", err);
+        res.status(500).json({ error: "Failed to delete user" });
     } finally {
         client.release();
     }
@@ -930,5 +1171,118 @@ router.get("/translations/stats", requireAdmin, async (req, res) => {
 });
 
 // === END TRANSLATION MANAGEMENT ROUTES ===
+
+// Get detailed user information
+router.get("/users/:id", requireAdmin, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { id } = req.params;
+
+        const query = `
+            SELECT
+                u.id,
+                u.email,
+                u.role,
+                u.is_active,
+                u.created_at,
+                u.provider,
+                u.provider_id,
+                u.onboarding_complete,
+                up.id as profile_id,
+                up.first_name,
+                up.last_name,
+                up.phone,
+                up.date_of_birth,
+                up.profile_picture,
+                up.street_number,
+                up.street_name,
+                up.postal_code,
+                up.city,
+                up.country,
+                up.created_at as profile_created_at,
+                up.updated_at as profile_updated_at,
+                COALESCE(event_stats.events_count, 0) as events_count,
+                COALESCE(booking_stats.bookings_count, 0) as bookings_count,
+                COALESCE(booking_stats.total_spent, 0) as total_spent,
+                COALESCE(review_stats.reviews_count, 0) as reviews_count,
+                COALESCE(favorite_stats.favorites_count, 0) as favorites_count
+            FROM users u
+            LEFT JOIN user_profiles up ON u.id = up.user_id
+            LEFT JOIN (
+                SELECT organizer_id, COUNT(*) as events_count
+                FROM events
+                GROUP BY organizer_id
+            ) event_stats ON u.id = event_stats.organizer_id
+            LEFT JOIN (
+                SELECT user_id,
+                       COUNT(*) as bookings_count,
+                       SUM(total_price) FILTER (WHERE booking_status = 'confirmed') as total_spent
+                FROM bookings
+                GROUP BY user_id
+            ) booking_stats ON u.id = booking_stats.user_id
+            LEFT JOIN (
+                SELECT user_id, COUNT(*) as reviews_count
+                FROM reviews
+                GROUP BY user_id
+            ) review_stats ON u.id = review_stats.user_id
+            LEFT JOIN (
+                SELECT user_id, COUNT(*) as favorites_count
+                FROM user_favorites
+                GROUP BY user_id
+            ) favorite_stats ON u.id = favorite_stats.user_id
+            WHERE u.id = $1
+        `;
+
+        const result = await client.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Get recent bookings
+        const bookingsQuery = `
+            SELECT b.*, e.title as event_title, e.event_date
+            FROM bookings b
+            LEFT JOIN events e ON b.event_id = e.id
+            WHERE b.user_id = $1
+            ORDER BY b.booking_date DESC
+            LIMIT 10
+        `;
+        const bookings = await client.query(bookingsQuery, [id]);
+
+        // Get recent reviews
+        const reviewsQuery = `
+            SELECT r.*, e.title as event_title
+            FROM reviews r
+            LEFT JOIN events e ON r.event_id = e.id
+            WHERE r.user_id = $1
+            ORDER BY r.created_at DESC
+            LIMIT 10
+        `;
+        const reviews = await client.query(reviewsQuery, [id]);
+
+        // Get created events if organizer
+        const eventsQuery = `
+            SELECT id, title, event_date, status, total_tickets, available_tickets
+            FROM events
+            WHERE organizer_id = $1
+            ORDER BY event_date DESC
+            LIMIT 10
+        `;
+        const events = await client.query(eventsQuery, [id]);
+
+        res.json({
+            user: result.rows[0],
+            recent_bookings: bookings.rows,
+            recent_reviews: reviews.rows,
+            created_events: events.rows,
+        });
+    } catch (err) {
+        console.error("Error fetching user details:", err);
+        res.status(500).json({ error: "Failed to fetch user details" });
+    } finally {
+        client.release();
+    }
+});
 
 export default router;

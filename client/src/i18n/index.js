@@ -9,7 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const i18nConfig = {
     lng: "fr", // Default language
     fallbackLng: "en",
-    
+
     backend: {
         loadPath: `${API_BASE_URL}/api/translations/{{lng}}/{{ns}}`,
         allowMultiLoading: false,
@@ -29,8 +29,7 @@ const i18nConfig = {
     ns: ["common", "auth", "home", "navigation", "onboarding", "map", "profile", "events", "bookings", "payments"],
 };
 
-i18n
-    .use(Backend) // Use HTTP backend to load translations
+i18n.use(Backend) // Use HTTP backend to load translations
     .use(LanguageDetector)
     .use(initReactI18next)
     .init(i18nConfig);

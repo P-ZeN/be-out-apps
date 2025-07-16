@@ -110,7 +110,9 @@ const AdminEvents = ({ user }) => {
             !searchTerm ||
             event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            event.location.toLowerCase().includes(searchTerm.toLowerCase());
+            (event.venue_name && event.venue_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (event.venue_city && event.venue_city.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (event.venue_address && event.venue_address.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const matchesStatus = statusFilter === "all" || event.moderation_status === statusFilter;
 
@@ -289,7 +291,7 @@ const AdminEvents = ({ user }) => {
                                     <TableCell>
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
                                             <Person sx={{ mr: 1, color: "text.secondary" }} />
-                                            <Typography variant="body2">{event.organizer_name || "N/A"}</Typography>
+                                            <Typography variant="body2">{event.creator_email || "N/A"}</Typography>
                                         </Box>
                                     </TableCell>
                                     <TableCell>
@@ -305,7 +307,9 @@ const AdminEvents = ({ user }) => {
                                                     sx={{ mr: 1, fontSize: "0.875rem", color: "text.secondary" }}
                                                 />
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {event.location}
+                                                    {event.venue_name && event.venue_city
+                                                        ? `${event.venue_name}, ${event.venue_city}`
+                                                        : event.venue_address || event.venue_name || "Lieu non défini"}
                                                 </Typography>
                                             </Box>
                                         </Box>
@@ -314,7 +318,9 @@ const AdminEvents = ({ user }) => {
                                         <Box sx={{ display: "flex", alignItems: "center" }}>
                                             <Euro sx={{ mr: 0.5, fontSize: "0.875rem", color: "text.secondary" }} />
                                             <Typography variant="body2">
-                                                {AdminService.formatCurrency(event.price)}
+                                                {AdminService.formatCurrency(
+                                                    event.discounted_price || event.original_price
+                                                )}
                                             </Typography>
                                         </Box>
                                     </TableCell>

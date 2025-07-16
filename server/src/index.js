@@ -48,7 +48,7 @@ const corsOptions = {
         callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Origin", "Accept"],
 };
 
@@ -124,36 +124,46 @@ app.use("/api", addressesRoutes);
 app.get("/api/translations/:language/:namespace", async (req, res) => {
     try {
         const { language, namespace } = req.params;
-        
+
         // Validate parameters
         if (!language || !namespace) {
             return res.status(400).json({ error: "Language and namespace are required" });
         }
-        
+
         // Validate language (allow only specific languages)
         const allowedLanguages = ["en", "fr", "es"];
         if (!allowedLanguages.includes(language)) {
             return res.status(400).json({ error: "Invalid language" });
         }
-        
+
         // Validate namespace (allow only specific namespaces)
-        const allowedNamespaces = ["common", "auth", "home", "navigation", "onboarding", "map", "profile", "events", "bookings", "payments"];
+        const allowedNamespaces = [
+            "common",
+            "auth",
+            "home",
+            "navigation",
+            "onboarding",
+            "map",
+            "profile",
+            "events",
+            "bookings",
+            "payments",
+        ];
         if (!allowedNamespaces.includes(namespace)) {
             return res.status(400).json({ error: "Invalid namespace" });
         }
-        
+
         // Construct file path
         const filePath = path.join(process.cwd(), "translations", language, `${namespace}.json`);
-        
+
         // Read and return translation file
         const fs = await import("fs/promises");
         const fileContent = await fs.readFile(filePath, "utf8");
         const translations = JSON.parse(fileContent);
-        
+
         // Set appropriate headers for caching
         res.setHeader("Cache-Control", "public, max-age=300"); // Cache for 5 minutes
         res.json(translations);
-        
     } catch (error) {
         if (error.code === "ENOENT") {
             return res.status(404).json({ error: "Translation file not found" });

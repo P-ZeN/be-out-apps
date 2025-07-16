@@ -134,6 +134,102 @@ class AdminService {
         }
     }
 
+    static async updateUser(adminId, userId, userData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                method: "PATCH",
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify(userData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error updating user:", error);
+            throw error;
+        }
+    }
+
+    static async deleteUser(adminId, userId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                method: "DELETE",
+                headers: this.getAdminHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            throw error;
+        }
+    }
+
+    static async getUserDetails(userId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                headers: this.getAdminHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error fetching user details:", error);
+            throw error;
+        }
+    }
+
+    static async deleteEvent(adminId, eventId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}`, {
+                method: "DELETE",
+                headers: this.getAdminHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error deleting event:", error);
+            throw error;
+        }
+    }
+
+    static async moderateEvent(adminId, eventId, moderationData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}/status`, {
+                method: "PATCH",
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify(moderationData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error moderating event:", error);
+            throw error;
+        }
+    }
+
     static async getBookings(params = {}) {
         try {
             const searchParams = new URLSearchParams();
