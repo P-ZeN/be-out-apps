@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "sync-translations": "xcopy \"..\\client\\src\\i18n\\locales\\*\" \"translations\\\" /E /Y"
   },
   "keywords": [],
   "author": "",

@@ -91,15 +91,16 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
             }
         }
 
-        // Update local state
-        onUpdateKey(key, valueToSave);
-
         // Create updated translations object for saving
         const updatedTranslations = {
             ...translations,
             [key]: valueToSave,
         };
 
+        // Update local state first
+        onUpdateKey(key, valueToSave);
+
+        // Clear editing state
         setEditingKeys((prev) => {
             const newSet = new Set(prev);
             newSet.delete(key);
@@ -117,6 +118,8 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
                 await onSave(updatedTranslations);
             } catch (error) {
                 console.error("Error auto-saving translation:", error);
+                // If save fails, we don't revert the local state
+                // The user can try saving again with the main save button
             }
         }
     };

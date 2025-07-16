@@ -1,0 +1,7 @@
+{
+  "bookings": {
+    "title": "Reservas",
+    "confirm": "Confirmar reserva",
+    "cancel": "Cancelar reserva"
+  }
+}

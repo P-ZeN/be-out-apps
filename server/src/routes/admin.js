@@ -649,7 +649,7 @@ const upload = multer({
 
 // Helper function to get translation file path
 const getTranslationFilePath = (language, namespace) => {
-    return path.join(__dirname, `../../../client/src/i18n/locales/${language}/${namespace}.json`);
+    return path.join(__dirname, `../../translations/${language}/${namespace}.json`);
 };
 
 // Helper function to ensure directory exists

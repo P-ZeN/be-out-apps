@@ -137,11 +137,14 @@ const AdminTranslations = () => {
     // Auto-save function for field-level saves (doesn't reload)
     const handleAutoSave = async (updatedTranslations) => {
         try {
+            console.log("Auto-saving translations:", updatedTranslations);
             // Use the provided translations or fall back to current state
             const translationsToSave = updatedTranslations || translations;
             await translationService.saveTranslations(selectedLanguage, selectedNamespace, translationsToSave);
+            console.log("Auto-save successful");
             setSuccess("Traduction sauvegardée !");
         } catch (err) {
+            console.error("Auto-save error:", err);
             setError("Échec de la sauvegarde de la traduction");
             console.error("Error auto-saving translation:", err);
         }

@@ -120,6 +120,49 @@ app.use("/api/emails", emailsRoutes);
 app.use("/api/files", filesRoutes);
 app.use("/api", addressesRoutes);
 
+// Public translation endpoints for client apps
+app.get("/api/translations/:language/:namespace", async (req, res) => {
+    try {
+        const { language, namespace } = req.params;
+        
+        // Validate parameters
+        if (!language || !namespace) {
+            return res.status(400).json({ error: "Language and namespace are required" });
+        }
+        
+        // Validate language (allow only specific languages)
+        const allowedLanguages = ["en", "fr", "es"];
+        if (!allowedLanguages.includes(language)) {
+            return res.status(400).json({ error: "Invalid language" });
+        }
+        
+        // Validate namespace (allow only specific namespaces)
+        const allowedNamespaces = ["common", "auth", "home", "navigation", "onboarding", "map", "profile", "events", "bookings", "payments"];
+        if (!allowedNamespaces.includes(namespace)) {
+            return res.status(400).json({ error: "Invalid namespace" });
+        }
+        
+        // Construct file path
+        const filePath = path.join(process.cwd(), "translations", language, `${namespace}.json`);
+        
+        // Read and return translation file
+        const fs = await import("fs/promises");
+        const fileContent = await fs.readFile(filePath, "utf8");
+        const translations = JSON.parse(fileContent);
+        
+        // Set appropriate headers for caching
+        res.setHeader("Cache-Control", "public, max-age=300"); // Cache for 5 minutes
+        res.json(translations);
+        
+    } catch (error) {
+        if (error.code === "ENOENT") {
+            return res.status(404).json({ error: "Translation file not found" });
+        }
+        console.error("Error loading translation:", error);
+        res.status(500).json({ error: "Failed to load translation" });
+    }
+});
+
 // Helper function to determine redirect URL based on environment and user role
 const getRedirectUrl = (user, req) => {
     const isProduction = process.env.NODE_ENV === "production";
