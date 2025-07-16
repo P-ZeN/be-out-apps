@@ -13,8 +13,35 @@ import {
     ListItemIcon,
     ListItemText,
     Alert,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    DialogContentText,
+    Tooltip,
+    Switch,
+    FormControlLabel,
+    Snackbar,
 } from "@mui/material";
-import { Add, MoreVert, Edit, Delete, Visibility, CalendarToday, People, TrendingUp } from "@mui/icons-material";
+import {
+    Add,
+    MoreVert,
+    Edit,
+    Delete,
+    Visibility,
+    CalendarToday,
+    People,
+    TrendingUp,
+    Send,
+    Publish,
+    UnpublishedOutlined,
+    History,
+    Undo,
+    CheckCircle,
+    Schedule,
+    Warning,
+    Block,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import organizerService from "../services/organizerService";
 
@@ -23,6 +50,8 @@ const Events = () => {
     const [loading, setLoading] = useState(true);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [confirmDialog, setConfirmDialog] = useState({ open: false, type: "", eventId: null });
+    const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -50,30 +79,152 @@ const Events = () => {
         setSelectedEvent(null);
     };
 
-    const getStatusColor = (status) => {
+    const showSnackbar = (message, severity = "success") => {
+        setSnackbar({ open: true, message, severity });
+    };
+
+    const handleConfirmDialog = (type, eventId) => {
+        setConfirmDialog({ open: true, type, eventId });
+        handleMenuClose();
+    };
+
+    const handleStatusAction = async () => {
+        const { type, eventId } = confirmDialog;
+        try {
+            let response;
+            switch (type) {
+                case "submit":
+                    response = await organizerService.submitEventForReview(eventId);
+                    showSnackbar("Événement soumis pour révision avec succès");
+                    break;
+                case "revert":
+                    response = await organizerService.revertEventToDraft(eventId);
+                    showSnackbar("Événement remis en brouillon avec succès");
+                    break;
+                case "publish":
+                    response = await organizerService.publishEvent(eventId, true);
+                    showSnackbar("Événement publié avec succès");
+                    break;
+                case "unpublish":
+                    response = await organizerService.publishEvent(eventId, false);
+                    showSnackbar("Événement dépublié avec succès");
+                    break;
+                default:
+                    break;
+            }
+            if (response) {
+                loadEvents(); // Reload events to reflect changes
+            }
+        } catch (error) {
+            showSnackbar(error.message, "error");
+        } finally {
+            setConfirmDialog({ open: false, type: "", eventId: null });
+        }
+    };
+
+    const getStatusColor = (status, moderationStatus) => {
+        if (moderationStatus === "rejected" || moderationStatus === "flagged") {
+            return "error";
+        }
+        if (moderationStatus === "revision_requested") {
+            return "warning";
+        }
+
         switch (status) {
             case "active":
                 return "success";
             case "draft":
-                return "warning";
+                return "default";
+            case "candidate":
+                return "info";
             case "cancelled":
+            case "suspended":
                 return "error";
             default:
                 return "default";
         }
     };
 
-    const getStatusLabel = (status) => {
+    const getStatusLabel = (status, moderationStatus, isPublished) => {
+        // Priority: moderation status overrides regular status for display
+        if (moderationStatus === "rejected") {
+            return "Rejeté";
+        }
+        if (moderationStatus === "revision_requested") {
+            return "Révision demandée";
+        }
+        if (moderationStatus === "under_review") {
+            return "En cours de révision";
+        }
+        if (moderationStatus === "flagged") {
+            return "Signalé";
+        }
+
         switch (status) {
             case "active":
-                return "Actif";
+                return isPublished ? "Publié" : "Approuvé (non publié)";
             case "draft":
                 return "Brouillon";
+            case "candidate":
+                return "En attente de validation";
             case "cancelled":
                 return "Annulé";
+            case "suspended":
+                return "Suspendu";
+            case "completed":
+                return "Terminé";
             default:
                 return status;
         }
+    };
+
+    const getStatusTooltip = (status, moderationStatus, isPublished) => {
+        if (moderationStatus === "rejected") {
+            return "Votre événement a été rejeté. Consultez les commentaires et modifiez-le.";
+        }
+        if (moderationStatus === "revision_requested") {
+            return "Des modifications sont requises. Consultez les commentaires de l'administrateur.";
+        }
+        if (moderationStatus === "under_review") {
+            return "Votre événement est en cours de révision par notre équipe.";
+        }
+        if (moderationStatus === "approved" && status === "active") {
+            return isPublished
+                ? "Votre événement est publié et visible par le public."
+                : "Votre événement est approuvé mais pas encore publié.";
+        }
+        if (status === "draft") {
+            return "Votre événement est en brouillon. Soumettez-le pour révision quand il est prêt.";
+        }
+        if (status === "candidate") {
+            return "Votre événement attend la validation de notre équipe.";
+        }
+        return "";
+    };
+
+    const canSubmitForReview = (event) => {
+        return event.status === "draft";
+    };
+
+    const canRevertToDraft = (event) => {
+        return event.status === "candidate" && event.moderation_status === "under_review";
+    };
+
+    const canPublishUnpublish = (event) => {
+        return event.moderation_status === "approved";
+    };
+
+    const canEdit = (event) => {
+        // Allow editing for draft events
+        if (event.status === "draft") return true;
+
+        // Allow editing if admin requested revision or rejected
+        if (event.moderation_status === "revision_requested") return true;
+        if (event.moderation_status === "rejected") return true;
+
+        // Do NOT allow editing approved events that are published or under review
+        // Once approved, major changes should require re-submission
+        return false;
     };
 
     return (
@@ -91,6 +242,17 @@ const Events = () => {
                     Nouvel événement
                 </Button>
             </Box>
+
+            {/* Status workflow info */}
+            <Alert severity="info" sx={{ mb: 3 }}>
+                <Typography variant="body2">
+                    <strong>Workflow des événements :</strong> Les nouveaux événements commencent en{" "}
+                    <strong>brouillon</strong>. Soumettez-les pour <strong>révision</strong> une fois prêts. Après
+                    approbation, vous pouvez les <strong>publier</strong>
+                    pour les rendre visibles au public. Vous pouvez suspendre temporairement la publication d'un
+                    événement approuvé à tout moment.
+                </Typography>
+            </Alert>
 
             {events.length === 0 ? (
                 <Card>
@@ -120,11 +282,33 @@ const Events = () => {
                                             alignItems: "flex-start",
                                             mb: 2,
                                         }}>
-                                        <Chip
-                                            label={getStatusLabel(event.status)}
-                                            color={getStatusColor(event.status)}
-                                            size="small"
-                                        />
+                                        <Tooltip
+                                            title={getStatusTooltip(
+                                                event.status,
+                                                event.moderation_status,
+                                                event.is_published
+                                            )}>
+                                            <Chip
+                                                label={getStatusLabel(
+                                                    event.status,
+                                                    event.moderation_status,
+                                                    event.is_published
+                                                )}
+                                                color={getStatusColor(event.status, event.moderation_status)}
+                                                size="small"
+                                                icon={
+                                                    event.moderation_status === "approved" && event.is_published ? (
+                                                        <CheckCircle sx={{ fontSize: 16 }} />
+                                                    ) : event.moderation_status === "under_review" ? (
+                                                        <Schedule sx={{ fontSize: 16 }} />
+                                                    ) : event.moderation_status === "revision_requested" ? (
+                                                        <Warning sx={{ fontSize: 16 }} />
+                                                    ) : event.moderation_status === "rejected" ? (
+                                                        <Block sx={{ fontSize: 16 }} />
+                                                    ) : undefined
+                                                }
+                                            />
+                                        </Tooltip>
                                         <IconButton size="small" onClick={(e) => handleMenuOpen(e, event)}>
                                             <MoreVert />
                                         </IconButton>
@@ -172,15 +356,22 @@ const Events = () => {
 
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                 <MenuItem
+                    disabled={!selectedEvent?.is_published || selectedEvent?.moderation_status !== "approved"}
                     onClick={() => {
-                        navigate(`/events/${selectedEvent?.id}`);
+                        if (selectedEvent?.is_published && selectedEvent?.moderation_status === "approved") {
+                            // Navigate to the public event page in the client app
+                            const clientUrl = import.meta.env.VITE_CLIENT_URL || "http://localhost:5173";
+                            window.open(`${clientUrl}/events/${selectedEvent?.id}`, "_blank");
+                        }
                         handleMenuClose();
                     }}>
                     <ListItemIcon>
                         <Visibility fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText>Voir les détails</ListItemText>
+                    <ListItemText>Voir la page de l'événement</ListItemText>
                 </MenuItem>
+
+                {/* Edit - always available */}
                 <MenuItem
                     onClick={() => {
                         navigate(`/events/${selectedEvent?.id}/edit`);
@@ -191,13 +382,113 @@ const Events = () => {
                     </ListItemIcon>
                     <ListItemText>Modifier</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={handleMenuClose}>
+
+                {/* Submit for review - only for draft events */}
+                {selectedEvent && canSubmitForReview(selectedEvent) && (
+                    <MenuItem onClick={() => handleConfirmDialog("submit", selectedEvent.id)}>
+                        <ListItemIcon>
+                            <Send fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Soumettre pour révision</ListItemText>
+                    </MenuItem>
+                )}
+
+                {/* Revert to draft - only for candidate events under review */}
+                {selectedEvent && canRevertToDraft(selectedEvent) && (
+                    <MenuItem onClick={() => handleConfirmDialog("revert", selectedEvent.id)}>
+                        <ListItemIcon>
+                            <Undo fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Remettre en brouillon</ListItemText>
+                    </MenuItem>
+                )}
+
+                {/* Publish/Unpublish - only for approved events */}
+                {selectedEvent && canPublishUnpublish(selectedEvent) && (
+                    <>
+                        {!selectedEvent.is_published ? (
+                            <MenuItem onClick={() => handleConfirmDialog("publish", selectedEvent.id)}>
+                                <ListItemIcon>
+                                    <Publish fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Publier</ListItemText>
+                            </MenuItem>
+                        ) : (
+                            <MenuItem onClick={() => handleConfirmDialog("unpublish", selectedEvent.id)}>
+                                <ListItemIcon>
+                                    <UnpublishedOutlined fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Dépublier</ListItemText>
+                            </MenuItem>
+                        )}
+                    </>
+                )}
+
+                {/* Status History */}
+                <MenuItem
+                    onClick={() => {
+                        navigate(`/events/${selectedEvent?.id}/status-history`);
+                        handleMenuClose();
+                    }}>
                     <ListItemIcon>
-                        <Delete fontSize="small" />
+                        <History fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText>Supprimer</ListItemText>
+                    <ListItemText>Historique des statuts</ListItemText>
                 </MenuItem>
+
+                {/* Delete - only for draft events */}
+                {selectedEvent && selectedEvent.status === "draft" && (
+                    <MenuItem onClick={handleMenuClose}>
+                        <ListItemIcon>
+                            <Delete fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Supprimer</ListItemText>
+                    </MenuItem>
+                )}
             </Menu>
+
+            {/* Confirmation Dialog */}
+            <Dialog
+                open={confirmDialog.open}
+                onClose={() => setConfirmDialog({ open: false, type: "", eventId: null })}>
+                <DialogTitle>
+                    {confirmDialog.type === "submit" && "Soumettre pour révision"}
+                    {confirmDialog.type === "revert" && "Remettre en brouillon"}
+                    {confirmDialog.type === "publish" && "Publier l'événement"}
+                    {confirmDialog.type === "unpublish" && "Dépublier l'événement"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {confirmDialog.type === "submit" &&
+                            "Voulez-vous soumettre cet événement pour révision ? Une fois soumis, il sera examiné par notre équipe."}
+                        {confirmDialog.type === "revert" &&
+                            "Voulez-vous remettre cet événement en brouillon ? Vous pourrez le modifier et le soumettre à nouveau."}
+                        {confirmDialog.type === "publish" &&
+                            "Voulez-vous publier cet événement ? Il sera visible par le public et ouvert aux réservations."}
+                        {confirmDialog.type === "unpublish" &&
+                            "Voulez-vous dépublier cet événement ? Il ne sera plus visible par le public mais restera approuvé."}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmDialog({ open: false, type: "", eventId: null })}>Annuler</Button>
+                    <Button onClick={handleStatusAction} variant="contained">
+                        Confirmer
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar({ open: false, message: "", severity: "success" })}>
+                <Alert
+                    onClose={() => setSnackbar({ open: false, message: "", severity: "success" })}
+                    severity={snackbar.severity}
+                    sx={{ width: "100%" }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

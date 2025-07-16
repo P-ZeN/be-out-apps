@@ -374,13 +374,14 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
         try {
             await client.query("BEGIN");
 
-            // Create the event
+            // Create the event with draft status by default
             const eventResult = await client.query(
                 `INSERT INTO events (
                     title, description, event_date, venue_id, organizer_id,
                     original_price, discounted_price, total_tickets, available_tickets,
-                    is_featured, requirements, cancellation_policy
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                    is_featured, requirements, cancellation_policy, status, is_published,
+                    status_changed_by, status_changed_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
                 RETURNING *`,
                 [
                     title,
@@ -395,6 +396,10 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     false, // is_featured
                     requirements || null, // requirements
                     cancellation_policy || null, // cancellation_policy
+                    "draft", // status - all new events start as draft
+                    false, // is_published - not published by default
+                    req.user.id, // status_changed_by
+                    new Date(), // status_changed_at
                 ]
             );
 
@@ -895,6 +900,301 @@ router.post("/events/:id/image", verifyOrganizerToken, upload.single("image"), a
     } catch (error) {
         console.error("Error uploading event image:", error);
         res.status(500).json({ error: "Failed to upload event image" });
+    }
+});
+
+// STATUS MANAGEMENT ENDPOINTS
+
+// Submit event for review (draft -> candidate)
+router.patch("/events/:id/submit", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Check if event exists and belongs to organizer
+            const checkResult = await client.query("SELECT * FROM events WHERE id = $1 AND organizer_id = $2", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            const event = checkResult.rows[0];
+
+            // Only allow submission from draft status
+            if (event.status !== "draft") {
+                return res.status(400).json({
+                    message: "Only draft events can be submitted for review",
+                });
+            }
+
+            // Update event status to candidate and moderation status to under_review
+            const result = await client.query(
+                `UPDATE events
+                 SET status = 'candidate',
+                     moderation_status = 'under_review',
+                     status_changed_by = $1,
+                     status_changed_at = NOW()
+                 WHERE id = $2 AND organizer_id = $3
+                 RETURNING *`,
+                [req.user.id, req.params.id, req.user.id]
+            );
+
+            await client.query("COMMIT");
+            res.json({
+                message: "Event submitted for review successfully",
+                event: result.rows[0],
+            });
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error submitting event for review:", error);
+        res.status(500).json({ message: "Error submitting event for review" });
+    }
+});
+
+// Publish/unpublish approved event
+router.patch("/events/:id/publish", verifyOrganizerToken, async (req, res) => {
+    try {
+        const { is_published } = req.body;
+
+        if (typeof is_published !== "boolean") {
+            return res.status(400).json({ message: "is_published must be a boolean" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Check if event exists and belongs to organizer
+            const checkResult = await client.query("SELECT * FROM events WHERE id = $1 AND organizer_id = $2", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            const event = checkResult.rows[0];
+
+            // Only allow publishing if event is approved
+            if (event.moderation_status !== "approved") {
+                return res.status(400).json({
+                    message: "Only approved events can be published/unpublished",
+                });
+            }
+
+            // Update publication status
+            const result = await client.query(
+                `UPDATE events
+                 SET is_published = $1,
+                     status_changed_by = $2,
+                     status_changed_at = NOW()
+                 WHERE id = $3 AND organizer_id = $4
+                 RETURNING *`,
+                [is_published, req.user.id, req.params.id, req.user.id]
+            );
+
+            await client.query("COMMIT");
+            res.json({
+                message: `Event ${is_published ? "published" : "unpublished"} successfully`,
+                event: result.rows[0],
+            });
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error updating event publication status:", error);
+        res.status(500).json({ message: "Error updating event publication status" });
+    }
+});
+
+// Get event status history
+router.get("/events/:id/status-history", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            // Verify event belongs to organizer
+            const eventCheck = await client.query("SELECT id FROM events WHERE id = $1 AND organizer_id = $2", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (eventCheck.rows.length === 0) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            // Get status history
+            const result = await client.query(
+                `SELECT esh.*, u.email as changed_by_email
+                 FROM event_status_history esh
+                 LEFT JOIN users u ON esh.changed_by = u.id
+                 WHERE esh.event_id = $1
+                 ORDER BY esh.created_at DESC`,
+                [req.params.id]
+            );
+
+            res.json(result.rows);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error fetching event status history:", error);
+        res.status(500).json({ message: "Error fetching event status history" });
+    }
+});
+
+// Revert event to draft (only from candidate status and if not yet reviewed)
+router.patch("/events/:id/revert", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Check if event exists and belongs to organizer
+            const checkResult = await client.query("SELECT * FROM events WHERE id = $1 AND organizer_id = $2", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            const event = checkResult.rows[0];
+
+            // Only allow reverting from candidate status and if still under review
+            if (event.status !== "candidate" || event.moderation_status !== "under_review") {
+                return res.status(400).json({
+                    message: "Can only revert candidate events that are still under review",
+                });
+            }
+
+            // Update event status back to draft
+            const result = await client.query(
+                `UPDATE events
+                 SET status = 'draft',
+                     moderation_status = 'pending',
+                     status_changed_by = $1,
+                     status_changed_at = NOW()
+                 WHERE id = $2 AND organizer_id = $3
+                 RETURNING *`,
+                [req.user.id, req.params.id, req.user.id]
+            );
+
+            await client.query("COMMIT");
+            res.json({
+                message: "Event reverted to draft successfully",
+                event: result.rows[0],
+            });
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error reverting event to draft:", error);
+        res.status(500).json({ message: "Error reverting event to draft" });
+    }
+});
+
+// Get organizer notifications
+router.get("/notifications", verifyOrganizerToken, async (req, res) => {
+    try {
+        const { limit = 20, offset = 0, unread_only = false } = req.query;
+
+        const client = await pool.connect();
+        try {
+            let whereClause = "WHERE organizer_id = $1";
+            let params = [req.user.id];
+
+            if (unread_only === "true") {
+                whereClause += " AND is_read = false";
+            }
+
+            const result = await client.query(
+                `SELECT * FROM organizer_notifications
+                 ${whereClause}
+                 ORDER BY created_at DESC
+                 LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+                [...params, limit, offset]
+            );
+
+            // Get unread count
+            const unreadResult = await client.query(
+                "SELECT COUNT(*) as unread_count FROM organizer_notifications WHERE organizer_id = $1 AND is_read = false",
+                [req.user.id]
+            );
+
+            res.json({
+                notifications: result.rows,
+                unread_count: parseInt(unreadResult.rows[0].unread_count),
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error fetching notifications:", error);
+        res.status(500).json({ message: "Error fetching notifications" });
+    }
+});
+
+// Mark notification as read
+router.patch("/notifications/:id/read", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            const result = await client.query(
+                `UPDATE organizer_notifications
+                 SET is_read = true
+                 WHERE id = $1 AND organizer_id = $2
+                 RETURNING *`,
+                [req.params.id, req.user.id]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ message: "Notification not found" });
+            }
+
+            res.json(result.rows[0]);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error marking notification as read:", error);
+        res.status(500).json({ message: "Error marking notification as read" });
+    }
+});
+
+// Mark all notifications as read
+router.patch("/notifications/read-all", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            await client.query(
+                "UPDATE organizer_notifications SET is_read = true WHERE organizer_id = $1 AND is_read = false",
+                [req.user.id]
+            );
+
+            res.json({ message: "All notifications marked as read" });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error marking all notifications as read:", error);
+        res.status(500).json({ message: "Error marking all notifications as read" });
     }
 });
 

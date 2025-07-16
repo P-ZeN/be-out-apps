@@ -12,8 +12,11 @@ const requireAdmin = async (req, res, next) => {
         authenticateToken(req, res, () => {
             // Then check if user has admin role
             if (!req.user || !req.user.userId) {
+                console.log("Admin middleware: No user or userId found");
                 return res.status(401).json({ error: "Admin authentication required" });
             }
+
+            console.log("Admin middleware: Checking role for user:", req.user.userId);
 
             // Get user role from database
             const checkAdminRole = async () => {
@@ -24,11 +27,15 @@ const requireAdmin = async (req, res, next) => {
                         [req.user.userId]
                     );
 
+                    console.log("Admin middleware: User role check result:", result.rows);
+
                     if (result.rows.length === 0) {
+                        console.log("Admin middleware: User not found or not admin/moderator");
                         return res.status(403).json({ error: "Admin access denied" });
                     }
 
                     req.adminUser = result.rows[0];
+                    console.log("Admin middleware: Access granted for user:", req.adminUser.email);
                     next();
                 } finally {
                     client.release();
@@ -200,29 +207,83 @@ router.get("/events", requireAdmin, async (req, res) => {
     }
 });
 
-// Update event status
+// Update event status and moderation
 router.patch("/events/:id/status", requireAdmin, async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query("BEGIN");
 
         const { id } = req.params;
-        const { status, admin_notes } = req.body;
+        const { status, moderation_status, admin_notes } = req.body;
 
-        if (!["active", "inactive", "cancelled", "pending"].includes(status)) {
+        // Validate status values
+        const validStatuses = ["draft", "candidate", "active", "sold_out", "cancelled", "completed", "suspended"];
+        const validModerationStatuses = [
+            "pending",
+            "under_review",
+            "approved",
+            "rejected",
+            "flagged",
+            "revision_requested",
+        ];
+
+        if (status && !validStatuses.includes(status)) {
             return res.status(400).json({ error: "Invalid status" });
         }
 
+        if (moderation_status && !validModerationStatuses.includes(moderation_status)) {
+            return res.status(400).json({ error: "Invalid moderation status" });
+        }
+
+        // Build dynamic query based on provided fields
+        let updateFields = [];
+        let updateValues = [];
+        let paramIndex = 1;
+
+        if (status) {
+            updateFields.push(`status = $${paramIndex}`);
+            updateValues.push(status);
+            paramIndex++;
+        }
+
+        if (moderation_status) {
+            updateFields.push(`moderation_status = $${paramIndex}`);
+            updateValues.push(moderation_status);
+            paramIndex++;
+        }
+
+        if (admin_notes !== undefined) {
+            updateFields.push(`admin_notes = $${paramIndex}`);
+            updateValues.push(admin_notes);
+            paramIndex++;
+        }
+
+        // Always update status_changed_by and updated_at
+        updateFields.push(`status_changed_by = $${paramIndex}`);
+        updateValues.push(req.adminUser.id);
+        paramIndex++;
+
+        updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+
+        // If approving, set approved_by and approved_at
+        if (moderation_status === "approved") {
+            updateFields.push(`approved_by = $${paramIndex}`);
+            updateValues.push(req.adminUser.id);
+            paramIndex++;
+
+            updateFields.push(`approved_at = CURRENT_TIMESTAMP`);
+        }
+
+        updateValues.push(id); // WHERE condition
+
         const query = `
             UPDATE events
-            SET status = $1,
-                admin_notes = $2,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = $3
+            SET ${updateFields.join(", ")}
+            WHERE id = $${paramIndex}
             RETURNING *
         `;
 
-        const result = await client.query(query, [status, admin_notes, id]);
+        const result = await client.query(query, updateValues);
 
         if (result.rows.length === 0) {
             await client.query("ROLLBACK");
@@ -232,11 +293,15 @@ router.patch("/events/:id/status", requireAdmin, async (req, res) => {
         // Log admin action
         await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
             req.adminUser.id,
-            "update_event_status",
+            "update_event_moderation",
             "event",
             id,
-            `Changed event status to ${status}`,
-            JSON.stringify({ old_status: result.rows[0].status, new_status: status, admin_notes }),
+            `Updated event moderation: ${moderation_status || status}`,
+            JSON.stringify({
+                status: status,
+                moderation_status: moderation_status,
+                admin_notes: admin_notes,
+            }),
         ]);
 
         await client.query("COMMIT");

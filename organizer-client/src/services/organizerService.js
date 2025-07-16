@@ -335,6 +335,102 @@ class OrganizerService {
 
         return response.json();
     }
+
+    // Event Status Management
+    async submitEventForReview(eventId) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}/submit`, {
+            method: "PATCH",
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to submit event for review");
+        }
+
+        return response.json();
+    }
+
+    async publishEvent(eventId, isPublished) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}/publish`, {
+            method: "PATCH",
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify({ is_published: isPublished }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to update publication status");
+        }
+
+        return response.json();
+    }
+
+    async revertEventToDraft(eventId) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}/revert`, {
+            method: "PATCH",
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to revert event to draft");
+        }
+
+        return response.json();
+    }
+
+    async getEventStatusHistory(eventId) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}/status-history`, {
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch event status history");
+        }
+
+        return response.json();
+    }
+
+    // Notifications
+    async getNotifications(params = {}) {
+        const queryParams = new URLSearchParams(params).toString();
+        const response = await fetch(`${API_BASE_URL}/api/organizer/notifications?${queryParams}`, {
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch notifications");
+        }
+
+        return response.json();
+    }
+
+    async markNotificationAsRead(notificationId) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/notifications/${notificationId}/read`, {
+            method: "PATCH",
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to mark notification as read");
+        }
+
+        return response.json();
+    }
+
+    async markAllNotificationsAsRead() {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/notifications/read-all`, {
+            method: "PATCH",
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to mark all notifications as read");
+        }
+
+        return response.json();
+    }
 }
 
 export default new OrganizerService();

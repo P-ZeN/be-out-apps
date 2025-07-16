@@ -64,6 +64,15 @@ const EventForm = () => {
         requirements: "",
         cancellation_policy: "",
         image: null,
+        is_published: false, // Add publication status to form data
+        request_review: false, // Switch to request review on submit
+    });
+
+    // Event administrative data (read-only for organizers except publication status)
+    const [eventAdminData, setEventAdminData] = useState({
+        status: "",
+        moderation_status: "",
+        admin_notes: "",
     });
 
     // UI state
@@ -117,18 +126,42 @@ const EventForm = () => {
                     organizerService.getVenues(),
                     organizerService.getCategories(),
                 ]);
-                setVenues(venuesData.venues || venuesData);
-                setCategories(categoriesData.categories || categoriesData);
+                
+                // Ensure we have arrays to work with
+                const venuesArray = venuesData.venues || venuesData || [];
+                const categoriesArray = categoriesData.categories || categoriesData || [];
+                
+                setVenues(venuesArray);
+                setCategories(categoriesArray);
 
                 // Load event data if editing
                 if (isEdit) {
                     const eventData = await organizerService.getEvent(eventId);
+                    
+                    // Validate that venue_id and category_id exist in available options
+                    const validVenueId = eventData.venue_id && venuesArray.some(v => v.id === eventData.venue_id) 
+                        ? eventData.venue_id 
+                        : "";
+                    const validCategoryId = eventData.category_id && categoriesArray.some(c => c.id === eventData.category_id) 
+                        ? eventData.category_id 
+                        : "";
+                    
+                    // Log warnings if IDs were invalid
+                    if (eventData.venue_id && !validVenueId) {
+                        console.warn(`Event venue_id ${eventData.venue_id} not found in available venues`);
+                        setError("Le lieu associé à cet événement n'est plus disponible. Veuillez sélectionner un nouveau lieu.");
+                    }
+                    if (eventData.category_id && !validCategoryId) {
+                        console.warn(`Event category_id ${eventData.category_id} not found in available categories`);
+                        setError("La catégorie associée à cet événement n'est plus disponible. Veuillez sélectionner une nouvelle catégorie.");
+                    }
+                    
                     setFormData({
                         title: eventData.title || "",
                         description: eventData.description || "",
                         event_date: eventData.event_date ? new Date(eventData.event_date) : null,
-                        venue_id: eventData.venue_id || "",
-                        category_id: eventData.category_id || "",
+                        venue_id: validVenueId,
+                        category_id: validCategoryId,
                         price: eventData.original_price || eventData.price || "",
                         max_participants: eventData.total_tickets || eventData.max_participants || "",
                         tags: eventData.tags || [],
@@ -136,6 +169,14 @@ const EventForm = () => {
                         requirements: eventData.requirements || "",
                         cancellation_policy: eventData.cancellation_policy || "",
                         image: null, // Will be handled separately for existing events
+                        is_published: eventData.is_published || false,
+                    });
+
+                    // Set administrative data
+                    setEventAdminData({
+                        status: eventData.status || "",
+                        moderation_status: eventData.moderation_status || "",
+                        admin_notes: eventData.admin_notes || "",
                     });
 
                     // Set image preview if event has an image
@@ -293,12 +334,29 @@ const EventForm = () => {
                 event_date: formData.event_date.toISOString(),
             };
 
-            // Remove image from eventData as it will be handled separately
+            // Remove fields that shouldn't be sent to the backend
             delete eventData.image;
+            delete eventData.request_review;
 
             let createdEvent;
             if (isEdit) {
                 await organizerService.updateEvent(eventId, eventData);
+
+                // If request_review is enabled, submit for review after update
+                if (
+                    formData.request_review &&
+                    eventAdminData.moderation_status !== "approved" &&
+                    eventAdminData.moderation_status !== "under_review"
+                ) {
+                    await organizerService.submitEventForReview(eventId);
+                    setEventAdminData((prev) => ({
+                        ...prev,
+                        moderation_status: "under_review",
+                    }));
+                    setSuccess("Événement mis à jour et soumis pour révision avec succès !");
+                } else {
+                    setSuccess("Événement mis à jour avec succès !");
+                }
 
                 // Upload image if present
                 if (formData.image) {
@@ -313,11 +371,17 @@ const EventForm = () => {
                         );
                     }
                 }
-
-                setSuccess("Événement mis à jour avec succès !");
             } else {
                 createdEvent = await organizerService.createEvent(eventData);
                 console.log("Event created:", createdEvent);
+
+                // If request_review is enabled, submit for review after creation
+                if (formData.request_review && createdEvent?.id) {
+                    await organizerService.submitEventForReview(createdEvent.id);
+                    setSuccess("Événement créé et soumis pour révision avec succès !");
+                } else {
+                    setSuccess("Événement créé avec succès !");
+                }
 
                 // Upload image if present
                 if (formData.image && createdEvent?.id) {
@@ -335,8 +399,6 @@ const EventForm = () => {
                     console.error("No event ID returned from createEvent");
                     throw new Error("Événement créé mais impossible d'uploader l'image (ID manquant)");
                 }
-
-                setSuccess("Événement créé avec succès !");
             }
 
             setTimeout(() => {
@@ -439,6 +501,235 @@ const EventForm = () => {
                         )}
 
                         <Grid container spacing={3}>
+                            {/* Administrative Parameters */}
+                            <Grid size={{ xs: 12 }}>
+                                <Card
+                                    variant="outlined"
+                                    sx={{
+                                        p: 3,
+                                        mb: 3,
+                                        backgroundColor: "grey.50",
+                                        border: "1px solid",
+                                        borderColor: "grey.300",
+                                    }}>
+                                    <Grid container spacing={3} alignItems="center">
+                                        {/* Publication Status */}
+                                        <Grid size={{ xs: 12, md: 4 }}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        checked={formData.is_published}
+                                                        onChange={(e) => handleChange("is_published", e.target.checked)}
+                                                        disabled={
+                                                            eventAdminData.moderation_status !== "approved" && isEdit
+                                                        }
+                                                    />
+                                                }
+                                                label={
+                                                    <Box sx={{ display: "flex", flexDirection: "column" }}>
+                                                        <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                                                            Publication
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {formData.is_published
+                                                                ? "Événement publié"
+                                                                : "Événement non publié"}
+                                                        </Typography>
+                                                    </Box>
+                                                }
+                                                sx={{ margin: 0 }}
+                                            />
+                                            {eventAdminData.moderation_status !== "approved" && isEdit && (
+                                                <Typography
+                                                    variant="caption"
+                                                    color="warning.main"
+                                                    sx={{ display: "block", mt: 1 }}>
+                                                    Publication disponible après approbation
+                                                </Typography>
+                                            )}
+                                        </Grid>
+
+                                        {/* Featured Status */}
+                                        <Grid size={{ xs: 12, md: 4 }}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        checked={formData.is_featured}
+                                                        onChange={(e) => handleChange("is_featured", e.target.checked)}
+                                                    />
+                                                }
+                                                label={
+                                                    <Box sx={{ display: "flex", flexDirection: "column" }}>
+                                                        <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                                                            En vedette
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {formData.is_featured
+                                                                ? "Événement mis en avant"
+                                                                : "Événement standard"}
+                                                        </Typography>
+                                                    </Box>
+                                                }
+                                                sx={{ margin: 0 }}
+                                            />
+                                        </Grid>
+
+                                        {/* Approval Status and Admin Comments (combined block when editing) */}
+                                        {isEdit && (
+                                            <Grid size={{ xs: 12, md: 8 }}>
+                                                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                    {/* Approval Status */}
+                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{ fontWeight: "medium", minWidth: "140px" }}>
+                                                            Statut d'approbation:
+                                                        </Typography>
+                                                        <Chip
+                                                            label={
+                                                                eventAdminData.moderation_status === "approved"
+                                                                    ? "Approuvé"
+                                                                    : eventAdminData.moderation_status === "rejected"
+                                                                    ? "Rejeté"
+                                                                    : eventAdminData.moderation_status ===
+                                                                      "under_review"
+                                                                    ? "En révision"
+                                                                    : eventAdminData.moderation_status ===
+                                                                      "revision_requested"
+                                                                    ? "Révision demandée"
+                                                                    : eventAdminData.moderation_status === "flagged"
+                                                                    ? "Signalé"
+                                                                    : "En attente"
+                                                            }
+                                                            color={
+                                                                eventAdminData.moderation_status === "approved"
+                                                                    ? "success"
+                                                                    : eventAdminData.moderation_status === "rejected" ||
+                                                                      eventAdminData.moderation_status === "flagged"
+                                                                    ? "error"
+                                                                    : eventAdminData.moderation_status ===
+                                                                      "revision_requested"
+                                                                    ? "warning"
+                                                                    : "default"
+                                                            }
+                                                            size="small"
+                                                        />
+                                                    </Box>
+
+                                                    {/* Admin Comments */}
+                                                    <Box>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{ fontWeight: "medium", mb: 1 }}>
+                                                            Commentaires de l'administrateur:
+                                                        </Typography>
+                                                        {eventAdminData.admin_notes ? (
+                                                            <Alert
+                                                                severity={
+                                                                    eventAdminData.moderation_status === "rejected" ||
+                                                                    eventAdminData.moderation_status === "flagged"
+                                                                        ? "error"
+                                                                        : eventAdminData.moderation_status ===
+                                                                          "revision_requested"
+                                                                        ? "warning"
+                                                                        : "info"
+                                                                }
+                                                                sx={{ mt: 1 }}>
+                                                                <Typography variant="body2">
+                                                                    {eventAdminData.admin_notes}
+                                                                </Typography>
+                                                            </Alert>
+                                                        ) : (
+                                                            <Typography
+                                                                variant="body2"
+                                                                color="text.secondary"
+                                                                sx={{ fontStyle: "italic" }}>
+                                                                Aucun commentaire de l'administrateur
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </Box>
+                                            </Grid>
+                                        )}
+
+                                        {/* Request Review Switch - only for non-approved events when editing */}
+                                        {isEdit &&
+                                            eventAdminData.moderation_status !== "approved" &&
+                                            eventAdminData.moderation_status !== "under_review" && (
+                                                <Grid size={{ xs: 12, md: 4 }}>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Switch
+                                                                checked={formData.request_review}
+                                                                onChange={(e) =>
+                                                                    handleChange("request_review", e.target.checked)
+                                                                }
+                                                            />
+                                                        }
+                                                        label={
+                                                            <Box sx={{ display: "flex", flexDirection: "column" }}>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{ fontWeight: "medium" }}>
+                                                                    Soumettre pour révision
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {formData.request_review
+                                                                        ? "Sera soumis à la révision"
+                                                                        : "Rester en brouillon"}
+                                                                </Typography>
+                                                            </Box>
+                                                        }
+                                                        sx={{ margin: 0 }}
+                                                    />
+                                                    {formData.request_review && (
+                                                        <Alert severity="info" sx={{ mt: 1, p: 1 }}>
+                                                            <Typography variant="caption">
+                                                                Votre événement sera examiné bientôt
+                                                            </Typography>
+                                                        </Alert>
+                                                    )}
+                                                </Grid>
+                                            )}
+
+                                        {/* Request Review Switch - for new events (non-edit mode) */}
+                                        {!isEdit && (
+                                            <Grid size={{ xs: 12, md: 4 }}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Switch
+                                                            checked={formData.request_review}
+                                                            onChange={(e) =>
+                                                                handleChange("request_review", e.target.checked)
+                                                            }
+                                                        />
+                                                    }
+                                                    label={
+                                                        <Box sx={{ display: "flex", flexDirection: "column" }}>
+                                                            <Typography variant="body2" sx={{ fontWeight: "medium" }}>
+                                                                Soumettre pour révision
+                                                            </Typography>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                {formData.request_review
+                                                                    ? "Sera soumis à la révision"
+                                                                    : "Rester en brouillon"}
+                                                            </Typography>
+                                                        </Box>
+                                                    }
+                                                    sx={{ margin: 0 }}
+                                                />
+                                                {formData.request_review && (
+                                                    <Alert severity="info" sx={{ mt: 1, p: 1 }}>
+                                                        <Typography variant="caption">
+                                                            Votre événement sera examiné bientôt
+                                                        </Typography>
+                                                    </Alert>
+                                                )}
+                                            </Grid>
+                                        )}
+                                    </Grid>
+                                </Card>
+                            </Grid>
                             {/* Basic Information */}
                             <Grid size={{ xs: 12 }}>
                                 <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center" }}>
@@ -765,26 +1056,6 @@ const EventForm = () => {
                                     multiline
                                     rows={3}
                                     helperText="Conditions de remboursement"
-                                />
-                            </Grid>
-
-                            {/* Settings */}
-                            <Grid size={{ xs: 12 }}>
-                                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                                    Paramètres
-                                </Typography>
-                                <Divider sx={{ mb: 3 }} />
-                            </Grid>
-
-                            <Grid size={{ xs: 12, md: 6 }}>
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={formData.is_featured}
-                                            onChange={(e) => handleChange("is_featured", e.target.checked)}
-                                        />
-                                    }
-                                    label="Événement en vedette"
                                 />
                             </Grid>
                         </Grid>

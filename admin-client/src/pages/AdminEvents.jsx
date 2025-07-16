@@ -63,7 +63,7 @@ const AdminEvents = ({ user }) => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [moderationDialogOpen, setModerationDialogOpen] = useState(false);
     const [moderationData, setModerationData] = useState({
-        status: "",
+        moderation_status: "",
         notes: "",
     });
 
@@ -138,11 +138,15 @@ const AdminEvents = ({ user }) => {
         if (!selectedEvent) return;
 
         try {
-            await AdminService.moderateEvent(user.id, selectedEvent.id, moderationData);
+            await AdminService.updateEventModeration(
+                selectedEvent.id,
+                moderationData.moderation_status,
+                moderationData.notes
+            );
             await loadEvents(); // Reload to get updated data
             setModerationDialogOpen(false);
             setSelectedEvent(null);
-            setModerationData({ status: "", notes: "" });
+            setModerationData({ moderation_status: "", notes: "" });
         } catch (err) {
             setError(err.message);
         }
@@ -349,7 +353,7 @@ const AdminEvents = ({ user }) => {
                                                     onClick={() => {
                                                         setSelectedEvent(event);
                                                         setModerationData({
-                                                            status: event.moderation_status || "",
+                                                            moderation_status: event.moderation_status || "",
                                                             notes: event.admin_notes || "",
                                                         });
                                                         setModerationDialogOpen(true);
@@ -408,25 +412,33 @@ const AdminEvents = ({ user }) => {
             </Dialog>
 
             {/* Moderation Dialog */}
-            <Dialog open={moderationDialogOpen} onClose={() => setModerationDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={moderationDialogOpen}
+                onClose={() => {
+                    setModerationDialogOpen(false);
+                    setModerationData({ moderation_status: "", notes: "" });
+                }}
+                maxWidth="sm"
+                fullWidth>
                 <DialogTitle>Modérer l'événement: {selectedEvent?.title}</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2 }}>
                         <FormControl fullWidth sx={{ mb: 2 }}>
                             <InputLabel>Statut de modération</InputLabel>
                             <Select
-                                value={moderationData.status}
+                                value={moderationData.moderation_status || ""}
                                 label="Statut de modération"
                                 onChange={(e) =>
                                     setModerationData({
                                         ...moderationData,
-                                        status: e.target.value,
+                                        moderation_status: e.target.value,
                                     })
                                 }>
+                                <MenuItem value="under_review">En cours de révision</MenuItem>
                                 <MenuItem value="approved">Approuvé</MenuItem>
-                                <MenuItem value="under_review">En révision</MenuItem>
                                 <MenuItem value="rejected">Rejeté</MenuItem>
-                                <MenuItem value="suspended">Suspendu</MenuItem>
+                                <MenuItem value="revision_requested">Révision demandée</MenuItem>
+                                <MenuItem value="flagged">Signalé</MenuItem>
                             </Select>
                         </FormControl>
                         <TextField
@@ -442,12 +454,42 @@ const AdminEvents = ({ user }) => {
                                 })
                             }
                             placeholder="Ajoutez des notes pour justifier votre décision..."
+                            required={
+                                moderationData.moderation_status === "rejected" ||
+                                moderationData.moderation_status === "revision_requested"
+                            }
+                            error={
+                                !moderationData.notes &&
+                                (moderationData.moderation_status === "rejected" ||
+                                    moderationData.moderation_status === "revision_requested")
+                            }
+                            helperText={
+                                (moderationData.moderation_status === "rejected" ||
+                                    moderationData.moderation_status === "revision_requested") &&
+                                !moderationData.notes
+                                    ? "Une justification est obligatoire pour les décisions négatives"
+                                    : "Ajoutez des notes pour expliquer votre décision"
+                            }
                         />
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setModerationDialogOpen(false)}>Annuler</Button>
-                    <Button onClick={handleModerateEvent} variant="contained" disabled={!moderationData.status}>
+                    <Button
+                        onClick={() => {
+                            setModerationDialogOpen(false);
+                            setModerationData({ moderation_status: "", notes: "" });
+                        }}>
+                        Annuler
+                    </Button>
+                    <Button
+                        onClick={handleModerateEvent}
+                        variant="contained"
+                        disabled={
+                            !moderationData.moderation_status ||
+                            ((moderationData.moderation_status === "rejected" ||
+                                moderationData.moderation_status === "revision_requested") &&
+                                !moderationData.notes.trim())
+                        }>
                         Sauvegarder
                     </Button>
                 </DialogActions>

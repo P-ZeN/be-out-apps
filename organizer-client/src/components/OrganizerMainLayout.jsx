@@ -80,6 +80,11 @@ const OrganizerMainLayout = ({ children }) => {
             path: "/events",
         },
         {
+            text: "Notifications",
+            icon: <Notifications />,
+            path: "/notifications",
+        },
+        {
             text: "Mes lieux",
             icon: <LocationOn />,
             path: "/venues",

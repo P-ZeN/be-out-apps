@@ -22,7 +22,12 @@ router.get("/", async (req, res) => {
         } = req.query;
 
         const offset = (page - 1) * limit;
-        let whereConditions = ["e.status = 'active'", "e.event_date > NOW()"];
+        let whereConditions = [
+            "e.status = 'active'",
+            "e.event_date > NOW()",
+            "e.moderation_status = 'approved'",
+            "e.is_published = true",
+        ];
         let queryParams = [];
         let paramIndex = 1;
 
@@ -197,6 +202,9 @@ router.get("/:id", async (req, res) => {
             LEFT JOIN categories cat ON ec.category_id = cat.id
             LEFT JOIN reviews r ON e.id = r.event_id
             WHERE e.id = $1
+                AND e.status = 'active'
+                AND e.moderation_status = 'approved'
+                AND e.is_published = true
             GROUP BY e.id, v.id, a.id
         `;
 
@@ -247,7 +255,11 @@ router.get("/meta/categories", async (req, res) => {
                 COUNT(DISTINCT e.id) as event_count
             FROM categories c
             LEFT JOIN event_categories ec ON c.id = ec.category_id
-            LEFT JOIN events e ON ec.event_id = e.id AND e.status = 'active' AND e.event_date > NOW()
+            LEFT JOIN events e ON ec.event_id = e.id
+                AND e.status = 'active'
+                AND e.event_date > NOW()
+                AND e.moderation_status = 'approved'
+                AND e.is_published = true
             GROUP BY c.id, c.name, c.description, c.name_fr, c.name_en, c.name_es,
                      c.description_fr, c.description_en, c.description_es, c.icon, c.color, c.created_at
             ORDER BY ${nameColumn}
@@ -276,7 +288,10 @@ router.get("/meta/stats", async (req, res) => {
                 MIN(discounted_price) as min_price,
                 MAX(discounted_price) as max_price
             FROM events
-            WHERE status = 'active' AND event_date > NOW()
+            WHERE status = 'active'
+                AND event_date > NOW()
+                AND moderation_status = 'approved'
+                AND is_published = true
         `;
 
         const result = await client.query(query);

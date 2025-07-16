@@ -87,6 +87,39 @@ class AdminService {
         }
     }
 
+    static async updateEventModeration(eventId, moderationStatus, adminNotes = "") {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}/status`, {
+                method: "PATCH",
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify({ moderation_status: moderationStatus, admin_notes: adminNotes }),
+            });
+
+            if (!response.ok) {
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (parseError) {
+                    // If JSON parsing fails, try to get text response
+                    try {
+                        const textError = await response.text();
+                        errorMessage = textError || errorMessage;
+                    } catch (textError) {
+                        // If both fail, use the original error message
+                        console.error("Failed to parse error response:", parseError);
+                    }
+                }
+                throw new Error(errorMessage);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error updating event moderation:", error);
+            throw error;
+        }
+    }
+
     static async getUsers(params = {}) {
         try {
             const searchParams = new URLSearchParams();

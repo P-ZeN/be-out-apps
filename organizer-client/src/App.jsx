@@ -13,6 +13,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import EventForm from "./pages/EventForm";
+import EventStatusHistory from "./pages/EventStatusHistory";
+import OrganizerNotifications from "./pages/OrganizerNotifications";
 import VenueManagement from "./pages/VenueManagement";
 import Bookings from "./pages/Bookings";
 import Revenue from "./pages/Revenue";
@@ -40,6 +42,11 @@ function App() {
                                                 <Route path="/events" element={<Events />} />
                                                 <Route path="/events/new" element={<EventForm />} />
                                                 <Route path="/events/:id/edit" element={<EventForm />} />
+                                                <Route
+                                                    path="/events/:id/status-history"
+                                                    element={<EventStatusHistory />}
+                                                />
+                                                <Route path="/notifications" element={<OrganizerNotifications />} />
                                                 <Route path="/venues" element={<VenueManagement />} />
                                                 <Route path="/bookings" element={<Bookings />} />
                                                 <Route path="/revenue" element={<Revenue />} />
