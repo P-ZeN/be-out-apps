@@ -75,7 +75,7 @@ const GeneralSettings = () => (
 );
 
 const LanguageSettings = () => {
-    const [selectedLanguage, setSelectedLanguage] = useState("en");
+    const [selectedLanguage, setSelectedLanguage] = useState("fr");
     const [selectedNamespace, setSelectedNamespace] = useState("common");
     const [translations, setTranslations] = useState({});
     const [loading, setLoading] = useState(true);
@@ -172,9 +172,9 @@ const LanguageSettings = () => {
     };
 
     const subTabsData = [
-        { label: "Edit Translations", icon: <Edit /> },
+        { label: "Modifier les Traductions", icon: <Edit /> },
         { label: "Import/Export", icon: <FileUpload /> },
-        { label: "Statistics", icon: <LanguageIcon /> },
+        { label: "Statistiques", icon: <LanguageIcon /> },
     ];
 
     return (
@@ -227,10 +227,10 @@ const LanguageSettings = () => {
                         <Grid container spacing={3} alignItems="center">
                             <Grid size={{ xs: 12, md: 3 }}>
                                 <FormControl fullWidth>
-                                    <InputLabel>Language</InputLabel>
+                                    <InputLabel>Langue</InputLabel>
                                     <Select
                                         value={selectedLanguage}
-                                        label="Language"
+                                        label="Langue"
                                         onChange={(e) => setSelectedLanguage(e.target.value)}>
                                         {availableLanguages.map((lang) => (
                                             <MenuItem key={lang.code} value={lang.code}>
@@ -245,7 +245,7 @@ const LanguageSettings = () => {
                             </Grid>
                             <Grid size={{ xs: 12, md: 3 }}>
                                 <FormControl fullWidth>
-                                    <InputLabel>Namespace</InputLabel>
+                                    <InputLabel>Espace de noms</InputLabel>
                                     <Select
                                         value={selectedNamespace}
                                         label="Namespace"
@@ -261,7 +261,7 @@ const LanguageSettings = () => {
                             <Grid size={{ xs: 12, md: 4 }}>
                                 <TextField
                                     fullWidth
-                                    label="Search translations"
+                                    label="Rechercher des traductions"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     InputProps={{
@@ -271,7 +271,7 @@ const LanguageSettings = () => {
                             </Grid>
                             <Grid size={{ xs: 12, md: 2 }}>
                                 <Stack direction="row" spacing={1}>
-                                    <Tooltip title="Refresh">
+                                    <Tooltip title="Actualiser">
                                         <IconButton onClick={loadTranslations}>
                                             <Refresh />
                                         </IconButton>
@@ -281,7 +281,7 @@ const LanguageSettings = () => {
                                         startIcon={<Save />}
                                         onClick={handleSaveTranslations}
                                         disabled={saving}>
-                                        {saving ? "Saving..." : "Save Changes"}
+                                        {saving ? "Sauvegarde..." : "Sauvegarder les Modifications"}
                                     </Button>
                                 </Stack>
                             </Grid>
@@ -308,7 +308,7 @@ const LanguageSettings = () => {
                             startIcon={<Save />}
                             onClick={handleSaveTranslations}
                             disabled={saving}>
-                            {saving ? <CircularProgress size={20} /> : "Save Changes"}
+                            {saving ? <CircularProgress size={20} /> : "Sauvegarder les Modifications"}
                         </Button>
                     </Box>
                 </Box>
@@ -348,7 +348,7 @@ const LanguageSettings = () => {
                                             <Typography variant="h6">{lang.name}</Typography>
                                         </Box>
                                         <Typography variant="body2" color="text.secondary">
-                                            Translation completion and statistics
+                                            Complétude des traductions et statistiques
                                         </Typography>
                                     </CardContent>
                                 </Card>

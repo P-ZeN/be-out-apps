@@ -154,8 +154,8 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
         return (
             <Paper sx={{ p: 3 }}>
                 <Alert severity="info">
-                    No translations found for {language}/{namespace}. Translation keys are managed by developers in the
-                    codebase.
+                    Aucune traduction trouvée pour {language}/{namespace}. Les clés de traduction sont gérées par les
+                    développeurs dans le code source.
                 </Alert>
             </Paper>
         );
@@ -172,7 +172,7 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
                         variant="outlined"
                     />
                     <Typography variant="body2" color="text.secondary">
-                        {Object.keys(translations).length} translation keys
+                        {Object.keys(translations).length} clés de traduction
                     </Typography>
                 </Stack>
             </Box>
@@ -182,7 +182,7 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
                     <AccordionSummary expandIcon={<ExpandMore />}>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             <KeyIcon fontSize="small" />
-                            <Typography variant="h6">{group === "root" ? "Root Level" : group}</Typography>
+                            <Typography variant="h6">{group === "root" ? "Niveau Racine" : group}</Typography>
                             <Chip size="small" label={entries.length} />
                         </Box>
                     </AccordionSummary>
@@ -191,8 +191,8 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
                             <Table>
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell width="40%">Key</TableCell>
-                                        <TableCell width="50%">Translation</TableCell>
+                                        <TableCell width="40%">Clé</TableCell>
+                                        <TableCell width="50%">Traduction</TableCell>
                                         <TableCell width="10%" align="center">
                                             Actions
                                         </TableCell>
@@ -290,7 +290,7 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
                                                     <Stack direction="row" spacing={0.5} justifyContent="center">
                                                         {isEditing ? (
                                                             <>
-                                                                <Tooltip title="Save">
+                                                                <Tooltip title="Sauvegarder">
                                                                     <IconButton
                                                                         size="small"
                                                                         color="primary"
@@ -298,7 +298,7 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
                                                                         <Save fontSize="small" />
                                                                     </IconButton>
                                                                 </Tooltip>
-                                                                <Tooltip title="Cancel">
+                                                                <Tooltip title="Annuler">
                                                                     <IconButton
                                                                         size="small"
                                                                         onClick={() => cancelEdit(key)}>
@@ -309,7 +309,7 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
                                                         ) : (
                                                             <>
                                                                 {isJsonObject(value) || looksLikeJson(value) ? (
-                                                                    <Tooltip title="Edit JSON Structure">
+                                                                    <Tooltip title="Modifier la Structure JSON">
                                                                         <IconButton
                                                                             size="small"
                                                                             color="secondary"
@@ -318,7 +318,7 @@ const TranslationEditor = ({ translations, onUpdateKey, onSave, language, namesp
                                                                         </IconButton>
                                                                     </Tooltip>
                                                                 ) : (
-                                                                    <Tooltip title="Edit">
+                                                                    <Tooltip title="Modifier">
                                                                         <IconButton
                                                                             size="small"
                                                                             onClick={() => startEdit(key)}>

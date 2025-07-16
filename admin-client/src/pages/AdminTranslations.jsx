@@ -48,7 +48,7 @@ import TranslationExport from "../components/TranslationExport";
 const AdminTranslations = () => {
     const { t } = useTranslation();
     const [currentTab, setCurrentTab] = useState(0);
-    const [selectedLanguage, setSelectedLanguage] = useState("en");
+    const [selectedLanguage, setSelectedLanguage] = useState("fr");
     const [selectedNamespace, setSelectedNamespace] = useState("common");
     const [translations, setTranslations] = useState({});
     const [loading, setLoading] = useState(true);
@@ -97,7 +97,7 @@ const AdminTranslations = () => {
             const data = await translationService.getTranslations(selectedLanguage, selectedNamespace);
             setTranslations(data);
         } catch (err) {
-            setError("Failed to load translations");
+            setError("Échec du chargement des traductions");
         } finally {
             setLoading(false);
         }
@@ -125,10 +125,10 @@ const AdminTranslations = () => {
         try {
             setSaving(true);
             const result = await translationService.saveTranslations(selectedLanguage, selectedNamespace, translations);
-            setSuccess("Translations saved successfully!");
+            setSuccess("Traductions sauvegardées avec succès !");
             await loadTranslations();
         } catch (err) {
-            setError("Failed to save translations");
+            setError("Échec de la sauvegarde des traductions");
         } finally {
             setSaving(false);
         }
@@ -140,9 +140,9 @@ const AdminTranslations = () => {
             // Use the provided translations or fall back to current state
             const translationsToSave = updatedTranslations || translations;
             await translationService.saveTranslations(selectedLanguage, selectedNamespace, translationsToSave);
-            setSuccess("Translation saved!");
+            setSuccess("Traduction sauvegardée !");
         } catch (err) {
-            setError("Failed to save translation");
+            setError("Échec de la sauvegarde de la traduction");
             console.error("Error auto-saving translation:", err);
         }
     };
@@ -166,9 +166,9 @@ const AdminTranslations = () => {
             setAddKeyDialog(false);
             setNewKey("");
             setNewValue("");
-            setSuccess("Key added successfully!");
+            setSuccess("Clé ajoutée avec succès !");
         } catch (err) {
-            setError("Failed to add key");
+            setError("Échec de l'ajout de la clé");
         }
     };
 
@@ -178,9 +178,9 @@ const AdminTranslations = () => {
             delete updatedTranslations[key];
             setTranslations(updatedTranslations);
             setDeleteDialog(null);
-            setSuccess("Key deleted successfully!");
+            setSuccess("Clé supprimée avec succès !");
         } catch (err) {
-            setError("Failed to delete key");
+            setError("Échec de la suppression de la clé");
         }
     };
 
@@ -199,19 +199,19 @@ const AdminTranslations = () => {
     };
 
     const tabsData = [
-        { label: "Edit Translations", icon: <Edit /> },
+        { label: "Modifier les Traductions", icon: <Edit /> },
         { label: "Import/Export", icon: <FileUpload /> },
-        { label: "Statistics", icon: <Language /> },
+        { label: "Statistiques", icon: <Language /> },
     ];
 
     return (
         <Box sx={{ p: 3 }}>
             <Box sx={{ mb: 3 }}>
                 <Typography variant="h4" gutterBottom>
-                    Translation Management
+                    Gestion des Traductions
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                    Manage translations for all UI components across different languages
+                    Gérer les traductions pour tous les composants de l'interface utilisateur dans différentes langues
                 </Typography>
             </Box>
 
@@ -233,10 +233,10 @@ const AdminTranslations = () => {
                         <Grid container spacing={3} alignItems="center">
                             <Grid item xs={12} md={3}>
                                 <FormControl fullWidth>
-                                    <InputLabel>Language</InputLabel>
+                                    <InputLabel>Langue</InputLabel>
                                     <Select
                                         value={selectedLanguage}
-                                        label="Language"
+                                        label="Langue"
                                         onChange={(e) => setSelectedLanguage(e.target.value)}>
                                         {availableLanguages.map((lang) => (
                                             <MenuItem key={lang.code} value={lang.code}>
@@ -251,10 +251,10 @@ const AdminTranslations = () => {
                             </Grid>
                             <Grid item xs={12} md={3}>
                                 <FormControl fullWidth>
-                                    <InputLabel>Namespace</InputLabel>
+                                    <InputLabel>Espace de noms</InputLabel>
                                     <Select
                                         value={selectedNamespace}
-                                        label="Namespace"
+                                        label="Espace de noms"
                                         onChange={(e) => setSelectedNamespace(e.target.value)}>
                                         {availableNamespaces.map((ns) => (
                                             <MenuItem key={ns.key} value={ns.key}>
@@ -267,7 +267,7 @@ const AdminTranslations = () => {
                             <Grid item xs={12} md={4}>
                                 <TextField
                                     fullWidth
-                                    label="Search translations"
+                                    label="Rechercher des traductions"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     InputProps={{
@@ -281,9 +281,9 @@ const AdminTranslations = () => {
                                         variant="contained"
                                         startIcon={<Add />}
                                         onClick={() => setAddKeyDialog(true)}>
-                                        Add Key
+                                        Ajouter une Clé
                                     </Button>
-                                    <Tooltip title="Refresh">
+                                    <Tooltip title="Actualiser">
                                         <IconButton onClick={loadTranslations}>
                                             <Refresh />
                                         </IconButton>
@@ -314,7 +314,7 @@ const AdminTranslations = () => {
                             startIcon={<Save />}
                             onClick={handleSaveTranslations}
                             disabled={saving}>
-                            {saving ? <CircularProgress size={20} /> : "Save Changes"}
+                            {saving ? <CircularProgress size={20} /> : "Sauvegarder les Modifications"}
                         </Button>
                     </Box>
                 </Box>
@@ -354,7 +354,7 @@ const AdminTranslations = () => {
                                             <Typography variant="h6">{lang.name}</Typography>
                                         </Box>
                                         <Typography variant="body2" color="text.secondary">
-                                            Translation completion and statistics
+                                            Complétude des traductions et statistiques
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -366,46 +366,46 @@ const AdminTranslations = () => {
 
             {/* Add Key Dialog */}
             <Dialog open={addKeyDialog} onClose={() => setAddKeyDialog(false)} maxWidth="md" fullWidth>
-                <DialogTitle>Add Translation Key</DialogTitle>
+                <DialogTitle>Ajouter une Clé de Traduction</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2 }}>
                         <TextField
                             fullWidth
-                            label="Key"
+                            label="Clé"
                             value={newKey}
                             onChange={(e) => setNewKey(e.target.value)}
                             sx={{ mb: 2 }}
-                            placeholder="e.g., buttons.submit"
+                            placeholder="ex: buttons.submit"
                         />
                         <TextField
                             fullWidth
-                            label="Value"
+                            label="Valeur"
                             value={newValue}
                             onChange={(e) => setNewValue(e.target.value)}
                             multiline
                             rows={3}
-                            placeholder="Enter translation value"
+                            placeholder="Entrez la valeur de traduction"
                         />
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setAddKeyDialog(false)}>Cancel</Button>
+                    <Button onClick={() => setAddKeyDialog(false)}>Annuler</Button>
                     <Button onClick={handleAddKey} variant="contained">
-                        Add Key
+                        Ajouter la Clé
                     </Button>
                 </DialogActions>
             </Dialog>
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={!!deleteDialog} onClose={() => setDeleteDialog(null)}>
-                <DialogTitle>Delete Translation Key</DialogTitle>
+                <DialogTitle>Supprimer la Clé de Traduction</DialogTitle>
                 <DialogContent>
-                    <Typography>Are you sure you want to delete the key "{deleteDialog}"?</Typography>
+                    <Typography>Êtes-vous sûr de vouloir supprimer la clé "{deleteDialog}" ?</Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDeleteDialog(null)}>Cancel</Button>
+                    <Button onClick={() => setDeleteDialog(null)}>Annuler</Button>
                     <Button onClick={() => handleDeleteKey(deleteDialog)} color="error">
-                        Delete
+                        Supprimer
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -16,10 +16,10 @@ const upload = multer({
     },
     fileFilter: (req, file, cb) => {
         // Accept only image files
-        if (file.mimetype.startsWith('image/')) {
+        if (file.mimetype.startsWith("image/")) {
             cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed'), false);
+            cb(new Error("Only image files are allowed"), false);
         }
     },
 });
@@ -55,9 +55,7 @@ class FileService {
 
             await fs.writeFile(filePath, file.buffer);
 
-            const url = isPublic 
-                ? `${this.publicUrl}/${relativePath}/${filename}`.replace(/\\/g, '/')
-                : null;
+            const url = isPublic ? `${this.publicUrl}/${relativePath}/${filename}`.replace(/\\/g, "/") : null;
 
             return {
                 filename,
@@ -855,10 +853,10 @@ router.post("/events/:id/image", verifyOrganizerToken, upload.single("image"), a
         // First verify the event belongs to the organizer
         const client = await pool.connect();
         try {
-            const eventCheck = await client.query(
-                "SELECT id FROM events WHERE id = $1 AND organizer_id = $2",
-                [eventId, req.user.id]
-            );
+            const eventCheck = await client.query("SELECT id FROM events WHERE id = $1 AND organizer_id = $2", [
+                eventId,
+                req.user.id,
+            ]);
 
             if (eventCheck.rows.length === 0) {
                 return res.status(404).json({ error: "Event not found or access denied" });
@@ -881,10 +879,10 @@ router.post("/events/:id/image", verifyOrganizerToken, upload.single("image"), a
             const result = await fileService.saveFile(processedFile, "events", true);
 
             // Update the event with the image URL
-            await client.query(
-                "UPDATE events SET image_url = $1, updated_at = NOW() WHERE id = $2",
-                [result.url, eventId]
-            );
+            await client.query("UPDATE events SET image_url = $1, updated_at = NOW() WHERE id = $2", [
+                result.url,
+                eventId,
+            ]);
 
             res.json({
                 message: "Event image uploaded successfully",

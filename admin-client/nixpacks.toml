@@ -7,4 +7,9 @@ cmds = ["npm run build"]
 
 # Tell Nixpacks how to start the application
 [start]
-cmd = "npx serve -s dist -l 80"
+cmd = "npx serve -s dist -l 80 --no-clipboard"
+
+[variables]
+NODE_ENV = "production"
+CI = "true"
+NO_UPDATE_NOTIFIER = "true"

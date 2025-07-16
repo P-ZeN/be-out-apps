@@ -238,7 +238,7 @@ const EventForm = () => {
         }
 
         // Validate file type
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
         if (!validTypes.includes(file.type)) {
             setImageError("Seuls les fichiers JPEG, PNG et WebP sont acceptés");
             return;
@@ -299,7 +299,7 @@ const EventForm = () => {
             let createdEvent;
             if (isEdit) {
                 await organizerService.updateEvent(eventId, eventData);
-                
+
                 // Upload image if present
                 if (formData.image) {
                     console.log("Uploading image for event:", eventId);
@@ -308,15 +308,17 @@ const EventForm = () => {
                         console.log("Image uploaded successfully");
                     } catch (imageError) {
                         console.error("Image upload failed:", imageError);
-                        throw new Error(`Événement sauvegardé mais erreur lors de l'upload de l'image: ${imageError.message}`);
+                        throw new Error(
+                            `Événement sauvegardé mais erreur lors de l'upload de l'image: ${imageError.message}`
+                        );
                     }
                 }
-                
+
                 setSuccess("Événement mis à jour avec succès !");
             } else {
                 createdEvent = await organizerService.createEvent(eventData);
                 console.log("Event created:", createdEvent);
-                
+
                 // Upload image if present
                 if (formData.image && createdEvent?.id) {
                     console.log("Uploading image for new event:", createdEvent.id);
@@ -325,13 +327,15 @@ const EventForm = () => {
                         console.log("Image uploaded successfully");
                     } catch (imageError) {
                         console.error("Image upload failed:", imageError);
-                        throw new Error(`Événement créé mais erreur lors de l'upload de l'image: ${imageError.message}`);
+                        throw new Error(
+                            `Événement créé mais erreur lors de l'upload de l'image: ${imageError.message}`
+                        );
                     }
                 } else if (formData.image) {
                     console.error("No event ID returned from createEvent");
                     throw new Error("Événement créé mais impossible d'uploader l'image (ID manquant)");
                 }
-                
+
                 setSuccess("Événement créé avec succès !");
             }
 
@@ -343,7 +347,7 @@ const EventForm = () => {
         } finally {
             setLoading(false);
         }
-    }; 
+    };
 
     // Handle venue creation
     const handleCreateVenue = () => {
@@ -534,7 +538,7 @@ const EventForm = () => {
                                         </Button>
                                     </Box>
                                 )}
-                                
+
                                 <input
                                     id="image-upload"
                                     type="file"
@@ -542,13 +546,13 @@ const EventForm = () => {
                                     onChange={handleImageUpload}
                                     style={{ display: "none" }}
                                 />
-                                
+
                                 {imageError && (
                                     <Typography color="error" variant="body2" sx={{ mt: 1 }}>
                                         {imageError}
                                     </Typography>
                                 )}
-                                
+
                                 {!formData.image && !imagePreview && (
                                     <Button
                                         variant="outlined"

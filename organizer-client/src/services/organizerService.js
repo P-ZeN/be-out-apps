@@ -173,7 +173,7 @@ class OrganizerService {
 
     async uploadEventImage(eventId, imageFile) {
         const formData = new FormData();
-        formData.append('image', imageFile);
+        formData.append("image", imageFile);
 
         const token = localStorage.getItem("organizerToken");
         const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}/image`, {

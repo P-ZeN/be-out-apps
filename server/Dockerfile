@@ -5,6 +5,13 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Set production environment variables
+ENV NODE_ENV=production
+ENV CI=true
+ENV NO_UPDATE_NOTIFIER=true
+ENV npm_config_fund=false
+ENV npm_config_audit=false
+
 # Install dependencies
 RUN npm install
 
