@@ -171,6 +171,27 @@ class OrganizerService {
         return response.json();
     }
 
+    async uploadEventImage(eventId, imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        const token = localStorage.getItem("organizerToken");
+        const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}/image`, {
+            method: "POST",
+            headers: {
+                ...(token && { Authorization: `Bearer ${token}` }),
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to upload image");
+        }
+
+        return response.json();
+    }
+
     async deleteEvent(eventId) {
         const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}`, {
             method: "DELETE",

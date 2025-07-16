@@ -1,8 +1,80 @@
 import { Router } from "express";
 import pool from "../db.js";
 import jwt from "jsonwebtoken";
+import multer from "multer";
+import sharp from "sharp";
+import path from "path";
+import fs from "fs/promises";
 
 const router = Router();
+
+// Configure multer for memory storage
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        // Accept only image files
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'), false);
+        }
+    },
+});
+
+// File service utilities
+class FileService {
+    constructor() {
+        this.uploadPath = process.env.UPLOAD_PATH || path.join(process.cwd(), "uploads");
+        this.publicUrl = process.env.PUBLIC_FILES_URL || "http://localhost:3000/uploads";
+    }
+
+    async ensureDirectoryExists(dir) {
+        try {
+            await fs.access(dir);
+        } catch {
+            await fs.mkdir(dir, { recursive: true });
+        }
+    }
+
+    async saveFile(file, folder = "uploads", isPublic = false) {
+        try {
+            const dir = isPublic ? "public" : "private";
+            const relativePath = path.join(dir, folder);
+            const fullPath = path.join(this.uploadPath, relativePath);
+
+            await this.ensureDirectoryExists(fullPath);
+
+            const timestamp = Date.now();
+            const randomString = Math.random().toString(36).substring(2, 15);
+            const extension = path.extname(file.originalname);
+            const filename = `${timestamp}_${randomString}${extension}`;
+            const filePath = path.join(fullPath, filename);
+
+            await fs.writeFile(filePath, file.buffer);
+
+            const url = isPublic 
+                ? `${this.publicUrl}/${relativePath}/${filename}`.replace(/\\/g, '/')
+                : null;
+
+            return {
+                filename,
+                originalName: file.originalname,
+                mimetype: file.mimetype,
+                size: file.size,
+                path: relativePath,
+                url,
+            };
+        } catch (error) {
+            console.error("Error saving file:", error);
+            throw new Error("Failed to save file");
+        }
+    }
+}
+
+const fileService = new FileService();
 
 // Middleware to verify organizer token
 const verifyOrganizerToken = async (req, res, next) => {
@@ -768,6 +840,63 @@ router.delete("/venues/:id", verifyOrganizerToken, async (req, res) => {
     } catch (error) {
         console.error("Error deleting venue:", error);
         res.status(500).json({ message: "Error deleting venue" });
+    }
+});
+
+// Upload event image
+router.post("/events/:id/image", verifyOrganizerToken, upload.single("image"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file provided" });
+        }
+
+        const eventId = req.params.id;
+
+        // First verify the event belongs to the organizer
+        const client = await pool.connect();
+        try {
+            const eventCheck = await client.query(
+                "SELECT id FROM events WHERE id = $1 AND organizer_id = $2",
+                [eventId, req.user.id]
+            );
+
+            if (eventCheck.rows.length === 0) {
+                return res.status(404).json({ error: "Event not found or access denied" });
+            }
+
+            // Process the image using sharp
+            const processedImage = await sharp(req.file.buffer)
+                .resize(1200, 800, { fit: "cover" })
+                .jpeg({ quality: 90 })
+                .toBuffer();
+
+            const processedFile = {
+                ...req.file,
+                buffer: processedImage,
+                originalname: req.file.originalname.replace(/\.[^/.]+$/, "") + ".jpg",
+                mimetype: "image/jpeg",
+            };
+
+            // Save the file
+            const result = await fileService.saveFile(processedFile, "events", true);
+
+            // Update the event with the image URL
+            await client.query(
+                "UPDATE events SET image_url = $1, updated_at = NOW() WHERE id = $2",
+                [result.url, eventId]
+            );
+
+            res.json({
+                message: "Event image uploaded successfully",
+                file: result,
+                imageUrl: result.url,
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error uploading event image:", error);
+        res.status(500).json({ error: "Failed to upload event image" });
     }
 });
 

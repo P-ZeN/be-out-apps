@@ -36,6 +36,8 @@ import {
     Save,
     Cancel,
     Add,
+    Delete,
+    Image,
 } from "@mui/icons-material";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { useNavigate, useParams } from "react-router-dom";
@@ -61,6 +63,7 @@ const EventForm = () => {
         is_featured: false,
         requirements: "",
         cancellation_policy: "",
+        image: null,
     });
 
     // UI state
@@ -71,6 +74,8 @@ const EventForm = () => {
     const [venues, setVenues] = useState([]);
     const [categories, setCategories] = useState([]);
     const [tagInput, setTagInput] = useState("");
+    const [imagePreview, setImagePreview] = useState("");
+    const [imageError, setImageError] = useState("");
 
     // Validation state
     const [errors, setErrors] = useState({});
@@ -130,7 +135,13 @@ const EventForm = () => {
                         is_featured: eventData.is_featured || false,
                         requirements: eventData.requirements || "",
                         cancellation_policy: eventData.cancellation_policy || "",
+                        image: null, // Will be handled separately for existing events
                     });
+
+                    // Set image preview if event has an image
+                    if (eventData.image_url) {
+                        setImagePreview(eventData.image_url);
+                    }
                 }
             } catch (error) {
                 setError(error.message || "Erreur lors du chargement des données");
@@ -217,6 +228,51 @@ const EventForm = () => {
         }
     };
 
+    // Handle image upload
+    const handleImageUpload = (event) => {
+        const file = event.target.files[0];
+        setImageError("");
+
+        if (!file) {
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            setImageError("Seuls les fichiers JPEG, PNG et WebP sont acceptés");
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            setImageError("La taille du fichier ne doit pas dépasser 5MB");
+            return;
+        }
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setImagePreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+
+        // Store file in form data
+        handleChange("image", file);
+    };
+
+    const handleRemoveImage = () => {
+        handleChange("image", null);
+        setImagePreview("");
+        setImageError("");
+        // Reset file input
+        const fileInput = document.getElementById("image-upload");
+        if (fileInput) {
+            fileInput.value = "";
+        }
+    };
+
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -237,11 +293,45 @@ const EventForm = () => {
                 event_date: formData.event_date.toISOString(),
             };
 
+            // Remove image from eventData as it will be handled separately
+            delete eventData.image;
+
+            let createdEvent;
             if (isEdit) {
                 await organizerService.updateEvent(eventId, eventData);
+                
+                // Upload image if present
+                if (formData.image) {
+                    console.log("Uploading image for event:", eventId);
+                    try {
+                        await organizerService.uploadEventImage(eventId, formData.image);
+                        console.log("Image uploaded successfully");
+                    } catch (imageError) {
+                        console.error("Image upload failed:", imageError);
+                        throw new Error(`Événement sauvegardé mais erreur lors de l'upload de l'image: ${imageError.message}`);
+                    }
+                }
+                
                 setSuccess("Événement mis à jour avec succès !");
             } else {
-                await organizerService.createEvent(eventData);
+                createdEvent = await organizerService.createEvent(eventData);
+                console.log("Event created:", createdEvent);
+                
+                // Upload image if present
+                if (formData.image && createdEvent?.id) {
+                    console.log("Uploading image for new event:", createdEvent.id);
+                    try {
+                        await organizerService.uploadEventImage(createdEvent.id, formData.image);
+                        console.log("Image uploaded successfully");
+                    } catch (imageError) {
+                        console.error("Image upload failed:", imageError);
+                        throw new Error(`Événement créé mais erreur lors de l'upload de l'image: ${imageError.message}`);
+                    }
+                } else if (formData.image) {
+                    console.error("No event ID returned from createEvent");
+                    throw new Error("Événement créé mais impossible d'uploader l'image (ID manquant)");
+                }
+                
                 setSuccess("Événement créé avec succès !");
             }
 
@@ -253,7 +343,7 @@ const EventForm = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }; 
 
     // Handle venue creation
     const handleCreateVenue = () => {
@@ -378,6 +468,96 @@ const EventForm = () => {
                                     rows={4}
                                     required
                                 />
+                            </Grid>
+
+                            {/* Image Upload */}
+                            <Grid size={{ xs: 12 }}>
+                                <Typography
+                                    variant="h6"
+                                    gutterBottom
+                                    sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+                                    <Image sx={{ mr: 1 }} />
+                                    Image de l'événement
+                                </Typography>
+                                <Divider sx={{ mb: 3 }} />
+                            </Grid>
+
+                            <Grid size={{ xs: 12 }}>
+                                {!formData.image && !imagePreview ? (
+                                    <Box
+                                        sx={{
+                                            border: "2px dashed #ccc",
+                                            borderRadius: 2,
+                                            p: 4,
+                                            textAlign: "center",
+                                            cursor: "pointer",
+                                            transition: "border-color 0.3s",
+                                            "&:hover": {
+                                                borderColor: "primary.main",
+                                            },
+                                        }}
+                                        onClick={() => document.getElementById("image-upload").click()}>
+                                        <CloudUpload sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+                                        <Typography variant="h6" gutterBottom>
+                                            Cliquez pour sélectionner une image
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Formats acceptés: JPEG, PNG, WebP • Taille max: 5MB
+                                        </Typography>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ position: "relative", display: "inline-block" }}>
+                                        <img
+                                            src={imagePreview}
+                                            alt="Aperçu de l'image"
+                                            style={{
+                                                maxWidth: "300px",
+                                                maxHeight: "200px",
+                                                width: "100%",
+                                                height: "auto",
+                                                borderRadius: "8px",
+                                                objectFit: "cover",
+                                            }}
+                                        />
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            size="small"
+                                            startIcon={<Delete />}
+                                            onClick={handleRemoveImage}
+                                            sx={{
+                                                position: "absolute",
+                                                top: 8,
+                                                right: 8,
+                                            }}>
+                                            Supprimer
+                                        </Button>
+                                    </Box>
+                                )}
+                                
+                                <input
+                                    id="image-upload"
+                                    type="file"
+                                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                                    onChange={handleImageUpload}
+                                    style={{ display: "none" }}
+                                />
+                                
+                                {imageError && (
+                                    <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                                        {imageError}
+                                    </Typography>
+                                )}
+                                
+                                {!formData.image && !imagePreview && (
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<CloudUpload />}
+                                        onClick={() => document.getElementById("image-upload").click()}
+                                        sx={{ mt: 2 }}>
+                                        Sélectionner une image
+                                    </Button>
+                                )}
                             </Grid>
 
                             {/* Date and Time */}
