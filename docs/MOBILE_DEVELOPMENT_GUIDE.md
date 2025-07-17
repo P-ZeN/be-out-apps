@@ -16,7 +16,7 @@ This guide will help you set up the development environment for building mobile 
    # Add these to your system environment variables
    ANDROID_HOME=C:\Users\%USERNAME%\AppData\Local\Android\Sdk
    NDK_HOME=%ANDROID_HOME%\ndk\25.2.9519653
-   
+
    # Add to PATH
    %ANDROID_HOME%\tools
    %ANDROID_HOME%\tools\bin
@@ -137,10 +137,10 @@ npm run tauri:ios:build
    ```powershell
    # List available emulators
    emulator -list-avds
-   
+
    # Start emulator
    emulator -avd <avd-name>
-   
+
    # Run app on emulator
    tauri android dev
    ```
@@ -149,10 +149,10 @@ npm run tauri:ios:build
    ```powershell
    # Enable USB debugging on device
    # Connect device via USB
-   
+
    # Check connected devices
    adb devices
-   
+
    # Run app on device
    tauri android dev --device <device-id>
    ```
@@ -163,7 +163,7 @@ npm run tauri:ios:build
    ```bash
    # List available simulators
    xcrun simctl list devices
-   
+
    # Run app on simulator
    tauri ios dev
    ```
@@ -226,7 +226,7 @@ npm run tauri:ios:build
    # Verify paths
    echo $ANDROID_HOME
    echo $NDK_HOME
-   
+
    # Reinstall SDK components if needed
    ```
 
@@ -234,7 +234,7 @@ npm run tauri:ios:build
    ```powershell
    # Clean build
    tauri android build --clean
-   
+
    # Update Rust targets
    rustup update
    rustup target add aarch64-linux-android
@@ -245,7 +245,7 @@ npm run tauri:ios:build
    # Restart ADB
    adb kill-server
    adb start-server
-   
+
    # Check USB debugging
    adb devices
    ```
@@ -261,7 +261,7 @@ npm run tauri:ios:build
    ```bash
    # Reset simulator
    xcrun simctl erase all
-   
+
    # Restart simulator
    xcrun simctl shutdown all
    ```

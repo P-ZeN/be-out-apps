@@ -49,7 +49,7 @@ event, events, discover, social, networking, community, local, map, calendar, ti
 ### Graphic Assets Required
 - **App Icon**: 512x512 PNG
 - **Feature Graphic**: 1024x500 PNG
-- **Screenshots**: 
+- **Screenshots**:
   - Phone: 1080x1920, 1440x2560, 1440x2880
   - Tablet: 1536x2048, 1920x1200, 2560x1440
 - **App Promo Video**: 30-120 seconds (optional)
@@ -84,13 +84,13 @@ event, events, discover, social, networking, community, local, map, calendar, ti
 
 ### App Review Information
 - **Demo Account**: Create a demo account for app review
-- **Review Notes**: 
+- **Review Notes**:
   - App requires location services for core functionality
   - Demo events are available for testing
   - No explicit content, suitable for 12+ age group
 
 ### Privacy Information
-- **Data Collection**: 
+- **Data Collection**:
   - Account information (name, email)
   - Location data (for event discovery)
   - Usage analytics (anonymized)
