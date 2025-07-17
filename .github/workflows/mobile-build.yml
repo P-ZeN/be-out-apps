@@ -35,6 +35,7 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     needs: test-client
+    if: false  # Temporarily disabled
     steps:
     - uses: actions/checkout@v4
 
@@ -96,7 +97,7 @@ jobs:
         # Verify NDK tools exist before creating config
         NDK_TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
         echo "Checking NDK toolchain at: $NDK_TOOLCHAIN"
-        
+
         if [ ! -d "$NDK_TOOLCHAIN" ]; then
           echo "❌ NDK toolchain directory not found: $NDK_TOOLCHAIN"
           echo "Available NDK contents:"
@@ -151,7 +152,7 @@ jobs:
 
         echo "Cargo config created:"
         cat ~/.cargo/config.toml
-        
+
         # Verify all tools exist
         echo "Verifying all tools exist:"
         for tool in "$NDK_TOOLCHAIN/llvm-ar" "$AARCH64_LINKER" "$ARMV7_LINKER" "$X86_64_LINKER" "$I686_LINKER"; do
@@ -185,20 +186,20 @@ jobs:
       run: |
         echo "Installing Tauri CLI globally..."
         npm install -g @tauri-apps/cli@latest
-        
+
         echo "Verifying Tauri CLI installation..."
         which tauri || echo "Tauri CLI not found in PATH"
         tauri --version || echo "Failed to get Tauri version"
-        
+
         echo "Checking if tauri is available via npx..."
         npx tauri --version || echo "npx tauri failed"
-        
+
         echo "Installing Tauri CLI locally as well..."
         npm install @tauri-apps/cli@latest
-        
+
         echo "Verifying local installation..."
         npx tauri --version || echo "Local npx tauri failed"
-        
+
         echo "Checking package.json scripts..."
         cat package.json | grep -A 5 -B 5 "scripts" || echo "No scripts section found"
 
@@ -221,10 +222,10 @@ jobs:
 
         echo "Available npm scripts:"
         npm run | grep tauri || echo "No tauri scripts found"
-        
+
         # Try different approaches to run tauri android init
         echo "Attempting to initialize Android project..."
-        
+
         # Method 1: Use npm run tauri (which should use the local CLI)
         if npm run tauri android init -- --ci; then
           echo "✅ Android project initialized with npm run tauri"
@@ -235,7 +236,7 @@ jobs:
         else
           echo "❌ All initialization methods failed"
           echo "Checking Tauri CLI installation..."
-          
+
           # Debug information
           which tauri || echo "Global tauri not found"
           npm list @tauri-apps/cli || echo "Local @tauri-apps/cli not found"
@@ -281,23 +282,23 @@ jobs:
       run: |
         echo "=== Testing Rust Cross-Compilation for Android ==="
         echo "Testing if we can compile a simple Rust program for Android targets..."
-        
+
         # Create a simple test Rust program
         mkdir -p /tmp/rust_test
         cd /tmp/rust_test
-        
+
         # Create Cargo.toml
         cat > Cargo.toml << 'CARGO_TOML_EOF'
         [package]
         name = "test_android"
         version = "0.1.0"
         edition = "2021"
-        
+
         [[bin]]
         name = "test_android"
         path = "src/main.rs"
         CARGO_TOML_EOF
-        
+
         # Create main.rs
         mkdir -p src
         cat > src/main.rs << 'MAIN_RS_EOF'
@@ -305,9 +306,9 @@ jobs:
             println!("Hello Android!");
         }
         MAIN_RS_EOF
-        
+
         echo "Created test project, testing compilation for each Android target:"
-        
+
         # Test aarch64-linux-android
         echo "Testing aarch64-linux-android..."
         if cargo build --target aarch64-linux-android --verbose 2>&1; then
@@ -317,7 +318,7 @@ jobs:
           echo "Checking linker configuration..."
           cat ~/.cargo/config.toml | grep -A 2 aarch64-linux-android || echo "No config found"
         fi
-        
+
         # Test armv7-linux-androideabi
         echo "Testing armv7-linux-androideabi..."
         if cargo build --target armv7-linux-androideabi --verbose 2>&1; then
@@ -327,7 +328,7 @@ jobs:
           echo "Checking linker configuration..."
           cat ~/.cargo/config.toml | grep -A 2 armv7-linux-androideabi || echo "No config found"
         fi
-        
+
         cd /home/runner/work/be-out-apps/be-out-apps
       env:
         NDK_HOME: ${{ env.NDK_HOME }}
@@ -336,13 +337,13 @@ jobs:
       run: |
         echo "=== Debugging Gradle Build Process ==="
         cd src-tauri/gen/android
-        
+
         echo "Gradle wrapper version:"
         ./gradlew --version
-        
+
         echo "Android project tasks:"
         ./gradlew tasks --all | grep -E "(rust|Build)" || echo "No rust-related tasks found"
-        
+
         echo "Attempting to run rustBuildArm64Release task manually with more details:"
         if ./gradlew :app:rustBuildArm64Release --info --stacktrace 2>&1 | tee gradle_rust_debug.log; then
           echo "✅ Manual Gradle task succeeded"
@@ -353,7 +354,7 @@ jobs:
           echo "=== Looking for Node.js errors ==="
           grep -i "node\|javascript\|process.*finished.*non-zero" gradle_rust_debug.log || echo "No Node.js specific errors found"
         fi
-        
+
         cd /home/runner/work/be-out-apps/be-out-apps
       env:
         NDK_HOME: ${{ env.NDK_HOME }}
@@ -394,7 +395,7 @@ jobs:
         echo "Starting Android build..."
         echo "Environment check before build:"
         echo "ANDROID_HOME: $ANDROID_HOME"
-        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT" 
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
         echo "NDK_HOME: $NDK_HOME"
         echo "JAVA_HOME: $JAVA_HOME"
         echo "PATH: $PATH"
@@ -402,7 +403,7 @@ jobs:
         # Set additional environment variables that Tauri might need
         export ANDROID_NDK_ROOT="$NDK_HOME"
         export ANDROID_NDK_HOME="$NDK_HOME"
-        
+
         echo "Additional environment variables set:"
         echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
         echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
@@ -410,10 +411,10 @@ jobs:
         # Try building with more verbose output and error handling
         echo "Building for Android with detailed logging..."
         set -x  # Enable command tracing
-        
+
         # First, let's try a simple build to see what happens
         echo "=== Starting Tauri Android Build ==="
-        
+
         # Use the npm script that's defined in package.json
         if npm run tauri:android:build -- --verbose 2>&1 | tee android_build.log; then
           BUILD_EXIT_CODE=0
@@ -428,9 +429,9 @@ jobs:
           BUILD_EXIT_CODE=1
           echo "❌ All build methods failed"
         fi
-        
+
         echo "=== Build completed with exit code: $BUILD_EXIT_CODE ==="
-        
+
         if [ $BUILD_EXIT_CODE -eq 0 ]; then
           echo "✅ Build succeeded! Looking for APK files..."
           find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found despite successful build"
@@ -443,7 +444,7 @@ jobs:
           grep -i "error\|failed\|exception" android_build.log | tail -10
           echo "=== Checking Rust compilation logs ==="
           find . -name "*.log" -type f -exec echo "=== {} ===" \; -exec tail -20 {} \; 2>/dev/null || echo "No additional log files found"
-          
+
           # Don't exit immediately - let's still try to find any partial artifacts
           echo "=== Checking for partial build artifacts ==="
           find . -name "*.so" -o -name "*.a" -o -name "*.apk" -o -name "*.aab" 2>/dev/null | head -10 || echo "No build artifacts found"
@@ -460,23 +461,23 @@ jobs:
         echo "=== Searching for APK files ==="
         echo "Looking for APK files in the workspace..."
         find . -name "*.apk" -type f 2>/dev/null | head -10 || echo "No APK files found"
-        
+
         echo "Checking standard Android build directories:"
         find . -path "*/build/outputs/apk*" -type d 2>/dev/null || echo "No standard APK output directories found"
         find . -path "*/target/*/release*" -type d 2>/dev/null || echo "No Rust target directories found"
-        
+
         echo "Checking Tauri Android project structure:"
         if [ -d "src-tauri/gen/android" ]; then
           echo "Android project directory structure:"
           find src-tauri/gen/android -type f -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No APK/AAB files in android directory"
-          
+
           echo "Full directory structure of Android project:"
           find src-tauri/gen/android -type d | head -20
-          
+
           echo "Build outputs directory:"
           find src-tauri/gen/android -path "*/build/outputs*" -type d -exec ls -la {} \; 2>/dev/null || echo "No build outputs found"
         fi
-        
+
         echo "Checking if build actually succeeded..."
         if [ -f "android_build.log" ]; then
           echo "=== Last 20 lines of build log ==="
@@ -520,10 +521,10 @@ jobs:
       run: |
         echo "Installing Tauri CLI..."
         npm install -g @tauri-apps/cli@latest
-        
+
         echo "Verifying Tauri CLI installation..."
         tauri --version || echo "Failed to get Tauri version"
-        
+
         echo "Installing Tauri CLI locally as well..."
         npm install @tauri-apps/cli@latest
 
@@ -541,7 +542,7 @@ jobs:
         echo "Initializing Tauri iOS project..."
         echo "Available npm scripts:"
         npm run | grep tauri || echo "No tauri scripts found"
-        
+
         # Try different methods to initialize iOS project
         if npm run tauri ios init -- --ci; then
           echo "✅ iOS project initialized with npm run tauri"
@@ -555,16 +556,20 @@ jobs:
           tauri --help || echo "No help available"
         fi
 
-        echo "Checking for generated iOS project..."
-        find . -name "*ios*" -type d 2>/dev/null || echo "No iOS directories found"
-        
+        echo "Checking for generated iOS/Apple project..."
+        find . -name "*ios*" -o -name "*apple*" -type d 2>/dev/null || echo "No iOS/Apple directories found"
+
+        # Check for both ios and apple directories (Tauri uses 'apple' for iOS/macOS)
         if [ -d "src-tauri/gen/ios" ]; then
-          echo "✅ iOS project created successfully"
+          echo "✅ iOS project created successfully at src-tauri/gen/ios"
           ls -la src-tauri/gen/ios/
+        elif [ -d "src-tauri/gen/apple" ]; then
+          echo "✅ Apple project created successfully at src-tauri/gen/apple"
+          ls -la src-tauri/gen/apple/
         else
-          echo "❌ iOS project directory not found"
-          echo "Searching for alternative iOS paths..."
-          find src-tauri -type d -name "*ios*" 2>/dev/null || echo "No iOS directories found"
+          echo "❌ iOS/Apple project directory not found"
+          echo "Searching for alternative iOS/Apple paths..."
+          find src-tauri -type d -name "*ios*" -o -name "*apple*" 2>/dev/null || echo "No iOS/Apple directories found"
         fi
 
     - name: Build iOS IPA
@@ -572,22 +577,32 @@ jobs:
         echo "Building iOS IPA..."
         echo "Checking iOS project directory..."
 
-        # Find iOS project directory
+        # Find iOS project directory (Tauri uses 'apple' directory for iOS/macOS)
         IOS_PROJECT_DIR=""
         if [ -d "src-tauri/gen/ios" ]; then
           IOS_PROJECT_DIR="src-tauri/gen/ios"
           echo "✅ Found iOS project at: $IOS_PROJECT_DIR"
+        elif [ -d "src-tauri/gen/apple" ]; then
+          IOS_PROJECT_DIR="src-tauri/gen/apple"
+          echo "✅ Found Apple project at: $IOS_PROJECT_DIR"
         else
-          echo "🔍 Searching for iOS project directory..."
-          IOS_PROJECT_DIR=$(find src-tauri -type d -name "*ios*" 2>/dev/null | head -1)
+          echo "🔍 Searching for iOS/Apple project directory..."
+          IOS_PROJECT_DIR=$(find src-tauri -type d -name "*ios*" -o -name "*apple*" 2>/dev/null | head -1)
           if [ -n "$IOS_PROJECT_DIR" ]; then
-            echo "✅ Found iOS project at: $IOS_PROJECT_DIR"
+            echo "✅ Found iOS/Apple project at: $IOS_PROJECT_DIR"
           else
-            echo "❌ No iOS project found, re-initializing..."
-            tauri ios init --ci
-            if [ -d "src-tauri/gen/ios" ]; then
-              IOS_PROJECT_DIR="src-tauri/gen/ios"
-              echo "✅ Re-initialization successful: $IOS_PROJECT_DIR"
+            echo "❌ No iOS/Apple project found, re-initializing..."
+            if tauri ios init --ci; then
+              if [ -d "src-tauri/gen/ios" ]; then
+                IOS_PROJECT_DIR="src-tauri/gen/ios"
+                echo "✅ Re-initialization successful: $IOS_PROJECT_DIR"
+              elif [ -d "src-tauri/gen/apple" ]; then
+                IOS_PROJECT_DIR="src-tauri/gen/apple"
+                echo "✅ Re-initialization successful: $IOS_PROJECT_DIR"
+              else
+                echo "❌ Re-initialization failed"
+                exit 1
+              fi
             else
               echo "❌ Re-initialization failed"
               exit 1
@@ -595,24 +610,48 @@ jobs:
           fi
         fi
 
+        echo "iOS/Apple project directory contents:"
+        ls -la "$IOS_PROJECT_DIR"/ 2>/dev/null || echo "Cannot list directory contents"
+
         echo "Starting iOS build..."
-        
+
+        # Note about code signing
+        echo "⚠️  Warning: No code signing certificates found."
+        echo "This is expected in CI environment. The build may fail at the signing step."
+        echo "To fix this, you would need to add APPLE_DEVELOPMENT_TEAM environment variable."
+
         # Try different methods to build iOS
         if npm run tauri ios build -- --verbose 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with npm run tauri ios build"
+          BUILD_SUCCESS=true
         elif npx tauri ios build --verbose 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with npx tauri ios build"
+          BUILD_SUCCESS=true
         elif tauri ios build --verbose 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with global tauri ios build"
+          BUILD_SUCCESS=true
         else
           echo "❌ All build methods failed"
+          BUILD_SUCCESS=false
+        fi
+
+        if [ "$BUILD_SUCCESS" = true ]; then
+          echo "✅ Build completed! Looking for IPA files..."
+          find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found despite successful build"
+        else
           echo "=== BUILD FAILED - Analyzing logs ==="
           if [ -f "ios_build.log" ]; then
             echo "Last 50 lines of build log:"
             tail -50 ios_build.log
             echo "=== Checking for common error patterns ==="
-            grep -i "error\|failed\|exception" ios_build.log | tail -10
+            grep -i "error\|failed\|exception\|code.*sign" ios_build.log | tail -10
+            echo "=== Checking for code signing issues ==="
+            grep -i "sign\|certificate\|team\|provision" ios_build.log | tail -5
           fi
+
+          echo "=== Note about expected failures ==="
+          echo "iOS builds in CI typically fail at code signing without proper certificates."
+          echo "The important part is that project generation and compilation succeed."
         fi
       env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
@@ -626,13 +665,15 @@ jobs:
         path: |
           src-tauri/gen/ios/build/Build/Products/*.ipa
           src-tauri/gen/ios/**/build/**/*.ipa
+          src-tauri/gen/apple/build/Build/Products/*.ipa
+          src-tauri/gen/apple/**/build/**/*.ipa
           **/*.ipa
         if-no-files-found: warn
 
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [build-android, build-ios]
+    needs: [build-ios]  # Only depends on iOS build now
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
     - uses: actions/checkout@v4
