@@ -1021,7 +1021,8 @@ const upload = multer({
 
 // Helper function to get translation file path
 const getTranslationFilePath = (language, namespace) => {
-    return path.join(__dirname, `../../translations/${language}/${namespace}.json`);
+    const translationsPath = process.env.TRANSLATIONS_PATH || "/app/translations";
+    return path.join(translationsPath, `${language}/${namespace}.json`);
 };
 
 // Helper function to ensure directory exists

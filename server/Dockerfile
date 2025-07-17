@@ -22,6 +22,9 @@ COPY . .
 # Create uploads directory
 RUN mkdir -p uploads/public/avatars uploads/public/events uploads/public/thumbnails uploads/private/documents uploads/private/temp
 
+# Create translations directory
+RUN mkdir -p translations
+
 # Create a non-root user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001

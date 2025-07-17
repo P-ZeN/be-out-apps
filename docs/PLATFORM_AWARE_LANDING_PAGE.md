@@ -11,7 +11,7 @@ When users visit the app through a web browser, they see:
 - Feature highlights and app screenshots
 - Call-to-action buttons for app downloads
 
-### Bundled App Experience  
+### Bundled App Experience
 When users open the Tauri-bundled app, they see:
 - The normal events home page
 - Full app functionality without landing page interference
@@ -91,7 +91,7 @@ Update the href attributes in `LandingPage.jsx`:
 // iOS App Store
 href="https://apps.apple.com/app/your-app-id"
 
-// Google Play Store  
+// Google Play Store
 href="https://play.google.com/store/apps/details?id=com.beout.app"
 ```
 

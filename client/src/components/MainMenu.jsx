@@ -85,28 +85,25 @@ const MainMenu = () => {
 
                 {/* Mobile Navigation */}
                 <Box sx={{ display: { xs: "flex", md: "none" }, gap: 1 }}>
-                    <IconButton 
-                        component={Link} 
-                        to="/" 
+                    <IconButton
+                        component={Link}
+                        to="/"
                         color={location.pathname === "/" || location.pathname === "/home" ? "primary" : "default"}
-                        title={t("menu.home", "Accueil")}
-                    >
+                        title={t("menu.home", "Accueil")}>
                         <HomeIcon />
                     </IconButton>
-                    <IconButton 
-                        component={Link} 
-                        to="/events" 
+                    <IconButton
+                        component={Link}
+                        to="/events"
                         color={location.pathname === "/events" ? "primary" : "default"}
-                        title={t("menu.events", "Événements")}
-                    >
+                        title={t("menu.events", "Événements")}>
                         <EventIcon />
                     </IconButton>
-                    <IconButton 
-                        component={Link} 
-                        to="/map" 
+                    <IconButton
+                        component={Link}
+                        to="/map"
                         color={location.pathname === "/map" ? "primary" : "default"}
-                        title={t("menu.map", "Carte")}
-                    >
+                        title={t("menu.map", "Carte")}>
                         <MapIcon />
                     </IconButton>
                 </Box>

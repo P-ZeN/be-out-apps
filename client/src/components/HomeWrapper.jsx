@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { getIsTauriApp } from '../utils/platformDetection';
-import LandingPage from './LandingPage';
-import { Home } from '../pages';
+import { useEffect, useState } from "react";
+import { getIsTauriApp } from "../utils/platformDetection";
+import LandingPage from "./LandingPage";
+import { Home } from "../pages";
 
 /**
  * HomeWrapper component that shows different content based on platform:

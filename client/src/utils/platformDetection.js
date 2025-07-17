@@ -15,7 +15,7 @@ export const getIsTauriApp = () => {
 
     try {
         // Primary check: Tauri API availability
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
             // Check for Tauri v1 API
             if (window.__TAURI__ || window.__TAURI_IPC__) {
                 isTauriApp = true;
@@ -30,7 +30,7 @@ export const getIsTauriApp = () => {
 
             // Check user agent for Tauri
             const userAgent = navigator.userAgent.toLowerCase();
-            if (userAgent.includes('tauri')) {
+            if (userAgent.includes("tauri")) {
                 isTauriApp = true;
                 return isTauriApp;
             }
@@ -42,13 +42,13 @@ export const getIsTauriApp = () => {
             }
 
             // Additional check: if running from file:// protocol, likely bundled
-            if (window.location.protocol === 'file:') {
+            if (window.location.protocol === "file:") {
                 isTauriApp = true;
                 return isTauriApp;
             }
 
             // Check for presence of tauri:// protocol in the URL
-            if (window.location.protocol.startsWith('tauri')) {
+            if (window.location.protocol.startsWith("tauri")) {
                 isTauriApp = true;
                 return isTauriApp;
             }
@@ -59,7 +59,7 @@ export const getIsTauriApp = () => {
         return isTauriApp;
     } catch (error) {
         // If any error occurs, assume web browser
-        console.log('Error detecting Tauri environment:', error);
+        console.log("Error detecting Tauri environment:", error);
         isTauriApp = false;
         return isTauriApp;
     }
@@ -70,7 +70,7 @@ export const getIsTauriApp = () => {
  * @returns {string} 'tauri' | 'web'
  */
 export const getPlatformType = () => {
-    return getIsTauriApp() ? 'tauri' : 'web';
+    return getIsTauriApp() ? "tauri" : "web";
 };
 
 /**

@@ -1,33 +1,15 @@
-import {
-    Box,
-    Typography,
-    Container,
-    Button,
-    Grid,
-    Card,
-    CardContent,
-    Stack,
-    Paper,
-    Chip,
-} from "@mui/material";
-import {
-    Apple,
-    Android,
-    EventAvailable,
-    LocationOn,
-    People,
-    Star,
-} from "@mui/icons-material";
+import { Box, Typography, Container, Button, Grid, Card, CardContent, Stack, Paper, Chip } from "@mui/material";
+import { Apple, Android, EventAvailable, LocationOn, People, Star } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
     const theme = useTheme();
-    const { t } = useTranslation("landing", { 
+    const { t } = useTranslation("landing", {
         useSuspense: false,
         // Provide fallback translations that work even if server is down
-        fallbackLng: false
+        fallbackLng: false,
     });
     const navigate = useNavigate();
 
@@ -35,23 +17,23 @@ const LandingPage = () => {
         {
             icon: <EventAvailable sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
             title: t("features.discover.title", "Discover Events"),
-            description: t("features.discover.description", "Find amazing events happening around you")
+            description: t("features.discover.description", "Find amazing events happening around you"),
         },
         {
             icon: <LocationOn sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
             title: t("features.location.title", "Location Based"),
-            description: t("features.location.description", "See events near your location on an interactive map")
+            description: t("features.location.description", "See events near your location on an interactive map"),
         },
         {
             icon: <People sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
             title: t("features.connect.title", "Connect"),
-            description: t("features.connect.description", "Meet like-minded people and build your community")
+            description: t("features.connect.description", "Meet like-minded people and build your community"),
         },
         {
             icon: <Star sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
             title: t("features.favorites.title", "Favorites"),
-            description: t("features.favorites.description", "Save and track your favorite events and venues")
-        }
+            description: t("features.favorites.description", "Save and track your favorite events and venues"),
+        },
     ];
 
     return (
@@ -64,8 +46,7 @@ const LandingPage = () => {
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}20, ${theme.palette.secondary.main}20)`,
                     borderRadius: 4,
                     mb: 6,
-                }}
-            >
+                }}>
                 <Typography
                     variant="h2"
                     component="h1"
@@ -74,8 +55,7 @@ const LandingPage = () => {
                         fontWeight: 700,
                         color: theme.palette.primary.main,
                         mb: 2,
-                    }}
-                >
+                    }}>
                     {t("appName", "BeOut")}
                 </Typography>
                 <Typography
@@ -87,8 +67,7 @@ const LandingPage = () => {
                         mb: 3,
                         maxWidth: 600,
                         mx: "auto",
-                    }}
-                >
+                    }}>
                     {t("hero.title", "Discover amazing events happening around you")}
                 </Typography>
                 <Typography
@@ -99,9 +78,11 @@ const LandingPage = () => {
                         maxWidth: 800,
                         mx: "auto",
                         fontSize: "1.1rem",
-                    }}
-                >
-                    {t("hero.description", "Connect with your community, explore local events, and never miss out on the experiences that matter to you.")}
+                    }}>
+                    {t(
+                        "hero.description",
+                        "Connect with your community, explore local events, and never miss out on the experiences that matter to you."
+                    )}
                 </Typography>
 
                 {/* Browse Events Button */}
@@ -109,7 +90,7 @@ const LandingPage = () => {
                     <Button
                         variant="contained"
                         size="large"
-                        onClick={() => navigate('/events')}
+                        onClick={() => navigate("/events")}
                         sx={{
                             px: 4,
                             py: 1.5,
@@ -121,8 +102,7 @@ const LandingPage = () => {
                                 transform: "translateY(-2px)",
                             },
                             transition: "all 0.2s ease",
-                        }}
-                    >
+                        }}>
                         {t("browseEvents", "Browse Events Now")}
                     </Button>
                     <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
@@ -131,12 +111,7 @@ const LandingPage = () => {
                 </Box>
 
                 {/* App Store Buttons */}
-                <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={2}
-                    justifyContent="center"
-                    sx={{ mb: 4 }}
-                >
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center" sx={{ mb: 4 }}>
                     <Button
                         variant="contained"
                         size="large"
@@ -157,8 +132,7 @@ const LandingPage = () => {
                         }}
                         href="#" // Replace with actual App Store link when available
                         target="_blank"
-                        rel="noopener noreferrer"
-                    >
+                        rel="noopener noreferrer">
                         {t("downloadIOS", "Download on the App Store")}
                     </Button>
                     <Button
@@ -181,8 +155,7 @@ const LandingPage = () => {
                         }}
                         href="#" // Replace with actual Google Play link when available
                         target="_blank"
-                        rel="noopener noreferrer"
-                    >
+                        rel="noopener noreferrer">
                         {t("downloadAndroid", "Get it on Google Play")}
                     </Button>
                 </Stack>
@@ -191,11 +164,11 @@ const LandingPage = () => {
                     label={t("status", "🚀 Coming Soon to App Stores")}
                     color="primary"
                     variant="outlined"
-                    sx={{ 
-                        fontSize: "0.9rem", 
-                        px: 2, 
+                    sx={{
+                        fontSize: "0.9rem",
+                        px: 2,
                         fontWeight: 600,
-                        bgcolor: theme.palette.primary.main + '10',
+                        bgcolor: theme.palette.primary.main + "10",
                     }}
                 />
             </Box>
@@ -206,8 +179,7 @@ const LandingPage = () => {
                 component="h2"
                 textAlign="center"
                 gutterBottom
-                sx={{ mb: 4, color: theme.palette.primary.main }}
-            >
+                sx={{ mb: 4, color: theme.palette.primary.main }}>
                 {t("features.title", "Why Choose BeOut?")}
             </Typography>
 
@@ -224,24 +196,17 @@ const LandingPage = () => {
                                     transform: "translateY(-4px)",
                                     boxShadow: 4,
                                 },
-                            }}
-                        >
+                            }}>
                             <CardContent>
-                                <Box sx={{ mb: 2 }}>
-                                    {feature.icon}
-                                </Box>
+                                <Box sx={{ mb: 2 }}>{feature.icon}</Box>
                                 <Typography
                                     variant="h6"
                                     component="h3"
                                     gutterBottom
-                                    sx={{ color: theme.palette.primary.main }}
-                                >
+                                    sx={{ color: theme.palette.primary.main }}>
                                     {feature.title}
                                 </Typography>
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                >
+                                <Typography variant="body2" color="text.secondary">
                                     {feature.description}
                                 </Typography>
                             </CardContent>
@@ -256,55 +221,42 @@ const LandingPage = () => {
                     p: 4,
                     textAlign: "center",
                     bgcolor: theme.palette.grey[50],
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    component="h2"
-                    gutterBottom
-                    sx={{ mb: 3, color: theme.palette.primary.main }}
-                >
+                }}>
+                <Typography variant="h4" component="h2" gutterBottom sx={{ mb: 3, color: theme.palette.primary.main }}>
                     {t("cta.title", "Start Exploring Events")}
                 </Typography>
-                <Typography
-                    variant="body1"
-                    color="text.secondary"
-                    sx={{ mb: 4, maxWidth: 600, mx: "auto" }}
-                >
-                    {t("cta.description", "Join thousands of users who have already discovered amazing events in their city. Start exploring events now or download the app when it's ready!")}
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: "auto" }}>
+                    {t(
+                        "cta.description",
+                        "Join thousands of users who have already discovered amazing events in their city. Start exploring events now or download the app when it's ready!"
+                    )}
                 </Typography>
-                
-                <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={2}
-                    justifyContent="center"
-                >
+
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
                     <Button
                         variant="contained"
                         size="large"
-                        onClick={() => navigate('/events')}
+                        onClick={() => navigate("/events")}
                         sx={{
                             px: 4,
                             py: 1.5,
                             fontSize: "1.1rem",
                             borderRadius: 2,
                             textTransform: "none",
-                        }}
-                    >
+                        }}>
                         {t("browseEventsNow", "Browse Events Now")}
                     </Button>
                     <Button
                         variant="outlined"
                         size="large"
-                        onClick={() => navigate('/map')}
+                        onClick={() => navigate("/map")}
                         sx={{
                             px: 4,
                             py: 1.5,
                             fontSize: "1.1rem",
                             borderRadius: 2,
                             textTransform: "none",
-                        }}
-                    >
+                        }}>
                         {t("viewMap", "View Map")}
                     </Button>
                 </Stack>
