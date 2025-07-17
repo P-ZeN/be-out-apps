@@ -41,6 +41,12 @@ jobs:
         node-version: '18'
         cache: 'npm'
     
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+    
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
       with:
@@ -62,23 +68,29 @@ jobs:
     - name: Build client
       run: npm run build:client
     
-    - name: Initialize Android
-      run: tauri android init
+    - name: Initialize Android project
+      run: |
+        echo "Initializing Tauri Android project..."
+        tauri android init --skip-targets-install
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
+        JAVA_HOME: ${{ env.JAVA_HOME }}
     
     - name: Build Android APK
-      run: tauri android build
+      run: |
+        echo "Building Android APK..."
+        tauri android build --verbose
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
+        JAVA_HOME: ${{ env.JAVA_HOME }}
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: android-apk
-        path: src-tauri/gen/android/app/build/outputs/apk/*/app-*.apk
+        path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
 
   build-ios:
     name: Build iOS IPA
