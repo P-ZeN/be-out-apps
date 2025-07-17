@@ -62,6 +62,21 @@ jobs:
         build-tools: 33.0.0
         ndk-version: 25.2.9519653
 
+    - name: Verify Android Environment
+      run: |
+        echo "Android SDK Root: $ANDROID_SDK_ROOT"
+        echo "NDK Home: $ANDROID_SDK_ROOT/ndk/25.2.9519653"
+        echo "Java Home: $JAVA_HOME"
+        ls -la $ANDROID_SDK_ROOT/ndk/ || echo "NDK directory not found"
+        # Find actual NDK directory
+        if [ -d "$ANDROID_SDK_ROOT/ndk" ]; then
+          echo "Available NDK versions:"
+          ls -la $ANDROID_SDK_ROOT/ndk/
+          NDK_DIR=$(ls -1 $ANDROID_SDK_ROOT/ndk/ | head -1)
+          echo "Using NDK: $NDK_DIR"
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_DIR" >> $GITHUB_ENV
+        fi
+
     - name: Install Tauri CLI
       run: npm install -g @tauri-apps/cli@latest
 
@@ -77,29 +92,67 @@ jobs:
     - name: Initialize Android project
       run: |
         echo "Initializing Tauri Android project..."
-        tauri android init --ci
-        echo "Android project initialized successfully"
-        ls -la src-tauri/gen/
+        echo "Environment variables:"
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "NDK_HOME: $NDK_HOME"
+        echo "JAVA_HOME: $JAVA_HOME"
+        
+        # Initialize Android project
+        tauri android init --ci || true
+        
+        echo "Checking for generated project..."
+        find . -name "gen" -type d 2>/dev/null || echo "No gen directory found"
+        find . -name "android" -type d 2>/dev/null || echo "No android directory found"
+        
+        # Check if Android project was created
+        if [ -d "src-tauri/gen/android" ]; then
+          echo "✅ Android project created successfully"
+          ls -la src-tauri/gen/
+        else
+          echo "❌ Android project directory not found, trying alternative paths..."
+          find src-tauri -type d -name "*android*" 2>/dev/null || echo "No Android directories found"
+        fi
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
-        NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
+        NDK_HOME: ${{ env.NDK_HOME }}
         JAVA_HOME: ${{ env.JAVA_HOME }}
 
     - name: Build Android APK
       run: |
         echo "Building Android APK..."
         echo "Checking Android project directory..."
-        if [ ! -d "src-tauri/gen/android" ]; then
-          echo "Android project directory missing, re-initializing..."
-          tauri android init --ci
+        
+        # Find Android project directory
+        ANDROID_PROJECT_DIR=""
+        if [ -d "src-tauri/gen/android" ]; then
+          ANDROID_PROJECT_DIR="src-tauri/gen/android"
+          echo "✅ Found Android project at: $ANDROID_PROJECT_DIR"
+        else
+          echo "🔍 Searching for Android project directory..."
+          ANDROID_PROJECT_DIR=$(find src-tauri -type d -name "*android*" 2>/dev/null | head -1)
+          if [ -n "$ANDROID_PROJECT_DIR" ]; then
+            echo "✅ Found Android project at: $ANDROID_PROJECT_DIR"
+          else
+            echo "❌ No Android project found, re-initializing..."
+            tauri android init --ci
+            if [ -d "src-tauri/gen/android" ]; then
+              ANDROID_PROJECT_DIR="src-tauri/gen/android"
+              echo "✅ Re-initialization successful: $ANDROID_PROJECT_DIR"
+            else
+              echo "❌ Re-initialization failed"
+              exit 1
+            fi
+          fi
         fi
+        
         echo "Android project directory contents:"
-        ls -la src-tauri/gen/android/
+        ls -la "$ANDROID_PROJECT_DIR"/ 2>/dev/null || echo "Cannot list directory contents"
+        
         echo "Starting Android build..."
         tauri android build --verbose
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
-        NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
+        NDK_HOME: ${{ env.NDK_HOME }}
         JAVA_HOME: ${{ env.JAVA_HOME }}
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
