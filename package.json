@@ -14,12 +14,17 @@
     "build:server": "npm run build --workspace=server",
     "build:admin": "npm run build --workspace=admin-client",
     "build:organizer": "npm run build --workspace=organizer-client",
-    "tauri": "npm run tauri --workspace=client"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:android": "tauri android dev",
+    "tauri:android:build": "tauri android build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@tauri-apps/cli": "^2.6.2",
     "concurrently": "^8.2.2"
   },
   "workspaces": [
