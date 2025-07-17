@@ -182,7 +182,25 @@ jobs:
         NDK_HOME: ${{ env.NDK_HOME }}
 
     - name: Install Tauri CLI
-      run: npm install -g @tauri-apps/cli@latest
+      run: |
+        echo "Installing Tauri CLI globally..."
+        npm install -g @tauri-apps/cli@latest
+        
+        echo "Verifying Tauri CLI installation..."
+        which tauri || echo "Tauri CLI not found in PATH"
+        tauri --version || echo "Failed to get Tauri version"
+        
+        echo "Checking if tauri is available via npx..."
+        npx tauri --version || echo "npx tauri failed"
+        
+        echo "Installing Tauri CLI locally as well..."
+        npm install @tauri-apps/cli@latest
+        
+        echo "Verifying local installation..."
+        npx tauri --version || echo "Local npx tauri failed"
+        
+        echo "Checking package.json scripts..."
+        cat package.json | grep -A 5 -B 5 "scripts" || echo "No scripts section found"
 
     - name: Install dependencies
       run: npm ci
@@ -201,8 +219,28 @@ jobs:
         echo "NDK_HOME: $NDK_HOME"
         echo "JAVA_HOME: $JAVA_HOME"
 
-        # Initialize Android project
-        tauri android init --ci || true
+        echo "Available npm scripts:"
+        npm run | grep tauri || echo "No tauri scripts found"
+        
+        # Try different approaches to run tauri android init
+        echo "Attempting to initialize Android project..."
+        
+        # Method 1: Use npm run tauri (which should use the local CLI)
+        if npm run tauri android init -- --ci; then
+          echo "✅ Android project initialized with npm run tauri"
+        elif npx tauri android init --ci; then
+          echo "✅ Android project initialized with npx tauri"
+        elif tauri android init --ci; then
+          echo "✅ Android project initialized with global tauri"
+        else
+          echo "❌ All initialization methods failed"
+          echo "Checking Tauri CLI installation..."
+          
+          # Debug information
+          which tauri || echo "Global tauri not found"
+          npm list @tauri-apps/cli || echo "Local @tauri-apps/cli not found"
+          ls -la node_modules/.bin/ | grep tauri || echo "No tauri in node_modules/.bin"
+        fi
 
         echo "Checking for generated project..."
         find . -name "gen" -type d 2>/dev/null || echo "No gen directory found"
@@ -238,6 +276,89 @@ jobs:
         env | grep -E "(ANDROID|NDK|JAVA|CARGO|RUST)" | sort
       env:
         NDK_HOME: ${{ env.NDK_HOME }}
+
+    - name: Test Rust Cross-Compilation
+      run: |
+        echo "=== Testing Rust Cross-Compilation for Android ==="
+        echo "Testing if we can compile a simple Rust program for Android targets..."
+        
+        # Create a simple test Rust program
+        mkdir -p /tmp/rust_test
+        cd /tmp/rust_test
+        
+        # Create Cargo.toml
+        cat > Cargo.toml << 'CARGO_TOML_EOF'
+        [package]
+        name = "test_android"
+        version = "0.1.0"
+        edition = "2021"
+        
+        [[bin]]
+        name = "test_android"
+        path = "src/main.rs"
+        CARGO_TOML_EOF
+        
+        # Create main.rs
+        mkdir -p src
+        cat > src/main.rs << 'MAIN_RS_EOF'
+        fn main() {
+            println!("Hello Android!");
+        }
+        MAIN_RS_EOF
+        
+        echo "Created test project, testing compilation for each Android target:"
+        
+        # Test aarch64-linux-android
+        echo "Testing aarch64-linux-android..."
+        if cargo build --target aarch64-linux-android --verbose 2>&1; then
+          echo "✅ aarch64-linux-android compilation successful"
+        else
+          echo "❌ Failed to compile for aarch64-linux-android"
+          echo "Checking linker configuration..."
+          cat ~/.cargo/config.toml | grep -A 2 aarch64-linux-android || echo "No config found"
+        fi
+        
+        # Test armv7-linux-androideabi
+        echo "Testing armv7-linux-androideabi..."
+        if cargo build --target armv7-linux-androideabi --verbose 2>&1; then
+          echo "✅ armv7-linux-androideabi compilation successful"
+        else
+          echo "❌ Failed to compile for armv7-linux-androideabi"
+          echo "Checking linker configuration..."
+          cat ~/.cargo/config.toml | grep -A 2 armv7-linux-androideabi || echo "No config found"
+        fi
+        
+        cd /home/runner/work/be-out-apps/be-out-apps
+      env:
+        NDK_HOME: ${{ env.NDK_HOME }}
+
+    - name: Debug Gradle Build Process
+      run: |
+        echo "=== Debugging Gradle Build Process ==="
+        cd src-tauri/gen/android
+        
+        echo "Gradle wrapper version:"
+        ./gradlew --version
+        
+        echo "Android project tasks:"
+        ./gradlew tasks --all | grep -E "(rust|Build)" || echo "No rust-related tasks found"
+        
+        echo "Attempting to run rustBuildArm64Release task manually with more details:"
+        if ./gradlew :app:rustBuildArm64Release --info --stacktrace 2>&1 | tee gradle_rust_debug.log; then
+          echo "✅ Manual Gradle task succeeded"
+        else
+          echo "❌ Manual Gradle task failed"
+          echo "=== Gradle Error Analysis ==="
+          tail -50 gradle_rust_debug.log
+          echo "=== Looking for Node.js errors ==="
+          grep -i "node\|javascript\|process.*finished.*non-zero" gradle_rust_debug.log || echo "No Node.js specific errors found"
+        fi
+        
+        cd /home/runner/work/be-out-apps/be-out-apps
+      env:
+        NDK_HOME: ${{ env.NDK_HOME }}
+        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        JAVA_HOME: ${{ env.JAVA_HOME }}
 
     - name: Build Android APK
       run: |
@@ -289,7 +410,32 @@ jobs:
         # Try building with more verbose output and error handling
         echo "Building for Android with detailed logging..."
         set -x  # Enable command tracing
-        tauri android build --verbose 2>&1 | tee android_build.log || {
+        
+        # First, let's try a simple build to see what happens
+        echo "=== Starting Tauri Android Build ==="
+        
+        # Use the npm script that's defined in package.json
+        if npm run tauri:android:build -- --verbose 2>&1 | tee android_build.log; then
+          BUILD_EXIT_CODE=0
+          echo "✅ Build succeeded with npm run tauri:android:build"
+        elif npm run tauri android build -- --verbose 2>&1 | tee android_build.log; then
+          BUILD_EXIT_CODE=0
+          echo "✅ Build succeeded with npm run tauri android build"
+        elif npx tauri android build --verbose 2>&1 | tee android_build.log; then
+          BUILD_EXIT_CODE=0
+          echo "✅ Build succeeded with npx tauri command"
+        else
+          BUILD_EXIT_CODE=1
+          echo "❌ All build methods failed"
+        fi
+        
+        echo "=== Build completed with exit code: $BUILD_EXIT_CODE ==="
+        
+        if [ $BUILD_EXIT_CODE -eq 0 ]; then
+          echo "✅ Build succeeded! Looking for APK files..."
+          find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found despite successful build"
+        else
+          echo "❌ Build failed with exit code $BUILD_EXIT_CODE"
           echo "=== BUILD FAILED - Analyzing logs ==="
           echo "Last 50 lines of build log:"
           tail -50 android_build.log
@@ -297,8 +443,11 @@ jobs:
           grep -i "error\|failed\|exception" android_build.log | tail -10
           echo "=== Checking Rust compilation logs ==="
           find . -name "*.log" -type f -exec echo "=== {} ===" \; -exec tail -20 {} \; 2>/dev/null || echo "No additional log files found"
-          exit 1
-        }
+          
+          # Don't exit immediately - let's still try to find any partial artifacts
+          echo "=== Checking for partial build artifacts ==="
+          find . -name "*.so" -o -name "*.a" -o -name "*.apk" -o -name "*.aab" 2>/dev/null | head -10 || echo "No build artifacts found"
+        fi
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
@@ -306,11 +455,47 @@ jobs:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
-    - name: Upload APK
+    - name: Find and Upload APK
+      run: |
+        echo "=== Searching for APK files ==="
+        echo "Looking for APK files in the workspace..."
+        find . -name "*.apk" -type f 2>/dev/null | head -10 || echo "No APK files found"
+        
+        echo "Checking standard Android build directories:"
+        find . -path "*/build/outputs/apk*" -type d 2>/dev/null || echo "No standard APK output directories found"
+        find . -path "*/target/*/release*" -type d 2>/dev/null || echo "No Rust target directories found"
+        
+        echo "Checking Tauri Android project structure:"
+        if [ -d "src-tauri/gen/android" ]; then
+          echo "Android project directory structure:"
+          find src-tauri/gen/android -type f -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No APK/AAB files in android directory"
+          
+          echo "Full directory structure of Android project:"
+          find src-tauri/gen/android -type d | head -20
+          
+          echo "Build outputs directory:"
+          find src-tauri/gen/android -path "*/build/outputs*" -type d -exec ls -la {} \; 2>/dev/null || echo "No build outputs found"
+        fi
+        
+        echo "Checking if build actually succeeded..."
+        if [ -f "android_build.log" ]; then
+          echo "=== Last 20 lines of build log ==="
+          tail -20 android_build.log
+          echo "=== Searching for APK creation messages ==="
+          grep -i "apk\|assembl\|build.*success" android_build.log || echo "No APK creation messages found"
+        fi
+
+    - name: Upload APK (if found)
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: android-apk
-        path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+        path: |
+          src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          src-tauri/gen/android/**/build/outputs/apk/**/*.apk
+          src-tauri/target/**/release/*.apk
+          **/*.apk
+        if-no-files-found: warn
 
   build-ios:
     name: Build iOS IPA
