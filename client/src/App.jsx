@@ -4,6 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import AppRoutes from "./components/AppRoutes";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import PlatformDebug from "./components/PlatformDebug";
 import { AuthProvider } from "./context/AuthContext";
 import { theme } from "./theme";
 import "./App.css";
@@ -17,6 +18,7 @@ function App() {
             <AuthProvider>
                 <ThemeProvider theme={theme}>
                     <CssBaseline />
+                    <PlatformDebug />
                     <Header />
                     <div className="main-content">
                         <AppRoutes />

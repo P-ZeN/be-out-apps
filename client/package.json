@@ -10,6 +10,8 @@
     "lint:colors": "findstr /S /N /R /I \"color.*[\\\"\\'][^\\\"\\']*(white|black|grey|gray|red|blue|green|yellow|#[0-9a-fA-F])\" src\\*.jsx src\\*.js || echo No hardcoded colors found!",
     "preview": "vite preview",
     "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
     "start": "serve -s dist"
   },
   "dependencies": {

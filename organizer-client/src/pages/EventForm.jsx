@@ -126,36 +126,42 @@ const EventForm = () => {
                     organizerService.getVenues(),
                     organizerService.getCategories(),
                 ]);
-                
+
                 // Ensure we have arrays to work with
                 const venuesArray = venuesData.venues || venuesData || [];
                 const categoriesArray = categoriesData.categories || categoriesData || [];
-                
+
                 setVenues(venuesArray);
                 setCategories(categoriesArray);
 
                 // Load event data if editing
                 if (isEdit) {
                     const eventData = await organizerService.getEvent(eventId);
-                    
+
                     // Validate that venue_id and category_id exist in available options
-                    const validVenueId = eventData.venue_id && venuesArray.some(v => v.id === eventData.venue_id) 
-                        ? eventData.venue_id 
-                        : "";
-                    const validCategoryId = eventData.category_id && categoriesArray.some(c => c.id === eventData.category_id) 
-                        ? eventData.category_id 
-                        : "";
-                    
+                    const validVenueId =
+                        eventData.venue_id && venuesArray.some((v) => v.id === eventData.venue_id)
+                            ? eventData.venue_id
+                            : "";
+                    const validCategoryId =
+                        eventData.category_id && categoriesArray.some((c) => c.id === eventData.category_id)
+                            ? eventData.category_id
+                            : "";
+
                     // Log warnings if IDs were invalid
                     if (eventData.venue_id && !validVenueId) {
                         console.warn(`Event venue_id ${eventData.venue_id} not found in available venues`);
-                        setError("Le lieu associé à cet événement n'est plus disponible. Veuillez sélectionner un nouveau lieu.");
+                        setError(
+                            "Le lieu associé à cet événement n'est plus disponible. Veuillez sélectionner un nouveau lieu."
+                        );
                     }
                     if (eventData.category_id && !validCategoryId) {
                         console.warn(`Event category_id ${eventData.category_id} not found in available categories`);
-                        setError("La catégorie associée à cet événement n'est plus disponible. Veuillez sélectionner une nouvelle catégorie.");
+                        setError(
+                            "La catégorie associée à cet événement n'est plus disponible. Veuillez sélectionner une nouvelle catégorie."
+                        );
                     }
-                    
+
                     setFormData({
                         title: eventData.title || "",
                         description: eventData.description || "",

@@ -4,13 +4,15 @@ import Register from "./Register";
 import Profile from "./Profile";
 import Onboarding from "./Onboarding";
 import PrivateRoute from "./PrivateRoute";
+import HomeWrapper from "./HomeWrapper";
 import { Home, EventDetail, MapView, Bookings, Favorites } from "../pages";
 
 const AppRoutes = () => {
     return (
         <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/home" element={<Home />} />
+            <Route path="/" element={<HomeWrapper />} />
+            <Route path="/home" element={<HomeWrapper />} />
+            <Route path="/events" element={<Home />} />
             <Route path="/map" element={<MapView />} />
             <Route path="/event/:id" element={<EventDetail />} />
             <Route path="/login" element={<Login />} />

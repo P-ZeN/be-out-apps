@@ -36,14 +36,16 @@ const MainMenu = () => {
     };
 
     const getCurrentTab = () => {
-        if (location.pathname === "/") return 0;
-        if (location.pathname === "/map") return 1;
+        if (location.pathname === "/" || location.pathname === "/home") return 0;
+        if (location.pathname === "/events") return 1;
+        if (location.pathname === "/map") return 2;
         return 0;
     };
 
     const handleTabChange = (event, newValue) => {
         if (newValue === 0) navigate("/");
-        if (newValue === 1) navigate("/map");
+        if (newValue === 1) navigate("/events");
+        if (newValue === 2) navigate("/map");
     };
 
     return (
@@ -75,17 +77,36 @@ const MainMenu = () => {
                         onChange={handleTabChange}
                         textColor="primary"
                         indicatorColor="primary">
-                        <Tab icon={<HomeIcon />} label="Événements" iconPosition="start" />
-                        <Tab icon={<MapIcon />} label="Carte" iconPosition="start" />
+                        <Tab icon={<HomeIcon />} label={t("menu.home", "Accueil")} iconPosition="start" />
+                        <Tab icon={<EventIcon />} label={t("menu.events", "Événements")} iconPosition="start" />
+                        <Tab icon={<MapIcon />} label={t("menu.map", "Carte")} iconPosition="start" />
                     </Tabs>
                 </Box>
 
                 {/* Mobile Navigation */}
                 <Box sx={{ display: { xs: "flex", md: "none" }, gap: 1 }}>
-                    <IconButton component={Link} to="/" color={location.pathname === "/" ? "primary" : "default"}>
+                    <IconButton 
+                        component={Link} 
+                        to="/" 
+                        color={location.pathname === "/" || location.pathname === "/home" ? "primary" : "default"}
+                        title={t("menu.home", "Accueil")}
+                    >
                         <HomeIcon />
                     </IconButton>
-                    <IconButton component={Link} to="/map" color={location.pathname === "/map" ? "primary" : "default"}>
+                    <IconButton 
+                        component={Link} 
+                        to="/events" 
+                        color={location.pathname === "/events" ? "primary" : "default"}
+                        title={t("menu.events", "Événements")}
+                    >
+                        <EventIcon />
+                    </IconButton>
+                    <IconButton 
+                        component={Link} 
+                        to="/map" 
+                        color={location.pathname === "/map" ? "primary" : "default"}
+                        title={t("menu.map", "Carte")}
+                    >
                         <MapIcon />
                     </IconButton>
                 </Box>

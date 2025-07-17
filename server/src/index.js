@@ -148,6 +148,7 @@ app.get("/api/translations/:language/:namespace", async (req, res) => {
             "events",
             "bookings",
             "payments",
+            "landing",
         ];
         if (!allowedNamespaces.includes(namespace)) {
             return res.status(400).json({ error: "Invalid namespace" });

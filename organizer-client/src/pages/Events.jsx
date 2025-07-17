@@ -243,17 +243,6 @@ const Events = () => {
                 </Button>
             </Box>
 
-            {/* Status workflow info */}
-            <Alert severity="info" sx={{ mb: 3 }}>
-                <Typography variant="body2">
-                    <strong>Workflow des événements :</strong> Les nouveaux événements commencent en{" "}
-                    <strong>brouillon</strong>. Soumettez-les pour <strong>révision</strong> une fois prêts. Après
-                    approbation, vous pouvez les <strong>publier</strong>
-                    pour les rendre visibles au public. Vous pouvez suspendre temporairement la publication d'un
-                    événement approuvé à tout moment.
-                </Typography>
-            </Alert>
-
             {events.length === 0 ? (
                 <Card>
                     <CardContent sx={{ textAlign: "center", py: 6 }}>

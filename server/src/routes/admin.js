@@ -157,16 +157,16 @@ router.get("/events", requireAdmin, async (req, res) => {
                 e.*,
                 v.name as venue_name,
                 va.locality as venue_city,
-                va.formatted_address as venue_address,
+                va.address_line_1 as venue_address,
                 uc.email as creator_email,
                 ua.email as approved_by_email,
-                COUNT(DISTINCT b.id) as total_bookings,
-                SUM(b.quantity) FILTER (WHERE b.booking_status = 'confirmed') as confirmed_tickets,
-                COUNT(DISTINCT r.id) as review_count,
-                AVG(r.rating) as average_rating
+                COUNT(DISTINCT b.id) as bookings_count,
+                COALESCE(SUM(b.total_price), 0) as total_revenue,
+                COALESCE(AVG(r.rating), 0) as average_rating,
+                COUNT(DISTINCT r.id) as reviews_count
             FROM events e
             LEFT JOIN venues v ON e.venue_id = v.id
-            LEFT JOIN address_relationships var ON v.id = var.entity_id AND var.entity_type = 'venue' AND var.relationship_type = 'venue_location' AND var.is_active = true
+            LEFT JOIN address_relationships var ON var.entity_type = 'venue' AND var.entity_id = v.id
             LEFT JOIN addresses va ON var.address_id = va.id
             LEFT JOIN users uc ON e.organizer_id = uc.id
             LEFT JOIN users ua ON e.approved_by = ua.id
@@ -202,6 +202,72 @@ router.get("/events", requireAdmin, async (req, res) => {
     } catch (err) {
         console.error("Error fetching admin events:", err);
         res.status(500).json({ error: "Failed to fetch events" });
+    } finally {
+        client.release();
+    }
+});
+
+// Get single event for admin management
+router.get("/events/:id", requireAdmin, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { id } = req.params;
+
+        const query = `
+            SELECT
+                e.*,
+                v.name as venue_name,
+                va.locality as venue_city,
+                va.address_line_1 as venue_address,
+                va.postal_code as venue_postal_code,
+                va.latitude as venue_latitude,
+                va.longitude as venue_longitude,
+                v.capacity as venue_capacity,
+                uc.email as creator_email,
+                uc.id as creator_id,
+                up.first_name as creator_first_name,
+                up.last_name as creator_last_name,
+                up.phone as creator_phone,
+                ua.email as approved_by_email,
+                ARRAY_AGG(DISTINCT cat.name) FILTER (WHERE cat.name IS NOT NULL) as categories,
+                COUNT(DISTINCT b.id) as bookings_count,
+                COALESCE(SUM(b.total_price) FILTER (WHERE b.booking_status = 'confirmed'), 0) as total_revenue,
+                COALESCE(AVG(r.rating), 0) as average_rating,
+                COUNT(DISTINCT r.id) as reviews_count
+            FROM events e
+            LEFT JOIN venues v ON e.venue_id = v.id
+            LEFT JOIN address_relationships var ON var.entity_type = 'venue' AND var.entity_id = v.id
+            LEFT JOIN addresses va ON var.address_id = va.id
+            LEFT JOIN users uc ON e.organizer_id = uc.id
+            LEFT JOIN user_profiles up ON uc.id = up.user_id
+            LEFT JOIN users ua ON e.approved_by = ua.id
+            LEFT JOIN bookings b ON e.id = b.event_id
+            LEFT JOIN reviews r ON e.id = r.event_id
+            LEFT JOIN event_categories ec ON e.id = ec.event_id
+            LEFT JOIN categories cat ON ec.category_id = cat.id
+            WHERE e.id = $1
+            GROUP BY e.id, v.id, va.id, uc.id, up.id, ua.id
+        `;
+
+        const result = await client.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Event not found" });
+        }
+
+        // Log admin action
+        await client.query("SELECT log_admin_action($1, $2, $3, $4, $5)", [
+            req.adminUser.id,
+            "view_event",
+            "event",
+            id,
+            `Viewed event details: ${result.rows[0].title}`,
+        ]);
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Error fetching admin event:", err);
+        res.status(500).json({ error: "Failed to fetch event" });
     } finally {
         client.release();
     }
