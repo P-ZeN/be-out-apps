@@ -65,47 +65,6 @@ jobs:
         echo "Installed targets:"
         rustup target list --installed | grep android
 
-    - name: Configure Cargo for Android
-      run: |
-        echo "Setting up Cargo configuration for Android builds..."
-        mkdir -p ~/.cargo
-        cat > ~/.cargo/config.toml << 'EOF'
-        [target.aarch64-linux-android]
-        ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-        linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
-
-        [target.armv7-linux-androideabi]
-        ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-        linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang"
-
-        [target.x86_64-linux-android]
-        ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-        linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android21-clang"
-
-        [target.i686-linux-android]
-        ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-        linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android21-clang"
-        EOF
-        
-        echo "Cargo config created successfully"
-      env:
-        ANDROID_NDK_HOME: ${{ env.NDK_HOME }}
-
-    - name: Verify NDK Tools
-      run: |
-        echo "Verifying NDK tools are available..."
-        echo "NDK_HOME: $NDK_HOME"
-        ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | head -10
-        
-        # Test if the linkers exist
-        if [ -f "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" ]; then
-          echo "✅ ARM64 linker found"
-        else
-          echo "❌ ARM64 linker not found"
-        fi
-      env:
-        NDK_HOME: ${{ env.NDK_HOME }}
-
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
@@ -127,6 +86,54 @@ jobs:
           echo "Using NDK: $NDK_DIR"
           echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_DIR" >> $GITHUB_ENV
         fi
+
+    - name: Configure Cargo for Android
+      run: |
+        echo "Setting up Cargo configuration for Android builds..."
+        echo "Using NDK_HOME: $NDK_HOME"
+        mkdir -p ~/.cargo
+        
+        # Create Cargo config with actual NDK path
+        cat > ~/.cargo/config.toml << EOF
+        [target.aarch64-linux-android]
+        ar = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        linker = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
+
+        [target.armv7-linux-androideabi]
+        ar = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        linker = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang"
+
+        [target.x86_64-linux-android]
+        ar = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        linker = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android21-clang"
+
+        [target.i686-linux-android]
+        ar = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        linker = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android21-clang"
+        EOF
+        
+        echo "Cargo config created with NDK path: $NDK_HOME"
+        echo "Cargo config contents:"
+        cat ~/.cargo/config.toml
+      env:
+        NDK_HOME: ${{ env.NDK_HOME }}
+
+    - name: Verify NDK Tools
+      run: |
+        echo "Verifying NDK tools are available..."
+        echo "NDK_HOME: $NDK_HOME"
+        ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | head -10
+        
+        # Test if the linkers exist
+        if [ -f "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" ]; then
+          echo "✅ ARM64 linker found"
+        else
+          echo "❌ ARM64 linker not found"
+          echo "Available linkers:"
+          find "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" -name "*android*clang*" | head -5
+        fi
+      env:
+        NDK_HOME: ${{ env.NDK_HOME }}
 
     - name: Install Tauri CLI
       run: npm install -g @tauri-apps/cli@latest
