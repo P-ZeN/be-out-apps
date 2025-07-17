@@ -59,7 +59,7 @@ jobs:
       run: |
         echo "Installing Android targets..."
         rustup target add aarch64-linux-android
-        rustup target add armv7-linux-androideabi  
+        rustup target add armv7-linux-androideabi
         rustup target add x86_64-linux-android
         rustup target add i686-linux-android
         echo "Installed targets:"
@@ -92,29 +92,75 @@ jobs:
         echo "Setting up Cargo configuration for Android builds..."
         echo "Using NDK_HOME: $NDK_HOME"
         mkdir -p ~/.cargo
+
+        # Verify NDK tools exist before creating config
+        NDK_TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+        echo "Checking NDK toolchain at: $NDK_TOOLCHAIN"
         
-        # Create Cargo config with actual NDK path
-        cat > ~/.cargo/config.toml << EOF
+        if [ ! -d "$NDK_TOOLCHAIN" ]; then
+          echo "❌ NDK toolchain directory not found: $NDK_TOOLCHAIN"
+          echo "Available NDK contents:"
+          find "$NDK_HOME" -type d -name "bin" 2>/dev/null | head -5
+          exit 1
+        fi
+
+        # Find the correct Android API level linkers
+        echo "Looking for Android clang linkers..."
+        AARCH64_LINKER=$(find "$NDK_TOOLCHAIN" -name "*aarch64*android*clang" | head -1)
+        ARMV7_LINKER=$(find "$NDK_TOOLCHAIN" -name "*armv7*android*clang" -o -name "*arm*android*clang" | head -1)
+        X86_64_LINKER=$(find "$NDK_TOOLCHAIN" -name "*x86_64*android*clang" | head -1)
+        I686_LINKER=$(find "$NDK_TOOLCHAIN" -name "*i686*android*clang" | head -1)
+
+        echo "Found linkers:"
+        echo "AARCH64: $AARCH64_LINKER"
+        echo "ARMV7: $ARMV7_LINKER"
+        echo "X86_64: $X86_64_LINKER"
+        echo "I686: $I686_LINKER"
+
+        # Use found linkers or fallback to API level 21
+        AARCH64_LINKER=${AARCH64_LINKER:-"$NDK_TOOLCHAIN/aarch64-linux-android21-clang"}
+        ARMV7_LINKER=${ARMV7_LINKER:-"$NDK_TOOLCHAIN/armv7a-linux-androideabi21-clang"}
+        X86_64_LINKER=${X86_64_LINKER:-"$NDK_TOOLCHAIN/x86_64-linux-android21-clang"}
+        I686_LINKER=${I686_LINKER:-"$NDK_TOOLCHAIN/i686-linux-android21-clang"}
+
+        # Create Cargo config with discovered linkers
+        cat > ~/.cargo/config.toml << 'CARGO_EOF'
         [target.aarch64-linux-android]
-        ar = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-        linker = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
+        ar = "AR_PLACEHOLDER"
+        linker = "AARCH64_LINKER_PLACEHOLDER"
 
         [target.armv7-linux-androideabi]
-        ar = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-        linker = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang"
+        ar = "AR_PLACEHOLDER"
+        linker = "ARMV7_LINKER_PLACEHOLDER"
 
         [target.x86_64-linux-android]
-        ar = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-        linker = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android21-clang"
+        ar = "AR_PLACEHOLDER"
+        linker = "X86_64_LINKER_PLACEHOLDER"
 
         [target.i686-linux-android]
-        ar = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
-        linker = "${NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android21-clang"
-        EOF
-        
-        echo "Cargo config created with NDK path: $NDK_HOME"
-        echo "Cargo config contents:"
+        ar = "AR_PLACEHOLDER"
+        linker = "I686_LINKER_PLACEHOLDER"
+        CARGO_EOF
+
+        # Replace placeholders with actual paths
+        sed -i "s|AR_PLACEHOLDER|$NDK_TOOLCHAIN/llvm-ar|g" ~/.cargo/config.toml
+        sed -i "s|AARCH64_LINKER_PLACEHOLDER|$AARCH64_LINKER|g" ~/.cargo/config.toml
+        sed -i "s|ARMV7_LINKER_PLACEHOLDER|$ARMV7_LINKER|g" ~/.cargo/config.toml
+        sed -i "s|X86_64_LINKER_PLACEHOLDER|$X86_64_LINKER|g" ~/.cargo/config.toml
+        sed -i "s|I686_LINKER_PLACEHOLDER|$I686_LINKER|g" ~/.cargo/config.toml
+
+        echo "Cargo config created:"
         cat ~/.cargo/config.toml
+        
+        # Verify all tools exist
+        echo "Verifying all tools exist:"
+        for tool in "$NDK_TOOLCHAIN/llvm-ar" "$AARCH64_LINKER" "$ARMV7_LINKER" "$X86_64_LINKER" "$I686_LINKER"; do
+          if [ -f "$tool" ]; then
+            echo "✅ $tool"
+          else
+            echo "❌ $tool (not found)"
+          fi
+        done
       env:
         NDK_HOME: ${{ env.NDK_HOME }}
 
@@ -123,7 +169,7 @@ jobs:
         echo "Verifying NDK tools are available..."
         echo "NDK_HOME: $NDK_HOME"
         ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | head -10
-        
+
         # Test if the linkers exist
         if [ -f "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" ]; then
           echo "✅ ARM64 linker found"
@@ -175,6 +221,24 @@ jobs:
         NDK_HOME: ${{ env.NDK_HOME }}
         JAVA_HOME: ${{ env.JAVA_HOME }}
 
+    - name: Debug Rust Build Environment
+      run: |
+        echo "=== Rust Build Environment Debug ==="
+        echo "Rust version:"
+        rustc --version
+        echo "Cargo version:"
+        cargo --version
+        echo "Installed targets:"
+        rustup target list --installed
+        echo "Cargo config:"
+        cat ~/.cargo/config.toml || echo "No Cargo config found"
+        echo "NDK tools verification:"
+        ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | grep -E "(aarch64|armv7|x86_64|i686).*android.*clang" || echo "No Android clang tools found"
+        echo "Environment variables:"
+        env | grep -E "(ANDROID|NDK|JAVA|CARGO|RUST)" | sort
+      env:
+        NDK_HOME: ${{ env.NDK_HOME }}
+
     - name: Build Android APK
       run: |
         echo "Building Android APK..."
@@ -209,17 +273,32 @@ jobs:
         echo "Starting Android build..."
         echo "Environment check before build:"
         echo "ANDROID_HOME: $ANDROID_HOME"
-        echo "NDK_HOME: $NDK_HOME" 
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT" 
+        echo "NDK_HOME: $NDK_HOME"
         echo "JAVA_HOME: $JAVA_HOME"
         echo "PATH: $PATH"
+
+        # Set additional environment variables that Tauri might need
+        export ANDROID_NDK_ROOT="$NDK_HOME"
+        export ANDROID_NDK_HOME="$NDK_HOME"
         
-        # Check available targets
-        echo "Checking available Tauri Android targets:"
-        tauri android build --help | grep -A 10 "target" || echo "Could not get target help"
-        
-        # Build for all default targets (should work without --target flag)
-        echo "Building for all default Android targets..."
-        tauri android build --verbose
+        echo "Additional environment variables set:"
+        echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
+        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+
+        # Try building with more verbose output and error handling
+        echo "Building for Android with detailed logging..."
+        set -x  # Enable command tracing
+        tauri android build --verbose 2>&1 | tee android_build.log || {
+          echo "=== BUILD FAILED - Analyzing logs ==="
+          echo "Last 50 lines of build log:"
+          tail -50 android_build.log
+          echo "=== Checking for common error patterns ==="
+          grep -i "error\|failed\|exception" android_build.log | tail -10
+          echo "=== Checking Rust compilation logs ==="
+          find . -name "*.log" -type f -exec echo "=== {} ===" \; -exec tail -20 {} \; 2>/dev/null || echo "No additional log files found"
+          exit 1
+        }
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
