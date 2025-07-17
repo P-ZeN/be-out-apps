@@ -36,6 +36,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Increase file descriptor limits
+RUN mkdir -p /etc/security
 RUN echo 'fs.file-max = 65536' >> /etc/sysctl.conf
 RUN echo '* soft nofile 65536' >> /etc/security/limits.conf
 RUN echo '* hard nofile 65536' >> /etc/security/limits.conf
