@@ -22,7 +22,7 @@ Name: VITE_API_URL
 Value: https://your-production-api-url.com
 (or http://localhost:3000 for testing)
 
-Name: VITE_MAPBOX_ACCESS_TOKEN  
+Name: VITE_MAPBOX_ACCESS_TOKEN
 Value: pk.your_actual_mapbox_token_here
 ```
 
@@ -40,10 +40,10 @@ Value: https://your-app-domain.com
 
 ### Security Benefits
 
-✅ **Secure**: Secrets are encrypted and not visible in logs  
-✅ **Access Control**: Only maintainers can view/edit secrets  
-✅ **Audit Trail**: GitHub logs when secrets are accessed  
-✅ **No Exposure**: Values never appear in repository code  
+✅ **Secure**: Secrets are encrypted and not visible in logs
+✅ **Access Control**: Only maintainers can view/edit secrets
+✅ **Audit Trail**: GitHub logs when secrets are accessed
+✅ **No Exposure**: Values never appear in repository code
 
 ## 🚀 How It Works in CI/CD
 
@@ -82,7 +82,7 @@ If builds fail with environment variable issues:
 To update an existing secret:
 1. Go to repository **Settings** → **Secrets and variables** → **Actions**
 2. Click on the secret name
-3. Click **Update** 
+3. Click **Update**
 4. Enter new value and save
 
 Changes take effect immediately for new workflow runs.

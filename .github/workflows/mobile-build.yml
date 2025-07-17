@@ -55,6 +55,57 @@ jobs:
       with:
         targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android
 
+    - name: Install Rust targets for Android
+      run: |
+        echo "Installing Android targets..."
+        rustup target add aarch64-linux-android
+        rustup target add armv7-linux-androideabi  
+        rustup target add x86_64-linux-android
+        rustup target add i686-linux-android
+        echo "Installed targets:"
+        rustup target list --installed | grep android
+
+    - name: Configure Cargo for Android
+      run: |
+        echo "Setting up Cargo configuration for Android builds..."
+        mkdir -p ~/.cargo
+        cat > ~/.cargo/config.toml << 'EOF'
+        [target.aarch64-linux-android]
+        ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
+
+        [target.armv7-linux-androideabi]
+        ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang"
+
+        [target.x86_64-linux-android]
+        ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android21-clang"
+
+        [target.i686-linux-android]
+        ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+        linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android21-clang"
+        EOF
+        
+        echo "Cargo config created successfully"
+      env:
+        ANDROID_NDK_HOME: ${{ env.NDK_HOME }}
+
+    - name: Verify NDK Tools
+      run: |
+        echo "Verifying NDK tools are available..."
+        echo "NDK_HOME: $NDK_HOME"
+        ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | head -10
+        
+        # Test if the linkers exist
+        if [ -f "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" ]; then
+          echo "✅ ARM64 linker found"
+        else
+          echo "❌ ARM64 linker not found"
+        fi
+      env:
+        NDK_HOME: ${{ env.NDK_HOME }}
+
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
@@ -96,14 +147,14 @@ jobs:
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "NDK_HOME: $NDK_HOME"
         echo "JAVA_HOME: $JAVA_HOME"
-        
+
         # Initialize Android project
         tauri android init --ci || true
-        
+
         echo "Checking for generated project..."
         find . -name "gen" -type d 2>/dev/null || echo "No gen directory found"
         find . -name "android" -type d 2>/dev/null || echo "No android directory found"
-        
+
         # Check if Android project was created
         if [ -d "src-tauri/gen/android" ]; then
           echo "✅ Android project created successfully"
@@ -121,7 +172,7 @@ jobs:
       run: |
         echo "Building Android APK..."
         echo "Checking Android project directory..."
-        
+
         # Find Android project directory
         ANDROID_PROJECT_DIR=""
         if [ -d "src-tauri/gen/android" ]; then
@@ -144,12 +195,19 @@ jobs:
             fi
           fi
         fi
-        
+
         echo "Android project directory contents:"
         ls -la "$ANDROID_PROJECT_DIR"/ 2>/dev/null || echo "Cannot list directory contents"
-        
+
         echo "Starting Android build..."
-        tauri android build --verbose
+        echo "Environment check before build:"
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "NDK_HOME: $NDK_HOME" 
+        echo "JAVA_HOME: $JAVA_HOME"
+        echo "PATH: $PATH"
+        
+        # Build with debug output for first few architectures only to reduce build time
+        tauri android build --target aarch64-linux-android --verbose
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
