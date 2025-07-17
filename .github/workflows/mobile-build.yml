@@ -206,8 +206,13 @@ jobs:
         echo "JAVA_HOME: $JAVA_HOME"
         echo "PATH: $PATH"
         
-        # Build with debug output for first few architectures only to reduce build time
-        tauri android build --target aarch64-linux-android --verbose
+        # Check available targets
+        echo "Checking available Tauri Android targets:"
+        tauri android build --help | grep -A 10 "target" || echo "Could not get target help"
+        
+        # Build for all default targets (should work without --target flag)
+        echo "Building for all default Android targets..."
+        tauri android build --verbose
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
