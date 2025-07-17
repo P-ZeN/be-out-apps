@@ -71,7 +71,9 @@ jobs:
     - name: Initialize Android project
       run: |
         echo "Initializing Tauri Android project..."
-        tauri android init --skip-targets-install
+        tauri android init --ci
+        echo "Android project initialized successfully"
+        ls -la src-tauri/gen/
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/25.2.9519653
@@ -80,6 +82,14 @@ jobs:
     - name: Build Android APK
       run: |
         echo "Building Android APK..."
+        echo "Checking Android project directory..."
+        if [ ! -d "src-tauri/gen/android" ]; then
+          echo "Android project directory missing, re-initializing..."
+          tauri android init --ci
+        fi
+        echo "Android project directory contents:"
+        ls -la src-tauri/gen/android/
+        echo "Starting Android build..."
         tauri android build --verbose
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
