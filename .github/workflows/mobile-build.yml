@@ -501,7 +501,7 @@ jobs:
     name: Build iOS IPA
     runs-on: macos-latest
     needs: test-client
-    if: false  # Disable until Tauri 2.x iOS support is stable
+    if: true  # Enable for testing - Tauri 2.x has iOS support
     steps:
     - uses: actions/checkout@v4
 
@@ -517,34 +517,122 @@ jobs:
         targets: aarch64-apple-ios,x86_64-apple-ios,aarch64-apple-ios-sim
 
     - name: Install Tauri CLI
-      run: npm install -g @tauri-apps/cli@latest
+      run: |
+        echo "Installing Tauri CLI..."
+        npm install -g @tauri-apps/cli@latest
+        
+        echo "Verifying Tauri CLI installation..."
+        tauri --version || echo "Failed to get Tauri version"
+        
+        echo "Installing Tauri CLI locally as well..."
+        npm install @tauri-apps/cli@latest
 
     - name: Install dependencies
       run: npm ci
 
     - name: Build client
       run: npm run build:client
+      env:
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
-    - name: Initialize iOS (when available)
+    - name: Initialize iOS project
       run: |
-        # This will be enabled when Tauri 2.x iOS support is stable
-        # tauri ios init
-        # tauri ios build --release
-        echo "iOS build will be available when Tauri 2.x iOS support is stable"
-        echo "Current status: iOS support is in development"
-        echo "For now, focus on Android development"
+        echo "Initializing Tauri iOS project..."
+        echo "Available npm scripts:"
+        npm run | grep tauri || echo "No tauri scripts found"
+        
+        # Try different methods to initialize iOS project
+        if npm run tauri ios init -- --ci; then
+          echo "✅ iOS project initialized with npm run tauri"
+        elif npx tauri ios init --ci; then
+          echo "✅ iOS project initialized with npx tauri"
+        elif tauri ios init --ci; then
+          echo "✅ iOS project initialized with global tauri"
+        else
+          echo "❌ All initialization methods failed"
+          echo "Checking available Tauri commands..."
+          tauri --help || echo "No help available"
+        fi
 
-    - name: Upload IPA (when available)
-      if: false
+        echo "Checking for generated iOS project..."
+        find . -name "*ios*" -type d 2>/dev/null || echo "No iOS directories found"
+        
+        if [ -d "src-tauri/gen/ios" ]; then
+          echo "✅ iOS project created successfully"
+          ls -la src-tauri/gen/ios/
+        else
+          echo "❌ iOS project directory not found"
+          echo "Searching for alternative iOS paths..."
+          find src-tauri -type d -name "*ios*" 2>/dev/null || echo "No iOS directories found"
+        fi
+
+    - name: Build iOS IPA
+      run: |
+        echo "Building iOS IPA..."
+        echo "Checking iOS project directory..."
+
+        # Find iOS project directory
+        IOS_PROJECT_DIR=""
+        if [ -d "src-tauri/gen/ios" ]; then
+          IOS_PROJECT_DIR="src-tauri/gen/ios"
+          echo "✅ Found iOS project at: $IOS_PROJECT_DIR"
+        else
+          echo "🔍 Searching for iOS project directory..."
+          IOS_PROJECT_DIR=$(find src-tauri -type d -name "*ios*" 2>/dev/null | head -1)
+          if [ -n "$IOS_PROJECT_DIR" ]; then
+            echo "✅ Found iOS project at: $IOS_PROJECT_DIR"
+          else
+            echo "❌ No iOS project found, re-initializing..."
+            tauri ios init --ci
+            if [ -d "src-tauri/gen/ios" ]; then
+              IOS_PROJECT_DIR="src-tauri/gen/ios"
+              echo "✅ Re-initialization successful: $IOS_PROJECT_DIR"
+            else
+              echo "❌ Re-initialization failed"
+              exit 1
+            fi
+          fi
+        fi
+
+        echo "Starting iOS build..."
+        
+        # Try different methods to build iOS
+        if npm run tauri ios build -- --verbose 2>&1 | tee ios_build.log; then
+          echo "✅ Build succeeded with npm run tauri ios build"
+        elif npx tauri ios build --verbose 2>&1 | tee ios_build.log; then
+          echo "✅ Build succeeded with npx tauri ios build"
+        elif tauri ios build --verbose 2>&1 | tee ios_build.log; then
+          echo "✅ Build succeeded with global tauri ios build"
+        else
+          echo "❌ All build methods failed"
+          echo "=== BUILD FAILED - Analyzing logs ==="
+          if [ -f "ios_build.log" ]; then
+            echo "Last 50 lines of build log:"
+            tail -50 ios_build.log
+            echo "=== Checking for common error patterns ==="
+            grep -i "error\|failed\|exception" ios_build.log | tail -10
+          fi
+        fi
+      env:
+        VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
+
+    - name: Upload IPA (if found)
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: ios-ipa
-        path: src-tauri/gen/ios/build/Build/Products/*.ipa
+        path: |
+          src-tauri/gen/ios/build/Build/Products/*.ipa
+          src-tauri/gen/ios/**/build/**/*.ipa
+          **/*.ipa
+        if-no-files-found: warn
 
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [build-android]
+    needs: [build-android, build-ios]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
     - uses: actions/checkout@v4
@@ -554,12 +642,27 @@ jobs:
       with:
         name: android-apk
         path: ./artifacts/
+      continue-on-error: true
+
+    - name: Download iOS IPA
+      uses: actions/download-artifact@v4
+      with:
+        name: ios-ipa
+        path: ./artifacts/
+      continue-on-error: true
+
+    - name: List artifacts
+      run: |
+        echo "Available artifacts:"
+        find ./artifacts -type f -name "*.apk" -o -name "*.ipa" 2>/dev/null || echo "No APK or IPA files found"
+        ls -la ./artifacts/ 2>/dev/null || echo "No artifacts directory"
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
           ./artifacts/*.apk
+          ./artifacts/*.ipa
         draft: true
         prerelease: false
         generate_release_notes: true
