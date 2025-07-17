@@ -89,3 +89,27 @@ docker cp <container-name>:/tmp/translations-backup.tar.gz ./translations-backup
 
 ### Automated Backup
 Consider setting up automated backups of the `beout_translations` volume in Dockploy.
+
+## Common Deployment Issues
+
+### inotify Error: "Too many open files"
+
+**Error Message:**
+
+```bash
+tail error: tail: inotify cannot be used, reverting to polling: Too many open files
+```
+
+**What it means:**
+
+- Container hit file descriptor limit
+- System falls back to less efficient file watching
+- Application continues to work normally
+
+**Solutions:**
+
+1. **Check for Docker ulimit settings** in Dockploy advanced configuration
+2. **Add ulimit parameter** if supported: `--ulimit nofile=65536:65536`
+3. **Safe to ignore** - this is mostly a performance optimization issue
+
+**Impact:** Minimal - application functions normally, just uses more CPU for file monitoring.

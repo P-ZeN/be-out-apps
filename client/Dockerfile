@@ -34,6 +34,12 @@ RUN npm run build
 
 # Production stage
 FROM nginx:alpine
+
+# Increase file descriptor limits
+RUN echo 'fs.file-max = 65536' >> /etc/sysctl.conf
+RUN echo '* soft nofile 65536' >> /etc/security/limits.conf
+RUN echo '* hard nofile 65536' >> /etc/security/limits.conf
+
 COPY --from=builder /app/build /usr/share/nginx/html
 COPY --from=builder /app/nginx.conf /etc/nginx/nginx.conf
 COPY --from=builder /app/docker-entrypoint.sh /docker-entrypoint.sh
