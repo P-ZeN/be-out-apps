@@ -50,18 +50,20 @@ export const useExternalLink = () => {
 /**
  * Higher-order component to wrap external links
  * Automatically handles platform-specific link behavior
+ * Note: This should be imported separately when needed
  */
-export const ExternalLink = ({ href, title, children, ...props }) => {
-    const { openExternalLink } = useExternalLink();
+export const createExternalLink = (openExternalLink) => {
+    return ({ href, title, children, ...props }) => {
+        const handleClick = (e) => {
+            e.preventDefault();
+            openExternalLink(href, title);
+        };
 
-    const handleClick = (e) => {
-        e.preventDefault();
-        openExternalLink(href, title);
+        // Return props for creating the link element
+        return {
+            href,
+            onClick: handleClick,
+            ...props
+        };
     };
-
-    return (
-        <a href={href} onClick={handleClick} {...props}>
-            {children}
-        </a>
-    );
 };
