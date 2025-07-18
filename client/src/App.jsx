@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import PlatformDebug from "./components/PlatformDebug";
 import { AuthProvider } from "./context/AuthContext";
+import { WebViewProvider } from "./context/WebViewContext";
 import { theme } from "./theme";
 import "./App.css";
 
@@ -16,15 +17,17 @@ function App() {
     return (
         <Router>
             <AuthProvider>
-                <ThemeProvider theme={theme}>
-                    <CssBaseline />
-                    <PlatformDebug />
-                    <Header />
-                    <div className="main-content">
-                        <AppRoutes />
-                    </div>
-                    <Footer />
-                </ThemeProvider>
+                <WebViewProvider>
+                    <ThemeProvider theme={theme}>
+                        <CssBaseline />
+                        <PlatformDebug />
+                        <Header />
+                        <div className="main-content">
+                            <AppRoutes />
+                        </div>
+                        <Footer />
+                    </ThemeProvider>
+                </WebViewProvider>
             </AuthProvider>
         </Router>
     );

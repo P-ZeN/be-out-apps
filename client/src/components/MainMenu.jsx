@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@mui/material/styles";
+import { getIsTauriApp } from "../utils/platformDetection";
 import {
     AppBar,
     Toolbar,
@@ -22,10 +23,15 @@ import LanguageSwitcher from "./LanguageSwitcher";
 const MainMenu = () => {
     const { user, logout } = useAuth();
     const [anchorEl, setAnchorEl] = useState(null);
+    const [isTauriApp, setIsTauriApp] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation("navigation");
     const theme = useTheme();
+
+    useEffect(() => {
+        setIsTauriApp(getIsTauriApp());
+    }, []);
 
     const handleMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -36,6 +42,14 @@ const MainMenu = () => {
     };
 
     const getCurrentTab = () => {
+        // For Tauri apps (mobile), only Events (0) and Map (1) tabs exist
+        if (isTauriApp) {
+            if (location.pathname === "/events") return 0;
+            if (location.pathname === "/map") return 1;
+            return 0; // Default to events for mobile
+        }
+
+        // For web apps, Home (0), Events (1), Map (2) tabs exist
         if (location.pathname === "/" || location.pathname === "/home") return 0;
         if (location.pathname === "/events") return 1;
         if (location.pathname === "/map") return 2;
@@ -43,9 +57,16 @@ const MainMenu = () => {
     };
 
     const handleTabChange = (event, newValue) => {
-        if (newValue === 0) navigate("/");
-        if (newValue === 1) navigate("/events");
-        if (newValue === 2) navigate("/map");
+        if (isTauriApp) {
+            // For mobile: 0=Events, 1=Map
+            if (newValue === 0) navigate("/events");
+            if (newValue === 1) navigate("/map");
+        } else {
+            // For web: 0=Home, 1=Events, 2=Map
+            if (newValue === 0) navigate("/");
+            if (newValue === 1) navigate("/events");
+            if (newValue === 2) navigate("/map");
+        }
     };
 
     return (
@@ -77,7 +98,9 @@ const MainMenu = () => {
                         onChange={handleTabChange}
                         textColor="primary"
                         indicatorColor="primary">
-                        <Tab icon={<HomeIcon />} label={t("menu.home", "Accueil")} iconPosition="start" />
+                        {!isTauriApp && (
+                            <Tab icon={<HomeIcon />} label={t("menu.home", "Accueil")} iconPosition="start" />
+                        )}
                         <Tab icon={<EventIcon />} label={t("menu.events", "Événements")} iconPosition="start" />
                         <Tab icon={<MapIcon />} label={t("menu.map", "Carte")} iconPosition="start" />
                     </Tabs>
@@ -85,13 +108,15 @@ const MainMenu = () => {
 
                 {/* Mobile Navigation */}
                 <Box sx={{ display: { xs: "flex", md: "none" }, gap: 1 }}>
-                    <IconButton
-                        component={Link}
-                        to="/"
-                        color={location.pathname === "/" || location.pathname === "/home" ? "primary" : "default"}
-                        title={t("menu.home", "Accueil")}>
-                        <HomeIcon />
-                    </IconButton>
+                    {!isTauriApp && (
+                        <IconButton
+                            component={Link}
+                            to="/"
+                            color={location.pathname === "/" || location.pathname === "/home" ? "primary" : "default"}
+                            title={t("menu.home", "Accueil")}>
+                            <HomeIcon />
+                        </IconButton>
+                    )}
                     <IconButton
                         component={Link}
                         to="/events"

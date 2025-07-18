@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { getIsTauriApp } from "../utils/platformDetection";
 import LandingPage from "./LandingPage";
 import { Home } from "../pages";
@@ -29,13 +30,13 @@ const HomeWrapper = () => {
         return null; // or a loading spinner if preferred
     }
 
-    // If running in Tauri (bundled app), show the actual home page
+    // If running in Tauri (bundled app), redirect to events page
     if (isTauriApp) {
-        return <Home />;
+        return <Navigate to="/events" replace />;
     }
 
-    // If running in web browser, show the landing page
-    return <LandingPage />;
+    // If running in web browser, show the actual home page with events
+    return <Home />;
 };
 
 export default HomeWrapper;

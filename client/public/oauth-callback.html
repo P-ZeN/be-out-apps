@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Complete Authentication</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+            .container {
+                text-align: center;
+                padding: 2rem;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+            .input-group {
+                margin: 1rem 0;
+            }
+            input {
+                padding: 0.5rem;
+                margin: 0.5rem;
+                border: none;
+                border-radius: 5px;
+                width: 300px;
+            }
+            button {
+                padding: 0.75rem 1.5rem;
+                margin: 0.5rem;
+                border: none;
+                border-radius: 5px;
+                background: #4caf50;
+                color: white;
+                cursor: pointer;
+                font-size: 1rem;
+            }
+            button:hover {
+                background: #45a049;
+            }
+            .cancel-btn {
+                background: #f44336;
+            }
+            .cancel-btn:hover {
+                background: #da190b;
+            }
+            .instructions {
+                margin-bottom: 1rem;
+                font-size: 0.9rem;
+                opacity: 0.9;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Complete Authentication</h2>
+            <div class="instructions">
+                After authorizing the app in your browser, copy the authorization code and paste it here:
+            </div>
+            <div class="input-group">
+                <input type="text" id="authCode" placeholder="Paste authorization code here..." />
+            </div>
+            <div>
+                <button onclick="submitCode()">Submit</button>
+                <button class="cancel-btn" onclick="cancelAuth()">Cancel</button>
+            </div>
+        </div>
+
+        <script>
+            const { invoke } = window.__TAURI__.core;
+
+            async function submitCode() {
+                const code = document.getElementById("authCode").value.trim();
+                if (!code) {
+                    alert("Please enter the authorization code");
+                    return;
+                }
+
+                try {
+                    await invoke("set_oauth_code", { code });
+                    // The window will be closed by the main OAuth handler
+                } catch (error) {
+                    console.error("Error setting OAuth code:", error);
+                    alert("Error: " + error);
+                }
+            }
+
+            async function cancelAuth() {
+                try {
+                    await invoke("set_oauth_code", { code: "CANCELLED" });
+                } catch (error) {
+                    console.error("Error cancelling OAuth:", error);
+                }
+            }
+
+            // Auto-focus the input field
+            document.getElementById("authCode").focus();
+
+            // Allow Enter key to submit
+            document.getElementById("authCode").addEventListener("keypress", function (e) {
+                if (e.key === "Enter") {
+                    submitCode();
+                }
+            });
+        </script>
+    </body>
+</html>

@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { useExternalLink } from "../hooks/useExternalLink";
 import { Button, TextField, Container, Typography, Box, Alert, Divider } from "@mui/material";
 import { Google, Facebook } from "@mui/icons-material";
+import WebViewOverlay from "./WebViewOverlay";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -16,6 +18,7 @@ const Register = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const t = useTranslation(["auth", "common"]).t;
+    const { openExternalLink, closeWebView, webViewState, isTauriApp } = useExternalLink();
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -29,6 +32,24 @@ const Register = () => {
             navigate("/onboarding");
         } catch (error) {
             setError("Registration failed");
+        }
+    };
+
+    const handleGoogleLogin = () => {
+        const googleAuthUrl = `${API_BASE_URL}/auth/google`;
+        if (isTauriApp) {
+            openExternalLink(googleAuthUrl, "Google Login");
+        } else {
+            window.location.href = googleAuthUrl;
+        }
+    };
+
+    const handleFacebookLogin = () => {
+        const facebookAuthUrl = `${API_BASE_URL}/auth/facebook`;
+        if (isTauriApp) {
+            openExternalLink(facebookAuthUrl, "Facebook Login");
+        } else {
+            window.location.href = facebookAuthUrl;
         }
     };
 
@@ -78,22 +99,24 @@ const Register = () => {
             <Divider sx={{ my: 2 }}>{t("auth:login.orLoginWith")}</Divider>
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <Button
-                    variant="outlined"
-                    startIcon={<Google />}
-                    onClick={() => (window.location.href = `${API_BASE_URL}/auth/google`)}>
+                <Button variant="outlined" startIcon={<Google />} onClick={handleGoogleLogin}>
                     {t("auth:login.loginWithGoogle")}
                 </Button>
-                <Button
-                    variant="outlined"
-                    startIcon={<Facebook />}
-                    onClick={() => (window.location.href = `${API_BASE_URL}/auth/facebook`)}>
+                <Button variant="outlined" startIcon={<Facebook />} onClick={handleFacebookLogin}>
                     {t("auth:login.loginWithFacebook")}
                 </Button>
             </Box>
 
             {message && <Alert severity="success">{message}</Alert>}
             {error && <Alert severity="error">{error}</Alert>}
+
+            {/* WebView Overlay for mobile external links */}
+            <WebViewOverlay
+                url={webViewState.url}
+                title={webViewState.title}
+                open={webViewState.open}
+                onClose={closeWebView}
+            />
         </Container>
     );
 };

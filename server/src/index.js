@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import setupRoutes from "./routes/setup.js";
 import authRoutes from "./routes/auth.js";
+import desktopAuthRoutes from "./routes/desktopAuth.js";
 import profileRoutes from "./routes/profile.js";
 import eventsRoutes from "./routes/events.js";
 import bookingsRoutes from "./routes/bookings.js";
@@ -127,6 +128,7 @@ const port = process.env.PORT || 3000;
 
 app.use("/", setupRoutes);
 app.use("/auth", authRoutes);
+app.use("/auth", desktopAuthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/user", profileRoutes);
 app.use("/api/user", profileRoutes);

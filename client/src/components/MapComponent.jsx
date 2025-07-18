@@ -42,6 +42,15 @@ const getMapboxToken = () => {
 
 const MAPBOX_TOKEN = getMapboxToken();
 
+// Debug logging for mobile troubleshooting
+console.log("MapComponent Debug Info:", {
+    token: MAPBOX_TOKEN,
+    tokenLength: MAPBOX_TOKEN?.length,
+    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+    origin: typeof window !== "undefined" ? window.location.origin : "unknown",
+    isMobile: typeof window !== "undefined" && /Mobi|Android/i.test(navigator.userAgent),
+});
+
 // Fallback component if Mapbox fails to load
 const MapFallback = ({ events, onEventClick, t }) => (
     <Box
@@ -115,6 +124,15 @@ const MapComponent = ({
     // Handle map errors
     const handleMapError = useCallback((error) => {
         console.error("Map error:", error);
+        console.error("Map error details:", {
+            message: error.message,
+            stack: error.stack,
+            token: MAPBOX_TOKEN,
+            tokenLength: MAPBOX_TOKEN?.length,
+            userAgent: navigator.userAgent,
+            origin: window.location.origin,
+            href: window.location.href,
+        });
         setMapError(true);
     }, []);
 

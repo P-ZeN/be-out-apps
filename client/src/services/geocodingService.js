@@ -52,6 +52,13 @@ export class GeocodingService {
             url.searchParams.append("limit", limit);
             url.searchParams.append("language", "fr");
 
+            console.log("Geocoding request:", {
+                url: url.toString(),
+                token: MAPBOX_TOKEN,
+                tokenLength: MAPBOX_TOKEN?.length,
+                userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+            });
+
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Geocoding API error: ${response.status}`);
