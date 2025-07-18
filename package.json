@@ -10,7 +10,7 @@
     "dev:admin": "npm run dev --workspace=admin-client",
     "dev:organizer": "npm run dev --workspace=organizer-client",
     "build": "npm run build --workspace=client && npm run build --workspace=server && npm run build --workspace=admin-client && npm run build --workspace=organizer-client",
-    "build:client": "npm run build --workspace=client",
+    "build:client": "npm run build:mobile --workspace=client",
     "build:server": "npm run build --workspace=server",
     "build:admin": "npm run build --workspace=admin-client",
     "build:organizer": "npm run build --workspace=organizer-client",
@@ -18,7 +18,11 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:android": "tauri android dev",
-    "tauri:android:build": "tauri android build"
+    "tauri:android:build": "tauri android build",
+    "tauri:android:init": "tauri android init",
+    "tauri:ios": "tauri ios dev",
+    "tauri:ios:build": "tauri ios build",
+    "tauri:ios:init": "tauri ios init"
   },
   "keywords": [],
   "author": "",

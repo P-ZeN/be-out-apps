@@ -1,68 +1,14 @@
 {
-  "$schema": "../../node_modules/@tauri-apps/cli/schema.json",
+  "productName": "Be Out!",
+  "version": "1.0.0",
+  "identifier": "com.beout.app",
   "build": {
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npm run build -- --mode production",
     "beforeDevCommand": "npm run dev",
-    "devPath": "http://localhost:5173",
-    "distDir": "../dist"
+    "frontendDist": "../build",
+    "devUrl": "http://localhost:5173"
   },
-  "package": {
-    "productName": "Be Out!",
-    "version": "1.0.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "category": "Lifestyle",
-      "copyright": "Copyright © 2025 Be Out!",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "com.beout.app",
-      "longDescription": "Discover amazing events happening around you. Connect with your community and never miss out on experiences that matter.",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "Discover events in your community",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      },
-      "iOS": {
-        "minimumSystemVersion": "13.0"
-      },
-      "android": {
-        "minSdkVersion": 24
-      }
-    },
-    "security": {
-      "csp": null
-    },
-    "updater": {
-      "active": false
-    },
+  "app": {
     "windows": [
       {
         "fullscreen": false,
@@ -71,6 +17,34 @@
         "title": "Be Out!",
         "width": 800
       }
-    ]
-  }
+    ],
+    "security": {
+      "csp": null
+    },
+    "withGlobalTauri": true
+  },
+  "bundle": {
+    "active": true,
+    "category": "Lifestyle",
+    "copyright": "Copyright © 2025 Be Out!",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "longDescription": "Discover amazing events happening around you. Connect with your community and never miss out on experiences that matter.",
+    "resources": [],
+    "shortDescription": "Discover events in your community",
+    "targets": "all",
+    "iOS": {
+      "minimumSystemVersion": "13.0"
+    },
+    "android": {
+      "minSdkVersion": 24,
+      "webviewDebugging": true
+    }
+  },
+  "plugins": {}
 }

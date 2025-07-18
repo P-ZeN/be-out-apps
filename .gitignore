@@ -3,6 +3,7 @@
 /.pnp
 .pnp.js
 .env*
+.env.keystore
 
 # Testing
 /coverage
@@ -20,3 +21,16 @@ yarn-error.log*
 # Tauri
 /src-tauri/target
 /src-tauri/Cargo.lock
+/src-tauri/gen/
+
+# Android Keystores (NEVER commit these!)
+*.keystore
+*.jks
+be-out-release.keystore
+debug.keystore
+
+# iOS Certificates (NEVER commit these!)
+*.p12
+*.mobileprovision
+*.cer
+*.certSigningRequest

@@ -615,10 +615,16 @@ jobs:
 
         echo "Starting iOS build..."
 
-        # Note about code signing
-        echo "⚠️  Warning: No code signing certificates found."
-        echo "This is expected in CI environment. The build may fail at the signing step."
-        echo "To fix this, you would need to add APPLE_DEVELOPMENT_TEAM environment variable."
+        # Set up code signing if certificates are available
+        if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
+          echo "🔐 Apple Developer Team found, setting up code signing..."
+          export APPLE_DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
+          echo "Using Apple Development Team: $APPLE_DEVELOPMENT_TEAM"
+        else
+          echo "⚠️  Warning: No code signing certificates found."
+          echo "This is expected in CI environment. The build may fail at the signing step."
+          echo "To fix this, you would need to add APPLE_DEVELOPMENT_TEAM environment variable."
+        fi
 
         # Try different methods to build iOS
         if npm run tauri ios build -- --verbose 2>&1 | tee ios_build.log; then

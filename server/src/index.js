@@ -39,7 +39,28 @@ const corsOptions = {
             "http://127.0.0.1:5175",
         ];
 
+        // Check for allowed origins or production domains
         if (allowedOrigins.includes(origin) || (origin && origin.includes("dedibox2.philippezenone.net"))) {
+            return callback(null, true);
+        }
+
+        // Allow Tauri mobile app origins (they typically start with tauri://)
+        if (
+            origin &&
+            (origin.startsWith("tauri://") ||
+                origin.startsWith("http://tauri.localhost") ||
+                origin.startsWith("https://tauri.localhost"))
+        ) {
+            return callback(null, true);
+        }
+
+        // Allow file:// protocol for mobile apps
+        if (origin && origin.startsWith("file://")) {
+            return callback(null, true);
+        }
+
+        // Allow capacitor origins for mobile apps
+        if (origin && (origin.startsWith("capacitor://") || origin.startsWith("ionic://"))) {
             return callback(null, true);
         }
 

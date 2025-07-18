@@ -38,14 +38,11 @@ npm run tauri:android:build
 - [ ] Rust installed with Android targets
 
 ### ✅ iOS Development (macOS only)
-- [ ] **Note**: iOS development requires macOS - not possible on Windows
-- [ ] Xcode installed (macOS only)
-- [ ] Xcode Command Line Tools installed (macOS only)
-- [ ] iOS Simulator installed (macOS only)
+- [ ] Xcode installed
+- [ ] Xcode Command Line Tools installed
+- [ ] iOS Simulator installed
 - [ ] Apple Developer Account (for device testing/App Store)
-- [ ] Rust installed with iOS targets (macOS only)
-
-**Windows Users**: You can prepare iOS configuration and use CI/CD with macOS runners to build iOS apps.
+- [ ] Rust installed with iOS targets
 
 ## 📱 Testing Devices
 
@@ -119,13 +116,11 @@ rustup target list --installed
 3. Complete store listing (see `docs/APP_STORE_CONFIG.md`)
 4. Submit for review
 
-### Apple App Store (macOS/CI-CD only)
-1. **Build signed IPA**: Use CI/CD with macOS runners (see `.github/workflows/mobile-build.yml`)
-2. **Upload to App Store Connect**: Use Transporter or Xcode on macOS
-3. **Complete app information**: Configure app metadata
-4. **Submit for review**: Through App Store Connect
-
-**Note**: iOS builds require macOS. Windows users can trigger iOS builds through CI/CD.
+### Apple App Store
+1. Build signed IPA: `tauri ios build --release` (when available)
+2. Upload to App Store Connect
+3. Complete app information
+4. Submit for review
 
 ## 🔐 Code Signing
 
