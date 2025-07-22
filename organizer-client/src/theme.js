@@ -3,93 +3,137 @@ import { createTheme } from "@mui/material/styles";
 export const theme = createTheme({
     palette: {
         primary: {
-            main: "#2e7d32", // Organizer green theme
-            dark: "#1b5e20",
-            light: "#4caf50",
-            contrastText: "#ffffff",
+            main: "#4CAF50", // Green - couleur d'accent principal (organizer brand)
+            dark: "#388E3C", // Darker green
+            light: "#81C784", // Lighter green
+            contrastText: "#FFFFFF", // White logo on green background
         },
         secondary: {
-            main: "#ff6f00", // Orange accent
-            dark: "#e65100",
-            light: "#ff8f00",
+            main: "#d32f2f", // Keep red for critical actions/alerts
+            dark: "#b71c1c",
+            light: "#f44336",
             contrastText: "#ffffff",
         },
         background: {
-            default: "#fafafa",
-            paper: "#ffffff",
+            default: "#FFECE1", // Crême - fond principal/pages (unified brand)
+            paper: "#ffffff", // Keep white for cards/elevated surfaces
         },
         text: {
-            primary: "#212121",
-            secondary: "#757575",
+            primary: "#140F0B", // Sombre - texte principal (unified brand)
+            secondary: "#5D4037", // Slightly lighter dark for secondary text
         },
-        success: {
-            main: "#4caf50",
-            dark: "#388e3c",
-            light: "#81c784",
-        },
-        warning: {
-            main: "#ff9800",
-            dark: "#f57c00",
-            light: "#ffb74d",
-        },
-        error: {
-            main: "#f44336",
-            dark: "#d32f2f",
-            light: "#e57373",
-        },
-        // Custom organizer colors
+        // Custom organizer colors - keep green for organizer-specific elements
         organizer: {
-            background: "#2e7d32",
+            background: "#4CAF50", // Green for organizer-specific backgrounds
             text: "#ffffff",
             textSecondary: "rgba(255, 255, 255, 0.8)",
-            revenue: "#4caf50",
-            pending: "#ff9800",
-            success: "#8bc34a",
+            success: "#4CAF50", // Green for success/revenue indicators
+        },
+        // Custom color for footer - using sombre background
+        footer: {
+            background: "#140F0B", // Sombre background
+            text: "#FFECE1", // Crème text
+            textSecondary: "rgba(255, 236, 225, 0.8)", // Crème with opacity
+            titleColor: "#4CAF50", // Green for titles
+        },
+        // Custom color for main menu - using green background
+        mainMenu: {
+            background: "#4CAF50", // Green background
+            text: "#FFECE1", // Crème text
+            textSecondary: "rgba(255, 236, 225, 0.8)",
+        },
+        // Additional brand colors for consistency
+        brand: {
+            creme: "#FFECE1",
+            green: "#4CAF50",
+            sombre: "#140F0B",
         },
     },
     typography: {
-        fontFamily: "Roboto, Arial, sans-serif",
+        fontFamily: '"ClashGrotesk-Variable", "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
         fontSize: 14,
+        // Titres - bold, semi bold
+        h1: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 700, // Bold
+            fontSize: "2.5rem",
+            color: "#140F0B",
+        },
+        h2: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 600, // Semi Bold
+            fontSize: "2rem",
+            color: "#140F0B",
+        },
+        h3: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 600, // Semi Bold
+            fontSize: "1.75rem",
+            color: "#140F0B",
+        },
         h4: {
-            fontWeight: 700,
-            fontSize: "2.125rem",
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 600, // Semi Bold
+            fontSize: "1.5rem",
+            color: "#140F0B",
         },
         h5: {
-            fontWeight: 600,
-            fontSize: "1.5rem",
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 600, // Semi Bold
+            fontSize: "1.25rem",
+            color: "#140F0B",
         },
         h6: {
-            fontWeight: 600,
-            fontSize: "1.25rem",
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 600, // Semi Bold
+            fontSize: "1.125rem",
+            color: "#140F0B",
+        },
+        // Sous titres, exergues - extra-light ou light
+        subtitle1: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 300, // Light
+            fontSize: "1rem",
+        },
+        subtitle2: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 200, // Extra Light
+            fontSize: "0.875rem",
         },
         body1: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 400, // Regular
             fontSize: "1rem",
         },
         body2: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 400, // Regular
             fontSize: "0.875rem",
         },
-        subtitle1: {
-            fontWeight: 500,
+        button: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 600, // Semi Bold for CTAs
+            textTransform: "none", // Keep original case
         },
-        subtitle2: {
-            fontWeight: 500,
-            fontSize: "0.875rem",
+        caption: {
+            fontFamily: '"ClashGrotesk-Variable", sans-serif',
+            fontWeight: 300, // Light
+            fontSize: "0.75rem",
         },
     },
-    spacing: 8,
+    spacing: 8, // The default spacing unit
     components: {
+        // Override MUI component styles globally
         MuiAppBar: {
             styleOverrides: {
                 root: {
                     zIndex: 1300,
-                },
-            },
-        },
-        MuiCard: {
-            styleOverrides: {
-                root: {
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    borderRadius: 12,
+                    backgroundColor: "#4CAF50", // Green brand color
+                    color: "#FFFFFF", // White text for organizer
+                    boxShadow: "none", // Remove shadow
+                    "& .MuiTypography-root": {
+                        color: "#FFFFFF", // Ensure all typography in AppBar is white
+                    },
                 },
             },
         },
@@ -97,14 +141,84 @@ export const theme = createTheme({
             styleOverrides: {
                 root: {
                     borderRadius: 8,
+                    fontFamily: '"ClashGrotesk-Variable", sans-serif',
+                    fontWeight: 600,
                     textTransform: "none",
+                },
+                contained: {
+                    backgroundColor: "#4CAF50", // Green for primary buttons
+                    color: "#FFFFFF",
+                    "&:hover": {
+                        backgroundColor: "#388E3C", // Darker green on hover
+                    },
+                },
+                outlined: {
+                    borderColor: "#4CAF50",
+                    color: "#4CAF50",
+                    "&:hover": {
+                        borderColor: "#388E3C",
+                        backgroundColor: "rgba(76, 175, 80, 0.04)",
+                    },
                 },
             },
         },
-        MuiPaper: {
+        MuiCard: {
             styleOverrides: {
                 root: {
-                    borderRadius: 8,
+                    borderRadius: 12,
+                    boxShadow: "0 2px 8px rgba(20, 15, 11, 0.1)",
+                },
+            },
+        },
+        MuiChip: {
+            styleOverrides: {
+                root: {
+                    fontFamily: '"ClashGrotesk-Variable", sans-serif',
+                    fontWeight: 500,
+                },
+                filled: {
+                    backgroundColor: "#4CAF50",
+                    color: "#FFFFFF",
+                },
+            },
+        },
+        // Organizer-specific component overrides
+        MuiAlert: {
+            styleOverrides: {
+                standardError: {
+                    backgroundColor: "#d32f2f", // Keep red for alerts
+                    color: "#ffffff",
+                },
+                standardSuccess: {
+                    backgroundColor: "#4CAF50", // Green for success
+                    color: "#ffffff",
+                },
+            },
+        },
+        MuiListItemButton: {
+            styleOverrides: {
+                root: {
+                    "&:hover": {
+                        backgroundColor: "rgba(76, 175, 80, 0.08)", // Light green hover
+                        color: "#140F0B", // Dark text on hover
+                        "& .MuiListItemIcon-root": {
+                            color: "#140F0B", // Dark icon on hover
+                        },
+                    },
+                    "&.Mui-selected": {
+                        backgroundColor: "#4CAF50", // Green background for selected
+                        color: "#FFFFFF", // White text for selected
+                        "&:hover": {
+                            backgroundColor: "#388E3C", // Darker green on hover when selected
+                            color: "#FFFFFF", // Keep white text
+                            "& .MuiListItemIcon-root": {
+                                color: "#FFFFFF", // Keep white icon
+                            },
+                        },
+                        "& .MuiListItemIcon-root": {
+                            color: "#FFFFFF", // White icon for selected
+                        },
+                    },
                 },
             },
         },

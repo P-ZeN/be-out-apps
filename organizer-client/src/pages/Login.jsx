@@ -42,7 +42,7 @@ const Login = () => {
         <Box
             sx={{
                 minHeight: "100vh",
-                background: "linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)",
+                backgroundColor: "#FFECE1", // Crème background
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -58,18 +58,18 @@ const Login = () => {
                     }}>
                     <CardContent sx={{ p: 4 }}>
                         <Box sx={{ textAlign: "center", mb: 4 }}>
-                            <Business
+                            <Box
+                                component="img"
+                                src="/be-out_logo.svg"
+                                alt="Be Out Logo"
                                 sx={{
-                                    fontSize: 48,
-                                    color: "primary.main",
+                                    height: 110,
+                                    width: "auto",
                                     mb: 2,
                                 }}
                             />
-                            <Typography variant="h4" fontWeight="bold" gutterBottom>
-                                Be-Out
-                            </Typography>
                             <Typography variant="h6" color="text.secondary" gutterBottom>
-                                Espace Organisateur
+                                Be Out - Espace Organisateur
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Connectez-vous pour gérer vos événements
@@ -119,6 +119,7 @@ const Login = () => {
                                 type="submit"
                                 fullWidth
                                 variant="contained"
+                                color="secondary"
                                 size="large"
                                 disabled={loading}
                                 sx={{

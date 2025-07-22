@@ -124,12 +124,27 @@ const OrganizerMainLayout = ({ children }) => {
     const drawer = (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
             <Box sx={{ p: 2, bgcolor: "primary.main", color: "white" }}>
-                <Typography variant="h6" fontWeight="bold">
-                    Be-Out
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                    Espace Organisateur
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                    <Box
+                        component="img"
+                        src="/be-out_logo.svg"
+                        alt="Be Out Logo"
+                        sx={{
+                            height: 50,
+                            width: "auto",
+                            mr: 2,
+                            filter: "brightness(0) invert(1)", // Make logo white on orange background
+                        }}
+                    />
+                    <Box>
+                        <Typography variant="h6" fontWeight="bold">
+                            Be-Out
+                        </Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                            Be Out - Espace Organisateur
+                        </Typography>
+                    </Box>
+                </Box>
             </Box>
 
             <Box sx={{ p: 2 }}>
@@ -205,8 +220,6 @@ const OrganizerMainLayout = ({ children }) => {
                 sx={{
                     width: { md: `calc(100% - ${drawerWidth}px)` },
                     ml: { md: `${drawerWidth}px` },
-                    bgcolor: "background.paper",
-                    color: "text.primary",
                     boxShadow: 1,
                 }}>
                 <Toolbar>

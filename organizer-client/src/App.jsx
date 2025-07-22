@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { fr } from "date-fns/locale";
-import { theme } from "./theme";
 import { AuthProvider } from "./context/AuthContext";
 import OrganizerMainLayout from "./components/OrganizerMainLayout";
 import Login from "./pages/Login";
@@ -20,6 +19,7 @@ import Bookings from "./pages/Bookings";
 import Revenue from "./pages/Revenue";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { theme } from "./theme";
 
 function App() {
     return (

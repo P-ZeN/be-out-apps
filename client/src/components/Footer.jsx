@@ -25,7 +25,13 @@ const Footer = () => {
                 <Grid container spacing={4}>
                     {/* Brand & Description */}
                     <Grid size={{ xs: 12, md: 4 }}>
-                        <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                fontWeight: "bold",
+                                color: theme.palette.footer.titleColor,
+                            }}>
                             Be Out
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 2, color: theme.palette.footer.textSecondary }}>
@@ -50,7 +56,12 @@ const Footer = () => {
 
                     {/* Quick Links */}
                     <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                color: theme.palette.footer.titleColor,
+                            }}>
                             Navigation
                         </Typography>
                         <Stack spacing={1}>
@@ -101,7 +112,12 @@ const Footer = () => {
 
                     {/* Categories */}
                     <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                color: theme.palette.footer.titleColor,
+                            }}>
                             Catégories
                         </Typography>
                         <Stack spacing={1}>
@@ -150,7 +166,12 @@ const Footer = () => {
 
                     {/* Support & Legal */}
                     <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                color: theme.palette.footer.titleColor,
+                            }}>
                             Support
                         </Typography>
                         <Stack spacing={1}>
@@ -199,7 +220,12 @@ const Footer = () => {
 
                     {/* Partner Info */}
                     <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                        <Typography variant="h6" gutterBottom>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                color: theme.palette.footer.titleColor,
+                            }}>
                             Partenaires
                         </Typography>
                         <Stack spacing={1}>

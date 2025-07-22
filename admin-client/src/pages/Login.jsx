@@ -44,12 +44,16 @@ const Login = ({ onLogin }) => {
                 <Card sx={{ width: "100%", maxWidth: 400 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
-                            <Avatar sx={{ bgcolor: "primary.main", mb: 2 }}>
-                                <AdminPanelSettings />
-                            </Avatar>
-                            <Typography variant="h4" component="h1" gutterBottom>
-                                Be Out Admin
-                            </Typography>
+                            <Box
+                                component="img"
+                                src="/be-out_logo.svg"
+                                alt="Be Out Logo"
+                                sx={{
+                                    height: 110,
+                                    width: "auto",
+                                    mb: 2,
+                                }}
+                            />
                             <Typography variant="body2" color="text.secondary">
                                 Sign in to access the admin dashboard
                             </Typography>

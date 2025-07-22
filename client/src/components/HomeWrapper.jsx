@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { getIsTauriApp } from "../utils/platformDetection";
 import LandingPage from "./LandingPage";
-import { Home } from "../pages";
+import { EventsPage } from "../pages";
 
 /**
  * HomeWrapper component that shows different content based on platform:
@@ -30,13 +30,13 @@ const HomeWrapper = () => {
         return null; // or a loading spinner if preferred
     }
 
-    // If running in Tauri (bundled app), redirect to events page
+    // If running in Tauri (mobile app), show events page
     if (isTauriApp) {
-        return <Navigate to="/events" replace />;
+        return <EventsPage />;
     }
 
-    // If running in web browser, show the actual home page with events
-    return <Home />;
+    // If running in web browser, show landing page with project description
+    return <LandingPage />;
 };
 
 export default HomeWrapper;

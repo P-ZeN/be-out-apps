@@ -63,7 +63,7 @@ export const createExternalLink = (openExternalLink) => {
         return {
             href,
             onClick: handleClick,
-            ...props
+            ...props,
         };
     };
 };

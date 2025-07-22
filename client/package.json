@@ -11,6 +11,7 @@
     "lint:colors": "findstr /S /N /R /I \"color.*[\\\"\\'][^\\\"\\']*(white|black|grey|gray|red|blue|green|yellow|#[0-9a-fA-F])\" src\\*.jsx src\\*.js || echo No hardcoded colors found!",
     "preview": "vite preview",
     "start": "serve -s dist",
+    "tauri": "tauri",
     "tauri:android:init": "tauri android init",
     "tauri:android:build": "tauri android build",
     "tauri:ios:init": "tauri ios init",
@@ -40,6 +41,7 @@
     "serve": "^14.2.3"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.6.2",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",

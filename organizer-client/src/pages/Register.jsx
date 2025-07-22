@@ -56,7 +56,7 @@ const Register = () => {
             <Box
                 sx={{
                     minHeight: "100vh",
-                    background: "linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)",
+                    backgroundColor: "#FFECE1", // Crème background
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -64,7 +64,16 @@ const Register = () => {
                 <Container maxWidth="sm">
                     <Card sx={{ borderRadius: 3, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}>
                         <CardContent sx={{ p: 4, textAlign: "center" }}>
-                            <Business sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
+                            <Box
+                                component="img"
+                                src="/be-out_logo.svg"
+                                alt="Be Out Logo"
+                                sx={{
+                                    height: 110,
+                                    width: "auto",
+                                    mb: 2,
+                                }}
+                            />
                             <Typography variant="h5" fontWeight="bold" gutterBottom>
                                 {t("register.success.title")}
                             </Typography>
@@ -85,7 +94,7 @@ const Register = () => {
         <Box
             sx={{
                 minHeight: "100vh",
-                background: "linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)",
+                backgroundColor: "#FFECE1", // Crème background
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -101,10 +110,13 @@ const Register = () => {
                     }}>
                     <CardContent sx={{ p: 4 }}>
                         <Box sx={{ textAlign: "center", mb: 4 }}>
-                            <Business
+                            <Box
+                                component="img"
+                                src="/be-out_logo.svg"
+                                alt="Be Out Logo"
                                 sx={{
-                                    fontSize: 48,
-                                    color: "primary.main",
+                                    height: 110,
+                                    width: "auto",
                                     mb: 2,
                                 }}
                             />
@@ -221,6 +233,7 @@ const Register = () => {
                                 type="submit"
                                 fullWidth
                                 variant="contained"
+                                color="secondary"
                                 size="large"
                                 disabled={loading}
                                 sx={{
@@ -230,7 +243,9 @@ const Register = () => {
                                     mt: 4,
                                     mb: 3,
                                 }}>
-                                {loading ? t("register.registering") : t("register")}
+                                {loading
+                                    ? t("register.registering", "Inscription...")
+                                    : t("register.submit", "Créer un compte")}
                             </Button>
 
                             <Box sx={{ textAlign: "center" }}>

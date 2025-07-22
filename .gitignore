@@ -1,5 +1,6 @@
 # Dependencies
 **/node_modules/
+
 /.pnp
 .pnp.js
 .env*
@@ -19,9 +20,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # Tauri
-/src-tauri/target
-/src-tauri/Cargo.lock
-/src-tauri/gen/
+**/src-tauri/target
+**/src-tauri/Cargo.lock
+**/src-tauri/gen/
 
 # Android Keystores (NEVER commit these!)
 *.keystore

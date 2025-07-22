@@ -39,12 +39,14 @@ const LanguageSwitcher = () => {
                 aria-haspopup="true"
                 title="Changer de langue"
                 sx={{
-                    color: "inherit",
+                    color: theme.palette.brand.sombre, // Dark color for normal state
+                    borderRadius: 0, // Remove rounded corners to match navbar style
                     "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        backgroundColor: "transparent", // Let parent container handle background
+                        color: "inherit", // Inherit color from parent hover state
                     },
                 }}>
-                <LanguageIcon sx={{ color: "inherit" }} />
+                <LanguageIcon />
             </IconButton>
             <Menu
                 id="language-menu"

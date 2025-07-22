@@ -5,8 +5,9 @@ import desktopAuthService from "../services/desktopAuthService";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExternalLink } from "../hooks/useExternalLink";
+import { waitForTauri, getTauriInfo } from "../utils/tauriReady";
 import { Button, TextField, Container, Typography, Box, Alert, Divider, CircularProgress } from "@mui/material";
-import { Google, Facebook } from "@mui/icons-material";
+import { Google, Facebook, Apple } from "@mui/icons-material";
 import WebViewOverlay from "./WebViewOverlay";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -45,12 +46,22 @@ const Login = () => {
         setOauthLoading(true);
 
         try {
+            console.log("=== GOOGLE OAUTH START ===");
+            console.log("isTauriApp (from hook):", isTauriApp);
+
             if (isTauriApp) {
-                // Use desktop OAuth flow for Tauri apps
+                console.log("Using Tauri OAuth flow...");
+                // Use improved OAuth flow for Tauri apps (both mobile and desktop)
                 const response = await desktopAuthService.startGoogleOAuth();
-                login(response);
-                setMessage(t("auth:login.success"));
+
+                if (response && response.token && response.user) {
+                    login(response);
+                    setMessage(t("auth:login.success"));
+                } else {
+                    throw new Error("Invalid OAuth response");
+                }
             } else {
+                console.log("Using web OAuth flow...");
                 // Use web OAuth flow for browsers
                 const googleAuthUrl = `${API_BASE_URL}/auth/google`;
                 window.location.href = googleAuthUrl;
@@ -62,13 +73,40 @@ const Login = () => {
             setOauthLoading(false);
         }
     };
-
     const handleFacebookLogin = () => {
         const facebookAuthUrl = `${API_BASE_URL}/auth/facebook`;
         if (isTauriApp) {
             openExternalLink(facebookAuthUrl, "Facebook Login");
         } else {
             window.location.href = facebookAuthUrl;
+        }
+    };
+
+    const handleAppleLogin = async () => {
+        setMessage("");
+        setError("");
+        setOauthLoading(true);
+
+        try {
+            if (isTauriApp) {
+                console.log("Using Apple Sign In for Tauri app...");
+                const response = await desktopAuthService.startAppleSignIn();
+
+                if (response && response.token && response.user) {
+                    login(response);
+                    setMessage(t("auth:login.success"));
+                } else {
+                    throw new Error("Invalid Apple Sign In response");
+                }
+            } else {
+                // For web, Apple Sign In is not typically available
+                setError("Apple Sign In is only available in the mobile app");
+            }
+        } catch (error) {
+            console.error("Apple Sign In error:", error);
+            setError(error.message || "Apple Sign In failed");
+        } finally {
+            setOauthLoading(false);
         }
     };
 
@@ -134,6 +172,13 @@ const Login = () => {
                     onClick={handleGoogleLogin}
                     disabled={oauthLoading || isLoading}>
                     {oauthLoading ? t("auth:login.authenticating") : t("auth:login.loginWithGoogle")}
+                </Button>
+                <Button
+                    variant="outlined"
+                    startIcon={<Apple />}
+                    onClick={handleAppleLogin}
+                    disabled={oauthLoading || isLoading}>
+                    Sign in with Apple
                 </Button>
                 <Button
                     variant="outlined"

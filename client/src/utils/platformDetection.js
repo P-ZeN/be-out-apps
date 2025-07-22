@@ -16,8 +16,12 @@ export const getIsTauriApp = () => {
     try {
         // Primary check: Tauri API availability
         if (typeof window !== "undefined") {
-            // Check for Tauri v1 API
-            if (window.__TAURI__ || window.__TAURI_IPC__) {
+            // CRITICAL: Check if Tauri APIs are actually available
+            // Even if we're on tauri.localhost, we need the actual APIs
+            const hasTauriApis = !!(window.__TAURI__ || window.__TAURI_IPC__ || window.__TAURI_INTERNALS__);
+
+            if (hasTauriApis) {
+                console.log("Tauri APIs detected - confirmed Tauri environment");
                 isTauriApp = true;
                 return isTauriApp;
             }
@@ -49,6 +53,13 @@ export const getIsTauriApp = () => {
 
             // Check for presence of tauri:// protocol in the URL
             if (window.location.protocol.startsWith("tauri")) {
+                isTauriApp = true;
+                return isTauriApp;
+            }
+
+            // Check for tauri.localhost (mobile app indicator) - even without APIs
+            if (window.location.href.includes("tauri.localhost")) {
+                console.log("Tauri mobile app detected (tauri.localhost)");
                 isTauriApp = true;
                 return isTauriApp;
             }
@@ -86,4 +97,14 @@ export const isWebApp = () => {
  */
 export const resetTauriDetection = () => {
     isTauriApp = null;
+};
+
+/**
+ * Check if Tauri APIs are actually available (separate from platform detection)
+ * Used for OAuth and other functionality that requires actual Tauri APIs
+ * @returns {boolean}
+ */
+export const areTauriApisAvailable = () => {
+    if (typeof window === "undefined") return false;
+    return !!(window.__TAURI__ || window.__TAURI_IPC__ || window.__TAURI_INTERNALS__ || window.ipc || window.rpc);
 };

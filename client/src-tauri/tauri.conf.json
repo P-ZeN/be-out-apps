@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "identifier": "com.beout.app",
   "build": {
-    "beforeBuildCommand": "npm run build -- --mode production",
+    "beforeBuildCommand": "cd client && npm run build:mobile",
     "beforeDevCommand": "npm run dev",
     "frontendDist": "../build",
     "devUrl": "http://localhost:5173"
@@ -15,7 +15,8 @@
         "height": 600,
         "resizable": true,
         "title": "Be Out!",
-        "width": 800
+        "width": 800,
+        "devtools": true
       }
     ],
     "security": {
@@ -28,11 +29,21 @@
     "category": "Lifestyle",
     "copyright": "Copyright © 2025 Be Out!",
     "icon": [
-      "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
+      "icons/32x32.png",
       "icons/icon.icns",
-      "icons/icon.ico"
+      "icons/icon.ico",
+      "icons/icon.png",
+      "icons/Square107x107Logo.png",
+      "icons/Square150x150Logo.png",
+      "icons/Square284x284Logo.png",
+      "icons/Square30x30Logo.png",
+      "icons/Square310x310Logo.png",
+      "icons/Square44x44Logo.png",
+      "icons/Square71x71Logo.png",
+      "icons/Square89x89Logo.png",
+      "icons/StoreLogo.png"
     ],
     "longDescription": "Discover amazing events happening around you. Connect with your community and never miss out on experiences that matter.",
     "resources": [],
@@ -42,9 +53,29 @@
       "minimumSystemVersion": "13.0"
     },
     "android": {
-      "minSdkVersion": 24,
-      "webviewDebugging": true
+      "minSdkVersion": 24
     }
   },
-  "plugins": {}
+  "plugins": {
+    "deep-link": {
+      "schemes": [
+        "com.beout.app"
+      ]
+    },
+    "opener": {},
+    "shell": {
+      "open": true,
+      "scope": [
+        {
+          "name": "am",
+          "cmd": "am",
+          "args": [
+            "start",
+            "-a", "android.intent.action.VIEW",
+            "-d", { "validator": "\\S+" }
+          ]
+        }
+      ]
+    }
+  }
 }

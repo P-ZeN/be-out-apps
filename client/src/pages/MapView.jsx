@@ -18,6 +18,7 @@ import { Search, MyLocation, LocationOn, Schedule, LocalOffer, FilterList } from
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
 import MapComponent from "../components/MapComponent";
 import AddressSearch from "../components/AddressSearch";
 import { GeocodingService } from "../services/geocodingService";
@@ -25,6 +26,7 @@ import EventService from "../services/eventService";
 
 const MapView = () => {
     const { t } = useTranslation(["map", "common"]);
+    const theme = useTheme();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedEventId, setSelectedEventId] = useState(null);
@@ -215,151 +217,174 @@ const MapView = () => {
     }, []);
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            {/* Header */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: "bold" }}>
-                    {t("title")}
-                </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                    {t("subtitle")}
-                </Typography>
-
-                {/* Search Bar */}
-                <AddressSearch
-                    onLocationSelect={handleLocationSelect}
-                    onCurrentLocation={handleCurrentLocation}
-                    placeholder={t("searchPlaceholder")}
-                    sx={{ maxWidth: "500px" }}
-                />
+        <>
+            {/* Hero Section - True Full Width */}
+            <Box
+                sx={{
+                    textAlign: "center",
+                    py: 6, // Reduced padding since no logo/text
+                    backgroundColor: theme.palette.primary.main, // Orange background
+                    borderRadius: 0,
+                    boxShadow: "none",
+                    border: "none",
+                    width: "100vw", // Full viewport width
+                    marginLeft: "calc(-50vw + 50%)", // Center and expand to full width
+                    marginRight: "calc(-50vw + 50%)", // Center and expand to full width
+                }}>
+                <Container maxWidth="lg">
+                    {/* Only Search Bar - no logo or text */}
+                    <Box sx={{ maxWidth: "500px", mx: "auto" }}>
+                        <AddressSearch
+                            onLocationSelect={handleLocationSelect}
+                            onCurrentLocation={handleCurrentLocation}
+                            placeholder={t("searchPlaceholder")}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    backgroundColor: "white",
+                                    borderRadius: 2,
+                                },
+                            }}
+                        />
+                    </Box>
+                </Container>
             </Box>
 
-            <Grid container spacing={3}>
-                {/* Interactive Map */}
-                <Grid size={{ xs: 12, md: 8 }}>
-                    <Paper
-                        sx={{
-                            height: "600px",
-                            borderRadius: 2,
-                            overflow: "hidden",
-                        }}>
-                        <MapComponent
-                            events={filteredEvents}
-                            onEventClick={handleEventClick}
-                            onEventSelect={handleEventSelect}
-                            selectedEventId={selectedEventId}
-                            center={mapCenter}
-                            zoom={mapZoom}
-                        />
-                    </Paper>
-                </Grid>
+            <Container maxWidth="lg" sx={{ py: 4 }}>
+                <Grid container spacing={3}>
+                    {/* Interactive Map */}
+                    <Grid size={{ xs: 12, md: 8 }}>
+                        <Paper
+                            sx={{
+                                height: "600px",
+                                borderRadius: 2,
+                                overflow: "hidden",
+                            }}>
+                            <MapComponent
+                                events={filteredEvents}
+                                onEventClick={handleEventClick}
+                                onEventSelect={handleEventSelect}
+                                selectedEventId={selectedEventId}
+                                center={mapCenter}
+                                zoom={mapZoom}
+                            />
+                        </Paper>
+                    </Grid>
 
-                {/* Events List */}
-                <Grid size={{ xs: 12, md: 4 }}>
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-                            {t("nearbyEvents", { count: filteredEvents.length })}
-                        </Typography>
-                    </Box>
+                    {/* Events List */}
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
+                                {t("nearbyEvents", { count: filteredEvents.length })}
+                            </Typography>
+                        </Box>
 
-                    <Box sx={{ maxHeight: "600px", overflowY: "auto" }}>
-                        {filteredEvents.map((event) => (
-                            <Card
-                                key={event.id}
-                                sx={{
-                                    mb: 2,
-                                    cursor: "pointer",
-                                    transition: "all 0.2s",
-                                    border: selectedEventId === event.id ? "2px solid" : "1px solid",
-                                    borderColor: selectedEventId === event.id ? "primary.main" : "divider",
-                                    "&:hover": {
-                                        transform: "translateY(-2px)",
-                                        boxShadow: 2,
-                                    },
-                                }}
-                                onClick={() => handleEventSelect(event.id)}>
-                                <CardContent sx={{ p: 2 }}>
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "flex-start",
-                                            mb: 1,
-                                        }}>
-                                        <Typography variant="subtitle1" sx={{ fontWeight: "bold", flex: 1 }}>
-                                            {event.title}
-                                        </Typography>
-                                        {event.isLastMinute && (
-                                            <Chip
-                                                label={t("lastMinute", { ns: "common" })}
-                                                size="small"
-                                                color="error"
-                                                sx={{ ml: 1 }}
-                                            />
-                                        )}
-                                    </Box>
-
-                                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                                        <LocationOn sx={{ fontSize: "1rem", mr: 0.5, color: "text.secondary" }} />
-                                        <Typography variant="body2" color="text.secondary">
-                                            {event.location} • {event.distance}
-                                        </Typography>
-                                    </Box>
-
-                                    <Box
-                                        sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                                            <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                                                {event.discountedPrice}€
+                        <Box sx={{ maxHeight: "600px", overflowY: "auto" }}>
+                            {filteredEvents.map((event) => (
+                                <Card
+                                    key={event.id}
+                                    sx={{
+                                        mb: 2,
+                                        cursor: "pointer",
+                                        transition: "all 0.2s",
+                                        border: selectedEventId === event.id ? "2px solid" : "1px solid",
+                                        borderColor: selectedEventId === event.id ? "primary.main" : "divider",
+                                        "&:hover": {
+                                            transform: "translateY(-2px)",
+                                            boxShadow: 2,
+                                        },
+                                    }}
+                                    onClick={() => handleEventSelect(event.id)}>
+                                    <CardContent sx={{ p: 2 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "flex-start",
+                                                mb: 1,
+                                            }}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: "bold", flex: 1 }}>
+                                                {event.title}
                                             </Typography>
-                                            {event.originalPrice !== event.discountedPrice && (
-                                                <>
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            textDecoration: "line-through",
-                                                            color: "text.secondary",
-                                                        }}>
-                                                        {event.originalPrice}€
-                                                    </Typography>
-                                                    <Chip label={`-${event.discount}%`} size="small" color="success" />
-                                                </>
+                                            {event.isLastMinute && (
+                                                <Chip
+                                                    label={t("lastMinute", { ns: "common" })}
+                                                    size="small"
+                                                    color="error"
+                                                    sx={{ ml: 1 }}
+                                                />
                                             )}
                                         </Box>
-                                        <Button
-                                            size="small"
-                                            variant="outlined"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleEventClick(event.id);
+
+                                        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                                            <LocationOn sx={{ fontSize: "1rem", mr: 0.5, color: "text.secondary" }} />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {event.location} • {event.distance}
+                                            </Typography>
+                                        </Box>
+
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "center",
                                             }}>
-                                            {t("view", { ns: "common" })}
-                                        </Button>
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </Box>
+                                            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                                                <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                                                    {event.discountedPrice}€
+                                                </Typography>
+                                                {event.originalPrice !== event.discountedPrice && (
+                                                    <>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                textDecoration: "line-through",
+                                                                color: "text.secondary",
+                                                            }}>
+                                                            {event.originalPrice}€
+                                                        </Typography>
+                                                        <Chip
+                                                            label={`-${event.discount}%`}
+                                                            size="small"
+                                                            color="success"
+                                                        />
+                                                    </>
+                                                )}
+                                            </Box>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEventClick(event.id);
+                                                }}>
+                                                {t("view", { ns: "common" })}
+                                            </Button>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </Box>
 
-                    <Button variant="outlined" fullWidth sx={{ mt: 2 }} onClick={() => navigate("/")}>
-                        {t("viewAllEvents")}
-                    </Button>
+                        <Button variant="outlined" fullWidth sx={{ mt: 2 }} onClick={() => navigate("/")}>
+                            {t("viewAllEvents")}
+                        </Button>
+                    </Grid>
                 </Grid>
-            </Grid>
 
-            {/* Snackbar for notifications */}
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={4000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}>
-                <Alert
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
-                    sx={{ width: "100%" }}>
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
-        </Container>
+                {/* Snackbar for notifications */}
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={4000}
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                    <Alert
+                        onClose={() => setSnackbar({ ...snackbar, open: false })}
+                        severity={snackbar.severity}
+                        sx={{ width: "100%" }}>
+                        {snackbar.message}
+                    </Alert>
+                </Snackbar>
+            </Container>
+        </>
     );
 };
 

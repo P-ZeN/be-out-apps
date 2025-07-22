@@ -109,12 +109,26 @@ const AdminMainLayout = ({ user, onLogout }) => {
     const drawer = (
         <Box>
             <Box sx={{ p: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
-                    Be Out Admin
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    Panel d'administration
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Box
+                        component="img"
+                        src="/be-out_logo.svg"
+                        alt="Be Out Logo"
+                        sx={{
+                            height: 50,
+                            width: "auto",
+                            mr: 2,
+                        }}
+                    />
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
+                            Be Out Admin
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Panel d'administration
+                        </Typography>
+                    </Box>
+                </Box>
             </Box>
             <Divider />
             <List>

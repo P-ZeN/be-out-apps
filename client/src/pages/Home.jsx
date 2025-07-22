@@ -246,14 +246,25 @@ const Home = () => {
                             textAlign: "center",
                             mb: 4,
                             py: 6,
-                            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                            color: theme.palette.primary.contrastText,
-                            borderRadius: 3,
+                            background: `linear-gradient(135deg, ${theme.palette.brand.orange} 0%, ${theme.palette.brand.creme} 100%)`,
+                            color: theme.palette.brand.sombre,
+                            borderRadius: 0,
+                            boxShadow: "none",
+                            border: "none",
                         }}>
                         <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: "bold" }}>
                             {t("home:title")}
                         </Typography>
-                        <Typography variant="h6" sx={{ mb: 4, opacity: 0.9, maxWidth: "600px", mx: "auto" }}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                mb: 4,
+                                opacity: 0.9,
+                                maxWidth: "600px",
+                                mx: "auto",
+                                fontWeight: 200, // Extra light - showing designers we understand the subtle art of typography 😉
+                                fontFamily: '"ClashGrotesk-Variable", sans-serif',
+                            }}>
                             {t("home:subtitle")}
                         </Typography>
 

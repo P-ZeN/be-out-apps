@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExternalLink } from "../hooks/useExternalLink";
 import { Button, TextField, Container, Typography, Box, Alert, Divider } from "@mui/material";
-import { Google, Facebook } from "@mui/icons-material";
+import { Google, Facebook, Apple } from "@mui/icons-material";
 import WebViewOverlay from "./WebViewOverlay";
+import desktopAuthService from "../services/desktopAuthService";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -15,10 +16,25 @@ const Register = () => {
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [isTauriAvailable, setIsTauriAvailable] = useState(false);
     const navigate = useNavigate();
     const { login } = useAuth();
     const t = useTranslation(["auth", "common"]).t;
     const { openExternalLink, closeWebView, webViewState, isTauriApp } = useExternalLink();
+
+    useEffect(() => {
+        const checkTauri = async () => {
+            try {
+                const isAvailable = await desktopAuthService.checkTauriAvailability();
+                setIsTauriAvailable(isAvailable);
+                console.log("Register: Tauri availability:", isAvailable);
+            } catch (error) {
+                console.log("Register: Tauri not available:", error);
+                setIsTauriAvailable(false);
+            }
+        };
+        checkTauri();
+    }, []);
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -35,20 +51,74 @@ const Register = () => {
         }
     };
 
-    const handleGoogleLogin = () => {
-        const googleAuthUrl = `${API_BASE_URL}/auth/google`;
-        if (isTauriApp) {
-            openExternalLink(googleAuthUrl, "Google Login");
-        } else {
-            window.location.href = googleAuthUrl;
+    const handleGoogleLogin = async () => {
+        console.log("=== REGISTER GOOGLE DEBUG INFO ===");
+        console.log("isTauriAvailable:", isTauriAvailable);
+        console.log("isTauriApp (hook):", isTauriApp);
+        console.log("==================================");
+
+        try {
+            if (isTauriAvailable) {
+                console.log("Using comprehensive mobile OAuth for Google");
+                const result = await desktopAuthService.startGoogleOAuth();
+
+                if (result && result.token && result.user) {
+                    login(result);
+                    setMessage("Registration/Login successful");
+                    navigate("/onboarding");
+                } else {
+                    setError("Google authentication failed - invalid response");
+                }
+            } else {
+                console.log("Using web browser redirect for Google");
+                const googleAuthUrl = `${API_BASE_URL}/auth/google`;
+                window.location.href = googleAuthUrl;
+            }
+        } catch (error) {
+            console.error("Google OAuth error:", error);
+            setError("Google authentication failed: " + error.message);
+        }
+    };
+
+    const handleAppleLogin = async () => {
+        console.log("=== REGISTER APPLE DEBUG INFO ===");
+        console.log("isTauriAvailable:", isTauriAvailable);
+        console.log("=================================");
+
+        try {
+            if (isTauriAvailable) {
+                console.log("Using comprehensive mobile OAuth for Apple");
+                const result = await desktopAuthService.startAppleSignIn();
+
+                if (result && result.token && result.user) {
+                    login(result);
+                    setMessage("Registration/Login successful");
+                    navigate("/onboarding");
+                } else {
+                    setError("Apple authentication failed - invalid response");
+                }
+            } else {
+                console.log("Apple Sign In not available on web");
+                setError("Apple Sign In is only available on mobile devices");
+            }
+        } catch (error) {
+            console.error("Apple OAuth error:", error);
+            setError("Apple authentication failed: " + error.message);
         }
     };
 
     const handleFacebookLogin = () => {
+        console.log("=== REGISTER FACEBOOK DEBUG INFO ===");
+        console.log("isTauriAvailable:", isTauriAvailable);
+        console.log("isTauriApp (hook):", isTauriApp);
+        console.log("====================================");
+
         const facebookAuthUrl = `${API_BASE_URL}/auth/facebook`;
         if (isTauriApp) {
+            console.log("Using Tauri external link handling for Facebook");
             openExternalLink(facebookAuthUrl, "Facebook Login");
         } else {
+            console.log("Using web browser redirect for Facebook");
             window.location.href = facebookAuthUrl;
         }
     };
@@ -101,6 +171,9 @@ const Register = () => {
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <Button variant="outlined" startIcon={<Google />} onClick={handleGoogleLogin}>
                     {t("auth:login.loginWithGoogle")}
+                </Button>
+                <Button variant="outlined" startIcon={<Apple />} onClick={handleAppleLogin}>
+                    Sign in with Apple
                 </Button>
                 <Button variant="outlined" startIcon={<Facebook />} onClick={handleFacebookLogin}>
                     {t("auth:login.loginWithFacebook")}
