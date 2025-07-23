@@ -4,37 +4,21 @@ import {
     Container,
     Button,
     Grid,
-    Card,
-    CardContent,
-    CardMedia,
-    Chip,
     TextField,
     InputAdornment,
-    IconButton,
-    Stack,
     Tabs,
     Tab,
-    Avatar,
     Divider,
     Paper,
 } from "@mui/material";
-import {
-    Search,
-    LocationOn,
-    FilterList,
-    Schedule,
-    LocalOffer,
-    FavoriteOutlined,
-    Share,
-    ArrowForward,
-} from "@mui/icons-material";
+import { Search, FilterList, LocalOffer } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useTheme } from "@mui/material/styles";
 import FilterDrawer from "../components/FilterDrawer";
-import FavoriteButton from "../components/FavoriteButton";
+import EventCard from "../components/EventCard";
 import EventService from "../services/eventService";
 import { useCategories } from "../services/enhancedCategoryService";
 
@@ -113,109 +97,6 @@ const EventsPage = () => {
     const filteredEvents = events;
     const lastMinuteEvents = events.filter((event) => event.is_last_minute);
 
-    const EventCard = ({ event }) => (
-        <Card
-            sx={{
-                height: "100%",
-                cursor: "pointer",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: 4,
-                },
-                position: "relative",
-            }}
-            onClick={() => navigate(`/event/${event.id}`)}>
-            {/* Favorite Button - positioned absolutely */}
-            <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 1 }}>
-                <FavoriteButton
-                    eventId={event.id}
-                    size="small"
-                    sx={{
-                        backgroundColor: theme.palette.background.paper,
-                        "&:hover": {
-                            backgroundColor: theme.palette.background.paper,
-                        },
-                    }}
-                />
-            </Box>
-
-            <CardMedia component="img" height="200" image={event.image_url} alt={event.title} />
-            <CardContent>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
-                    <Typography variant="h6" component="h3" sx={{ flex: 1, mr: 1 }}>
-                        {event.title}
-                    </Typography>
-                    <Box sx={{ display: "flex", gap: 0.5 }}>
-                        <IconButton size="small">
-                            <Share />
-                        </IconButton>
-                    </Box>
-                </Box>
-
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {event.short_description || event.description}
-                </Typography>
-
-                <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                    {event.categories &&
-                        event.categories.map((category, index) => (
-                            <Chip key={index} label={category} size="small" color="primary" variant="outlined" />
-                        ))}
-                    {event.is_last_minute && (
-                        <Chip label={t("home:badges.lastMinute")} size="small" color="error" icon={<LocalOffer />} />
-                    )}
-                </Stack>
-
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                    <Schedule sx={{ mr: 1, fontSize: "1rem", color: "text.secondary" }} />
-                    <Typography variant="body2" color="text.secondary">
-                        {new Date(event.event_date).toLocaleDateString("fr-FR", {
-                            day: "numeric",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <LocationOn sx={{ mr: 1, fontSize: "1rem", color: "text.secondary" }} />
-                    <Typography variant="body2" color="text.secondary">
-                        {event.venue?.city || event.venue_city}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Box>
-                        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                            <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                                {event.discounted_price}€
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{ textDecoration: "line-through", color: "text.secondary" }}>
-                                {event.original_price}€
-                            </Typography>
-                            <Chip
-                                label={`-${event.discount_percentage}%`}
-                                size="small"
-                                color="success"
-                                sx={{ fontWeight: "bold" }}
-                            />
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                            {event.available_tickets} {t("home:ticketsAvailable")}
-                        </Typography>
-                    </Box>
-                    <Button variant="contained" size="small" endIcon={<ArrowForward />}>
-                        {t("common:buttons.buyNow")}
-                    </Button>
-                </Box>
-            </CardContent>
-        </Card>
-    );
-
     return (
         <>
             {/* Hero Section - True Full Width */}
@@ -274,19 +155,6 @@ const EventsPage = () => {
                                 )}
                             </Typography>
                         </Box>
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                mb: 4,
-                                color: theme.palette.mainMenu.textSecondary, // Proper theme color with opacity
-                                maxWidth: "600px",
-                                mx: "auto",
-                                fontSize: "1.1rem",
-                                fontWeight: 200,
-                                fontFamily: theme.typography.fontFamily,
-                            }}>
-                            {t("home:subtitle")}
-                        </Typography>
 
                         {/* Search Bar */}
                         <Box sx={{ maxWidth: "600px", mx: "auto" }}>
@@ -404,7 +272,15 @@ const EventsPage = () => {
                         )}
                         {/* CTA Section for non-authenticated users */}
                         {!isAuthenticated && (
-                            <Paper sx={{ textAlign: "center", p: 4, mt: 6, backgroundColor: "grey.50" }}>
+                            <Paper
+                                sx={{
+                                    textAlign: "center",
+                                    p: 4,
+                                    mt: 6,
+                                    backgroundColor: "grey.50",
+                                    borderRadius: 0,
+                                    boxShadow: 0,
+                                }}>
                                 <Typography variant="h5" gutterBottom>
                                     {t("home:cta.title")}
                                 </Typography>
