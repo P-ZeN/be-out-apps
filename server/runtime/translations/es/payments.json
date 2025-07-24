@@ -1,0 +1,7 @@
+{
+  "payments": {
+    "title": "Pagos",
+    "process": "Procesar pago",
+    "success": "Pago exitoso"
+  }
+}

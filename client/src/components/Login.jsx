@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../services/authService";
-import desktopAuthService from "../services/desktopAuthService";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExternalLink } from "../hooks/useExternalLink";
@@ -51,7 +50,8 @@ const Login = () => {
 
             if (isTauriApp) {
                 console.log("Using Tauri OAuth flow...");
-                // Use improved OAuth flow for Tauri apps (both mobile and desktop)
+                // Dynamically import desktop auth service only when needed
+                const { default: desktopAuthService } = await import("../services/desktopAuthService");
                 const response = await desktopAuthService.startGoogleOAuth();
 
                 if (response && response.token && response.user) {
@@ -90,6 +90,8 @@ const Login = () => {
         try {
             if (isTauriApp) {
                 console.log("Using Apple Sign In for Tauri app...");
+                // Dynamically import desktop auth service only when needed
+                const { default: desktopAuthService } = await import("../services/desktopAuthService");
                 const response = await desktopAuthService.startAppleSignIn();
 
                 if (response && response.token && response.user) {

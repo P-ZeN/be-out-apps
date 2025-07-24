@@ -1,11 +1,32 @@
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { areTauriApisAvailable } from "../utils/platformDetection";
 
 class DesktopAuthService {
     constructor() {
         this.codeVerifier = null;
         this.codeChallenge = null;
+        this._tauriApis = null;
+    }
+
+    async _getTauriApis() {
+        if (!areTauriApisAvailable()) {
+            throw new Error("Tauri APIs not available");
+        }
+        
+        if (!this._tauriApis) {
+            try {
+                const { invoke } = await import("@tauri-apps/api/core");
+                const { listen } = await import("@tauri-apps/api/event");
+                this._tauriApis = { invoke, listen };
+            } catch (error) {
+                throw new Error("Failed to load Tauri APIs: " + error.message);
+            }
+        }
+        
+        return this._tauriApis;
+    }
+
+    async checkTauriAvailability() {
+        return areTauriApisAvailable();
     }
 
     generatePKCE() {
@@ -26,10 +47,13 @@ class DesktopAuthService {
     }
 
     async startGoogleOAuth() {
+        console.log("=== GOOGLE OAUTH START ===");
+        
         if (!areTauriApisAvailable()) {
             throw new Error("This OAuth service is for Tauri apps only.");
         }
 
+        console.log("Tauri APIs available, generating PKCE...");
         await this.generatePKCE();
 
         const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_DESKTOP;
@@ -37,56 +61,185 @@ class DesktopAuthService {
             throw new Error("Google Client ID not configured");
         }
 
-        const redirectUri = "com.beout.app://oauth";
+        const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+        
+        // Register OAuth session for polling
+        try {
+            await fetch(`${API_BASE_URL}/auth/mobile/session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    challenge: this.codeChallenge,
+                    codeVerifier: this.codeVerifier,
+                    clientId: clientId
+                })
+            });
+        } catch (error) {
+            console.warn("Failed to register OAuth session:", error);
+            // Continue anyway, polling will handle missing sessions gracefully
+        }
+
+        const redirectUri = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/auth/mobile/callback`;
         const scope = "openid email profile";
 
         const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
         authUrl.searchParams.set("client_id", clientId);
         authUrl.searchParams.set("redirect_uri", redirectUri);
         authUrl.searchParams.set("response_type", "code");
-        authUrl.search_params.set("scope", scope);
+        authUrl.searchParams.set("scope", scope);
         authUrl.searchParams.set("code_challenge", this.codeChallenge);
         authUrl.searchParams.set("code_challenge_method", "S256");
         authUrl.searchParams.set("access_type", "offline");
 
-        await invoke("plugin:shell|open", { path: authUrl.toString() });
+        console.log("Opening OAuth URL:", authUrl.toString());
+        
+        try {
+            const { invoke } = await this._getTauriApis();
+            
+            // Use opener plugin which is designed for opening URLs on mobile
+            await invoke("plugin:opener|open", {
+                uri: authUrl.toString()
+            });
+            
+            console.log("OAuth URL opened successfully in browser");
+        } catch (error) {
+            console.error("Failed to open OAuth URL with opener:", error);
+            
+            // Fallback to shell plugin
+            try {
+                await invoke("plugin:shell|open", { 
+                    path: authUrl.toString()
+                });
+                console.log("OAuth URL opened successfully with shell");
+            } catch (shellError) {
+                console.error("Both opener and shell failed:", shellError);
+                throw new Error(`Unable to open OAuth URL. Please ensure you have a browser available.`);
+            }
+        }
 
-        return this.waitForCallback();
+        console.log("Waiting for OAuth callback...");
+        return this.waitForCallbackWithPolling();
+    }
+
+    async waitForCallbackWithPolling() {
+        return new Promise((resolve, reject) => {
+            const timeout = 5 * 60 * 1000; // 5 minutes
+            const pollInterval = 2000; // 2 seconds
+            let attempts = 0;
+            const maxAttempts = timeout / pollInterval;
+
+            console.log("Starting OAuth polling...");
+
+            const pollForResult = async () => {
+                attempts++;
+                
+                if (attempts > maxAttempts) {
+                    reject(new Error("OAuth timeout. Please try again."));
+                    return;
+                }
+
+                try {
+                    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+                    const response = await fetch(`${API_BASE_URL}/auth/mobile/poll/${this.codeChallenge}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.status === 'completed' && result.user) {
+                            console.log("OAuth completed successfully via polling");
+                            resolve(result);
+                            return;
+                        } else if (result.status === 'error') {
+                            reject(new Error(result.error || 'OAuth failed'));
+                            return;
+                        }
+                        // Status is 'pending', continue polling
+                    }
+                } catch (error) {
+                    console.log(`Polling attempt ${attempts} failed:`, error);
+                }
+
+                // Continue polling
+                setTimeout(pollForResult, pollInterval);
+            };
+
+            // Start polling
+            setTimeout(pollForResult, pollInterval);
+        });
     }
 
     async waitForCallback() {
+        const { listen } = await this._getTauriApis();
+        
         return new Promise((resolve, reject) => {
             const timeout = 5 * 60 * 1000; // 5 minutes
 
-            const unlistenPromise = listen("deep-link-received", async (event) => {
-                const unlisten = await unlistenPromise;
-                unlisten();
-                clearTimeout(timeoutId);
+            // Try to listen for different possible event names
+            const eventNames = ["deep-link-received", "deeplink", "url-received", "scheme-url"];
+            const unlistenPromises = [];
 
-                try {
-                    const url = new URL(event.payload);
-                    const code = url.searchParams.get("code");
-                    const error = url.searchParams.get("error");
+            console.log("Setting up deep link listeners for events:", eventNames);
 
-                    if (error) {
-                        return reject(new Error(`OAuth error: ${error}`));
+            eventNames.forEach(eventName => {
+                const unlistenPromise = listen(eventName, async (event) => {
+                    console.log(`Event '${eventName}' received:`, event);
+                    
+                    // Clean up all listeners
+                    for (const promise of unlistenPromises) {
+                        try {
+                            const unlisten = await promise;
+                            unlisten();
+                        } catch (e) {
+                            console.log("Could not unlisten:", e);
+                        }
                     }
+                    clearTimeout(timeoutId);
 
-                    if (code) {
-                        const userInfo = await this.exchangeCodeForToken(code);
-                        return resolve(userInfo);
+                    try {
+                        console.log("Deep link event received:", event.payload);
+                        const url = new URL(event.payload);
+                        const code = url.searchParams.get("code");
+                        const error = url.searchParams.get("error");
+
+                        if (error) {
+                            return reject(new Error(`OAuth error: ${error}`));
+                        }
+
+                        if (code) {
+                            console.log("Authorization code received, exchanging for token...");
+                            const userInfo = await this.exchangeCodeForToken(code);
+                            return resolve(userInfo);
+                        }
+
+                        reject(new Error("No code received in callback."));
+                    } catch (err) {
+                        console.error("Error processing deep link:", err);
+                        reject(err);
                     }
+                }).catch((error) => {
+                    console.error(`Failed to set up ${eventName} listener:`, error);
+                });
 
-                    reject(new Error("No code received in callback."));
-                } catch (err) {
-                    reject(err);
-                }
+                unlistenPromises.push(unlistenPromise);
             });
 
             const timeoutId = setTimeout(async () => {
-                const unlisten = await unlistenPromise;
-                unlisten();
-                reject(new Error("OAuth timeout."));
+                console.log("OAuth timeout, cleaning up listeners...");
+                for (const promise of unlistenPromises) {
+                    try {
+                        const unlisten = await promise;
+                        unlisten();
+                    } catch (e) {
+                        console.log("Could not unlisten during timeout:", e);
+                    }
+                }
+                reject(new Error("OAuth timeout. Please try again."));
             }, timeout);
         });
     }
@@ -104,7 +257,7 @@ class DesktopAuthService {
                 code,
                 clientId,
                 codeVerifier: this.codeVerifier,
-                redirectUri: "com.beout.app://oauth",
+                redirectUri: `${API_BASE_URL}/auth/mobile/callback`,
             }),
         });
 
@@ -114,6 +267,23 @@ class DesktopAuthService {
         }
 
         return await response.json();
+    }
+
+    async startAppleSignIn() {
+        try {
+            console.log("Starting Apple Sign In...");
+
+            if (!areTauriApisAvailable()) {
+                throw new Error("Apple Sign In only available in Tauri apps");
+            }
+
+            // For now, Apple Sign In is not fully implemented
+            // This would require native iOS implementation or web-based flow
+            throw new Error("Apple Sign In implementation is in progress. Please use Google OAuth for now.");
+        } catch (error) {
+            console.error("Apple Sign In error:", error);
+            throw error;
+        }
     }
 }
 

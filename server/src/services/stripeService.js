@@ -1,13 +1,25 @@
 import Stripe from "stripe";
 import pool from "../db.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Initialize Stripe only if the secret key is provided
+const stripe = process.env.STRIPE_SECRET_KEY 
+    ? new Stripe(process.env.STRIPE_SECRET_KEY)
+    : null;
+
+// Log warning if Stripe is not configured
+if (!stripe) {
+    console.warn("⚠️  STRIPE_SECRET_KEY not configured - payment features will be disabled");
+}
 
 class StripeService {
     /**
      * Create a payment intent for booking
      */
     static async createPaymentIntent(bookingData) {
+        if (!stripe) {
+            throw new Error("Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.");
+        }
+        
         try {
             const { amount, currency = "eur", metadata = {} } = bookingData;
 

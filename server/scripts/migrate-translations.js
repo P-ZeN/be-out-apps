@@ -6,7 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const sourceDir = path.join(__dirname, "../translations"); // Git repo location
-const targetDir = process.env.TRANSLATIONS_PATH || "/app/translations"; // Persistent volume location
+// Use local development path when TRANSLATIONS_PATH is not set (development mode)
+const targetDir = process.env.TRANSLATIONS_PATH || path.join(__dirname, "../runtime/translations"); // Development: local runtime folder, Production: persistent volume
 
 async function migrateTranslations() {
     try {

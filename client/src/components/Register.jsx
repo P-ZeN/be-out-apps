@@ -7,7 +7,7 @@ import { useExternalLink } from "../hooks/useExternalLink";
 import { Button, TextField, Container, Typography, Box, Alert, Divider } from "@mui/material";
 import { Google, Facebook, Apple } from "@mui/icons-material";
 import WebViewOverlay from "./WebViewOverlay";
-import desktopAuthService from "../services/desktopAuthService";
+import { areTauriApisAvailable } from "../utils/platformDetection";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -25,7 +25,7 @@ const Register = () => {
     useEffect(() => {
         const checkTauri = async () => {
             try {
-                const isAvailable = await desktopAuthService.checkTauriAvailability();
+                const isAvailable = areTauriApisAvailable();
                 setIsTauriAvailable(isAvailable);
                 console.log("Register: Tauri availability:", isAvailable);
             } catch (error) {
@@ -60,6 +60,8 @@ const Register = () => {
         try {
             if (isTauriAvailable) {
                 console.log("Using comprehensive mobile OAuth for Google");
+                // Dynamically import desktop auth service only when needed
+                const { default: desktopAuthService } = await import("../services/desktopAuthService");
                 const result = await desktopAuthService.startGoogleOAuth();
 
                 if (result && result.token && result.user) {
@@ -88,6 +90,8 @@ const Register = () => {
         try {
             if (isTauriAvailable) {
                 console.log("Using comprehensive mobile OAuth for Apple");
+                // Dynamically import desktop auth service only when needed
+                const { default: desktopAuthService } = await import("../services/desktopAuthService");
                 const result = await desktopAuthService.startAppleSignIn();
 
                 if (result && result.token && result.user) {

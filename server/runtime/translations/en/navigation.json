@@ -1,0 +1,14 @@
+{
+  "menu": {
+    "home": "Home",
+    "profile": "Profile",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "tooltips": {
+    "account": "Account",
+    "loginRegister": "Login/Register",
+    "home": "Home"
+  }
+}

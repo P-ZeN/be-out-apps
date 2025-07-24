@@ -29,6 +29,7 @@ yarn-error.log*
 *.jks
 be-out-release.keystore
 debug.keystore
+keystore.properties
 
 # iOS Certificates (NEVER commit these!)
 *.p12
