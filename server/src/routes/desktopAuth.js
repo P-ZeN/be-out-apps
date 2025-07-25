@@ -25,9 +25,9 @@ router.get("/mobile/start", async (req, res) => {
             session: session
         });
         
-        // Build Google OAuth URL with proper desktop client redirect
-        const clientId = process.env.GOOGLE_CLIENT_ID_DESKTOP || process.env.GOOGLE_CLIENT_ID;
-        const redirectUri = `${process.env.API_URL || 'http://localhost:3000'}/auth/desktop/google/callback`;
+        // Build Google OAuth URL with web client (same as frontend)
+        const clientId = process.env.GOOGLE_CLIENT_ID || "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com";
+        const redirectUri = `https://server.be-out-app.dedibox2.philippezenone.net/auth/desktop/google/callback`;
         const scope = "openid email profile";
         
         const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -37,6 +37,10 @@ router.get("/mobile/start", async (req, res) => {
         authUrl.searchParams.set("scope", scope);
         authUrl.searchParams.set("state", challenge); // Use challenge as state
         authUrl.searchParams.set("access_type", "offline");
+        
+        // Add mobile-friendly parameters
+        authUrl.searchParams.set("prompt", "select_account");
+        authUrl.searchParams.set("include_granted_scopes", "true");
         
         // Redirect user to Google OAuth
         res.redirect(authUrl.toString());
@@ -356,9 +360,9 @@ router.get("/desktop/google/callback", async (req, res) => {
         }
 
         // Exchange the authorization code for tokens
-        const clientId = process.env.GOOGLE_CLIENT_ID_DESKTOP || process.env.GOOGLE_CLIENT_ID;
-        const clientSecret = process.env.GOOGLE_CLIENT_SECRET_DESKTOP || process.env.GOOGLE_CLIENT_SECRET;
-        const redirectUri = `${process.env.API_URL || 'http://localhost:3000'}/auth/desktop/google/callback`;
+        const clientId = process.env.GOOGLE_CLIENT_ID || "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com";
+        const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+        const redirectUri = `https://server.be-out-app.dedibox2.philippezenone.net/auth/desktop/google/callback`;
 
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",

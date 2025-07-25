@@ -74,32 +74,50 @@ class DesktopAuthService {
         console.log("Opening OAuth URL:", authUrl);
 
         try {
-            console.log("Opening OAuth URL using native mobile approach...");
+            console.log("Opening OAuth URL using system browser...");
             
-            // For mobile WebView, use direct window.open which works reliably
-            const opened = window.open(authUrl.toString(), '_blank', 'noopener,noreferrer');
+            // For mobile apps, we need to open in the system browser, not WebView
+            // This avoids Google's disallowed_useragent restriction
             
-            if (!opened) {
-                // Fallback: create a hidden link and click it
-                const link = document.createElement('a');
-                link.href = authUrl.toString();
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+            const { invoke } = await this._getTauriApis();
+            
+            // First try to use shell plugin to open in system browser
+            try {
+                await invoke("plugin:shell|open", {
+                    path: authUrl.toString()
+                });
+                console.log("OAuth URL opened in system browser successfully");
+            } catch (shellError) {
+                console.log("Shell plugin failed, trying fallback:", shellError);
+                
+                // Fallback: Use window.open with specific parameters to force system browser
+                const opened = window.open(
+                    authUrl.toString(), 
+                    '_blank', 
+                    'noopener,noreferrer,external'
+                );
+                
+                if (!opened) {
+                    // Last fallback: create a link and click it
+                    const link = document.createElement('a');
+                    link.href = authUrl.toString();
+                    link.target = '_system'; // Cordova/PhoneGap style
+                    link.rel = 'noopener noreferrer';
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
             }
             
-            console.log("OAuth URL opened successfully");
         } catch (error) {
             console.error("Failed to open OAuth URL:", error);
-            // Last resort: show the URL to user in a more user-friendly way
-            const userMessage = `To complete Google Sign-In, please open this link:\n\n${authUrl.toString()}\n\nAfter signing in, return to this app.`;
+            // User-friendly error with instructions
+            const userMessage = `To sign in with Google, please:\n\n1. Copy this link: ${authUrl.toString()}\n\n2. Open it in your browser\n\n3. Complete sign-in\n\n4. Return to this app`;
             if (confirm(userMessage + "\n\nPress OK to copy the link to clipboard.")) {
                 try {
                     await navigator.clipboard.writeText(authUrl.toString());
-                    alert("Link copied to clipboard! Please paste it in your browser.");
+                    alert("Link copied! Please open it in your browser.");
                 } catch (clipboardError) {
                     alert("Please manually copy this link:\n\n" + authUrl.toString());
                 }
