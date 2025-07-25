@@ -48,84 +48,66 @@ class DesktopAuthService {
 
     async startGoogleOAuth() {
         console.log("=== GOOGLE OAUTH START ===");
-
-        if (!areTauriApisAvailable()) {
-            throw new Error("This OAuth service is for Tauri apps only.");
-        }
-
-        console.log("Tauri APIs available, generating PKCE...");
-        await this.generatePKCE();
-
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_DESKTOP;
-        if (!clientId) {
-            throw new Error("Google Client ID not configured");
-        }
-
-        // Use our backend as a proxy for the OAuth flow
-        // The backend will handle the Google OAuth and return the result
-        const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         
-        // Create a unique session ID for this OAuth attempt
-        const sessionId = this.codeChallenge; // Use the PKCE challenge as session ID
-        
-        // Start OAuth flow through our backend proxy
-        const authUrl = `${API_BASE_URL}/auth/mobile/start?session=${sessionId}&challenge=${this.codeChallenge}`;
-        
-        console.log("Opening OAuth URL:", authUrl);
-
         try {
-            console.log("Opening OAuth URL using system browser...");
+            if (!areTauriApisAvailable()) {
+                throw new Error("Tauri APIs not available");
+            }
+
+            console.log("Tauri APIs available, using system browser with deep links...");
             
-            // For mobile apps, we need to open in the system browser, not WebView
-            // This avoids Google's disallowed_useragent restriction
+            // Generate PKCE parameters
+            await this.generatePKCE();
             
+            // Store PKCE parameters
+            localStorage.setItem('oauth_code_verifier', this.codeVerifier);
+            localStorage.setItem('oauth_code_challenge', this.codeChallenge);
+            
+            // Use Android client ID and redirect to custom scheme
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_ANDROID || "1064619689471-7lr8e71tr6h55as83o8gn4bdnhabavpu.apps.googleusercontent.com"; // Fallback for safety
+            const redirectUri = "com.beout.app://oauth/callback"; // Custom URL scheme
+            const scope = "openid email profile";
+            const state = this.base64URLEncode(crypto.getRandomValues(new Uint8Array(32)));
+            
+            const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+            authUrl.searchParams.set("client_id", clientId);
+            authUrl.searchParams.set("redirect_uri", redirectUri);
+            authUrl.searchParams.set("response_type", "code");
+            authUrl.searchParams.set("scope", scope);
+            authUrl.searchParams.set("state", state);
+            authUrl.searchParams.set("code_challenge", this.codeChallenge);
+            authUrl.searchParams.set("code_challenge_method", "S256");
+            authUrl.searchParams.set("prompt", "select_account");
+            
+            console.log('Opening OAuth URL in system browser:', authUrl.toString());
+            
+            // Get Tauri APIs
             const { invoke } = await this._getTauriApis();
             
-            // First try to use shell plugin to open in system browser
-            try {
-                await invoke("plugin:shell|open", {
-                    path: authUrl.toString()
-                });
-                console.log("OAuth URL opened in system browser successfully");
-            } catch (shellError) {
-                console.log("Shell plugin failed, trying fallback:", shellError);
+            // Open in system browser
+            await invoke('plugin:shell|open', {
+                path: authUrl.toString(),
+                with: null
+            });
+            
+            console.log('OAuth URL opened successfully in system browser');
+            console.log('Waiting for deep link callback...');
+            
+            // Return a promise that resolves when the deep link is received
+            return new Promise((resolve, reject) => {
+                // Set up deep link listener
+                const timeout = setTimeout(() => {
+                    reject(new Error('OAuth timeout - no callback received'));
+                }, 300000); // 5 minute timeout
                 
-                // Fallback: Use window.open with specific parameters to force system browser
-                const opened = window.open(
-                    authUrl.toString(), 
-                    '_blank', 
-                    'noopener,noreferrer,external'
-                );
-                
-                if (!opened) {
-                    // Last fallback: create a link and click it
-                    const link = document.createElement('a');
-                    link.href = authUrl.toString();
-                    link.target = '_system'; // Cordova/PhoneGap style
-                    link.rel = 'noopener noreferrer';
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-            }
+                // Store resolve/reject for deep link handler
+                window.oauthPromise = { resolve, reject, timeout };
+            });
             
         } catch (error) {
-            console.error("Failed to open OAuth URL:", error);
-            // User-friendly error with instructions
-            const userMessage = `To sign in with Google, please:\n\n1. Copy this link: ${authUrl.toString()}\n\n2. Open it in your browser\n\n3. Complete sign-in\n\n4. Return to this app`;
-            if (confirm(userMessage + "\n\nPress OK to copy the link to clipboard.")) {
-                try {
-                    await navigator.clipboard.writeText(authUrl.toString());
-                    alert("Link copied! Please open it in your browser.");
-                } catch (clipboardError) {
-                    alert("Please manually copy this link:\n\n" + authUrl.toString());
-                }
-            }
+            console.error('OAuth error:', error);
+            throw error;
         }
-
-        console.log("Waiting for OAuth callback...");
-        return this.waitForCallbackWithPolling();
     }
 
     async waitForCallbackWithPolling() {
@@ -287,6 +269,85 @@ class DesktopAuthService {
             throw new Error("Apple Sign In implementation is in progress. Please use Google OAuth for now.");
         } catch (error) {
             console.error("Apple Sign In error:", error);
+            throw error;
+        }
+    }
+
+    // Deep link handler (called by Tauri when URL scheme is received)
+    async handleOAuthCallback(url) {
+        console.log('=== OAUTH CALLBACK RECEIVED ===');
+        console.log('Callback URL:', url);
+        
+        try {
+            const urlObj = new URL(url);
+            const code = urlObj.searchParams.get('code');
+            const state = urlObj.searchParams.get('state');
+            const error = urlObj.searchParams.get('error');
+            
+            if (error) {
+                throw new Error(`OAuth error: ${error}`);
+            }
+            
+            if (!code) {
+                throw new Error('No authorization code received');
+            }
+            
+            console.log('Authorization code received, exchanging for tokens...');
+            
+            // Get stored PKCE verifier
+            const codeVerifier = localStorage.getItem('oauth_code_verifier');
+            if (!codeVerifier) {
+                throw new Error('PKCE code verifier not found');
+            }
+            
+            // Exchange code for tokens
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/mobile/exchange`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code,
+                    codeVerifier,
+                    redirectUri: "com.beout.app://oauth/callback"
+                }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error(`Token exchange failed: ${response.status} - ${errorData}`);
+            }
+            
+            const data = await response.json();
+            console.log('OAuth successful:', data);
+            
+            // Clean up
+            localStorage.removeItem('oauth_code_verifier');
+            localStorage.removeItem('oauth_code_challenge');
+            
+            // Resolve the promise
+            if (window.oauthPromise) {
+                clearTimeout(window.oauthPromise.timeout);
+                window.oauthPromise.resolve(data);
+                window.oauthPromise = null;
+            }
+            
+            return data;
+            
+        } catch (error) {
+            console.error('OAuth callback error:', error);
+            
+            // Clean up
+            localStorage.removeItem('oauth_code_verifier');
+            localStorage.removeItem('oauth_code_challenge');
+            
+            // Reject the promise
+            if (window.oauthPromise) {
+                clearTimeout(window.oauthPromise.timeout);
+                window.oauthPromise.reject(error);
+                window.oauthPromise = null;
+            }
+            
             throw error;
         }
     }

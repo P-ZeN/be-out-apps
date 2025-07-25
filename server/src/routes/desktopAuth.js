@@ -8,28 +8,28 @@ const router = Router();
 // Mobile OAuth start endpoint - initiates OAuth flow with proper redirect
 router.get("/mobile/start", async (req, res) => {
     const { session, challenge } = req.query;
-    
+
     if (!session || !challenge) {
         return res.status(400).json({ message: "Missing session or challenge parameter" });
     }
-    
+
     try {
         // Store the session for polling
         if (!global.oauthSessions) {
             global.oauthSessions = new Map();
         }
-        
+
         global.oauthSessions.set(challenge, {
             status: 'pending',
             timestamp: Date.now(),
             session: session
         });
-        
+
         // Build Google OAuth URL with web client (same as frontend)
         const clientId = process.env.GOOGLE_CLIENT_ID || "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com";
         const redirectUri = `https://server.be-out-app.dedibox2.philippezenone.net/auth/desktop/google/callback`;
         const scope = "openid email profile";
-        
+
         const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
         authUrl.searchParams.set("client_id", clientId);
         authUrl.searchParams.set("redirect_uri", redirectUri);
@@ -37,14 +37,14 @@ router.get("/mobile/start", async (req, res) => {
         authUrl.searchParams.set("scope", scope);
         authUrl.searchParams.set("state", challenge); // Use challenge as state
         authUrl.searchParams.set("access_type", "offline");
-        
+
         // Add mobile-friendly parameters
         authUrl.searchParams.set("prompt", "select_account");
         authUrl.searchParams.set("include_granted_scopes", "true");
-        
+
         // Redirect user to Google OAuth
         res.redirect(authUrl.toString());
-        
+
     } catch (error) {
         console.error("Error starting mobile OAuth:", error);
         res.status(500).json({ message: "Failed to start OAuth flow" });
@@ -344,7 +344,7 @@ router.get("/desktop/google/callback", async (req, res) => {
         if (!global.oauthSessions) {
             global.oauthSessions = new Map();
         }
-        
+
         const sessionData = global.oauthSessions.get(state);
 
         if (!sessionData) {
@@ -453,16 +453,78 @@ router.get("/desktop/google/callback", async (req, res) => {
 
             return res.send(`
                 <html>
-                    <body style="font-family: Arial; text-align: center; padding: 50px;">
-                        <h2>✅ Success!</h2>
-                        <p>Welcome, ${userData.name}!</p>
-                        <p>You have been successfully signed in with Google.</p>
-                        <p>You can now close this window and return to the app.</p>
+                    <head>
+                        <meta name="viewport" content="width=device-width, initial-scale=1">
+                        <style>
+                            body { 
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                                text-align: center; 
+                                padding: 50px 20px; 
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                margin: 0;
+                                min-height: 100vh;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                flex-direction: column;
+                            }
+                            .success-container {
+                                background: rgba(255,255,255,0.1);
+                                padding: 40px;
+                                border-radius: 20px;
+                                backdrop-filter: blur(10px);
+                                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                            }
+                            .checkmark {
+                                font-size: 4em;
+                                margin-bottom: 20px;
+                            }
+                            .return-button {
+                                background: #4CAF50;
+                                color: white;
+                                border: none;
+                                padding: 15px 30px;
+                                border-radius: 25px;
+                                font-size: 16px;
+                                cursor: pointer;
+                                margin-top: 20px;
+                                transition: all 0.3s ease;
+                            }
+                            .return-button:hover {
+                                background: #45a049;
+                                transform: translateY(-2px);
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="success-container">
+                            <div class="checkmark">✅</div>
+                            <h2>Welcome, ${userData.name}!</h2>
+                            <p>You have been successfully signed in with Google.</p>
+                            <button class="return-button" onclick="returnToApp()">Return to App</button>
+                            <p style="font-size: 14px; opacity: 0.8; margin-top: 20px;">
+                                Automatically returning in <span id="countdown">3</span> seconds...
+                            </p>
+                        </div>
                         <script>
-                            // Auto-close after 3 seconds
-                            setTimeout(() => {
-                                window.close();
-                            }, 3000);
+                            let countdown = 3;
+                            const countdownElement = document.getElementById('countdown');
+                            
+                            function returnToApp() {
+                                // Navigate back to the app's main page
+                                window.location.href = 'tauri://localhost/';
+                            }
+                            
+                            // Auto-return countdown
+                            const timer = setInterval(() => {
+                                countdown--;
+                                countdownElement.textContent = countdown;
+                                if (countdown <= 0) {
+                                    clearInterval(timer);
+                                    returnToApp();
+                                }
+                            }, 1000);
                         </script>
                     </body>
                 </html>
@@ -477,7 +539,7 @@ router.get("/desktop/google/callback", async (req, res) => {
 
     } catch (error) {
         console.error("Desktop OAuth callback error:", error);
-        
+
         // Store error in session for polling
         if (state && global.oauthSessions.has(state)) {
             const sessionData = global.oauthSessions.get(state);
@@ -485,7 +547,7 @@ router.get("/desktop/google/callback", async (req, res) => {
             sessionData.error = error.message || 'Authentication failed';
             global.oauthSessions.set(state, sessionData);
         }
-        
+
         return res.status(500).send(`
             <html>
                 <body style="font-family: Arial; text-align: center; padding: 50px;">
@@ -560,6 +622,125 @@ router.post("/mobile/session", async (req, res) => {
     });
 
     res.json({ success: true });
+});
+
+// Mobile token exchange endpoint - exchanges authorization code for tokens using PKCE
+router.post("/mobile/exchange", async (req, res) => {
+    const { code, codeVerifier, redirectUri } = req.body;
+
+    if (!code || !codeVerifier || !redirectUri) {
+        return res.status(400).json({ message: "Missing required parameters" });
+    }
+
+    try {
+        console.log("Exchanging authorization code for tokens with PKCE...");
+        
+        // Exchange code for tokens with Google using PKCE
+        const tokenUrl = "https://oauth2.googleapis.com/token";
+        const clientId = process.env.GOOGLE_CLIENT_ID_ANDROID || "1064619689471-7lr8e71tr6h55as83o8gn4bdnhabavpu.apps.googleusercontent.com";
+        
+        const tokenResponse = await fetch(tokenUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+                client_id: clientId,
+                code: code,
+                code_verifier: codeVerifier,
+                grant_type: "authorization_code",
+                redirect_uri: redirectUri,
+            }),
+        });
+
+        if (!tokenResponse.ok) {
+            const errorData = await tokenResponse.text();
+            console.error("Token exchange failed:", errorData);
+            return res.status(400).json({ message: "Token exchange failed", error: errorData });
+        }
+
+        const tokenData = await tokenResponse.json();
+        console.log("Token exchange successful");
+
+        // Get user info from Google
+        const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+            headers: {
+                Authorization: `Bearer ${tokenData.access_token}`,
+            },
+        });
+
+        if (!userInfoResponse.ok) {
+            console.error("Failed to fetch user info");
+            return res.status(400).json({ message: "Failed to fetch user info" });
+        }
+
+        const userData = await userInfoResponse.json();
+        console.log("User data retrieved:", userData.email);
+
+        // Check if user exists in database
+        const userQuery = "SELECT * FROM users WHERE email = $1";
+        const userResult = await pool.query(userQuery, [userData.email]);
+
+        let user;
+        if (userResult.rows.length > 0) {
+            // Update existing user
+            user = userResult.rows[0];
+            const updateQuery = `
+                UPDATE users 
+                SET name = $1, avatar_url = $2, google_id = $3, updated_at = NOW() 
+                WHERE email = $4 
+                RETURNING *
+            `;
+            const updateResult = await pool.query(updateQuery, [
+                userData.name,
+                userData.picture,
+                userData.id,
+                userData.email
+            ]);
+            user = updateResult.rows[0];
+        } else {
+            // Create new user
+            const insertQuery = `
+                INSERT INTO users (name, email, avatar_url, google_id, is_verified, created_at, updated_at) 
+                VALUES ($1, $2, $3, $4, true, NOW(), NOW()) 
+                RETURNING *
+            `;
+            const insertResult = await pool.query(insertQuery, [
+                userData.name,
+                userData.email,
+                userData.picture,
+                userData.id
+            ]);
+            user = insertResult.rows[0];
+        }
+
+        // Generate JWT token
+        const jwtToken = jwt.sign(
+            { 
+                userId: user.id, 
+                email: user.email,
+                name: user.name 
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        res.json({
+            message: "Authentication successful",
+            token: jwtToken,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                avatar_url: user.avatar_url,
+                is_verified: user.is_verified
+            }
+        });
+
+    } catch (error) {
+        console.error("Error in token exchange:", error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
 });
 
 // Extract the token exchange logic to a reusable function
