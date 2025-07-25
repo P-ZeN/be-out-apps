@@ -45,7 +45,7 @@ cd /home/zen/dev/be-out-apps
 
 # Set environment variables and build
 export VITE_API_URL="https://server.be-out-app.dedibox2.philippezenone.net"
-export VITE_GOOGLE_CLIENT_ID_DESKTOP="1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
+export VITE_GOOGLE_CLIENT_ID_ANDROID="1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 export VITE_MAPBOX_ACCESS_TOKEN="pk.eyJ1IjoicGhpbGlwcGV6ZW5vbmUiLCJhIjoiY21jeXQyemdpMHRwazJrc2JkdG9vZzViaCJ9.0h5JWCXgM5nY6hrDtj-vsw"
 
 npm run tauri:android:build

@@ -58,11 +58,10 @@ const Register = () => {
         console.log("==================================");
 
         try {
-            if (isTauriAvailable) {
-                console.log("Using comprehensive mobile OAuth for Google");
-                // Dynamically import desktop auth service only when needed
-                const { default: desktopAuthService } = await import("../services/desktopAuthService");
-                const result = await desktopAuthService.startGoogleOAuth();
+            if (isTauriApp) {
+                console.log("Starting Google OAuth for registration...");
+                const { default: mobileAuthService } = await import("../services/mobileAuthService");
+                const result = await mobileAuthService.startGoogleOAuth();
 
                 if (result && result.token && result.user) {
                     login(result);
@@ -90,9 +89,9 @@ const Register = () => {
         try {
             if (isTauriAvailable) {
                 console.log("Using comprehensive mobile OAuth for Apple");
-                // Dynamically import desktop auth service only when needed
-                const { default: desktopAuthService } = await import("../services/desktopAuthService");
-                const result = await desktopAuthService.startAppleSignIn();
+                // Dynamically import mobile auth service only when needed
+                const { default: mobileAuthService } = await import("../services/mobileAuthService");
+                const result = await mobileAuthService.startAppleSignIn();
 
                 if (result && result.token && result.user) {
                     login(result);

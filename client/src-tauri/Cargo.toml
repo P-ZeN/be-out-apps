@@ -21,8 +21,9 @@ tauri-build = { version = "2.1.0", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "2.1.0", features = ["devtools"] }
+tauri = { version = "2.1.0", features = [] }
 tauri-plugin-shell = "2.1.0"
+tauri-plugin-deep-link = "2.4.1"
 tokio = { version = "1.0", features = ["time", "net"] }
 
 

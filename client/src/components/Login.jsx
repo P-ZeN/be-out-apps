@@ -50,9 +50,9 @@ const Login = () => {
 
             if (isTauriApp) {
                 console.log("Using Tauri OAuth flow...");
-                // Dynamically import desktop auth service only when needed
-                const { default: desktopAuthService } = await import("../services/desktopAuthService");
-                const response = await desktopAuthService.startGoogleOAuth();
+                // Dynamically import mobile auth service only when needed
+                const { default: mobileAuthService } = await import("../services/mobileAuthService");
+                const response = await mobileAuthService.startGoogleOAuth();
 
                 if (response && response.token && response.user) {
                     login(response);
@@ -90,9 +90,9 @@ const Login = () => {
         try {
             if (isTauriApp) {
                 console.log("Using Apple Sign In for Tauri app...");
-                // Dynamically import desktop auth service only when needed
-                const { default: desktopAuthService } = await import("../services/desktopAuthService");
-                const response = await desktopAuthService.startAppleSignIn();
+                // Dynamically import mobile auth service only when needed
+                const { default: mobileAuthService } = await import("../services/mobileAuthService");
+                const response = await mobileAuthService.startAppleSignIn();
 
                 if (response && response.token && response.user) {
                     login(response);
