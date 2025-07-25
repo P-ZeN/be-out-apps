@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import pool from "../db.js";
 
 // Initialize Stripe only if the secret key is provided
-const stripe = process.env.STRIPE_SECRET_KEY 
+const stripe = process.env.STRIPE_SECRET_KEY
     ? new Stripe(process.env.STRIPE_SECRET_KEY)
     : null;
 
@@ -19,7 +19,7 @@ class StripeService {
         if (!stripe) {
             throw new Error("Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.");
         }
-        
+
         try {
             const { amount, currency = "eur", metadata = {} } = bookingData;
 

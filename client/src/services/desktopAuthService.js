@@ -11,7 +11,7 @@ class DesktopAuthService {
         if (!areTauriApisAvailable()) {
             throw new Error("Tauri APIs not available");
         }
-        
+
         if (!this._tauriApis) {
             try {
                 const { invoke } = await import("@tauri-apps/api/core");
@@ -21,7 +21,7 @@ class DesktopAuthService {
                 throw new Error("Failed to load Tauri APIs: " + error.message);
             }
         }
-        
+
         return this._tauriApis;
     }
 
@@ -48,7 +48,7 @@ class DesktopAuthService {
 
     async startGoogleOAuth() {
         console.log("=== GOOGLE OAUTH START ===");
-        
+
         if (!areTauriApisAvailable()) {
             throw new Error("This OAuth service is for Tauri apps only.");
         }
@@ -61,61 +61,48 @@ class DesktopAuthService {
             throw new Error("Google Client ID not configured");
         }
 
+        // Use our backend as a proxy for the OAuth flow
+        // The backend will handle the Google OAuth and return the result
         const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         
-        // Register OAuth session for polling
-        try {
-            await fetch(`${API_BASE_URL}/auth/mobile/session`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    challenge: this.codeChallenge,
-                    codeVerifier: this.codeVerifier,
-                    clientId: clientId
-                })
-            });
-        } catch (error) {
-            console.warn("Failed to register OAuth session:", error);
-            // Continue anyway, polling will handle missing sessions gracefully
-        }
-
-        const redirectUri = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/auth/mobile/callback`;
-        const scope = "openid email profile";
-
-        const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-        authUrl.searchParams.set("client_id", clientId);
-        authUrl.searchParams.set("redirect_uri", redirectUri);
-        authUrl.searchParams.set("response_type", "code");
-        authUrl.searchParams.set("scope", scope);
-        authUrl.searchParams.set("code_challenge", this.codeChallenge);
-        authUrl.searchParams.set("code_challenge_method", "S256");
-        authUrl.searchParams.set("access_type", "offline");
-
-        console.log("Opening OAuth URL:", authUrl.toString());
+        // Create a unique session ID for this OAuth attempt
+        const sessionId = this.codeChallenge; // Use the PKCE challenge as session ID
         
+        // Start OAuth flow through our backend proxy
+        const authUrl = `${API_BASE_URL}/auth/mobile/start?session=${sessionId}&challenge=${this.codeChallenge}`;
+        
+        console.log("Opening OAuth URL:", authUrl);
+
         try {
-            const { invoke } = await this._getTauriApis();
+            console.log("Opening OAuth URL using native mobile approach...");
             
-            // Use opener plugin which is designed for opening URLs on mobile
-            await invoke("plugin:opener|open", {
-                uri: authUrl.toString()
-            });
+            // For mobile WebView, use direct window.open which works reliably
+            const opened = window.open(authUrl.toString(), '_blank', 'noopener,noreferrer');
             
-            console.log("OAuth URL opened successfully in browser");
+            if (!opened) {
+                // Fallback: create a hidden link and click it
+                const link = document.createElement('a');
+                link.href = authUrl.toString();
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            console.log("OAuth URL opened successfully");
         } catch (error) {
-            console.error("Failed to open OAuth URL with opener:", error);
-            
-            // Fallback to shell plugin
-            try {
-                await invoke("plugin:shell|open", { 
-                    path: authUrl.toString()
-                });
-                console.log("OAuth URL opened successfully with shell");
-            } catch (shellError) {
-                console.error("Both opener and shell failed:", shellError);
-                throw new Error(`Unable to open OAuth URL. Please ensure you have a browser available.`);
+            console.error("Failed to open OAuth URL:", error);
+            // Last resort: show the URL to user in a more user-friendly way
+            const userMessage = `To complete Google Sign-In, please open this link:\n\n${authUrl.toString()}\n\nAfter signing in, return to this app.`;
+            if (confirm(userMessage + "\n\nPress OK to copy the link to clipboard.")) {
+                try {
+                    await navigator.clipboard.writeText(authUrl.toString());
+                    alert("Link copied to clipboard! Please paste it in your browser.");
+                } catch (clipboardError) {
+                    alert("Please manually copy this link:\n\n" + authUrl.toString());
+                }
             }
         }
 
@@ -134,7 +121,7 @@ class DesktopAuthService {
 
             const pollForResult = async () => {
                 attempts++;
-                
+
                 if (attempts > maxAttempts) {
                     reject(new Error("OAuth timeout. Please try again."));
                     return;
@@ -176,7 +163,7 @@ class DesktopAuthService {
 
     async waitForCallback() {
         const { listen } = await this._getTauriApis();
-        
+
         return new Promise((resolve, reject) => {
             const timeout = 5 * 60 * 1000; // 5 minutes
 
@@ -189,7 +176,7 @@ class DesktopAuthService {
             eventNames.forEach(eventName => {
                 const unlistenPromise = listen(eventName, async (event) => {
                     console.log(`Event '${eventName}' received:`, event);
-                    
+
                     // Clean up all listeners
                     for (const promise of unlistenPromises) {
                         try {
