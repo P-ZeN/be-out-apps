@@ -7,6 +7,7 @@ class MobileAuthService {
         this._tauriApis = null;
         this.packageName = 'com.beout.app'; // From Tauri identifier
         this.serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        // Use WEB CLIENT ID instead of Android client ID for OAuth plugin
         this.clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "1064619689471-mvbg3sjq3p2idncgme2l6fhrcpqd8hj9.apps.googleusercontent.com";
         this.oauthState = null;
     }
@@ -67,21 +68,21 @@ class MobileAuthService {
             localStorage.setItem('oauth_code_verifier', this.codeVerifier);
             localStorage.setItem('oauth_code_challenge', this.codeChallenge);
 
-            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_ANDROID || "1064619689471-7lr8e71tr6h55as83o8gn4bdnhabavpu.apps.googleusercontent.com";
+            // Use external relay server instead of localhost for mobile OAuth
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "1064619689471-mvbg3sjq3p2idncgme2l6fhrcpqd8hj9.apps.googleusercontent.com";
             const scope = "openid email profile";
             const state = this.base64URLEncode(crypto.getRandomValues(new Uint8Array(32)));
 
-            console.log("[OAUTH] Using ANDROID client ID for mobile OAuth:", clientId);
+            console.log("[OAUTH] Using WEB CLIENT ID for mobile OAuth with external relay:", clientId);
             this.oauthState = state;
 
             const { invoke, listen } = await this._getTauriApis();
 
-            console.log("[OAUTH] Setting up deep-link listener for mobile OAuth...");
+            console.log("[OAUTH] Setting up external relay for mobile OAuth...");
             
-            // For mobile, we need to use custom URL scheme instead of localhost
-            // because the browser can't reach the app's internal localhost server
-            const redirectUri = `beout://oauth2redirect`;
-            console.log("[OAUTH] Redirect URI (mobile):", redirectUri);
+            // Use external server relay instead of localhost - browsers CAN reach this
+            const redirectUri = `${this.serverUrl}/auth/mobile/google/callback`;
+            console.log("[OAUTH] Redirect URI (mobile external relay):", redirectUri);
 
             // Build the OAuth URL with custom scheme redirect
             const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
@@ -97,83 +98,63 @@ class MobileAuthService {
             console.log('[OAUTH] Opening OAuth URL:', authUrl.toString());
 
             return new Promise(async (resolve, reject) => {
-                const timeout = setTimeout(async () => {
+                const timeout = setTimeout(() => {
                     console.error("[OAUTH] Timeout - no callback received after 5 minutes");
-                    try {
-                        await invoke('plugin:oauth|cancel', { port });
-                    } catch (e) {
-                        console.log('[OAUTH] Error canceling OAuth server:', e);
-                    }
                     reject(new Error('OAuth timeout - no callback received'));
                 }, 300000); // 5 minute timeout
 
-                // Listen for OAuth callback URL
-                const unlisten = await listen('oauth://url', async (event) => {
-                    console.log('[OAUTH] OAuth callback received:', event.payload);
-                    clearTimeout(timeout);
-                    unlisten();
-
-                    try {
-                        // Stop the OAuth server
-                        await invoke('plugin:oauth|cancel', { port });
-                        
-                        // Extract authorization code from callback URL
-                        const callbackUrl = new URL(event.payload);
-                        const code = callbackUrl.searchParams.get("code");
-                        const error = callbackUrl.searchParams.get("error");
-                        const receivedState = callbackUrl.searchParams.get("state");
-
-                        if (error) {
-                            return reject(new Error(`OAuth error: ${error}`));
-                        }
-
-                        if (receivedState !== state) {
-                            return reject(new Error('Invalid state parameter - possible CSRF attack'));
-                        }
-
-                        if (code) {
-                            console.log('[OAUTH] Authorization code received, exchanging for token...');
-                            const tokenData = await this.exchangeCodeForTokenWithPlugin(code, state);
-                            console.log('[OAUTH] Token exchange successful');
-                            return resolve(tokenData);
-                        }
-
-                        reject(new Error("No authorization code received in callback."));
-                    } catch (err) {
-                        console.error('[OAUTH] Error processing OAuth callback:', err);
-                        reject(err);
-                    }
-                });
+                // Store state for server-side verification
+                console.log('[OAUTH] Storing OAuth state for polling:', state);
 
                 // Try to open the OAuth URL in the system browser
                 try {
-                    // Use our native Android URL opener
                     await invoke('open_url_android', { url: authUrl.toString() });
-                    console.log('[OAUTH] OAuth URL opened in system browser via Android intent');
-                } catch (err) {
-                    console.error('[OAUTH] Failed to open URL with Android intent:', err);
-                    // Fallback to shell plugin
-                    try {
-                        await invoke('plugin:shell|open', { path: authUrl.toString() });
-                        console.log('[OAUTH] OAuth URL opened via shell plugin');
-                    } catch (shellErr) {
-                        console.error('[OAUTH] Shell plugin not available on Android, providing manual instructions');
-                        console.log('[OAUTH] Please open the following URL in your browser:');
-                        console.log(authUrl.toString());
-                        
-                        if (typeof window !== 'undefined' && window.alert) {
-                            setTimeout(() => {
-                                window.alert(
-                                    'Please open this URL in your browser to complete OAuth:\n\n' +
-                                    authUrl.toString() + '\n\n' +
-                                    'After completing the authorization, return to this app.'
-                                );
-                            }, 100);
-                        }
-                    }
+                    console.log('[OAUTH] Successfully opened OAuth URL in browser');
+                } catch (error) {
+                    console.log('[OAUTH] Failed to open URL with Android intent:', error);
+                    console.log('[OAUTH] Providing manual instructions');
+                    console.log('[OAUTH] Please open the following URL in your browser:');
+                    console.log(authUrl.toString());
                 }
+
+                console.log('[OAUTH] Starting server polling for OAuth result...');
                 
-                console.log('[OAUTH] Waiting for OAuth callback...');
+                // Poll the server for OAuth completion
+                const pollForResult = async () => {
+                    try {
+                        const response = await fetch(`${this.serverUrl}/api/mobile-auth/poll/${state}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            if (result.success) {
+                                clearTimeout(timeout);
+                                console.log('[OAUTH] OAuth completed via server polling');
+                                return resolve(result);
+                            } else if (result.error) {
+                                clearTimeout(timeout);
+                                return reject(new Error(`OAuth error: ${result.error}`));
+                            }
+                            // Still waiting, continue polling
+                        } else if (response.status === 404) {
+                            // OAuth not completed yet, continue polling
+                        } else {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+                    } catch (error) {
+                        console.log('[OAUTH] Polling error (will retry):', error.message);
+                    }
+
+                    // Continue polling every 2 seconds
+                    setTimeout(pollForResult, 2000);
+                };
+
+                // Start polling
+                pollForResult();
             });
 
         } catch (error) {

@@ -1,6 +1,5 @@
 use tauri::command;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GoogleSignInResult {
@@ -14,45 +13,34 @@ pub struct GoogleSignInResult {
 }
 
 #[command]
-pub async fn google_sign_in(nonce: String) -> Result<GoogleSignInResult, String> {
+pub async fn google_sign_in(
+    filter_by_authorized_accounts: Option<bool>,
+    auto_select_enabled: Option<bool>, 
+    nonce: String
+) -> Result<GoogleSignInResult, String> {
     #[cfg(target_os = "android")]
     {
-        // Get web client ID from environment or default
-        let web_client_id = std::env::var("GOOGLE_WEB_CLIENT_ID")
-            .unwrap_or_else(|_| "YOUR_WEB_CLIENT_ID".to_string());
-        
-        // This would be the JNI call to Android
-        // For now, simulate the native call
-        match call_android_google_sign_in(&nonce, &web_client_id).await {
-            Ok(result) => Ok(result),
-            Err(e) => Ok(GoogleSignInResult {
-                success: false,
-                id_token: None,
-                display_name: None,
-                given_name: None,
-                family_name: None,
-                profile_picture_uri: None,
-                error: Some(e),
-            })
-        }
+        // For now, return a descriptive error that explains what's happening
+        Ok(GoogleSignInResult {
+            success: false,
+            id_token: None,
+            display_name: None,
+            given_name: None,
+            family_name: None,
+            profile_picture_uri: None,
+            error: Some(format!(
+                "Native Google Sign-In not yet fully implemented. Parameters received: filter_by_authorized_accounts={:?}, auto_select_enabled={:?}, nonce={}", 
+                filter_by_authorized_accounts, 
+                auto_select_enabled, 
+                if nonce.len() > 10 { &nonce[..10] } else { &nonce }
+            )),
+        })
     }
     
     #[cfg(not(target_os = "android"))]
     {
         Err("Google Sign-In is only available on Android".to_string())
     }
-}
-
-#[cfg(target_os = "android")]
-async fn call_android_google_sign_in(nonce: &str, web_client_id: &str) -> Result<GoogleSignInResult, String> {
-    // This is where we would make the actual JNI call
-    // For now, return a placeholder that indicates the structure is ready
-    
-    // Simulate async operation
-    tokio::time::sleep(Duration::from_millis(100)).await;
-    
-    // Return error indicating native implementation needed
-    Err("JNI integration not yet complete - Android Credential Manager ready".to_string())
 }
 
 #[command]

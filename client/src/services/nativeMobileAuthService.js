@@ -33,15 +33,22 @@ class NativeMobileAuthService {
             console.log("[NATIVE_AUTH] Attempting sign-in with authorized accounts...");
             
             const result = await invoke('google_sign_in', {
-                filterByAuthorizedAccounts: true,
-                autoSelectEnabled: true,
+                filter_by_authorized_accounts: true,
+                auto_select_enabled: true,
                 nonce: this._generateNonce()
             });
             
-            console.log("[NATIVE_AUTH] Native sign-in successful:", result);
+            console.log("[NATIVE_AUTH] Native sign-in result:", result);
+            
+            // Check if native sign-in was actually successful
+            if (!result.success || !result.id_token) {
+                const error = result.error || "Native sign-in failed - no token received";
+                console.log("[NATIVE_AUTH] Native sign-in failed:", error);
+                throw new Error(error);
+            }
             
             // Validate the ID token with your server
-            const validatedUser = await this.validateTokenWithServer(result.idToken);
+            const validatedUser = await this.validateTokenWithServer(result.id_token);
             
             console.log("[NATIVE_AUTH] Token validation successful");
             return validatedUser;
