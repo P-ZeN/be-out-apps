@@ -456,10 +456,10 @@ router.get("/mobile/google/callback", async (req, res) => {
                     <head>
                         <meta name="viewport" content="width=device-width, initial-scale=1">
                         <style>
-                            body { 
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                                text-align: center; 
-                                padding: 50px 20px; 
+                            body {
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                text-align: center;
+                                padding: 50px 20px;
                                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                                 color: white;
                                 margin: 0;
@@ -510,12 +510,12 @@ router.get("/mobile/google/callback", async (req, res) => {
                         <script>
                             let countdown = 3;
                             const countdownElement = document.getElementById('countdown');
-                            
+
                             function returnToApp() {
                                 // Navigate back to the app's main page
                                 window.location.href = 'tauri://localhost/';
                             }
-                            
+
                             // Auto-return countdown
                             const timer = setInterval(() => {
                                 countdown--;
@@ -634,11 +634,11 @@ router.post("/mobile/exchange", async (req, res) => {
 
     try {
         console.log("Exchanging authorization code for tokens with PKCE...");
-        
+
         // Exchange code for tokens with Google using PKCE
         const tokenUrl = "https://oauth2.googleapis.com/token";
         const clientId = process.env.GOOGLE_CLIENT_ID_ANDROID || "1064619689471-7lr8e71tr6h55as83o8gn4bdnhabavpu.apps.googleusercontent.com";
-        
+
         const tokenResponse = await fetch(tokenUrl, {
             method: "POST",
             headers: {
@@ -686,9 +686,9 @@ router.post("/mobile/exchange", async (req, res) => {
             // Update existing user
             user = userResult.rows[0];
             const updateQuery = `
-                UPDATE users 
-                SET name = $1, avatar_url = $2, google_id = $3, updated_at = NOW() 
-                WHERE email = $4 
+                UPDATE users
+                SET name = $1, avatar_url = $2, google_id = $3, updated_at = NOW()
+                WHERE email = $4
                 RETURNING *
             `;
             const updateResult = await pool.query(updateQuery, [
@@ -701,8 +701,8 @@ router.post("/mobile/exchange", async (req, res) => {
         } else {
             // Create new user
             const insertQuery = `
-                INSERT INTO users (name, email, avatar_url, google_id, is_verified, created_at, updated_at) 
-                VALUES ($1, $2, $3, $4, true, NOW(), NOW()) 
+                INSERT INTO users (name, email, avatar_url, google_id, is_verified, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, true, NOW(), NOW())
                 RETURNING *
             `;
             const insertResult = await pool.query(insertQuery, [
@@ -716,10 +716,10 @@ router.post("/mobile/exchange", async (req, res) => {
 
         // Generate JWT token
         const jwtToken = jwt.sign(
-            { 
-                userId: user.id, 
+            {
+                userId: user.id,
                 email: user.email,
-                name: user.name 
+                name: user.name
             },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }

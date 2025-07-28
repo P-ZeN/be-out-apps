@@ -10,17 +10,17 @@ if (window.__TAURI__) {
     (async () => {
         try {
             const { listen } = await import("@tauri-apps/api/event");
-            
+
             // Listen for deep link events - use proper event names (not URLs!)
             const eventNames = ["deep-link", "new-url", "plugin:deep-link|new-url", "deep_link", "url_opened"];
-            
+
             console.log("Setting up deep link listeners for Android OAuth callbacks...");
-            
+
             for (const eventName of eventNames) {
                 try {
                     await listen(eventName, (event) => {
                         console.log(`[DEEP LINK] Event '${eventName}' received:`, event.payload);
-                        
+
                         // Check if it's an OAuth callback
                         const url = event.payload || event.url || event;
                         if (typeof url === 'string' && (url.includes("googleusercontent.apps") || url.includes("oauth2redirect"))) {
@@ -35,7 +35,7 @@ if (window.__TAURI__) {
                     console.log(`[DEEP LINK] Failed to register listener for ${eventName}:`, error.message);
                 }
             }
-            
+
         } catch (error) {
             console.error("Failed to set up deep link listeners:", error);
         }

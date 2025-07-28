@@ -21,9 +21,13 @@ tauri-build = { version = "2.1.0", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "2.1.0", features = [] }
+tauri = { version = "2.1.0", features = ["devtools"] }
 tauri-plugin-shell = "2.1.0"
 tauri-plugin-deep-link = "2.4.1"
+tauri-plugin-oauth = { git = "https://github.com/FabianLars/tauri-plugin-oauth", branch = "v2" }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
 tokio = { version = "1.0", features = ["time", "net"] }
 
 

@@ -60,9 +60,12 @@
             "open": true
         },
         "deep-link": {
-            "desktop": {
-                "schemes": ["beout"]
-            }
+            "schemes": [
+                "beout"
+            ]
+        },
+        "opener": {
+            "open": true
         }
     }
 }

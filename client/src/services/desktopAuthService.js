@@ -1,13 +1,13 @@
 import { areTauriApisAvailable } from "../utils/platformDetection";
 
-class MobileAuthService {
+class DesktopAuthService {
     constructor() {
         this.codeVerifier = null;
         this.codeChallenge = null;
         this._tauriApis = null;
         this.packageName = 'com.beout.app'; // From Tauri identifier
         this.serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        this.clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "1064619689471-mvbg3sjq3p2idncgme2l6fhrcpqd8hj9.apps.googleusercontent.com";
+        this.clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_ANDROID || "1064619689471-7lr8e71tr6h55as83o8gn4bdnhabavpu.apps.googleusercontent.com";
         this.oauthState = null;
     }
 
@@ -52,38 +52,41 @@ class MobileAuthService {
 
     async startGoogleOAuth() {
         console.log("=== GOOGLE OAUTH START ===");
-        console.log("[OAUTH] Starting OAuth flow with tauri-plugin-oauth...");
+        console.log("[OAUTH] Initializing Android OAuth flow with system browser...");
 
         try {
             if (!areTauriApisAvailable()) {
                 throw new Error("Tauri APIs not available");
             }
 
+            console.log("[OAUTH] Tauri APIs available, using system browser OAuth flow...");
+
             // Generate PKCE parameters
             await this.generatePKCE();
-            console.log("[OAUTH] PKCE parameters generated");
+            console.log("[OAUTH] PKCE parameters generated successfully");
 
-            // Store PKCE parameters for verification
+            // Store PKCE parameters
             localStorage.setItem('oauth_code_verifier', this.codeVerifier);
             localStorage.setItem('oauth_code_challenge', this.codeChallenge);
+            console.log("[OAUTH] PKCE parameters stored in localStorage");
 
+            // Use Android client ID and proper HTTPS redirect for deep linking
             const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_ANDROID || "1064619689471-7lr8e71tr6h55as83o8gn4bdnhabavpu.apps.googleusercontent.com";
+            // Use HTTPS redirect that matches our deep-link configuration
+            const redirectUri = 'https://server.be-out-app.dedibox2.philippezenone.net/auth/google/callback';
             const scope = "openid email profile";
             const state = this.base64URLEncode(crypto.getRandomValues(new Uint8Array(32)));
 
-            console.log("[OAUTH] Using ANDROID client ID for mobile OAuth:", clientId);
+            console.log("[OAUTH] Configuration:");
+            console.log("  - Client ID:", clientId);
+            console.log("  - Redirect URI:", redirectUri);
+            console.log("  - Scope:", scope);
+            console.log("  - State:", state);
+
+            // Store state for verification
             this.oauthState = state;
+            console.log("[OAUTH] State stored for verification");
 
-            const { invoke, listen } = await this._getTauriApis();
-
-            console.log("[OAUTH] Setting up deep-link listener for mobile OAuth...");
-            
-            // For mobile, we need to use custom URL scheme instead of localhost
-            // because the browser can't reach the app's internal localhost server
-            const redirectUri = `beout://oauth2redirect`;
-            console.log("[OAUTH] Redirect URI (mobile):", redirectUri);
-
-            // Build the OAuth URL with custom scheme redirect
             const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
             authUrl.searchParams.set("client_id", clientId);
             authUrl.searchParams.set("redirect_uri", redirectUri);
@@ -94,146 +97,74 @@ class MobileAuthService {
             authUrl.searchParams.set("code_challenge_method", "S256");
             authUrl.searchParams.set("prompt", "select_account");
 
-            console.log('[OAUTH] Opening OAuth URL:', authUrl.toString());
+            console.log('[OAUTH] Opening OAuth URL in system browser:', authUrl.toString());
+
+            // Get Tauri APIs
+            const { invoke, listen } = await this._getTauriApis();
+            console.log("[OAUTH] Tauri APIs loaded successfully");
+
+            // Set up deep link listener before opening the URL
+            console.log("[OAUTH] Setting up deep link listener...");
 
             return new Promise(async (resolve, reject) => {
-                const timeout = setTimeout(async () => {
+                const timeout = setTimeout(() => {
                     console.error("[OAUTH] Timeout - no callback received after 5 minutes");
-                    try {
-                        await invoke('plugin:oauth|cancel', { port });
-                    } catch (e) {
-                        console.log('[OAUTH] Error canceling OAuth server:', e);
-                    }
                     reject(new Error('OAuth timeout - no callback received'));
                 }, 300000); // 5 minute timeout
 
-                // Listen for OAuth callback URL
-                const unlisten = await listen('oauth://url', async (event) => {
-                    console.log('[OAUTH] OAuth callback received:', event.payload);
+                // Listen for deep link events
+                const unlisten = await listen('deep-link://new-url', (event) => {
+                    console.log('[OAUTH] Deep link received:', event.payload);
                     clearTimeout(timeout);
                     unlisten();
 
                     try {
-                        // Stop the OAuth server
-                        await invoke('plugin:oauth|cancel', { port });
-                        
-                        // Extract authorization code from callback URL
-                        const callbackUrl = new URL(event.payload);
-                        const code = callbackUrl.searchParams.get("code");
-                        const error = callbackUrl.searchParams.get("error");
-                        const receivedState = callbackUrl.searchParams.get("state");
-
-                        if (error) {
-                            return reject(new Error(`OAuth error: ${error}`));
+                        // Extract authorization code from deep link
+                        const urls = event.payload;
+                        if (urls && urls.length > 0) {
+                            const callbackUrl = urls[0];
+                            console.log('[OAUTH] Processing callback URL:', callbackUrl);
+                            this.handleOAuthCallback(callbackUrl).then(resolve).catch(reject);
+                        } else {
+                            reject(new Error('No URL in deep link callback'));
                         }
-
-                        if (receivedState !== state) {
-                            return reject(new Error('Invalid state parameter - possible CSRF attack'));
-                        }
-
-                        if (code) {
-                            console.log('[OAUTH] Authorization code received, exchanging for token...');
-                            const tokenData = await this.exchangeCodeForTokenWithPlugin(code, state);
-                            console.log('[OAUTH] Token exchange successful');
-                            return resolve(tokenData);
-                        }
-
-                        reject(new Error("No authorization code received in callback."));
-                    } catch (err) {
-                        console.error('[OAUTH] Error processing OAuth callback:', err);
-                        reject(err);
+                    } catch (error) {
+                        console.error('[OAUTH] Error processing deep link:', error);
+                        reject(error);
                     }
                 });
 
-                // Try to open the OAuth URL in the system browser
+                // Open OAuth URL in system browser
                 try {
-                    // Use our native Android URL opener
-                    await invoke('open_url_android', { url: authUrl.toString() });
-                    console.log('[OAUTH] OAuth URL opened in system browser via Android intent');
-                } catch (err) {
-                    console.error('[OAUTH] Failed to open URL with Android intent:', err);
-                    // Fallback to shell plugin
-                    try {
-                        await invoke('plugin:shell|open', { path: authUrl.toString() });
-                        console.log('[OAUTH] OAuth URL opened via shell plugin');
-                    } catch (shellErr) {
-                        console.error('[OAUTH] Shell plugin not available on Android, providing manual instructions');
-                        console.log('[OAUTH] Please open the following URL in your browser:');
-                        console.log(authUrl.toString());
-                        
-                        if (typeof window !== 'undefined' && window.alert) {
-                            setTimeout(() => {
-                                window.alert(
-                                    'Please open this URL in your browser to complete OAuth:\n\n' +
-                                    authUrl.toString() + '\n\n' +
-                                    'After completing the authorization, return to this app.'
-                                );
-                            }, 100);
-                        }
-                    }
+                    console.log("[OAUTH] Attempting to open URL in system browser...");
+
+                    await invoke('plugin:shell|open', {
+                        path: authUrl.toString()
+                    });
+                    console.log('[OAUTH] OAuth URL opened successfully in system browser');
+                    console.log('[OAUTH] Waiting for deep link callback...');
+
+                } catch (error) {
+                    console.error('[OAUTH] Shell plugin failed:', error.message);
+                    clearTimeout(timeout);
+                    unlisten();
+
+                    // CRITICAL: Do NOT fall back to WebView for OAuth as Google blocks embedded browsers
+                    reject(new Error(
+                        'Cannot open system browser for OAuth. Google requires OAuth to happen in a secure browser, not in embedded WebViews.\n\n' +
+                        'Troubleshooting steps:\n' +
+                        '1. Ensure shell plugin is properly configured in Tauri\n' +
+                        '2. Check Android permissions for opening URLs\n' +
+                        '3. Verify the OAuth redirect URI is properly configured in Google Cloud Console\n\n' +
+                        'Shell plugin error: ' + error.message
+                    ));
                 }
-                
-                console.log('[OAUTH] Waiting for OAuth callback...');
             });
 
         } catch (error) {
-            console.error('[OAUTH] OAuth failed:', error);
-            throw new Error(`OAuth authentication failed: ${error.message}`);
+            console.error('[OAUTH] OAuth error:', error);
+            throw error;
         }
-    }
-
-    // Token exchange method for the OAuth plugin
-    async exchangeCodeForTokenWithPlugin(code, state) {
-        console.log('[OAUTH] Starting token exchange with plugin result...');
-
-        // Verify state
-        if (state !== this.oauthState) {
-            throw new Error('Invalid state parameter - possible CSRF attack');
-        }
-
-        const tokenRequestData = {
-            code,
-            codeVerifier: this.codeVerifier,
-            clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || "1064619689471-mvbg3sjq3p2idncgme2l6fhrcpqd8hj9.apps.googleusercontent.com"
-        };
-
-        console.log('[OAUTH] Token exchange request:', {
-            serverUrl: this.serverUrl,
-            endpoint: '/api/auth/exchange-token',
-            hasCode: !!code,
-            hasCodeVerifier: !!this.codeVerifier,
-            hasClientId: !!tokenRequestData.clientId
-        });
-
-        const tokenResponse = await fetch(`${this.serverUrl}/api/auth/exchange-token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(tokenRequestData),
-        });
-
-        console.log('[OAUTH] Token exchange response status:', tokenResponse.status);
-
-        if (!tokenResponse.ok) {
-            const errorData = await tokenResponse.json();
-            console.error('[OAUTH] Token exchange failed:', errorData);
-            throw new Error(`Token exchange failed: ${errorData.error || tokenResponse.statusText}`);
-        }
-
-        const tokenData = await tokenResponse.json();
-        console.log('[OAUTH] Token exchange successful:', {
-            hasAccessToken: !!tokenData.access_token,
-            hasUser: !!tokenData.user,
-            userEmail: tokenData.user?.email || 'unknown'
-        });
-
-        // Clean up stored state
-        this.oauthState = null;
-        this.codeVerifier = null;
-        console.log('[OAUTH] Cleanup completed');
-
-        return tokenData;
     }
 
     async waitForCallbackWithPolling() {
@@ -359,9 +290,9 @@ class MobileAuthService {
 
     async exchangeCodeForToken(code) {
         const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID_DESKTOP;
 
-        const response = await fetch(`${API_BASE_URL}/auth/mobile/google/token`, {
+        const response = await fetch(`${API_BASE_URL}/auth/desktop/google/token`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -454,14 +385,14 @@ class MobileAuthService {
 
                 console.log('[OAUTH CALLBACK] Token exchange request:', {
                     serverUrl: this.serverUrl,
-                    endpoint: '/api/mobile-auth/exchange-mobile-token',
+                    endpoint: '/api/desktop-auth/exchange-mobile-token',
                     hasCode: !!code,
                     hasCodeVerifier: !!this.codeVerifier,
                     hasClientId: !!this.clientId
                 });
 
                 // Exchange authorization code for access token
-                const tokenResponse = await fetch(`${this.serverUrl}/api/mobile-auth/exchange-mobile-token`, {
+                const tokenResponse = await fetch(`${this.serverUrl}/api/desktop-auth/exchange-mobile-token`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -517,7 +448,7 @@ class MobileAuthService {
 
                 throw error;
             }
-    }
+        }
 }
 
-export default new MobileAuthService();
+export default new DesktopAuthService();

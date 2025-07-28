@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExternalLink } from "../hooks/useExternalLink";
 import { waitForTauri, getTauriInfo } from "../utils/tauriReady";
+import { areTauriApisAvailable } from "../utils/platformDetection";
 import { Button, TextField, Container, Typography, Box, Alert, Divider, CircularProgress } from "@mui/material";
 import { Google, Facebook, Apple } from "@mui/icons-material";
 import WebViewOverlay from "./WebViewOverlay";
@@ -18,7 +19,7 @@ const Login = () => {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [oauthLoading, setOauthLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, nativeLogin } = useAuth();
     const navigate = useNavigate();
     const { t } = useTranslation(["auth", "common"]);
     const { openExternalLink, closeWebView, webViewState, isTauriApp } = useExternalLink();
@@ -47,18 +48,25 @@ const Login = () => {
         try {
             console.log("=== GOOGLE OAUTH START ===");
             console.log("isTauriApp (from hook):", isTauriApp);
+            console.log("areTauriApisAvailable():", areTauriApisAvailable());
 
-            if (isTauriApp) {
-                console.log("Using Tauri OAuth flow...");
-                // Dynamically import mobile auth service only when needed
-                const { default: mobileAuthService } = await import("../services/mobileAuthService");
-                const response = await mobileAuthService.startGoogleOAuth();
-
-                if (response && response.token && response.user) {
-                    login(response);
+            if (areTauriApisAvailable() && nativeLogin) {
+                console.log("Using native Google Sign-In...");
+                try {
+                    await nativeLogin();
                     setMessage(t("auth:login.success"));
-                } else {
-                    throw new Error("Invalid OAuth response");
+                } catch (nativeError) {
+                    console.error("Native sign-in failed, falling back to web OAuth:", nativeError);
+                    // Fallback to the old mobile auth service
+                    const { default: mobileAuthService } = await import("../services/mobileAuthService");
+                    const response = await mobileAuthService.startGoogleOAuth();
+
+                    if (response && response.token && response.user) {
+                        login(response);
+                        setMessage(t("auth:login.success"));
+                    } else {
+                        throw new Error("Invalid OAuth response");
+                    }
                 }
             } else {
                 console.log("Using web OAuth flow...");
