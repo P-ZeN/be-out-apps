@@ -122,7 +122,7 @@ class MobileAuthService {
                 // Poll the server for OAuth completion
                 const pollForResult = async () => {
                     try {
-                        const response = await fetch(`${this.serverUrl}/api/mobile-auth/poll/${state}`, {
+                        const response = await fetch(`${this.serverUrl}/api/mobile-auth/mobile/poll/${state}`, {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
