@@ -10,8 +10,6 @@ import { WebViewProvider } from "./context/WebViewContext";
 import { theme } from "./theme";
 import "./App.css";
 import { useEffect } from "react";
-import { listen } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/tauri";
 
 // Build timestamp for deployment verification
 console.log("App build timestamp:", "2025-07-29-10:00");
@@ -44,12 +42,12 @@ const AppContent = () => {
         const setupDeepLinkListeners = async () => {
             try {
                 // Listen for deep links when app is already running
-                unlisten = await listen("deep-link://new-url", (event) => {
+                unlisten = await window.__TAURI__.event.listen("deep-link://new-url", (event) => {
                     handleDeepLink(event.payload);
                 });
 
                 // Check for initial deep link that launched the app
-                const initialUrl = await invoke("plugin:deep-link|get_initial_url");
+                const initialUrl = await window.__TAURI__.tauri.invoke("plugin:deep-link|get_initial_url");
                 if (initialUrl) {
                     handleDeepLink(initialUrl);
                 }
@@ -59,7 +57,7 @@ const AppContent = () => {
         };
 
         // Only run this setup in a Tauri environment
-        if (window.__TAURI__) {
+        if (window.__TAURI__ && window.__TAURI__.event && window.__TAURI__.tauri) {
             setupDeepLinkListeners();
         }
 

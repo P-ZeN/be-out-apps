@@ -52,17 +52,29 @@ const Register = () => {
     };
 
     const handleGoogleLogin = async () => {
+        setError("");
         try {
-            console.log("=== REGISTER GOOGLE START ===");
-            const googleAuthUrl = `${API_BASE_URL}/api/oauth/google/login`;
-            if (window.__TAURI__ && window.__TAURI__.shell) {
-                await window.__TAURI__.shell.open(googleAuthUrl);
+            if (window.__TAURI__) {
+                // Native mobile flow
+                const { serverAuthCode } = await window.__TAURI__.googleSignin.signIn();
+                if (serverAuthCode) {
+                    const response = await authService.loginWithGoogleMobile(serverAuthCode);
+                    nativeLogin(response.token, response.user); // Use nativeLogin to store token and user
+                    setMessage(t("auth:login.success"));
+                    // Redirect to onboarding as this is a new user
+                    navigate("/onboarding");
+                } else {
+                    throw new Error("Google Sign-In failed to return an authorization code.");
+                }
             } else {
+                // Web flow
+                console.log("=== REGISTER GOOGLE START (Web) ===");
+                const googleAuthUrl = `${API_BASE_URL}/api/oauth/google/login`;
                 window.location.href = googleAuthUrl;
             }
         } catch (error) {
             console.error("Google OAuth error:", error);
-            setError("Google authentication failed: " + error.message);
+            setError("Google authentication failed: " + (error.message || "Unknown error"));
         }
     };
 

@@ -21,10 +21,30 @@ const login = async (userData) => {
         },
         body: JSON.stringify(userData),
     });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
+    }
+    return response.json();
+};
+
+const loginWithGoogleMobile = async (serverAuthCode) => {
+    const response = await fetch(`${API_BASE_URL}/api/oauth/google/mobile-callback`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ serverAuthCode }),
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Google login failed");
+    }
     return response.json();
 };
 
 export default {
     register,
     login,
+    loginWithGoogleMobile,
 };
