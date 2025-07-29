@@ -10,21 +10,13 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID_SERVER);
 
 // New endpoint for mobile authentication
 router.post("/google/mobile-callback", async (req, res) => {
-    const { serverAuthCode } = req.body;
+    const { idToken } = req.body;
 
-    if (!serverAuthCode) {
-        return res.status(400).json({ message: "Authorization code is missing." });
+    if (!idToken) {
+        return res.status(400).json({ message: "ID token is missing." });
     }
 
     try {
-        // Exchange authorization code for tokens
-        const { tokens } = await client.getToken(serverAuthCode);
-        const idToken = tokens.id_token;
-
-        if (!idToken) {
-            return res.status(400).json({ message: "Failed to retrieve ID token from Google." });
-        }
-
         // Verify the ID token and get user profile
         const ticket = await client.verifyIdToken({
             idToken,

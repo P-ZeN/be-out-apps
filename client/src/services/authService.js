@@ -28,13 +28,13 @@ const login = async (userData) => {
     return response.json();
 };
 
-const loginWithGoogleMobile = async (serverAuthCode) => {
+const loginWithGoogleMobile = async (idToken) => {
     const response = await fetch(`${API_BASE_URL}/api/oauth/google/mobile-callback`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ serverAuthCode }),
+        body: JSON.stringify({ idToken }),
     });
     if (!response.ok) {
         const errorData = await response.json();

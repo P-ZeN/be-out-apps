@@ -56,15 +56,15 @@ const Register = () => {
         try {
             if (window.__TAURI__) {
                 // Native mobile flow
-                const { serverAuthCode } = await window.__TAURI__.googleSignin.signIn();
-                if (serverAuthCode) {
-                    const response = await authService.loginWithGoogleMobile(serverAuthCode);
+                const { id_token } = await window.__TAURI__.social.signInWithGoogle();
+                if (id_token) {
+                    const response = await authService.loginWithGoogleMobile(id_token);
                     nativeLogin(response.token, response.user); // Use nativeLogin to store token and user
                     setMessage(t("auth:login.success"));
                     // Redirect to onboarding as this is a new user
                     navigate("/onboarding");
                 } else {
-                    throw new Error("Google Sign-In failed to return an authorization code.");
+                    throw new Error("Google Sign-In failed to return an ID token.");
                 }
             } else {
                 // Web flow

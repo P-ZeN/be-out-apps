@@ -46,13 +46,17 @@ const Login = () => {
         try {
             if (window.__TAURI__) {
                 // Native mobile flow
-                const { serverAuthCode } = await window.__TAURI__.googleSignin.signIn();
-                if (serverAuthCode) {
-                    const response = await authService.loginWithGoogleMobile(serverAuthCode);
+                const { id_token } = await window.__TAURI__.social.signInWithGoogle();
+                if (id_token) {
+                    // The tauri-plugin-social returns an id_token, which is what our server needs.
+                    // We can reuse the loginWithGoogleMobile function, but we'll pass the id_token instead of a serverAuthCode.
+                    // For clarity, we should rename the parameter on the server-side, but for now, this will work.
+                    // Let's adjust the server endpoint to accept `idToken` instead of `serverAuthCode`.
+                    const response = await authService.loginWithGoogleMobile(id_token);
                     nativeLogin(response.token, response.user); // Use nativeLogin to store token and user
                     setMessage(t("auth:login.success"));
                 } else {
-                    throw new Error("Google Sign-In failed to return an authorization code.");
+                    throw new Error("Google Sign-In failed to return an ID token.");
                 }
             } else {
                 // Web flow
