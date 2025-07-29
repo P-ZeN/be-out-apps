@@ -9,6 +9,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 const getMapboxToken = () => {
     // Strategy 1: Vite build-time environment variable
     const buildTimeToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+    console.log("Build-time token check:", {
+        buildTimeToken,
+        length: buildTimeToken?.length,
+        isValid: buildTimeToken && buildTimeToken !== "%VITE_MAPBOX_ACCESS_TOKEN%" && !buildTimeToken.includes("undefined")
+    });
     if (buildTimeToken && buildTimeToken !== "%VITE_MAPBOX_ACCESS_TOKEN%" && !buildTimeToken.includes("undefined")) {
         console.log("Using build-time Mapbox token");
         return buildTimeToken;
@@ -50,6 +55,21 @@ console.log("MapComponent Debug Info:", {
     origin: typeof window !== "undefined" ? window.location.origin : "unknown",
     isMobile: typeof window !== "undefined" && /Mobi|Android/i.test(navigator.userAgent),
 });
+
+// Test the token with a direct API call
+if (MAPBOX_TOKEN && typeof fetch !== "undefined") {
+    fetch(`https://api.mapbox.com/styles/v1/mapbox/streets-v12?access_token=${MAPBOX_TOKEN}`)
+        .then(response => {
+            console.log("Direct Mapbox API test:", {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+            return response.text();
+        })
+        .then(text => console.log("API Response preview:", text.substring(0, 200)))
+        .catch(error => console.log("Direct API test error:", error));
+}
 
 // Fallback component if Mapbox fails to load
 const MapFallback = ({ events, onEventClick, t }) => (

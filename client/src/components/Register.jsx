@@ -18,7 +18,7 @@ const Register = () => {
     const [error, setError] = useState("");
     const [isTauriAvailable, setIsTauriAvailable] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, nativeLogin } = useAuth();
     const t = useTranslation(["auth", "common"]).t;
     const { openExternalLink, closeWebView, webViewState, isTauriApp } = useExternalLink();
 
@@ -59,17 +59,10 @@ const Register = () => {
 
         try {
             if (isTauriApp) {
-                console.log("Starting Google OAuth for registration...");
-                const { default: mobileAuthService } = await import("../services/mobileAuthService");
-                const result = await mobileAuthService.startGoogleOAuth();
-
-                if (result && result.token && result.user) {
-                    login(result);
-                    setMessage("Registration/Login successful");
-                    navigate("/onboarding");
-                } else {
-                    setError("Google authentication failed - invalid response");
-                }
+                console.log("Starting native Google Sign-In for registration...");
+                await nativeLogin();
+                setMessage("Registration/Login successful");
+                navigate("/onboarding");
             } else {
                 console.log("Using web browser redirect for Google");
                 const googleAuthUrl = `${API_BASE_URL}/auth/google`;
@@ -87,22 +80,14 @@ const Register = () => {
         console.log("=================================");
 
         try {
-            if (isTauriAvailable) {
-                console.log("Using comprehensive mobile OAuth for Apple");
-                // Dynamically import mobile auth service only when needed
-                const { default: mobileAuthService } = await import("../services/mobileAuthService");
-                const result = await mobileAuthService.startAppleSignIn();
-
-                if (result && result.token && result.user) {
-                    login(result);
-                    setMessage("Registration/Login successful");
-                    navigate("/onboarding");
-                } else {
-                    setError("Apple authentication failed - invalid response");
-                }
+            if (isTauriApp) {
+                console.log("Apple Sign-In not yet implemented for native auth");
+                setError("Apple Sign-In will be available in a future update");
+                // TODO: Implement Apple Sign-In in native auth service
             } else {
-                console.log("Apple Sign In not available on web");
-                setError("Apple Sign In is only available on mobile devices");
+                console.log("Using web browser redirect for Apple");
+                const appleAuthUrl = `${API_BASE_URL}/auth/apple`;
+                window.location.href = appleAuthUrl;
             }
         } catch (error) {
             console.error("Apple OAuth error:", error);

@@ -56,17 +56,8 @@ const Login = () => {
                     await nativeLogin();
                     setMessage(t("auth:login.success"));
                 } catch (nativeError) {
-                    console.error("Native sign-in failed, falling back to web OAuth:", nativeError);
-                    // Fallback to the old mobile auth service
-                    const { default: mobileAuthService } = await import("../services/mobileAuthService");
-                    const response = await mobileAuthService.startGoogleOAuth();
-
-                    if (response && response.token && response.user) {
-                        login(response);
-                        setMessage(t("auth:login.success"));
-                    } else {
-                        throw new Error("Invalid OAuth response");
-                    }
+                    console.error("Native sign-in failed:", nativeError);
+                    throw new Error("Native Google Sign-In failed: " + nativeError.message);
                 }
             } else {
                 console.log("Using web OAuth flow...");
@@ -97,20 +88,13 @@ const Login = () => {
 
         try {
             if (isTauriApp) {
-                console.log("Using Apple Sign In for Tauri app...");
-                // Dynamically import mobile auth service only when needed
-                const { default: mobileAuthService } = await import("../services/mobileAuthService");
-                const response = await mobileAuthService.startAppleSignIn();
-
-                if (response && response.token && response.user) {
-                    login(response);
-                    setMessage(t("auth:login.success"));
-                } else {
-                    throw new Error("Invalid Apple Sign In response");
-                }
+                console.log("Apple Sign-In not yet implemented for native auth");
+                setError("Apple Sign-In will be available in a future update");
+                // TODO: Implement Apple Sign-In in native auth service
             } else {
-                // For web, Apple Sign In is not typically available
-                setError("Apple Sign In is only available in the mobile app");
+                console.log("Using web browser redirect for Apple");
+                const appleAuthUrl = `${API_BASE_URL}/auth/apple`;
+                window.location.href = appleAuthUrl;
             }
         } catch (error) {
             console.error("Apple Sign In error:", error);

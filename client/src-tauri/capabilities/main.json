@@ -9,9 +9,7 @@
         "core:default",
         "shell:allow-open",
         "shell:default",
-        "deep-link:default",
-        "oauth:allow-start",
-        "oauth:allow-cancel"
+        "deep-link:default"
     ],
     "local": true
 }

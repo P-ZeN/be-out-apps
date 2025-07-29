@@ -2,7 +2,7 @@
 
 ## Important: Google Cloud Console Configuration
 
-The OAuth plugin creates a temporary localhost server on a random port (e.g., `http://localhost:38901/callback`). 
+The OAuth plugin creates a temporary localhost server on a random port (e.g., `http://localhost:38901/callback`).
 
 ### Required Action:
 

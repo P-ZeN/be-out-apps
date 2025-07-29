@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 import "./i18n"; // Initialize i18n
-import mobileAuthService from "./services/mobileAuthService.js";
 
 // Set up deep link listener for OAuth callbacks (Android only)
 if (window.__TAURI__) {
@@ -24,8 +23,7 @@ if (window.__TAURI__) {
                         // Check if it's an OAuth callback
                         const url = event.payload || event.url || event;
                         if (typeof url === 'string' && (url.includes("googleusercontent.apps") || url.includes("oauth2redirect"))) {
-                            console.log("[DEEP LINK] OAuth callback detected, processing...");
-                            mobileAuthService.handleOAuthCallback(url);
+                            console.log("[DEEP LINK] OAuth callback detected - native auth handles this internally");
                         } else {
                             console.log("[DEEP LINK] Not an OAuth callback, ignoring:", url);
                         }

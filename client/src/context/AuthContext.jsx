@@ -83,20 +83,20 @@ export const AuthProvider = ({ children }) => {
         try {
             setLoading(true);
             console.log("[AUTH_CONTEXT] Starting native Google Sign-In...");
-            
+
             const result = await nativeAuthService.signIn();
-            
+
             // The nativeAuthService.signIn() already validates with server and stores tokens
             // result contains: { user, token, refreshToken }
             setUser(result.user);
-            
+
             console.log("[AUTH_CONTEXT] Native sign-in successful");
-            
+
             // Check if onboarding is complete
             if (!result.user.onboarding_complete) {
                 navigate("/onboarding");
             }
-            
+
             return result;
         } catch (error) {
             console.error("[AUTH_CONTEXT] Native sign-in failed:", error);
@@ -118,13 +118,13 @@ export const AuthProvider = ({ children }) => {
                     // Continue with local logout even if native sign-out fails
                 }
             }
-            
+
             // Clear local storage and state
             localStorage.removeItem("token");
             localStorage.removeItem("refreshToken");
             localStorage.removeItem("userProfile");
             setUser(null);
-            
+
         } catch (error) {
             console.error("[AUTH_CONTEXT] Logout failed:", error);
             // Still clear local state even if there was an error

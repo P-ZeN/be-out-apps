@@ -247,7 +247,7 @@ router.post("/google/validate", async (req, res) => {
                 }
             } else {
                 user = userResult.rows[0];
-                
+
                 // Update Google ID if not set
                 await poolClient.query(
                     "UPDATE users SET google_id = $1 WHERE id = $2 AND google_id IS NULL",
@@ -295,11 +295,11 @@ router.post("/google/validate", async (req, res) => {
 
     } catch (error) {
         console.error("Google token validation error:", error);
-        
+
         if (error.message && error.message.includes('Token used too late')) {
             return res.status(401).json({ message: "Token expired" });
         }
-        
+
         if (error.message && error.message.includes('Wrong recipient')) {
             return res.status(401).json({ message: "Invalid token audience" });
         }

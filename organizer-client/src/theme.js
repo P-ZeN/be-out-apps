@@ -3,10 +3,10 @@ import { createTheme } from "@mui/material/styles";
 export const theme = createTheme({
     palette: {
         primary: {
-            main: "#4CAF50", // Green - couleur d'accent principal (organizer brand)
-            dark: "#388E3C", // Darker green
-            light: "#81C784", // Lighter green
-            contrastText: "#FFFFFF", // White logo on green background
+            main: "#110e3a", // Dark blue - couleur d'accent principal (organizer brand)
+            dark: "#0a0825", // Darker blue
+            light: "#1a1548", // Lighter blue
+            contrastText: "#FFFFFF", // White logo on blue background
         },
         secondary: {
             main: "#d32f2f", // Keep red for critical actions/alerts
@@ -22,23 +22,23 @@ export const theme = createTheme({
             primary: "#140F0B", // Sombre - texte principal (unified brand)
             secondary: "#5D4037", // Slightly lighter dark for secondary text
         },
-        // Custom organizer colors - keep green for organizer-specific elements
+        // Custom organizer colors - keep blue for organizer-specific elements
         organizer: {
-            background: "#4CAF50", // Green for organizer-specific backgrounds
+            background: "#110e3a", // Blue for organizer-specific backgrounds
             text: "#ffffff",
             textSecondary: "rgba(255, 255, 255, 0.8)",
-            success: "#4CAF50", // Green for success/revenue indicators
+            success: "#110e3a", // Blue for success/revenue indicators
         },
         // Custom color for footer - using sombre background
         footer: {
             background: "#140F0B", // Sombre background
             text: "#FFECE1", // Crème text
             textSecondary: "rgba(255, 236, 225, 0.8)", // Crème with opacity
-            titleColor: "#4CAF50", // Green for titles
+            titleColor: "#110e3a", // Blue for titles
         },
-        // Custom color for main menu - using green background
+        // Custom color for main menu - using blue background
         mainMenu: {
-            background: "#4CAF50", // Green background
+            background: "#110e3a", // Blue background
             text: "#FFECE1", // Crème text
             textSecondary: "rgba(255, 236, 225, 0.8)",
         },
@@ -46,6 +46,7 @@ export const theme = createTheme({
         brand: {
             creme: "#FFECE1",
             green: "#4CAF50",
+            blue: "#110e3a",
             sombre: "#140F0B",
         },
     },
@@ -128,7 +129,7 @@ export const theme = createTheme({
             styleOverrides: {
                 root: {
                     zIndex: 1300,
-                    backgroundColor: "#4CAF50", // Green brand color
+                    backgroundColor: "#110e3a", // Blue brand color
                     color: "#FFFFFF", // White text for organizer
                     boxShadow: "none", // Remove shadow
                     "& .MuiTypography-root": {
@@ -146,18 +147,18 @@ export const theme = createTheme({
                     textTransform: "none",
                 },
                 contained: {
-                    backgroundColor: "#4CAF50", // Green for primary buttons
+                    backgroundColor: "#110e3a", // Blue for primary buttons
                     color: "#FFFFFF",
                     "&:hover": {
-                        backgroundColor: "#388E3C", // Darker green on hover
+                        backgroundColor: "#0a0825", // Darker blue on hover
                     },
                 },
                 outlined: {
-                    borderColor: "#4CAF50",
-                    color: "#4CAF50",
+                    borderColor: "#110e3a",
+                    color: "#110e3a",
                     "&:hover": {
-                        borderColor: "#388E3C",
-                        backgroundColor: "rgba(76, 175, 80, 0.04)",
+                        borderColor: "#0a0825",
+                        backgroundColor: "rgba(17, 14, 58, 0.04)",
                     },
                 },
             },
@@ -177,7 +178,7 @@ export const theme = createTheme({
                     fontWeight: 500,
                 },
                 filled: {
-                    backgroundColor: "#4CAF50",
+                    backgroundColor: "#110e3a",
                     color: "#FFFFFF",
                 },
             },
@@ -190,7 +191,7 @@ export const theme = createTheme({
                     color: "#ffffff",
                 },
                 standardSuccess: {
-                    backgroundColor: "#4CAF50", // Green for success
+                    backgroundColor: "#110e3a", // Blue for success
                     color: "#ffffff",
                 },
             },
@@ -199,17 +200,17 @@ export const theme = createTheme({
             styleOverrides: {
                 root: {
                     "&:hover": {
-                        backgroundColor: "rgba(76, 175, 80, 0.08)", // Light green hover
+                        backgroundColor: "rgba(17, 14, 58, 0.08)", // Light blue hover
                         color: "#140F0B", // Dark text on hover
                         "& .MuiListItemIcon-root": {
                             color: "#140F0B", // Dark icon on hover
                         },
                     },
                     "&.Mui-selected": {
-                        backgroundColor: "#4CAF50", // Green background for selected
+                        backgroundColor: "#110e3a", // Blue background for selected
                         color: "#FFFFFF", // White text for selected
                         "&:hover": {
-                            backgroundColor: "#388E3C", // Darker green on hover when selected
+                            backgroundColor: "#0a0825", // Darker blue on hover when selected
                             color: "#FFFFFF", // Keep white text
                             "& .MuiListItemIcon-root": {
                                 color: "#FFFFFF", // Keep white icon
