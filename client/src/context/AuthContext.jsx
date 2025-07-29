@@ -79,6 +79,18 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
+    const loginWithToken = (token) => {
+        localStorage.setItem("token", token);
+        userService.getProfile().then((profileData) => {
+            setUser(profileData);
+            if (!profileData.onboarding_complete) {
+                navigate("/onboarding");
+            } else {
+                navigate("/"); // Or to a default logged-in page
+            }
+        });
+    };
+
     const nativeLogin = async () => {
         try {
             setLoading(true);

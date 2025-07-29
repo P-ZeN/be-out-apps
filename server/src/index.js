@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import path from "path";
 import setupRoutes from "./routes/setup.js";
 import authRoutes from "./routes/auth.js";
+import oauthRoutes from "./routes/oauth.js"; // Import the new OAuth routes
 import mobileAuthRoutes from "./routes/mobileAuth.js";
 import profileRoutes from "./routes/profile.js";
 import eventsRoutes from "./routes/events.js";
@@ -126,13 +127,11 @@ app.use(
 
 const port = process.env.PORT || 3000;
 
-app.use("/", setupRoutes);
-app.use("/auth", authRoutes);
-app.use("/auth", mobileAuthRoutes);
+app.use("/api/setup", setupRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/mobile-auth", mobileAuthRoutes);
-app.use("/user", profileRoutes);
-app.use("/api/user", profileRoutes);
+app.use("/api/oauth", oauthRoutes); // Use the new OAuth routes
+app.use("/api/auth/mobile", mobileAuthRoutes);
+app.use("/api/profile", profileRoutes);
 app.use("/api/events", eventsRoutes);
 app.use("/api/bookings", bookingsRoutes);
 app.use("/api/admin", adminRoutes);

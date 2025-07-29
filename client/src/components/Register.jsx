@@ -52,20 +52,12 @@ const Register = () => {
     };
 
     const handleGoogleLogin = async () => {
-        console.log("=== REGISTER GOOGLE DEBUG INFO ===");
-        console.log("isTauriAvailable:", isTauriAvailable);
-        console.log("isTauriApp (hook):", isTauriApp);
-        console.log("==================================");
-
         try {
-            if (isTauriApp) {
-                console.log("Starting native Google Sign-In for registration...");
-                await nativeLogin();
-                setMessage("Registration/Login successful");
-                navigate("/onboarding");
+            console.log("=== REGISTER GOOGLE START ===");
+            const googleAuthUrl = `${API_BASE_URL}/api/oauth/google/login`;
+            if (window.__TAURI__ && window.__TAURI__.shell) {
+                await window.__TAURI__.shell.open(googleAuthUrl);
             } else {
-                console.log("Using web browser redirect for Google");
-                const googleAuthUrl = `${API_BASE_URL}/auth/google`;
                 window.location.href = googleAuthUrl;
             }
         } catch (error) {

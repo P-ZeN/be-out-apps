@@ -39,6 +39,9 @@ export default defineConfig(({ mode }) => {
             target: process.env.TAURI_PLATFORM == "windows" ? "chrome105" : "safari13",
             minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
             sourcemap: !!process.env.TAURI_DEBUG,
+            rollupOptions: {
+                external: [/^@tauri-apps\/api\/.*/],
+            },
         },
         // Define environment variables for different environments
         define: {

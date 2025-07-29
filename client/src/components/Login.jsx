@@ -41,35 +41,17 @@ const Login = () => {
     };
 
     const handleGoogleLogin = async () => {
-        setMessage("");
-        setError("");
-        setOauthLoading(true);
-
         try {
             console.log("=== GOOGLE OAUTH START ===");
-            console.log("isTauriApp (from hook):", isTauriApp);
-            console.log("areTauriApisAvailable():", areTauriApisAvailable());
-
-            if (areTauriApisAvailable() && nativeLogin) {
-                console.log("Using native Google Sign-In...");
-                try {
-                    await nativeLogin();
-                    setMessage(t("auth:login.success"));
-                } catch (nativeError) {
-                    console.error("Native sign-in failed:", nativeError);
-                    throw new Error("Native Google Sign-In failed: " + nativeError.message);
-                }
+            const googleAuthUrl = `${API_BASE_URL}/api/oauth/google/login`;
+            if (window.__TAURI__ && window.__TAURI__.shell) {
+                await window.__TAURI__.shell.open(googleAuthUrl);
             } else {
-                console.log("Using web OAuth flow...");
-                // Use web OAuth flow for browsers
-                const googleAuthUrl = `${API_BASE_URL}/auth/google`;
                 window.location.href = googleAuthUrl;
             }
         } catch (error) {
             console.error("Google OAuth error:", error);
-            setError(error.message || t("auth:login.failed"));
-        } finally {
-            setOauthLoading(false);
+            setError("Google authentication failed: " + error.message);
         }
     };
     const handleFacebookLogin = () => {
