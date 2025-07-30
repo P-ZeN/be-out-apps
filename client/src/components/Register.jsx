@@ -55,16 +55,29 @@ const Register = () => {
         setError("");
         try {
             if (window.__TAURI__) {
-                // Native mobile flow
-                const { id_token } = await window.__TAURI__.social.signInWithGoogle();
-                if (id_token) {
-                    const response = await authService.loginWithGoogleMobile(id_token);
-                    nativeLogin(response.token, response.user); // Use nativeLogin to store token and user
+                // Native mobile flow using our new google-signin plugin
+                console.log("=== REGISTER GOOGLE START (Tauri) ===");
+
+                // Generate a random nonce for security
+                const nonce = Math.random().toString(36).substring(2, 15);
+
+                // Call our new plugin's sign-in method
+                const result = await window.__TAURI__.invoke('plugin:google-signin|google_sign_in', {
+                    filterByAuthorizedAccounts: false,
+                    autoSelectEnabled: false,
+                    nonce: nonce
+                });
+
+                console.log("Google sign-in result:", result);
+
+                if (result.success && result.id_token) {
+                    const response = await authService.loginWithGoogleMobile(result.id_token);
+                    nativeLogin(response.token, response.user);
                     setMessage(t("auth:login.success"));
                     // Redirect to onboarding as this is a new user
                     navigate("/onboarding");
                 } else {
-                    throw new Error("Google Sign-In failed to return an ID token.");
+                    throw new Error(result.error || "Google Sign-In failed to return an ID token.");
                 }
             } else {
                 // Web flow

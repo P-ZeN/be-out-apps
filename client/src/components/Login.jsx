@@ -45,18 +45,27 @@ const Login = () => {
         setOauthLoading(true);
         try {
             if (window.__TAURI__) {
-                // Native mobile flow
-                const { id_token } = await window.__TAURI__.social.signInWithGoogle();
-                if (id_token) {
-                    // The tauri-plugin-social returns an id_token, which is what our server needs.
-                    // We can reuse the loginWithGoogleMobile function, but we'll pass the id_token instead of a serverAuthCode.
-                    // For clarity, we should rename the parameter on the server-side, but for now, this will work.
-                    // Let's adjust the server endpoint to accept `idToken` instead of `serverAuthCode`.
-                    const response = await authService.loginWithGoogleMobile(id_token);
-                    nativeLogin(response.token, response.user); // Use nativeLogin to store token and user
+                // Native mobile flow using our new google-signin plugin
+                console.log("=== GOOGLE OAUTH START (Tauri) ===");
+
+                // Generate a random nonce for security
+                const nonce = Math.random().toString(36).substring(2, 15);
+
+                // Call our new plugin's sign-in method
+                const result = await window.__TAURI__.invoke('plugin:google-signin|google_sign_in', {
+                    filterByAuthorizedAccounts: false,
+                    autoSelectEnabled: false,
+                    nonce: nonce
+                });
+
+                console.log("Google sign-in result:", result);
+
+                if (result.success && result.id_token) {
+                    const response = await authService.loginWithGoogleMobile(result.id_token);
+                    nativeLogin(response.token, response.user);
                     setMessage(t("auth:login.success"));
                 } else {
-                    throw new Error("Google Sign-In failed to return an ID token.");
+                    throw new Error(result.error || "Google Sign-In failed to return an ID token.");
                 }
             } else {
                 // Web flow
