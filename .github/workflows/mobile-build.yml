@@ -238,6 +238,30 @@ jobs:
           echo "- ANDROID_KEY_PASSWORD: Key password"
         fi
 
+    - name: Debug Signing Setup
+      working-directory: ./client
+      run: |
+        echo "=== Checking signing setup ==="
+        if [ -f "src-tauri/keystore.properties" ]; then
+          echo "✅ keystore.properties exists"
+          echo "Contents (passwords hidden):"
+          sed 's/Password=.*/Password=***HIDDEN***/g' src-tauri/keystore.properties
+        else
+          echo "❌ keystore.properties not found"
+        fi
+        
+        if [ -f "src-tauri/keystore/be-out-release.keystore" ]; then
+          echo "✅ Keystore file exists"
+          ls -la src-tauri/keystore/be-out-release.keystore
+        else
+          echo "❌ Keystore file not found"
+          ls -la src-tauri/keystore/ || echo "Keystore directory not found"
+        fi
+        
+        echo "=== Environment variables ==="
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+
     - name: Build client
       run: npm run build:client
       env:
@@ -536,7 +560,7 @@ jobs:
 
   build-ios:
     name: Build iOS IPA
-    runs-on: macos-latest
+    runs-on: macos-15  # Use macOS 15 which has Xcode 16+
     needs: test-client
     if: true  # Enable for testing - Tauri 2.x has iOS support
     steps:
@@ -553,10 +577,38 @@ jobs:
       with:
         targets: aarch64-apple-ios,x86_64-apple-ios,aarch64-apple-ios-sim
 
+    - name: Verify Xcode Version
+      run: |
+        echo "=== Xcode Environment Check ==="
+        xcodebuild -version
+        xcrun --show-sdk-version --sdk iphoneos || echo "iPhone SDK not found"
+        
+        # Check Xcode version compatibility
+        XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
+        echo "Detected Xcode version: $XCODE_VERSION"
+        
+        # Tauri 2.x typically requires Xcode 15.0+ for iOS builds
+        if [[ $(echo "$XCODE_VERSION 15.0" | tr " " "\n" | sort -V | head -1) != "15.0" ]]; then
+          echo "⚠️  Warning: Xcode version may be too old for Tauri 2.x iOS builds"
+          echo "   Detected: $XCODE_VERSION"
+          echo "   Required: 15.0 or later"
+          echo "   This may cause project format compatibility issues"
+        else
+          echo "✅ Xcode version appears compatible"
+        fi
+
     - name: Install Tauri CLI
       run: |
         echo "Installing Tauri CLI..."
-        npm install -g @tauri-apps/cli@latest
+        
+        # Try to install the latest version first
+        if npm install -g @tauri-apps/cli@latest; then
+          TAURI_VERSION=$(npm list -g @tauri-apps/cli --depth=0 | grep @tauri-apps/cli)
+          echo "✅ Installed: $TAURI_VERSION"
+        else
+          echo "❌ Failed to install latest Tauri CLI"
+          exit 1
+        fi
 
         echo "Verifying Tauri CLI installation..."
         tauri --version || echo "Failed to get Tauri version"
@@ -684,13 +736,26 @@ jobs:
             tail -50 ios_build.log
             echo "=== Checking for common error patterns ==="
             grep -i "error\|failed\|exception\|code.*sign" ios_build.log | tail -10
+            echo "=== Checking for Xcode project format issues ==="
+            grep -i "project.*format\|future.*xcode\|adjust.*project.*format" ios_build.log | tail -5
             echo "=== Checking for code signing issues ==="
             grep -i "sign\|certificate\|team\|provision" ios_build.log | tail -5
+            
+            # Check for specific Xcode project format error
+            if grep -q "future Xcode project file format" ios_build.log; then
+              echo ""
+              echo "🔧 XCODE PROJECT FORMAT ISSUE DETECTED:"
+              echo "   The generated iOS project uses a newer format than this Xcode version supports."
+              echo "   Solutions:"
+              echo "   1. Use a newer macOS runner (macos-15 instead of macos-latest)"
+              echo "   2. Use an older Tauri CLI version that generates compatible projects"
+              echo "   3. Update the GitHub Actions runner to use Xcode 16+"
+            fi
           fi
 
           echo "=== Note about expected failures ==="
           echo "iOS builds in CI typically fail at code signing without proper certificates."
-          echo "The important part is that project generation and compilation succeed."
+          echo "However, Xcode project format issues indicate a toolchain compatibility problem."
         fi
       env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
