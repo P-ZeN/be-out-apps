@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "identifier": "com.beout.app",
     "build": {
-        "beforeBuildCommand": "npm run build:client",
+        "beforeBuildCommand": "npm run build:mobile",
         "beforeDevCommand": "npm run dev",
         "frontendDist": "../build",
         "devUrl": "http://localhost:5173"

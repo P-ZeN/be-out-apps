@@ -35,7 +35,7 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     needs: test-client
-    if: false  # Temporarily disabled
+    if: true  # Enabled
     steps:
     - uses: actions/checkout@v4
 
@@ -206,6 +206,38 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Setup Android Code Signing
+      working-directory: ./client
+      run: |
+        echo "Setting up Android code signing..."
+        
+        # Create keystore directory
+        mkdir -p src-tauri/keystore
+        
+        # Decode and save the keystore file
+        if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+          echo "✅ Android keystore found in secrets"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > src-tauri/keystore/be-out-release.keystore
+          
+          # Create keystore.properties file
+          cat > src-tauri/keystore.properties << EOF
+        storeFile=keystore/be-out-release.keystore
+        storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+        keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+        EOF
+          
+          echo "✅ Android code signing configured"
+          ls -la src-tauri/keystore/
+        else
+          echo "⚠️  No Android keystore found in secrets - building unsigned APK"
+          echo "To enable signed builds, add these secrets to your GitHub repository:"
+          echo "- ANDROID_KEYSTORE_BASE64: Base64 encoded keystore file"
+          echo "- ANDROID_KEYSTORE_PASSWORD: Keystore password"
+          echo "- ANDROID_KEY_ALIAS: Key alias"
+          echo "- ANDROID_KEY_PASSWORD: Key password"
+        fi
+
     - name: Build client
       run: npm run build:client
       env:
@@ -213,6 +245,7 @@ jobs:
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
     - name: Initialize Android project
+      working-directory: ./client
       run: |
         echo "Initializing Tauri Android project..."
         echo "Environment variables:"
@@ -220,27 +253,29 @@ jobs:
         echo "NDK_HOME: $NDK_HOME"
         echo "JAVA_HOME: $JAVA_HOME"
 
-        echo "Available npm scripts:"
+        echo "Available npm scripts in client directory:"
         npm run | grep tauri || echo "No tauri scripts found"
+
+        echo "Checking Tauri CLI availability:"
+        npx tauri --version || echo "npx tauri not available"
 
         # Try different approaches to run tauri android init
         echo "Attempting to initialize Android project..."
 
-        # Method 1: Use npm run tauri (which should use the local CLI)
-        if npm run tauri android init -- --ci; then
-          echo "✅ Android project initialized with npm run tauri"
+        # Try npm scripts first, then npx
+        if npm run tauri:android:init -- --ci; then
+          echo "✅ Android project initialized with npm script"
         elif npx tauri android init --ci; then
           echo "✅ Android project initialized with npx tauri"
-        elif tauri android init --ci; then
-          echo "✅ Android project initialized with global tauri"
         else
           echo "❌ All initialization methods failed"
           echo "Checking Tauri CLI installation..."
 
           # Debug information
-          which tauri || echo "Global tauri not found"
           npm list @tauri-apps/cli || echo "Local @tauri-apps/cli not found"
           ls -la node_modules/.bin/ | grep tauri || echo "No tauri in node_modules/.bin"
+          echo "Checking root node_modules:"
+          ls -la ../node_modules/.bin/ | grep tauri || echo "No tauri in root node_modules/.bin"
         fi
 
         echo "Checking for generated project..."
@@ -329,11 +364,11 @@ jobs:
           cat ~/.cargo/config.toml | grep -A 2 armv7-linux-androideabi || echo "No config found"
         fi
 
-        cd /home/runner/work/be-out-apps/be-out-apps
       env:
         NDK_HOME: ${{ env.NDK_HOME }}
 
     - name: Debug Gradle Build Process
+      working-directory: ./client
       run: |
         echo "=== Debugging Gradle Build Process ==="
         cd src-tauri/gen/android
@@ -355,13 +390,13 @@ jobs:
           grep -i "node\|javascript\|process.*finished.*non-zero" gradle_rust_debug.log || echo "No Node.js specific errors found"
         fi
 
-        cd /home/runner/work/be-out-apps/be-out-apps
       env:
         NDK_HOME: ${{ env.NDK_HOME }}
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         JAVA_HOME: ${{ env.JAVA_HOME }}
 
     - name: Build Android APK
+      working-directory: ./client
       run: |
         echo "Building Android APK..."
         echo "Checking Android project directory..."
@@ -378,7 +413,7 @@ jobs:
             echo "✅ Found Android project at: $ANDROID_PROJECT_DIR"
           else
             echo "❌ No Android project found, re-initializing..."
-            tauri android init --ci
+            npx tauri android init --ci
             if [ -d "src-tauri/gen/android" ]; then
               ANDROID_PROJECT_DIR="src-tauri/gen/android"
               echo "✅ Re-initialization successful: $ANDROID_PROJECT_DIR"
@@ -457,6 +492,7 @@ jobs:
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
     - name: Find and Upload APK
+      working-directory: ./client
       run: |
         echo "=== Searching for APK files ==="
         echo "Looking for APK files in the workspace..."
@@ -492,10 +528,10 @@ jobs:
       with:
         name: android-apk
         path: |
-          src-tauri/gen/android/app/build/outputs/apk/**/*.apk
-          src-tauri/gen/android/**/build/outputs/apk/**/*.apk
-          src-tauri/target/**/release/*.apk
-          **/*.apk
+          client/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          client/src-tauri/gen/android/**/build/outputs/apk/**/*.apk
+          client/src-tauri/target/**/release/*.apk
+          client/**/*.apk
         if-no-files-found: warn
 
   build-ios:
@@ -538,22 +574,21 @@ jobs:
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
     - name: Initialize iOS project
+      working-directory: ./client
       run: |
         echo "Initializing Tauri iOS project..."
-        echo "Available npm scripts:"
+        echo "Available npm scripts in client directory:"
         npm run | grep tauri || echo "No tauri scripts found"
 
         # Try different methods to initialize iOS project
-        if npm run tauri ios init -- --ci; then
-          echo "✅ iOS project initialized with npm run tauri"
+        if npm run tauri:ios:init -- --ci; then
+          echo "✅ iOS project initialized with npm script"
         elif npx tauri ios init --ci; then
           echo "✅ iOS project initialized with npx tauri"
-        elif tauri ios init --ci; then
-          echo "✅ iOS project initialized with global tauri"
         else
           echo "❌ All initialization methods failed"
           echo "Checking available Tauri commands..."
-          tauri --help || echo "No help available"
+          npx tauri --help || echo "No help available"
         fi
 
         echo "Checking for generated iOS/Apple project..."
@@ -573,6 +608,7 @@ jobs:
         fi
 
     - name: Build iOS IPA
+      working-directory: ./client
       run: |
         echo "Building iOS IPA..."
         echo "Checking iOS project directory..."
@@ -592,7 +628,7 @@ jobs:
             echo "✅ Found iOS/Apple project at: $IOS_PROJECT_DIR"
           else
             echo "❌ No iOS/Apple project found, re-initializing..."
-            if tauri ios init --ci; then
+            if npx tauri ios init --ci; then
               if [ -d "src-tauri/gen/ios" ]; then
                 IOS_PROJECT_DIR="src-tauri/gen/ios"
                 echo "✅ Re-initialization successful: $IOS_PROJECT_DIR"
@@ -627,14 +663,11 @@ jobs:
         fi
 
         # Try different methods to build iOS
-        if npm run tauri ios build -- --verbose 2>&1 | tee ios_build.log; then
-          echo "✅ Build succeeded with npm run tauri ios build"
+        if npm run tauri:ios:build -- --verbose 2>&1 | tee ios_build.log; then
+          echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
         elif npx tauri ios build --verbose 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with npx tauri ios build"
-          BUILD_SUCCESS=true
-        elif tauri ios build --verbose 2>&1 | tee ios_build.log; then
-          echo "✅ Build succeeded with global tauri ios build"
           BUILD_SUCCESS=true
         else
           echo "❌ All build methods failed"
@@ -669,17 +702,17 @@ jobs:
       with:
         name: ios-ipa
         path: |
-          src-tauri/gen/ios/build/Build/Products/*.ipa
-          src-tauri/gen/ios/**/build/**/*.ipa
-          src-tauri/gen/apple/build/Build/Products/*.ipa
-          src-tauri/gen/apple/**/build/**/*.ipa
-          **/*.ipa
+          client/src-tauri/gen/ios/build/Build/Products/*.ipa
+          client/src-tauri/gen/ios/**/build/**/*.ipa
+          client/src-tauri/gen/apple/build/Build/Products/*.ipa
+          client/src-tauri/gen/apple/**/build/**/*.ipa
+          client/**/*.ipa
         if-no-files-found: warn
 
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [build-ios]  # Only depends on iOS build now
+    needs: [build-android, build-ios]  # Now depends on both builds
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
     - uses: actions/checkout@v4
