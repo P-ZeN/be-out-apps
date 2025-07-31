@@ -23,7 +23,7 @@ router.post("/google/mobile-callback", async (req, res) => {
             audience: process.env.GOOGLE_CLIENT_ID_SERVER,
         });
         const payload = ticket.getPayload();
-        
+
         if (!payload) {
             return res.status(400).json({ message: "Invalid Google token." });
         }
@@ -85,33 +85,49 @@ router.post("/google/mobile-profile-callback", async (req, res) => {
         // For mobile profile authentication, we use the email as the unique identifier
         // since we don't have a Google ID from native Android sign-in
         
-        // Check if user exists in the database by email
-        let userResult = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        // Check if user exists in the database by email and provider
+        let userResult = await pool.query(
+            "SELECT * FROM users WHERE email = $1 AND provider = $2", 
+            [email, 'google']
+        );
         let user = userResult.rows[0];
 
         // If user doesn't exist, create a new one
         if (!user) {
-            // For mobile profile auth, we'll use email as a fallback identifier
-            // In a production app, you might want to implement additional verification
             const newUserResult = await pool.query(
-                "INSERT INTO users (email, full_name, profile_picture_url, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *",
-                [email, displayName, profilePictureUri]
+                "INSERT INTO users (email, provider, provider_id, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *",
+                [email, 'google', email] // Use email as provider_id since we don't have Google ID
             );
             user = newUserResult.rows[0];
+            
+            // Create user profile with the provided data
+            await pool.query(
+                "INSERT INTO user_profiles (user_id, first_name, last_name, profile_picture, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())",
+                [user.id, givenName, familyName, profilePictureUri]
+            );
         } else {
             // Update existing user's profile information
-            const updateResult = await pool.query(
-                "UPDATE users SET full_name = $1, profile_picture_url = $2, updated_at = NOW() WHERE email = $3 RETURNING *",
-                [displayName, profilePictureUri, email]
+            await pool.query(
+                "UPDATE user_profiles SET first_name = $1, last_name = $2, profile_picture = $3, updated_at = NOW() WHERE user_id = $4",
+                [givenName, familyName, profilePictureUri, user.id]
             );
-            user = updateResult.rows[0];
         }
+
+        // Get updated user with profile data
+        const userWithProfileResult = await pool.query(`
+            SELECT u.*, up.first_name, up.last_name, up.profile_picture 
+            FROM users u 
+            LEFT JOIN user_profiles up ON u.id = up.user_id 
+            WHERE u.id = $1
+        `, [user.id]);
+        
+        const userWithProfile = userWithProfileResult.rows[0];
 
         // Generate JWT for our application
         const appTokenPayload = {
-            id: user.id,
-            email: user.email,
-            roles: user.roles,
+            id: userWithProfile.id,
+            email: userWithProfile.email,
+            role: userWithProfile.role,
         };
 
         const appToken = jwt.sign(appTokenPayload, process.env.JWT_SECRET, {
@@ -123,11 +139,13 @@ router.post("/google/mobile-profile-callback", async (req, res) => {
             message: "Mobile profile authentication successful.",
             token: appToken,
             user: {
-                id: user.id,
-                email: user.email,
-                fullName: user.full_name,
-                profilePictureUrl: user.profile_picture_url,
-                roles: user.roles,
+                id: userWithProfile.id,
+                email: userWithProfile.email,
+                fullName: displayName,
+                firstName: userWithProfile.first_name,
+                lastName: userWithProfile.last_name,
+                profilePictureUrl: userWithProfile.profile_picture,
+                role: userWithProfile.role,
             },
         });
 
@@ -135,9 +153,7 @@ router.post("/google/mobile-profile-callback", async (req, res) => {
         console.error("Error during Google mobile profile authentication:", error);
         res.status(500).json({ message: "Internal server error during authentication." });
     }
-});
-
-// Step 1: The client initiates the login process by redirecting to this endpoint.
+});// Step 1: The client initiates the login process by redirecting to this endpoint.
 // This will redirect the user to the Google OAuth2 consent screen.
 router.get(
     "/google/login",

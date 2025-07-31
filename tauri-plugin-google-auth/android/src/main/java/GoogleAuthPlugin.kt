@@ -29,10 +29,10 @@ class GoogleSignInArgs {
 class GoogleAuthPlugin(private val activity: Activity): Plugin(activity) {
     companion object {
         private var instance: GoogleAuthPlugin? = null
-        
+
         fun getInstance(): GoogleAuthPlugin? = instance
     }
-    
+
     private val implementation = GoogleAuth(activity)
 
     override fun load(webView: android.webkit.WebView) {
@@ -40,7 +40,7 @@ class GoogleAuthPlugin(private val activity: Activity): Plugin(activity) {
         // Register this instance globally so MainActivity can access it
         instance = this
     }
-    
+
     // This method can be called from the main activity to handle activity results
     fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         implementation.handleActivityResult(requestCode, resultCode, data)

@@ -24,7 +24,7 @@ class GoogleAuth(private val activity: Activity) {
     companion object {
         private const val SIGN_IN_REQUEST_CODE = 9001
     }
-    
+
     private var googleSignInClient: GoogleSignInClient? = null
     private var currentCallback: ((GoogleSignInResult) -> Unit)? = null
     private val TAG = "GoogleAuth"
@@ -83,12 +83,12 @@ class GoogleAuth(private val activity: Activity) {
             callback(GoogleSignInResult(false, error = "Sign-in error: ${e.message}"))
         }
     }
-    
+
     private fun startInteractiveSignIn(client: GoogleSignInClient, callback: (GoogleSignInResult) -> Unit) {
         try {
             // Store the callback for when the result comes back
             currentCallback = callback
-            
+
             // Launch the sign-in intent
             val signInIntent = client.signInIntent
             activity.startActivityForResult(signInIntent, SIGN_IN_REQUEST_CODE)
@@ -97,7 +97,7 @@ class GoogleAuth(private val activity: Activity) {
             callback(GoogleSignInResult(false, error = "Failed to start interactive sign-in: ${e.message}"))
         }
     }
-    
+
     fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == SIGN_IN_REQUEST_CODE) {
             Log.d(TAG, "Received sign-in activity result")

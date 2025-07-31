@@ -5,8 +5,20 @@ import { LocationOn, LocalOffer, Close } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+// Function to detect if running in Tauri
+const isTauri = () => {
+    return typeof window !== "undefined" && window.__TAURI__ !== undefined;
+};
+
 // Function to get Mapbox token with multiple fallback strategies
 const getMapboxToken = () => {
+    const isTauriApp = isTauri();
+    console.log("Environment detection:", {
+        isTauri: isTauriApp,
+        origin: typeof window !== "undefined" ? window.location.origin : "unknown",
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown"
+    });
+
     // Strategy 1: Vite build-time environment variable
     const buildTimeToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
     console.log("Build-time token check:", {
@@ -47,28 +59,37 @@ const getMapboxToken = () => {
 
 const MAPBOX_TOKEN = getMapboxToken();
 
-// Debug logging for mobile troubleshooting
+// Debug logging for mobile and Tauri troubleshooting
 console.log("MapComponent Debug Info:", {
     token: MAPBOX_TOKEN,
     tokenLength: MAPBOX_TOKEN?.length,
     userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
     origin: typeof window !== "undefined" ? window.location.origin : "unknown",
     isMobile: typeof window !== "undefined" && /Mobi|Android/i.test(navigator.userAgent),
+    isTauri: isTauri(),
+    protocol: typeof window !== "undefined" ? window.location.protocol : "unknown",
+    hostname: typeof window !== "undefined" ? window.location.hostname : "unknown"
 });
 
-// Test the token with a direct API call
+// Test the token with a direct API call, but handle Tauri CORS issues
 if (MAPBOX_TOKEN && typeof fetch !== "undefined") {
-    fetch(`https://api.mapbox.com/styles/v1/mapbox/streets-v12?access_token=${MAPBOX_TOKEN}`)
-        .then(response => {
-            console.log("Direct Mapbox API test:", {
-                status: response.status,
-                statusText: response.statusText,
-                headers: Object.fromEntries(response.headers.entries())
-            });
-            return response.text();
-        })
-        .then(text => console.log("API Response preview:", text.substring(0, 200)))
-        .catch(error => console.log("Direct API test error:", error));
+    // For Tauri, the WebView should handle HTTPS requests normally
+    const testUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v12?access_token=${MAPBOX_TOKEN}`;
+
+    // Only test in development or if specifically needed
+    if (process.env.NODE_ENV === 'development') {
+        fetch(testUrl)
+            .then(response => {
+                console.log("Direct Mapbox API test:", {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: testUrl
+                });
+                return response.text();
+            })
+            .then(text => console.log("API Response preview:", text.substring(0, 200)))
+            .catch(error => console.log("Direct API test error:", error));
+    }
 }
 
 // Fallback component if Mapbox fails to load

@@ -248,7 +248,7 @@ const Login = () => {
 
                     if (result.success) {
                         console.log("Google sign-in successful for mobile - using profile data");
-                        
+
                         // For mobile Android sign-in, we don't get an ID token
                         // Instead, we send the user profile data directly to the backend
                         if (result.idToken) {
@@ -266,7 +266,7 @@ const Login = () => {
                             });
                             nativeLogin(response.token, response.user);
                         }
-                        
+
                         setMessage(t("auth:login.success"));
                         return;
                     } else {
