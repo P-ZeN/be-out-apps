@@ -84,10 +84,10 @@ router.post("/google/mobile-profile-callback", async (req, res) => {
     try {
         // For mobile profile authentication, we use the email as the unique identifier
         // since we don't have a Google ID from native Android sign-in
-        
+
         // Check if user exists in the database by email and provider
         let userResult = await pool.query(
-            "SELECT * FROM users WHERE email = $1 AND provider = $2", 
+            "SELECT * FROM users WHERE email = $1 AND provider = $2",
             [email, 'google']
         );
         let user = userResult.rows[0];
@@ -99,7 +99,7 @@ router.post("/google/mobile-profile-callback", async (req, res) => {
                 [email, 'google', email] // Use email as provider_id since we don't have Google ID
             );
             user = newUserResult.rows[0];
-            
+
             // Create user profile with the provided data
             await pool.query(
                 "INSERT INTO user_profiles (user_id, first_name, last_name, profile_picture, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())",
@@ -115,12 +115,12 @@ router.post("/google/mobile-profile-callback", async (req, res) => {
 
         // Get updated user with profile data
         const userWithProfileResult = await pool.query(`
-            SELECT u.*, up.first_name, up.last_name, up.profile_picture 
-            FROM users u 
-            LEFT JOIN user_profiles up ON u.id = up.user_id 
+            SELECT u.*, up.first_name, up.last_name, up.profile_picture
+            FROM users u
+            LEFT JOIN user_profiles up ON u.id = up.user_id
             WHERE u.id = $1
         `, [user.id]);
-        
+
         const userWithProfile = userWithProfileResult.rows[0];
 
         // Generate JWT for our application
@@ -188,7 +188,7 @@ router.get(
         // Step 4: Check if this is a mobile app request or web browser
         const userAgent = req.headers['user-agent'] || '';
         const isMobileApp = userAgent.includes('tauri') || userAgent.includes('BeOut') || req.query.mobile === 'true';
-        
+
         if (isMobileApp) {
             // Redirect to deep link for mobile app
             const deepLink = `beout://oauth/success?token=${token}`;
@@ -207,7 +207,7 @@ router.get("/login/failed", (req, res) => {
     // Check if this is a mobile app request or web browser
     const userAgent = req.headers['user-agent'] || '';
     const isMobileApp = userAgent.includes('tauri') || userAgent.includes('BeOut') || req.query.mobile === 'true';
-    
+
     if (isMobileApp) {
         // Redirect to deep link for mobile app
         const deepLink = `beout://oauth/failure`;

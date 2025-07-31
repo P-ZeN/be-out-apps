@@ -52,9 +52,6 @@ const getMapboxToken = () => {
         }
     }
 
-    // Strategy 4: Fallback token (your current hardcoded token)
-    console.log("Using fallback Mapbox token");
-    return "pk.eyJ1IjoicGhpbGlwcGV6ZW5vbmUiLCJhIjoiY21jeXQyemdpMHRwazJsc2JkdG9vZzViaCJ9.0h5JWCXgM5nY6hrDtj-vsw";
 };
 
 const MAPBOX_TOKEN = getMapboxToken();
