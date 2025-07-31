@@ -43,8 +43,24 @@ const loginWithGoogleMobile = async (idToken) => {
     return response.json();
 };
 
+const loginWithGoogleProfileMobile = async (profileData) => {
+    const response = await fetch(`${API_BASE_URL}/api/oauth/google/mobile-profile-callback`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(profileData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Google profile login failed");
+    }
+    return response.json();
+};
+
 export default {
     register,
     login,
     loginWithGoogleMobile,
+    loginWithGoogleProfileMobile,
 };

@@ -1,3 +1,0 @@
-[default]
-description = "No permissions required"
-permissions = ["allow-logout", "allow-request-signin"]

@@ -40,7 +40,8 @@
         "react-i18next": "^15.5.3",
         "react-map-gl": "^7.1.9",
         "react-router-dom": "^7.6.2",
-        "serve": "^14.2.3"
+        "serve": "^14.2.3",
+        "tauri-plugin-google-auth-api": "file:../tauri-plugin-google-auth"
     },
     "devDependencies": {
         "@tauri-apps/cli": "^2.3.1",

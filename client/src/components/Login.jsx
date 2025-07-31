@@ -24,6 +24,45 @@ const Login = () => {
     const { t } = useTranslation(["auth", "common"]);
     const { openExternalLink, closeWebView, webViewState, isTauriApp } = useExternalLink();
 
+    // Dynamic access to Tauri invoke function using internals
+    const getTauriInvoke = () => {
+        try {
+            // Try to access Tauri invoke through window.__TAURI_INTERNALS__
+            if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {
+                console.log('Using Tauri internals invoke function');
+                return {
+                    invoke: window.__TAURI_INTERNALS__.invoke
+                };
+            }
+
+            // Fallback to window.__TAURI_INTERNALS__.ipc if available
+            if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.ipc) {
+                console.log('Using Tauri internals IPC for invoke');
+                return {
+                    invoke: async (cmd, payload) => {
+                        return new Promise((resolve, reject) => {
+                            try {
+                                const result = window.__TAURI_INTERNALS__.ipc({
+                                    cmd: cmd,
+                                    payload: payload || {}
+                                });
+                                resolve(result);
+                            } catch (error) {
+                                reject(error);
+                            }
+                        });
+                    }
+                };
+            }
+
+            console.log('No Tauri invoke method available');
+            return null;
+        } catch (error) {
+            console.log('Error accessing Tauri invoke:', error);
+            return null;
+        }
+    };
+
     const handleLogin = async (e) => {
         e.preventDefault();
         setMessage("");
@@ -44,31 +83,271 @@ const Login = () => {
         setError("");
         setOauthLoading(true);
         try {
-            if (window.__TAURI__) {
+            console.log('Beginning detection of type of environment');
+
+            // Debug: Log all the Tauri-related properties
+            console.log('Debug - window.__TAURI__:', typeof window.__TAURI__, window.__TAURI__);
+            console.log('Debug - window.__TAURI_IPC__:', typeof window.__TAURI_IPC__, window.__TAURI_IPC__);
+            console.log('Debug - window.__TAURI_INTERNALS__:', typeof window.__TAURI_INTERNALS__, window.__TAURI_INTERNALS__);
+            console.log('Debug - window.ipc:', typeof window.ipc, window.ipc);
+            console.log('Debug - window.rpc:', typeof window.rpc, window.rpc);
+            console.log('Debug - areTauriApisAvailable():', areTauriApisAvailable());
+            console.log('Debug - window.AndroidGoogleSignIn:', typeof window.AndroidGoogleSignIn, window.AndroidGoogleSignIn);
+
+            // Debug: Check available Tauri plugins
+            if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.plugins) {
+                console.log('Debug - Available Tauri plugins:', Object.keys(window.__TAURI_INTERNALS__.plugins));
+            }
+
+            // Set up a global function that MainActivity can call to confirm interface setup
+            window.onAndroidInterfaceReady = function() {
+                console.log('Android interface ready callback triggered');
+                window.isAndroidGoogleSignInReady = true;
+            };
+
+            // Function to wait for AndroidGoogleSignIn interface
+            const waitForAndroidInterface = (timeout = 1000) => {
+                return new Promise((resolve) => {
+                    if (window.AndroidGoogleSignIn) {
+                        resolve(true);
+                        return;
+                    }
+
+                    console.log('AndroidGoogleSignIn not immediately available, waiting...');
+
+                    // Try to trigger interface setup manually
+                    if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.ipc) {
+                        console.log('Attempting to trigger Android interface setup...');
+                        try {
+                            // Try to call a setup method if available
+                            window.__TAURI_INTERNALS__.ipc.postMessage && window.__TAURI_INTERNALS__.ipc.postMessage({
+                                cmd: 'setup_javascript_interface',
+                                data: {}
+                            });
+                        } catch (e) {
+                            console.log('Could not trigger interface setup:', e);
+                        }
+                    }
+
+                    let elapsed = 0;
+                    const interval = 100; // Check every 100ms
+
+                    const checkInterval = setInterval(() => {
+                        elapsed += interval;
+                        if (window.AndroidGoogleSignIn) {
+                            console.log(`AndroidGoogleSignIn became available after ${elapsed}ms`);
+                            clearInterval(checkInterval);
+                            resolve(true);
+                        } else if (elapsed >= timeout) {
+                            console.log(`AndroidGoogleSignIn not available after ${timeout}ms timeout`);
+                            clearInterval(checkInterval);
+                            resolve(false);
+                        }
+                    }, interval);
+                });
+            };
+
+            // Check for Android interface first, with retry mechanism
+            const hasAndroidInterface = await waitForAndroidInterface();
+            if (hasAndroidInterface) {
+                console.log('Environment detected: Android (AndroidGoogleSignIn interface available)');
+                console.log('=== GOOGLE OAUTH START (Android Interface) ===');                return new Promise((resolve, reject) => {
+                    try {
+                        console.log('Android interface detected, checking availability...');
+                        console.log('window.AndroidGoogleSignIn:', window.AndroidGoogleSignIn);
+                        console.log('typeof window.AndroidGoogleSignIn:', typeof window.AndroidGoogleSignIn);
+
+                        console.log('Testing Android interface...');
+                        const testResult = window.AndroidGoogleSignIn.testInterface();
+                        console.log('Android interface test result:', testResult);
+
+                        // Set up global callbacks for the result
+                        window.onGoogleSignInSuccess = async function(result) {
+                            console.log('Android Google Sign-in success callback triggered:', result);
+
+                            if (result.success && result.user) {
+                                try {
+                                    // Process the token with our backend
+                                    const authResult = await authService.loginWithGoogleMobile(result.user.idToken);
+                                    if (authResult.token) {
+                                        nativeLogin(authResult.token, authResult.user);
+                                        setMessage(t("auth:login.success"));
+                                        resolve();
+                                    } else {
+                                        setError('Failed to authenticate with server');
+                                        resolve();
+                                    }
+                                } catch (error) {
+                                    console.error('Backend authentication error:', error);
+                                    setError('Server authentication failed');
+                                    resolve();
+                                }
+                            } else {
+                                setError('Invalid sign-in result');
+                                resolve();
+                            }
+                        };
+
+                        window.onGoogleSignInError = function(result) {
+                            console.error('Android Google Sign-in error callback triggered:', result);
+                            setError(result.error || 'Android sign-in failed');
+                            resolve();
+                        };
+
+                        // Start the sign-in process
+                        console.log('Starting Android Google Sign-in...');
+                        window.AndroidGoogleSignIn.signIn();
+                        console.log('Android Sign-in method called');
+
+                        // Set a timeout in case nothing happens
+                        setTimeout(() => {
+                            console.error('Android sign-in timeout - no response received');
+                            setError('Sign-in timeout - no response from Android');
+                            resolve();
+                        }, 30000); // 30 second timeout
+
+                    } catch (error) {
+                        console.error('Error in Android Google Sign-in:', error);
+                        setError(error.toString());
+                        resolve();
+                    }
+                });
+
+                // Return early since we handled Android interface
+                return;
+            }
+
+            // Continue with Tauri plugin or Web flow
+            if (areTauriApisAvailable()) {
                 // Native mobile flow using our new google-signin plugin
+                console.log('Environment detected: Tauri (Tauri APIs available)');
                 console.log("=== GOOGLE OAUTH START (Tauri) ===");
 
                 // Generate a random nonce for security
                 const nonce = Math.random().toString(36).substring(2, 15);
 
-                // Call our new plugin's sign-in method
-                const result = await window.__TAURI__.invoke('plugin:google-signin|google_sign_in', {
-                    filterByAuthorizedAccounts: false,
-                    autoSelectEnabled: false,
-                    nonce: nonce
-                });
+                // Get the invoke function using internals
+                const invokeApi = getTauriInvoke();
+                if (!invokeApi || !invokeApi.invoke) {
+                    throw new Error('Tauri invoke function not available');
+                }
 
-                console.log("Google sign-in result:", result);
+                // First try our new custom google-auth plugin
+                console.log('Trying our custom google-auth plugin...');
+                try {
+                    // Use correct payload structure that matches the plugin expectations
+                    const result = await invokeApi.invoke('plugin:google-auth|google_sign_in', {
+                        payload: {
+                            filterByAuthorizedAccounts: false,
+                            autoSelectEnabled: false,
+                            nonce: nonce
+                        }
+                    });
 
-                if (result.success && result.id_token) {
-                    const response = await authService.loginWithGoogleMobile(result.id_token);
-                    nativeLogin(response.token, response.user);
-                    setMessage(t("auth:login.success"));
-                } else {
-                    throw new Error(result.error || "Google Sign-In failed to return an ID token.");
+                    console.log("Google sign-in result:", result);
+
+                    if (result.success) {
+                        console.log("Google sign-in successful for mobile - using profile data");
+                        
+                        // For mobile Android sign-in, we don't get an ID token
+                        // Instead, we send the user profile data directly to the backend
+                        if (result.idToken) {
+                            // If we have an ID token, use the normal flow
+                            const response = await authService.loginWithGoogleMobile(result.idToken);
+                            nativeLogin(response.token, response.user);
+                        } else {
+                            // For native Android sign-in, send profile data directly
+                            const response = await authService.loginWithGoogleProfileMobile({
+                                email: result.email,
+                                displayName: result.displayName,
+                                givenName: result.givenName,
+                                familyName: result.familyName,
+                                profilePictureUri: result.profilePictureUri
+                            });
+                            nativeLogin(response.token, response.user);
+                        }
+                        
+                        setMessage(t("auth:login.success"));
+                        return;
+                    } else {
+                        throw new Error(result.error || "Google Sign-In failed.");
+                    }
+                } catch (pluginError) {
+                    console.log('Plugin invocation failed:', pluginError);
+                    
+                    // Try ping command to test if plugin is available
+                    try {
+                        const pingResult = await invokeApi.invoke('plugin:google-auth|ping', { 
+                            payload: { value: 'test' } 
+                        });
+                        console.log('Plugin ping successful:', pingResult);
+                        setError('Plugin is available but Google Sign-in failed: ' + pluginError.message);
+                        return;
+                    } catch (pingError) {
+                        console.log('Plugin ping failed - plugin not available:', pingError);
+                        
+                        // Fall back to legacy commands
+                        console.log('Trying legacy custom commands...');
+                        try {
+                            const setupResult = await invokeApi.invoke('setup_android_interface', {});
+                            console.log('setup_android_interface result:', setupResult);
+                            
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            
+                            const result = await invokeApi.invoke('google_sign_in_android', {});
+                            console.log('google_sign_in_android result:', result);
+                            
+                            // Show message that we're using fallback
+                            setError('Using fallback method - plugin not properly registered. Result: ' + JSON.stringify(result));
+                            return;
+                        } catch (legacyError) {
+                            console.log('Legacy commands failed:', legacyError);
+                            throw new Error('All Google Sign-in methods failed');
+                        }
+                    }
+                }                // Fallback to the new official plugin approach
+                console.log('Trying our custom google-auth plugin...');
+                try {
+                    const { googleSignIn } = await import('tauri-plugin-google-auth-api');
+                    const result = await googleSignIn({
+                        filterByAuthorizedAccounts: false,
+                        autoSelectEnabled: false,
+                        nonce: nonce
+                    });
+
+                    console.log("Google sign-in result:", result);
+
+                    if (result.success && result.idToken) {
+                        const response = await authService.loginWithGoogleMobile(result.idToken);
+                        nativeLogin(response.token, response.user);
+                        setMessage(t("auth:login.success"));
+                    } else {
+                        throw new Error(result.error || "Google Sign-In failed to return an ID token.");
+                    }
+                } catch (pluginError) {
+                    console.log('Official plugin failed:', pluginError);
+
+                    // Final fallback to the old plugin approach
+                    console.log('Trying legacy google-signin plugin...');
+                    const result = await invokeApi.invoke('plugin:google-signin|google_sign_in', {
+                        filterByAuthorizedAccounts: false,
+                        autoSelectEnabled: false,
+                        nonce: nonce
+                    });
+
+                    console.log("Legacy plugin result:", result);
+
+                    if (result.success && result.id_token) {
+                        const response = await authService.loginWithGoogleMobile(result.id_token);
+                        nativeLogin(response.token, response.user);
+                        setMessage(t("auth:login.success"));
+                    } else {
+                        throw new Error(result.error || "Google Sign-In failed to return an ID token.");
+                    }
                 }
             } else {
                 // Web flow
+                console.log('Environment detected: Web (no Tauri APIs, no Android interface)');
                 console.log("=== GOOGLE OAUTH START (Web) ===");
                 const googleAuthUrl = `${API_BASE_URL}/api/oauth/google/login`;
                 window.location.href = googleAuthUrl;
