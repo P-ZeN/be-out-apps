@@ -73,6 +73,70 @@ router.post("/google/mobile-callback", async (req, res) => {
     }
 });
 
+// New endpoint for mobile authentication using profile data (for native Android sign-in)
+router.post("/google/mobile-profile-callback", async (req, res) => {
+    const { email, displayName, givenName, familyName, profilePictureUri } = req.body;
+
+    if (!email || !displayName) {
+        return res.status(400).json({ message: "Email and display name are required." });
+    }
+
+    try {
+        // For mobile profile authentication, we use the email as the unique identifier
+        // since we don't have a Google ID from native Android sign-in
+        
+        // Check if user exists in the database by email
+        let userResult = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        let user = userResult.rows[0];
+
+        // If user doesn't exist, create a new one
+        if (!user) {
+            // For mobile profile auth, we'll use email as a fallback identifier
+            // In a production app, you might want to implement additional verification
+            const newUserResult = await pool.query(
+                "INSERT INTO users (email, full_name, profile_picture_url, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING *",
+                [email, displayName, profilePictureUri]
+            );
+            user = newUserResult.rows[0];
+        } else {
+            // Update existing user's profile information
+            const updateResult = await pool.query(
+                "UPDATE users SET full_name = $1, profile_picture_url = $2, updated_at = NOW() WHERE email = $3 RETURNING *",
+                [displayName, profilePictureUri, email]
+            );
+            user = updateResult.rows[0];
+        }
+
+        // Generate JWT for our application
+        const appTokenPayload = {
+            id: user.id,
+            email: user.email,
+            roles: user.roles,
+        };
+
+        const appToken = jwt.sign(appTokenPayload, process.env.JWT_SECRET, {
+            expiresIn: "7d",
+        });
+
+        // Send the token and user info back to the client
+        res.json({
+            message: "Mobile profile authentication successful.",
+            token: appToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                fullName: user.full_name,
+                profilePictureUrl: user.profile_picture_url,
+                roles: user.roles,
+            },
+        });
+
+    } catch (error) {
+        console.error("Error during Google mobile profile authentication:", error);
+        res.status(500).json({ message: "Internal server error during authentication." });
+    }
+});
+
 // Step 1: The client initiates the login process by redirecting to this endpoint.
 // This will redirect the user to the Google OAuth2 consent screen.
 router.get(

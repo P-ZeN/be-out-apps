@@ -274,76 +274,8 @@ const Login = () => {
                     }
                 } catch (pluginError) {
                     console.log('Plugin invocation failed:', pluginError);
-                    
-                    // Try ping command to test if plugin is available
-                    try {
-                        const pingResult = await invokeApi.invoke('plugin:google-auth|ping', { 
-                            payload: { value: 'test' } 
-                        });
-                        console.log('Plugin ping successful:', pingResult);
-                        setError('Plugin is available but Google Sign-in failed: ' + pluginError.message);
-                        return;
-                    } catch (pingError) {
-                        console.log('Plugin ping failed - plugin not available:', pingError);
-                        
-                        // Fall back to legacy commands
-                        console.log('Trying legacy custom commands...');
-                        try {
-                            const setupResult = await invokeApi.invoke('setup_android_interface', {});
-                            console.log('setup_android_interface result:', setupResult);
-                            
-                            await new Promise(resolve => setTimeout(resolve, 1000));
-                            
-                            const result = await invokeApi.invoke('google_sign_in_android', {});
-                            console.log('google_sign_in_android result:', result);
-                            
-                            // Show message that we're using fallback
-                            setError('Using fallback method - plugin not properly registered. Result: ' + JSON.stringify(result));
-                            return;
-                        } catch (legacyError) {
-                            console.log('Legacy commands failed:', legacyError);
-                            throw new Error('All Google Sign-in methods failed');
-                        }
-                    }
-                }                // Fallback to the new official plugin approach
-                console.log('Trying our custom google-auth plugin...');
-                try {
-                    const { googleSignIn } = await import('tauri-plugin-google-auth-api');
-                    const result = await googleSignIn({
-                        filterByAuthorizedAccounts: false,
-                        autoSelectEnabled: false,
-                        nonce: nonce
-                    });
-
-                    console.log("Google sign-in result:", result);
-
-                    if (result.success && result.idToken) {
-                        const response = await authService.loginWithGoogleMobile(result.idToken);
-                        nativeLogin(response.token, response.user);
-                        setMessage(t("auth:login.success"));
-                    } else {
-                        throw new Error(result.error || "Google Sign-In failed to return an ID token.");
-                    }
-                } catch (pluginError) {
-                    console.log('Official plugin failed:', pluginError);
-
-                    // Final fallback to the old plugin approach
-                    console.log('Trying legacy google-signin plugin...');
-                    const result = await invokeApi.invoke('plugin:google-signin|google_sign_in', {
-                        filterByAuthorizedAccounts: false,
-                        autoSelectEnabled: false,
-                        nonce: nonce
-                    });
-
-                    console.log("Legacy plugin result:", result);
-
-                    if (result.success && result.id_token) {
-                        const response = await authService.loginWithGoogleMobile(result.id_token);
-                        nativeLogin(response.token, response.user);
-                        setMessage(t("auth:login.success"));
-                    } else {
-                        throw new Error(result.error || "Google Sign-In failed to return an ID token.");
-                    }
+                    setError('Google Sign-in plugin failed: ' + pluginError.message);
+                    return;
                 }
             } else {
                 // Web flow
