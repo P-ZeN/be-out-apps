@@ -185,20 +185,38 @@ router.get(
             expiresIn: "7d", // Token expires in 7 days
         });
 
-        // Step 4: Redirect back to the Tauri app with the token.
-        // The deep link `beout://` must be configured in your Tauri app.
-        const deepLink = `beout://oauth/success?token=${token}`;
-
-        res.redirect(deepLink);
+        // Step 4: Check if this is a mobile app request or web browser
+        const userAgent = req.headers['user-agent'] || '';
+        const isMobileApp = userAgent.includes('tauri') || userAgent.includes('BeOut') || req.query.mobile === 'true';
+        
+        if (isMobileApp) {
+            // Redirect to deep link for mobile app
+            const deepLink = `beout://oauth/success?token=${token}`;
+            res.redirect(deepLink);
+        } else {
+            // For web browsers, redirect to the web app with token as URL parameter
+            const webRedirectUrl = process.env.WEB_REDIRECT_URL || 'http://localhost:5173';
+            res.redirect(`${webRedirectUrl}/?token=${token}`);
+        }
     }
 );
 
 // A simple route to notify the user if the login failed.
 // The client can be redirected here from the passport callback on failure.
 router.get("/login/failed", (req, res) => {
-    // You can redirect to a specific failure page in your app
-    const deepLink = `beout://oauth/failure`;
-    res.redirect(deepLink);
+    // Check if this is a mobile app request or web browser
+    const userAgent = req.headers['user-agent'] || '';
+    const isMobileApp = userAgent.includes('tauri') || userAgent.includes('BeOut') || req.query.mobile === 'true';
+    
+    if (isMobileApp) {
+        // Redirect to deep link for mobile app
+        const deepLink = `beout://oauth/failure`;
+        res.redirect(deepLink);
+    } else {
+        // For web browsers, redirect to the web app login page with error parameter
+        const webRedirectUrl = process.env.WEB_REDIRECT_URL || 'http://localhost:5173';
+        res.redirect(`${webRedirectUrl}/login?error=oauth_failed`);
+    }
 });
 
 export default router;

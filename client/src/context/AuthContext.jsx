@@ -91,18 +91,28 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    const nativeLogin = async () => {
+    const nativeLogin = async (token = null, userData = null) => {
         try {
             setLoading(true);
-            console.log("[AUTH_CONTEXT] Starting native Google Sign-In...");
+            console.log("[AUTH_CONTEXT] Starting native login...");
 
-            const result = await nativeAuthService.signIn();
+            let result;
 
-            // The nativeAuthService.signIn() already validates with server and stores tokens
-            // result contains: { user, token, refreshToken }
-            setUser(result.user);
+            if (token && userData) {
+                // Direct login with provided token and user data (from Google Sign-in)
+                console.log("[AUTH_CONTEXT] Using provided token and user data");
+                localStorage.setItem("token", token);
+                localStorage.setItem("userProfile", JSON.stringify(userData));
+                setUser(userData);
+                result = { user: userData, token };
+            } else {
+                // Fallback to native auth service
+                console.log("[AUTH_CONTEXT] Using native auth service");
+                result = await nativeAuthService.signIn();
+                setUser(result.user);
+            }
 
-            console.log("[AUTH_CONTEXT] Native sign-in successful");
+            console.log("[AUTH_CONTEXT] Native login successful");
 
             // Check if onboarding is complete
             if (!result.user.onboarding_complete) {
@@ -111,7 +121,7 @@ export const AuthProvider = ({ children }) => {
 
             return result;
         } catch (error) {
-            console.error("[AUTH_CONTEXT] Native sign-in failed:", error);
+            console.error("[AUTH_CONTEXT] Native login failed:", error);
             throw error;
         } finally {
             setLoading(false);
