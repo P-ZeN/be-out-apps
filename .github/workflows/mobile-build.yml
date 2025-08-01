@@ -460,6 +460,59 @@ jobs:
           find src-tauri/gen/android -name "*.gradle*" 2>/dev/null || echo "No gradle files found"
         fi
 
+    - name: Debug Gradle Build Process Before Tauri
+      working-directory: ./client
+      run: |
+        echo "=== Manual Gradle Build Debug ==="
+        
+        if [ -d "src-tauri/gen/android" ]; then
+          cd src-tauri/gen/android
+          
+          echo "=== Gradle Project Structure ==="
+          ls -la
+          
+          echo "=== Gradle Wrapper Permissions ==="
+          ls -la gradlew
+          chmod +x gradlew
+          
+          echo "=== Gradle Version ==="
+          ./gradlew --version
+          
+          echo "=== Android Project Tasks ==="
+          ./gradlew tasks --all | head -50
+          
+          echo "=== Checking Build File Contents ==="
+          echo "--- app/build.gradle.kts (first 50 lines) ---"
+          head -50 app/build.gradle.kts || echo "No app build file found"
+          
+          echo "=== Trying Basic Gradle Build ==="
+          if ./gradlew build --info --stacktrace 2>&1 | tee manual_gradle_build.log; then
+            echo "✅ Manual Gradle build succeeded"
+          else
+            echo "❌ Manual Gradle build failed"
+            echo "=== Last 50 lines of Gradle build log ==="
+            tail -50 manual_gradle_build.log
+            
+            echo "=== Looking for specific error patterns ==="
+            grep -i "error\|exception\|failed\|could not" manual_gradle_build.log | tail -20
+            
+            echo "=== Checking for signing-related errors ==="
+            grep -i "sign\|keystore\|alias\|password" manual_gradle_build.log | tail -10
+          fi
+        else
+          echo "❌ Android project directory not found"
+        fi
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        NDK_HOME: ${{ env.NDK_HOME }}
+        JAVA_HOME: ${{ env.JAVA_HOME }}
+        # Android signing environment variables
+        CI: true
+        KEYSTORE_PATH: android/release.keystore
+        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
     - name: Debug Rust Build Environment
       run: |
         echo "=== Rust Build Environment Debug ==="
@@ -617,6 +670,9 @@ jobs:
         echo "=== Starting Tauri Android Build ==="
 
         # Use the npm script that's defined in package.json
+        echo "=== Attempting Tauri Build with Enhanced Error Reporting ==="
+        
+        # Run with maximum verbosity and capture all output
         if npm run tauri:android:build -- --verbose 2>&1 | tee android_build.log; then
           BUILD_EXIT_CODE=0
           echo "✅ Build succeeded with npm run tauri:android:build"
@@ -625,6 +681,33 @@ jobs:
           echo "✅ Build succeeded with npm run tauri android build"
         elif npx tauri android build --verbose 2>&1 | tee android_build.log; then
           BUILD_EXIT_CODE=0
+          echo "✅ Build succeeded with npx tauri command"
+        else
+          BUILD_EXIT_CODE=1
+          echo "❌ All build methods failed"
+          
+          # Immediately analyze the Gradle failure
+          echo "=== GRADLE BUILD FAILURE ANALYSIS ==="
+          
+          if [ -d "src-tauri/gen/android" ]; then
+            cd src-tauri/gen/android
+            
+            echo "=== Running Gradle with maximum verbosity ==="
+            ./gradlew assembleRelease --info --stacktrace --debug 2>&1 | tee detailed_gradle.log
+            
+            echo "=== Gradle Build File Verification ==="
+            echo "--- app/build.gradle.kts content around signingConfigs ---"
+            grep -A 10 -B 5 "signingConfigs\|signingConfig" app/build.gradle.kts || echo "No signing config found in build file"
+            
+            echo "=== Environment Variables in Gradle Context ==="
+            ./gradlew :app:tasks --info 2>&1 | grep -i "environment\|CI\|KEYSTORE\|KEY_" || echo "No environment variable info found"
+            
+            echo "=== Last 100 lines of detailed Gradle log ==="
+            tail -100 detailed_gradle.log
+            
+            cd ../../..
+          fi
+        fi
           echo "✅ Build succeeded with npx tauri command"
         else
           BUILD_EXIT_CODE=1
