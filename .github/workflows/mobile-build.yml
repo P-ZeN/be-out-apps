@@ -457,7 +457,7 @@ jobs:
             cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'EOF'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
-            <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+            <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                 <!-- Use standard Material Design colors -->
                 <item name="colorPrimary">@android:color/holo_blue_bright</item>
                 <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
@@ -471,7 +471,7 @@ jobs:
             cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'EOF'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
-            <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+            <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                 <!-- Use standard Material Design colors -->
                 <item name="colorPrimary">@android:color/holo_blue_bright</item>
                 <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
@@ -487,7 +487,7 @@ jobs:
             cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'EOF'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
-            <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+            <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                 <!-- Use standard Material Design colors -->
                 <item name="colorPrimary">@android:color/holo_blue_bright</item>
                 <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
@@ -501,7 +501,7 @@ jobs:
             cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'EOF'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
-            <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+            <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                 <!-- Use standard Material Design colors -->
                 <item name="colorPrimary">@android:color/holo_blue_bright</item>
                 <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
