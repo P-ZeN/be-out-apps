@@ -359,65 +359,59 @@ jobs:
             echo "⚠️ signingConfigs already exists, skipping patch"
           else
             echo "🔧 Adding signing configuration to app build file..."
-
-            # Create the signing configuration content
-            cat > signing_config_patch.txt << 'EOF'
-
-    signingConfigs {
-        if (System.getenv("CI") == "true" && System.getenv("KEYSTORE_PATH") != null) {
-            create("release") {
-                storeFile = file("../../../../../${System.getenv("KEYSTORE_PATH")}")
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
-            }
-        } else {
-            // Load keystore properties from git-ignored file for local development
-            val keystoreProperties = Properties().apply {
-                val propFile = file("../../../../../src-tauri/keystore.properties")
-                if (propFile.exists()) {
-                    propFile.inputStream().use { load(it) }
-                }
-            }
-
-            if (keystoreProperties.containsKey("keyAlias")) {
-                create("release") {
-                    storeFile = file("../../../../../src-tauri/${keystoreProperties["storeFile"]}")
-                    storePassword = keystoreProperties["storePassword"] as String
-                    keyAlias = keystoreProperties["keyAlias"] as String
-                    keyPassword = keystoreProperties["keyPassword"] as String
-                }
-            }
-        }
-    }
-EOF
-
+            
+            # Create the signing configuration content using echo statements
+            echo "" > signing_config_patch.txt
+            echo "    signingConfigs {" >> signing_config_patch.txt
+            echo "        if (System.getenv(\"CI\") == \"true\" && System.getenv(\"KEYSTORE_PATH\") != null) {" >> signing_config_patch.txt
+            echo "            create(\"release\") {" >> signing_config_patch.txt
+            echo "                storeFile = file(\"../../../../../\${System.getenv(\"KEYSTORE_PATH\")}\")" >> signing_config_patch.txt
+            echo "                storePassword = System.getenv(\"KEYSTORE_PASSWORD\")" >> signing_config_patch.txt
+            echo "                keyAlias = System.getenv(\"KEY_ALIAS\")" >> signing_config_patch.txt
+            echo "                keyPassword = System.getenv(\"KEY_PASSWORD\")" >> signing_config_patch.txt
+            echo "            }" >> signing_config_patch.txt
+            echo "        } else {" >> signing_config_patch.txt
+            echo "            // Load keystore properties from git-ignored file for local development" >> signing_config_patch.txt
+            echo "            val keystoreProperties = Properties().apply {" >> signing_config_patch.txt
+            echo "                val propFile = file(\"../../../../../src-tauri/keystore.properties\")" >> signing_config_patch.txt
+            echo "                if (propFile.exists()) {" >> signing_config_patch.txt
+            echo "                    propFile.inputStream().use { load(it) }" >> signing_config_patch.txt
+            echo "                }" >> signing_config_patch.txt
+            echo "            }" >> signing_config_patch.txt
+            echo "" >> signing_config_patch.txt
+            echo "            if (keystoreProperties.containsKey(\"keyAlias\")) {" >> signing_config_patch.txt
+            echo "                create(\"release\") {" >> signing_config_patch.txt
+            echo "                    storeFile = file(\"../../../../../src-tauri/\${keystoreProperties[\"storeFile\"]}\")" >> signing_config_patch.txt
+            echo "                    storePassword = keystoreProperties[\"storePassword\"] as String" >> signing_config_patch.txt
+            echo "                    keyAlias = keystoreProperties[\"keyAlias\"] as String" >> signing_config_patch.txt
+            echo "                    keyPassword = keystoreProperties[\"keyPassword\"] as String" >> signing_config_patch.txt
+            echo "                }" >> signing_config_patch.txt
+            echo "            }" >> signing_config_patch.txt
+            echo "        }" >> signing_config_patch.txt
+            echo "    }" >> signing_config_patch.txt
+            
             # Insert the signing configuration after the defaultConfig block
-            sed -i '/defaultConfig {/,/}/!b; /}/a\
-'"$(cat signing_config_patch.txt)" "$APP_BUILD_FILE"
+            sed -i '/defaultConfig {/,/}/!b; /}/a\\n'"$(cat signing_config_patch.txt)" "$APP_BUILD_FILE"
 
             # Add signingConfig to the release buildType
-            sed -i '/getByName("release") {/,/}/ s/}/            signingConfig = signingConfigs.findByName("release")\
-        }/' "$APP_BUILD_FILE"
+            sed -i '/getByName("release") {/,/}/ s/}/            signingConfig = signingConfigs.findByName("release")\n        }/' "$APP_BUILD_FILE"
 
             # Add validation block at the end, before rust block
-            cat >> "$APP_BUILD_FILE" << 'EOF'
-
-afterEvaluate {
-    if (System.getenv("CI") == "true") {
-        val signingConfig = android.signingConfigs.findByName("release")
-        // Fail the build if signingConfig is missing or any value is missing
-        if (signingConfig == null ||
-            signingConfig.storeFile == null ||
-            signingConfig.storePassword.isNullOrBlank() ||
-            signingConfig.keyAlias.isNullOrBlank() ||
-            signingConfig.keyPassword.isNullOrBlank()
-        ) {
-            throw org.gradle.api.GradleException("Signing config for release build is missing or incomplete. Please check your environment variables.")
-        }
-    }
-}
-EOF
+            echo "" >> "$APP_BUILD_FILE"
+            echo "afterEvaluate {" >> "$APP_BUILD_FILE"
+            echo "    if (System.getenv(\"CI\") == \"true\") {" >> "$APP_BUILD_FILE"
+            echo "        val signingConfig = android.signingConfigs.findByName(\"release\")" >> "$APP_BUILD_FILE"
+            echo "        // Fail the build if signingConfig is missing or any value is missing" >> "$APP_BUILD_FILE"
+            echo "        if (signingConfig == null ||" >> "$APP_BUILD_FILE"
+            echo "            signingConfig.storeFile == null ||" >> "$APP_BUILD_FILE"
+            echo "            signingConfig.storePassword.isNullOrBlank() ||" >> "$APP_BUILD_FILE"
+            echo "            signingConfig.keyAlias.isNullOrBlank() ||" >> "$APP_BUILD_FILE"
+            echo "            signingConfig.keyPassword.isNullOrBlank()" >> "$APP_BUILD_FILE"
+            echo "        ) {" >> "$APP_BUILD_FILE"
+            echo "            throw org.gradle.api.GradleException(\"Signing config for release build is missing or incomplete. Please check your environment variables.\")" >> "$APP_BUILD_FILE"
+            echo "        }" >> "$APP_BUILD_FILE"
+            echo "    }" >> "$APP_BUILD_FILE"
+            echo "}" >> "$APP_BUILD_FILE"
 
             echo "✅ Successfully patched app build file for signing"
 
