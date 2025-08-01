@@ -294,17 +294,17 @@ jobs:
       working-directory: ./client
       run: |
         echo "Generating app icons for mobile platforms..."
-        
+
         # Check if the icon file exists
         ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
         if [ -f "$ICON_FILE" ]; then
           echo "✅ Found icon file: $ICON_FILE"
           ls -la "$ICON_FILE"
-          
+
           echo "Generating icons using Tauri CLI..."
           if npx tauri icon "$ICON_FILE"; then
             echo "✅ Icons generated successfully"
-            
+
             # Show generated icons
             echo "=== Generated icons ==="
             find src-tauri/icons -name "*.png" -o -name "*.ico" | head -10
@@ -317,7 +317,7 @@ jobs:
           echo "⚠️  Icon file not found: $ICON_FILE"
           echo "Available files in src-tauri/icons/:"
           ls -la src-tauri/icons/ || echo "Icons directory not found"
-          
+
           # Try to find any PNG files that could be used as icons
           echo "Looking for alternative icon files..."
           find src-tauri -name "*.png" | head -5
@@ -378,57 +378,65 @@ jobs:
       working-directory: ./client
       run: |
         echo "=== DEBUGGING: Android Project Generation for Local vs CI Comparison ==="
-        
+
         if [ -d "src-tauri/gen/android" ]; then
           echo "🔍 Analyzing generated Android project..."
-          
+
           echo "=== 1. Tauri CLI Version Info ==="
           npx tauri --version || echo "npx tauri version failed"
           cargo tauri --version || echo "cargo tauri version failed"
-          
+
           echo "=== 2. Android Project Structure ==="
           find src-tauri/gen/android -type f -name "*.xml" -o -name "*.gradle*" -o -name "*.kt" | head -20
-          
-          echo "=== 3. Android Manifest Contents ==="
+
+          echo "=== 3. Android Manifest Contents (COMPLETE) ==="
           if [ -f "src-tauri/gen/android/app/src/main/AndroidManifest.xml" ]; then
-            echo "--- AndroidManifest.xml ---"
+            echo "--- COMPLETE AndroidManifest.xml ---"
             cat src-tauri/gen/android/app/src/main/AndroidManifest.xml
+            echo "--- END AndroidManifest.xml ---"
           else
             echo "❌ AndroidManifest.xml not found"
             find src-tauri/gen/android -name "AndroidManifest.xml" 2>/dev/null || echo "No manifest files found"
           fi
-          
-          echo "=== 4. Android Styles and Themes ==="
-          find src-tauri/gen/android -path "*/res/values*" -name "*.xml" -exec echo "--- {} ---" \; -exec cat {} \; 2>/dev/null || echo "No styles/themes found"
-          
+
+          echo "=== 4. Android Themes (CRITICAL FOR STATUS BAR) ==="
+          echo "--- themes.xml ---"
+          cat src-tauri/gen/android/app/src/main/res/values/themes.xml 2>/dev/null || echo "No themes.xml found"
+          echo "--- themes.xml (night) ---"
+          cat src-tauri/gen/android/app/src/main/res/values-night/themes.xml 2>/dev/null || echo "No night themes.xml found"
+          echo "--- colors.xml ---"
+          cat src-tauri/gen/android/app/src/main/res/values/colors.xml 2>/dev/null || echo "No colors.xml found"
+          echo "--- strings.xml ---"
+          cat src-tauri/gen/android/app/src/main/res/values/strings.xml 2>/dev/null || echo "No strings.xml found"
+
           echo "=== 5. Build Configuration Files ==="
           if [ -f "src-tauri/gen/android/app/build.gradle.kts" ]; then
             echo "--- app/build.gradle.kts (first 50 lines) ---"
             head -50 src-tauri/gen/android/app/build.gradle.kts
           fi
-          
+
           if [ -f "src-tauri/gen/android/build.gradle.kts" ]; then
             echo "--- root build.gradle.kts ---"
             cat src-tauri/gen/android/build.gradle.kts
           fi
-          
+
           echo "=== 6. Generated App Configuration ==="
           find src-tauri/gen/android -name "*.properties" -exec echo "--- {} ---" \; -exec cat {} \; 2>/dev/null || echo "No properties files found"
-          
+
           echo "=== 7. Android Resources ==="
           echo "Generated drawable resources:"
           find src-tauri/gen/android -path "*/res/drawable*" -name "*.png" -o -name "*.xml" | head -10 || echo "No drawable resources found"
-          
+
           echo "Generated layout resources:"
           find src-tauri/gen/android -path "*/res/layout*" -name "*.xml" | head -5 || echo "No layout resources found"
-          
+
           echo "=== 8. Tauri Configuration Used ==="
           echo "--- tauri.conf.json ---"
           cat src-tauri/tauri.conf.json | head -50
-          
+
           echo "=== 9. Environment Variables During Generation ==="
           env | grep -E "(ANDROID|TAURI|JAVA|SDK)" | sort
-          
+
         else
           echo "❌ No Android project found - initialization may have failed"
         fi
@@ -490,7 +498,7 @@ jobs:
             # Use a simpler approach with awk to avoid sed delimiter issues
             awk '
             /defaultConfig \{/ { in_config = 1 }
-            in_config && /^\s*\}/ && !inserted { 
+            in_config && /^\s*\}/ && !inserted {
                 print $0
                 while ((getline line < "signing_config_patch.txt") > 0) {
                     print line
@@ -505,7 +513,7 @@ jobs:
             # Add signingConfig to the release buildType using a different approach
             # First create a temporary patch file for the signing config line
             echo "            signingConfig = signingConfigs.findByName(\"release\")" > buildtype_patch.txt
-            
+
             # Insert the signingConfig line before the closing brace of the release buildType
             awk '
             /getByName\("release"\) \{/ { in_release = 1 }
@@ -520,7 +528,7 @@ jobs:
             }
             { print }
             ' "$APP_BUILD_FILE" > "$APP_BUILD_FILE.tmp" && mv "$APP_BUILD_FILE.tmp" "$APP_BUILD_FILE"
-            
+
             # Clean up the temporary file
             rm buildtype_patch.txt
 
@@ -560,27 +568,27 @@ jobs:
       working-directory: ./client
       run: |
         echo "=== Manual Gradle Build Debug ==="
-        
+
         if [ -d "src-tauri/gen/android" ]; then
           cd src-tauri/gen/android
-          
+
           echo "=== Gradle Project Structure ==="
           ls -la
-          
+
           echo "=== Gradle Wrapper Permissions ==="
           ls -la gradlew
           chmod +x gradlew
-          
+
           echo "=== Gradle Version ==="
           ./gradlew --version
-          
+
           echo "=== Android Project Tasks ==="
           ./gradlew tasks --all | head -50
-          
+
           echo "=== Checking Build File Contents ==="
           echo "--- app/build.gradle.kts (first 50 lines) ---"
           head -50 app/build.gradle.kts || echo "No app build file found"
-          
+
           echo "=== Trying Basic Gradle Build ==="
           if ./gradlew build --info --stacktrace 2>&1 | tee manual_gradle_build.log; then
             echo "✅ Manual Gradle build succeeded"
@@ -588,10 +596,10 @@ jobs:
             echo "❌ Manual Gradle build failed"
             echo "=== Last 50 lines of Gradle build log ==="
             tail -50 manual_gradle_build.log
-            
+
             echo "=== Looking for specific error patterns ==="
             grep -i "error\|exception\|failed\|could not" manual_gradle_build.log | tail -20
-            
+
             echo "=== Checking for signing-related errors ==="
             grep -i "sign\|keystore\|alias\|password" manual_gradle_build.log | tail -10
           fi
@@ -767,7 +775,7 @@ jobs:
 
         # Use the npm script that's defined in package.json
         echo "=== Attempting Tauri Build with Enhanced Error Reporting ==="
-        
+
         # Run with maximum verbosity and capture all output
         if npm run tauri:android:build -- --verbose 2>&1 | tee android_build.log; then
           BUILD_EXIT_CODE=0
@@ -781,26 +789,26 @@ jobs:
         else
           BUILD_EXIT_CODE=1
           echo "❌ All build methods failed"
-          
+
           # Immediately analyze the Gradle failure
           echo "=== GRADLE BUILD FAILURE ANALYSIS ==="
-          
+
           if [ -d "src-tauri/gen/android" ]; then
             cd src-tauri/gen/android
-            
+
             echo "=== Running Gradle with maximum verbosity ==="
             ./gradlew assembleRelease --info --stacktrace --debug 2>&1 | tee detailed_gradle.log
-            
+
             echo "=== Gradle Build File Verification ==="
             echo "--- app/build.gradle.kts content around signingConfigs ---"
             grep -A 10 -B 5 "signingConfigs\|signingConfig" app/build.gradle.kts || echo "No signing config found in build file"
-            
+
             echo "=== Environment Variables in Gradle Context ==="
             ./gradlew :app:tasks --info 2>&1 | grep -i "environment\|CI\|KEYSTORE\|KEY_" || echo "No environment variable info found"
-            
+
             echo "=== Last 100 lines of detailed Gradle log ==="
             tail -100 detailed_gradle.log
-            
+
             cd ../../..
           fi
         fi
