@@ -365,7 +365,7 @@ jobs:
             echo "    signingConfigs {" >> signing_config_patch.txt
             echo "        if (System.getenv(\"CI\") == \"true\" && System.getenv(\"KEYSTORE_PATH\") != null) {" >> signing_config_patch.txt
             echo "            create(\"release\") {" >> signing_config_patch.txt
-            echo "                storeFile = file(\"../../../../../\${System.getenv(\"KEYSTORE_PATH\")}\")" >> signing_config_patch.txt
+            echo "                storeFile = file(\"../../../../\${System.getenv(\"KEYSTORE_PATH\")}\")" >> signing_config_patch.txt
             echo "                storePassword = System.getenv(\"KEYSTORE_PASSWORD\")" >> signing_config_patch.txt
             echo "                keyAlias = System.getenv(\"KEY_ALIAS\")" >> signing_config_patch.txt
             echo "                keyPassword = System.getenv(\"KEY_PASSWORD\")" >> signing_config_patch.txt
@@ -707,11 +707,6 @@ jobs:
             
             cd ../../..
           fi
-        fi
-          echo "✅ Build succeeded with npx tauri command"
-        else
-          BUILD_EXIT_CODE=1
-          echo "❌ All build methods failed"
         fi
 
         echo "=== Build completed with exit code: $BUILD_EXIT_CODE ==="
