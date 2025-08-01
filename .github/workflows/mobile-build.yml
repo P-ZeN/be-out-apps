@@ -345,21 +345,21 @@ jobs:
       working-directory: ./client
       run: |
         echo "=== Patching Android app build.gradle.kts for signing ==="
-        
+
         APP_BUILD_FILE="src-tauri/gen/android/app/build.gradle.kts"
-        
+
         if [ -f "$APP_BUILD_FILE" ]; then
           echo "✅ Found app build file: $APP_BUILD_FILE"
-          
+
           # Create a backup
           cp "$APP_BUILD_FILE" "$APP_BUILD_FILE.backup"
-          
+
           # Check if signingConfigs already exists (to avoid double-patching)
           if grep -q "signingConfigs" "$APP_BUILD_FILE"; then
             echo "⚠️ signingConfigs already exists, skipping patch"
           else
             echo "🔧 Adding signing configuration to app build file..."
-            
+
             # Create the signing configuration content
             cat > signing_config_patch.txt << 'EOF'
 
@@ -395,11 +395,11 @@ EOF
             # Insert the signing configuration after the defaultConfig block
             sed -i '/defaultConfig {/,/}/!b; /}/a\
 '"$(cat signing_config_patch.txt)" "$APP_BUILD_FILE"
-            
+
             # Add signingConfig to the release buildType
             sed -i '/getByName("release") {/,/}/ s/}/            signingConfig = signingConfigs.findByName("release")\
         }/' "$APP_BUILD_FILE"
-            
+
             # Add validation block at the end, before rust block
             cat >> "$APP_BUILD_FILE" << 'EOF'
 
@@ -418,13 +418,13 @@ afterEvaluate {
     }
 }
 EOF
-            
+
             echo "✅ Successfully patched app build file for signing"
-            
+
             # Show the changes
             echo "=== Patched build file content (first 100 lines) ==="
             head -100 "$APP_BUILD_FILE"
-            
+
             # Clean up
             rm signing_config_patch.txt
           fi
