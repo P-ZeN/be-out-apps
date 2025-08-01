@@ -194,7 +194,7 @@ jobs:
 
     - name: Install Tauri CLI
       run: |
-        echo "Installing Tauri CLI globally..."
+        echo "Installing Tauri CLI (latest version)..."
         npm install -g @tauri-apps/cli@latest
 
         echo "Verifying Tauri CLI installation..."
@@ -443,6 +443,80 @@ jobs:
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
+
+    - name: Fix Android Themes for Status Bar
+      if: inputs.platform == 'android'
+      run: |
+        echo "🔧 Fixing Android themes to prevent status bar overlap..."
+        
+        # Ensure the generated Android project exists
+        if [ -d "client/src-tauri/gen/android" ]; then
+          # Fix the main themes.xml file
+          if [ -f "client/src-tauri/gen/android/app/src/main/res/values/themes.xml" ]; then
+            echo "📝 Patching main themes.xml..."
+            cat > client/src-tauri/gen/android/app/src/main/res/values/themes.xml << 'EOF'
+        <resources xmlns:tools="http://schemas.android.com/tools">
+            <!-- Base application theme. -->
+            <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+                <!-- Customize your theme here. -->
+                <item name="colorPrimary">@color/colorPrimary</item>
+                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+                <item name="colorAccent">@color/colorAccent</item>
+            </style>
+        </resources>
+        EOF
+          else
+            echo "❌ Main themes.xml not found, creating it..."
+            mkdir -p client/src-tauri/gen/android/app/src/main/res/values
+            cat > client/src-tauri/gen/android/app/src/main/res/values/themes.xml << 'EOF'
+        <resources xmlns:tools="http://schemas.android.com/tools">
+            <!-- Base application theme. -->
+            <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+                <!-- Customize your theme here. -->
+                <item name="colorPrimary">@color/colorPrimary</item>
+                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+                <item name="colorAccent">@color/colorAccent</item>
+            </style>
+        </resources>
+        EOF
+          fi
+          
+          # Fix the night themes.xml file if it exists
+          if [ -f "client/src-tauri/gen/android/app/src/main/res/values-night/themes.xml" ]; then
+            echo "📝 Patching night themes.xml..."
+            cat > client/src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'EOF'
+        <resources xmlns:tools="http://schemas.android.com/tools">
+            <!-- Base application theme. -->
+            <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+                <!-- Customize your theme here. -->
+                <item name="colorPrimary">@color/colorPrimary</item>
+                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+                <item name="colorAccent">@color/colorAccent</item>
+            </style>
+        </resources>
+        EOF
+          else
+            echo "🌙 Night themes.xml not found, creating it..."
+            mkdir -p client/src-tauri/gen/android/app/src/main/res/values-night
+            cat > client/src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'EOF'
+        <resources xmlns:tools="http://schemas.android.com/tools">
+            <!-- Base application theme. -->
+            <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+                <!-- Customize your theme here. -->
+                <item name="colorPrimary">@color/colorPrimary</item>
+                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+                <item name="colorAccent">@color/colorAccent</item>
+            </style>
+        </resources>
+        EOF
+          fi
+          
+          echo "✅ Android themes patched successfully!"
+          echo "📋 Verifying theme files after patching:"
+          find client/src-tauri/gen/android -name "themes.xml" -exec echo "--- {} ---" \; -exec cat {} \;
+        else
+          echo "❌ No Android project found to patch"
+        fi
         JAVA_HOME: ${{ env.JAVA_HOME }}
 
     - name: Patch Android Build for Signing
