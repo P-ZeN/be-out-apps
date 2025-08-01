@@ -290,6 +290,39 @@ jobs:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
+    - name: Generate App Icons
+      working-directory: ./client
+      run: |
+        echo "Generating app icons for mobile platforms..."
+        
+        # Check if the icon file exists
+        ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
+        if [ -f "$ICON_FILE" ]; then
+          echo "✅ Found icon file: $ICON_FILE"
+          ls -la "$ICON_FILE"
+          
+          echo "Generating icons using Tauri CLI..."
+          if npx tauri icon "$ICON_FILE"; then
+            echo "✅ Icons generated successfully"
+            
+            # Show generated icons
+            echo "=== Generated icons ==="
+            find src-tauri/icons -name "*.png" -o -name "*.ico" | head -10
+          else
+            echo "❌ Failed to generate icons"
+            echo "Trying with local Tauri CLI..."
+            cargo tauri icon "$ICON_FILE" || echo "Local cargo tauri also failed"
+          fi
+        else
+          echo "⚠️  Icon file not found: $ICON_FILE"
+          echo "Available files in src-tauri/icons/:"
+          ls -la src-tauri/icons/ || echo "Icons directory not found"
+          
+          # Try to find any PNG files that could be used as icons
+          echo "Looking for alternative icon files..."
+          find src-tauri -name "*.png" | head -5
+        fi
+
     - name: Initialize Android project
       working-directory: ./client
       run: |
@@ -335,6 +368,69 @@ jobs:
         else
           echo "❌ Android project directory not found, trying alternative paths..."
           find src-tauri -type d -name "*android*" 2>/dev/null || echo "No Android directories found"
+        fi
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        NDK_HOME: ${{ env.NDK_HOME }}
+        JAVA_HOME: ${{ env.JAVA_HOME }}
+
+    - name: Debug Android Project Generation (Compare with Local)
+      working-directory: ./client
+      run: |
+        echo "=== DEBUGGING: Android Project Generation for Local vs CI Comparison ==="
+        
+        if [ -d "src-tauri/gen/android" ]; then
+          echo "🔍 Analyzing generated Android project..."
+          
+          echo "=== 1. Tauri CLI Version Info ==="
+          npx tauri --version || echo "npx tauri version failed"
+          cargo tauri --version || echo "cargo tauri version failed"
+          
+          echo "=== 2. Android Project Structure ==="
+          find src-tauri/gen/android -type f -name "*.xml" -o -name "*.gradle*" -o -name "*.kt" | head -20
+          
+          echo "=== 3. Android Manifest Contents ==="
+          if [ -f "src-tauri/gen/android/app/src/main/AndroidManifest.xml" ]; then
+            echo "--- AndroidManifest.xml ---"
+            cat src-tauri/gen/android/app/src/main/AndroidManifest.xml
+          else
+            echo "❌ AndroidManifest.xml not found"
+            find src-tauri/gen/android -name "AndroidManifest.xml" 2>/dev/null || echo "No manifest files found"
+          fi
+          
+          echo "=== 4. Android Styles and Themes ==="
+          find src-tauri/gen/android -path "*/res/values*" -name "*.xml" -exec echo "--- {} ---" \; -exec cat {} \; 2>/dev/null || echo "No styles/themes found"
+          
+          echo "=== 5. Build Configuration Files ==="
+          if [ -f "src-tauri/gen/android/app/build.gradle.kts" ]; then
+            echo "--- app/build.gradle.kts (first 50 lines) ---"
+            head -50 src-tauri/gen/android/app/build.gradle.kts
+          fi
+          
+          if [ -f "src-tauri/gen/android/build.gradle.kts" ]; then
+            echo "--- root build.gradle.kts ---"
+            cat src-tauri/gen/android/build.gradle.kts
+          fi
+          
+          echo "=== 6. Generated App Configuration ==="
+          find src-tauri/gen/android -name "*.properties" -exec echo "--- {} ---" \; -exec cat {} \; 2>/dev/null || echo "No properties files found"
+          
+          echo "=== 7. Android Resources ==="
+          echo "Generated drawable resources:"
+          find src-tauri/gen/android -path "*/res/drawable*" -name "*.png" -o -name "*.xml" | head -10 || echo "No drawable resources found"
+          
+          echo "Generated layout resources:"
+          find src-tauri/gen/android -path "*/res/layout*" -name "*.xml" | head -5 || echo "No layout resources found"
+          
+          echo "=== 8. Tauri Configuration Used ==="
+          echo "--- tauri.conf.json ---"
+          cat src-tauri/tauri.conf.json | head -50
+          
+          echo "=== 9. Environment Variables During Generation ==="
+          env | grep -E "(ANDROID|TAURI|JAVA|SDK)" | sort
+          
+        else
+          echo "❌ No Android project found - initialization may have failed"
         fi
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
