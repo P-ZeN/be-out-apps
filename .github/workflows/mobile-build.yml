@@ -1127,18 +1127,18 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
 
           # Install development provisioning profile
-          if [ -n "${{ secrets.APPLE_DEVELOPMENT_PROVISIONING_PROFILE_BASE64 }}" ]; then
+          if [ -n "${{ secrets.IOS_DEVELOPMENT_PROVISIONING_PROFILE }}" ]; then
             echo "🔧 Installing development provisioning profile..."
-            echo "${{ secrets.APPLE_DEVELOPMENT_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision
+            echo "${{ secrets.IOS_DEVELOPMENT_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision
             echo "✅ Development provisioning profile installed"
           else
             echo "⚠️  Development provisioning profile not found in secrets"
           fi
 
           # Install distribution provisioning profile
-          if [ -n "${{ secrets.APPLE_DISTRIBUTION_PROVISIONING_PROFILE_BASE64 }}" ]; then
+          if [ -n "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" ]; then
             echo "📦 Installing distribution provisioning profile..."
-            echo "${{ secrets.APPLE_DISTRIBUTION_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision
+            echo "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision
             echo "✅ Distribution provisioning profile installed"
           else
             echo "⚠️  Distribution provisioning profile not found in secrets"
