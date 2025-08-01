@@ -3,7 +3,6 @@ name: Mobile App Build and Release
 on:
   push:
     branches: [ mobile-build ]  # Only run on mobile-build branch
-    tags: [ 'v*' ]  # Still run on version tags for releases
     paths:  # Only run when these files change
       - 'client/**'
       - '.github/workflows/mobile-build.yml'
