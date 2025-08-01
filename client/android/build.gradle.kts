@@ -61,6 +61,20 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+afterEvaluate {
+    if (System.getenv("CI") == "true") {
+        val signingConfig = android.signingConfigs.findByName("release")
+        // Fail the build if signingConfig is missing or any value is missing
+        if (signingConfig == null ||
+            signingConfig.storeFile == null ||
+            signingConfig.storePassword.isNullOrBlank() ||
+            signingConfig.keyAlias.isNullOrBlank() ||
+            signingConfig.keyPassword.isNullOrBlank()
+        ) {
+            throw GradleException("Signing config for release build is missing or incomplete. Please check your environment variables.")
+        }
+    }
 }
 
 dependencies {
