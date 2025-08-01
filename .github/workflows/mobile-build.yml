@@ -1003,7 +1003,7 @@ jobs:
     - name: Install Apple Certificates and Provisioning Profiles
       run: |
         echo "🔐 Setting up iOS code signing..."
-        
+
         # Check if we have the required secrets for code signing
         if [ -z "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
           echo "⚠️  APPLE_DEVELOPMENT_TEAM secret not found"
@@ -1017,11 +1017,11 @@ jobs:
 
         if [ "$SKIP_CODESIGN" = "false" ]; then
           echo "🔑 Installing certificates and provisioning profiles..."
-          
+
           # Create temporary keychain
           KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
           echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
-          
+
           security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
@@ -1076,10 +1076,10 @@ jobs:
           echo "🔍 Verifying code signing setup..."
           echo "Available signing identities:"
           security find-identity -v -p codesigning | head -10
-          
+
           echo "Installed provisioning profiles:"
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
-          
+
           echo "✅ Code signing setup completed"
         else
           echo "⏭️  Skipping code signing setup (no certificates configured)"
@@ -1198,16 +1198,16 @@ jobs:
           echo "🔐 Code signing enabled with Team ID: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export APPLE_DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export APPLE_TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
-          
+
           # Code signing configuration for development builds
           export CODE_SIGN_IDENTITY="Apple Development"
           export PROVISIONING_PROFILE_SPECIFIER="Be Out Development Profile"
           export CODE_SIGN_STYLE="Manual"
-          
+
           # Additional Xcode build settings
           export DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export PRODUCT_BUNDLE_IDENTIFIER="com.beout.app"
-          
+
           echo "Code signing configuration:"
           echo "  Team ID: $APPLE_DEVELOPMENT_TEAM"
           echo "  Bundle ID: $PRODUCT_BUNDLE_IDENTIFIER"
@@ -1228,12 +1228,12 @@ jobs:
 
         # Try different methods to build iOS
         echo "=== Attempting Tauri iOS Build ==="
-        
+
         if npm run tauri:ios:build -- --verbose 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
         elif npx tauri ios build --verbose 2>&1 | tee ios_build.log; then
-          echo "✅ Build succeeded with npx tauri ios build"  
+          echo "✅ Build succeeded with npx tauri ios build"
           BUILD_SUCCESS=true
         else
           echo "❌ All build methods failed"
@@ -1244,13 +1244,13 @@ jobs:
           echo "✅ Build completed! Looking for IPA files..."
           echo "=== Searching for IPA files ==="
           find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
-          
+
           echo "=== Searching for app bundles ==="
           find . -name "*.app" -type d 2>/dev/null | head -5 || echo "No .app bundles found"
-          
+
           echo "=== Checking Xcode build directories ==="
           find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
-          
+
         else
           echo "=== BUILD FAILED - Analyzing logs ==="
           if [ -f "ios_build.log" ]; then
@@ -1277,7 +1277,7 @@ jobs:
               echo "   3. Verify certificates haven't expired"
               echo "   4. See docs/IOS_CODE_SIGNING_SETUP.md for setup instructions"
             fi
-            
+
             if grep -q "future Xcode project file format" ios_build.log; then
               echo ""
               echo "🔧 XCODE PROJECT FORMAT ISSUE DETECTED:"
@@ -1287,7 +1287,7 @@ jobs:
               echo "   2. Use an older Tauri CLI version that generates compatible projects"
               echo "   3. Update the GitHub Actions runner to use Xcode 16+"
             fi
-            
+
             if grep -q "Provisioning profile.*doesn't include signing certificate" ios_build.log; then
               echo ""
               echo "🔧 PROVISIONING PROFILE MISMATCH:"
@@ -1319,10 +1319,10 @@ jobs:
       run: |
         echo "=== Searching for IPA files ==="
         find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
-        
+
         echo "=== Searching for app bundles ==="
         find . -name "*.app" -type d 2>/dev/null | head -5 || echo "No .app bundles found"
-        
+
         echo "=== Checking Xcode build directories ==="
         find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
 
@@ -1346,27 +1346,21 @@ jobs:
           security delete-keychain build.keychain || echo "Keychain already deleted"
           echo "✅ Keychain cleanup completed"
         fi
-EOF
-          
-          echo "✅ Tauri iOS configuration created"
-          echo "Configuration contents:"
-          cat src-tauri/tauri.ios.conf.json
-        fi
 
         # Try different methods to build iOS
         echo "=== Attempting Tauri iOS Build ==="
-        
+
         # Build with explicit code signing parameters if available
         if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
           echo "🔐 Building with code signing enabled..."
-          
+
           # Method 1: Try with npm script and config file
           if npm run tauri:ios:build -- --config src-tauri/tauri.ios.conf.json --verbose 2>&1 | tee ios_build.log; then
             echo "✅ Build succeeded with npm script and config file"
             BUILD_SUCCESS=true
-          # Method 2: Try with npx tauri and config file  
+          # Method 2: Try with npx tauri and config file
           elif npx tauri ios build --config src-tauri/tauri.ios.conf.json --verbose 2>&1 | tee ios_build.log; then
-            echo "✅ Build succeeded with npx tauri and config file"  
+            echo "✅ Build succeeded with npx tauri and config file"
             BUILD_SUCCESS=true
           # Method 3: Try with environment variables
           elif APPLE_DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}" \
@@ -1381,14 +1375,14 @@ EOF
           fi
         else
           echo "⚠️  Building without code signing..."
-          
+
           # Method 1: Try with npm script
           if npm run tauri:ios:build -- --verbose 2>&1 | tee ios_build.log; then
             echo "✅ Build succeeded with npm script"
             BUILD_SUCCESS=true
           # Method 2: Try with npx tauri
           elif npx tauri ios build --verbose 2>&1 | tee ios_build.log; then
-            echo "✅ Build succeeded with npx tauri ios build"  
+            echo "✅ Build succeeded with npx tauri ios build"
             BUILD_SUCCESS=true
           else
             echo "❌ All build methods failed"
@@ -1400,13 +1394,13 @@ EOF
           echo "✅ Build completed! Looking for IPA files..."
           echo "=== Searching for IPA files ==="
           find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
-          
+
           echo "=== Searching for app bundles ==="
           find . -name "*.app" -type d 2>/dev/null | head -5 || echo "No .app bundles found"
-          
+
           echo "=== Checking Xcode build directories ==="
           find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
-          
+
         else
           echo "=== BUILD FAILED - Analyzing logs ==="
           if [ -f "ios_build.log" ]; then
@@ -1433,7 +1427,7 @@ EOF
               echo "   3. Verify certificates haven't expired"
               echo "   4. See docs/IOS_CODE_SIGNING_SETUP.md for setup instructions"
             fi
-            
+
             if grep -q "future Xcode project file format" ios_build.log; then
               echo ""
               echo "🔧 XCODE PROJECT FORMAT ISSUE DETECTED:"
@@ -1443,7 +1437,7 @@ EOF
               echo "   2. Use an older Tauri CLI version that generates compatible projects"
               echo "   3. Update the GitHub Actions runner to use Xcode 16+"
             fi
-            
+
             if grep -q "Provisioning profile.*doesn't include signing certificate" ios_build.log; then
               echo ""
               echo "🔧 PROVISIONING PROFILE MISMATCH:"

@@ -107,14 +107,14 @@ jobs:
         openssl genrsa -out ios_development_private.key 2048
         openssl req -new -key ios_development_private.key -out ios_development.csr \
           -subj "/C=US/ST=California/L=San Francisco/O=Be Out/OU=Development/CN=iOS Development: Be Out/emailAddress=your-email@example.com"
-        
+
         # Generate distribution certificate
         openssl genrsa -out ios_distribution_private.key 2048
         openssl req -new -key ios_distribution_private.key -out ios_distribution.csr \
           -subj "/C=US/ST=California/L=San Francisco/O=Be Out/OU=Development/CN=iOS Distribution: Be Out/emailAddress=your-email@example.com"
-        
+
         echo "CSR files generated. Download them from the artifacts and upload to Apple Developer Portal."
-        
+
     - name: Upload CSR files
       uses: actions/upload-artifact@v4
       with:

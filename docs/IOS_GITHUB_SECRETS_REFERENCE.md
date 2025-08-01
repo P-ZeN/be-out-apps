@@ -66,7 +66,7 @@ cd ~/Downloads
 base64 -i ios_development.p12 | pbcopy
 echo "✅ Development certificate copied to clipboard - paste into APPLE_DEVELOPMENT_CERTIFICATE_P12_BASE64"
 
-# Convert distribution certificate  
+# Convert distribution certificate
 base64 -i ios_distribution.p12 | pbcopy
 echo "✅ Distribution certificate copied to clipboard - paste into APPLE_DISTRIBUTION_CERTIFICATE_P12_BASE64"
 
