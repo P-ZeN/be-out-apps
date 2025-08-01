@@ -391,15 +391,39 @@ jobs:
             echo "    }" >> signing_config_patch.txt
 
             # Insert the signing configuration after the defaultConfig block
-            sed -i '/defaultConfig {/,/}/!b; /}/a\\n'"$(cat signing_config_patch.txt)" "$APP_BUILD_FILE"
+            # Use a simpler approach with awk to avoid sed delimiter issues
+            awk '
+            /defaultConfig \{/ { in_config = 1 }
+            in_config && /^\s*\}/ && !inserted { 
+                print $0
+                while ((getline line < "signing_config_patch.txt") > 0) {
+                    print line
+                }
+                close("signing_config_patch.txt")
+                inserted = 1
+                next
+            }
+            { print }
+            ' "$APP_BUILD_FILE" > "$APP_BUILD_FILE.tmp" && mv "$APP_BUILD_FILE.tmp" "$APP_BUILD_FILE"
 
             # Add signingConfig to the release buildType using a different approach
             # First create a temporary patch file for the signing config line
             echo "            signingConfig = signingConfigs.findByName(\"release\")" > buildtype_patch.txt
             
             # Insert the signingConfig line before the closing brace of the release buildType
-            sed -i '/getByName("release") {/,/^[[:space:]]*}/ { /^[[:space:]]*}/ { r buildtype_patch.txt
-            } }' "$APP_BUILD_FILE"
+            awk '
+            /getByName\("release"\) \{/ { in_release = 1 }
+            in_release && /^\s*\}/ && !inserted {
+                while ((getline line < "buildtype_patch.txt") > 0) {
+                    print line
+                }
+                close("buildtype_patch.txt")
+                print $0
+                inserted = 1
+                next
+            }
+            { print }
+            ' "$APP_BUILD_FILE" > "$APP_BUILD_FILE.tmp" && mv "$APP_BUILD_FILE.tmp" "$APP_BUILD_FILE"
             
             # Clean up the temporary file
             rm buildtype_patch.txt
