@@ -2,10 +2,21 @@ name: Mobile App Build and Release
 
 on:
   push:
-    branches: [ main, develop ]
-    tags: [ 'v*' ]
+    branches: [ mobile-build ]  # Only run on mobile-build branch
+    tags: [ 'v*' ]  # Still run on version tags for releases
+    paths:  # Only run when these files change
+      - 'client/**'
+      - '.github/workflows/mobile-build.yml'
+      - 'package.json'
+      - 'package-lock.json'
   pull_request:
-    branches: [ main ]
+    branches: [ mobile-build ]  # Only run PR checks when targeting mobile-build branch
+    paths:  # Only run when these files change
+      - 'client/**'
+      - '.github/workflows/mobile-build.yml'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:  # Allow manual triggering from GitHub UI
 
 env:
   CARGO_TERM_COLOR: always
@@ -210,15 +221,15 @@ jobs:
       working-directory: ./client
       run: |
         echo "Setting up Android code signing..."
-        
+
         # Create keystore directory
         mkdir -p src-tauri/keystore
-        
+
         # Decode and save the keystore file
         if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
           echo "✅ Android keystore found in secrets"
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > src-tauri/keystore/be-out-release.keystore
-          
+
           # Create keystore.properties file
           cat > src-tauri/keystore.properties << EOF
         storeFile=keystore/be-out-release.keystore
@@ -226,7 +237,7 @@ jobs:
         keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
         keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
         EOF
-          
+
           echo "✅ Android code signing configured"
           ls -la src-tauri/keystore/
         else
@@ -249,7 +260,7 @@ jobs:
         else
           echo "❌ keystore.properties not found"
         fi
-        
+
         if [ -f "src-tauri/keystore/be-out-release.keystore" ]; then
           echo "✅ Keystore file exists"
           ls -la src-tauri/keystore/be-out-release.keystore
@@ -257,7 +268,7 @@ jobs:
           echo "❌ Keystore file not found"
           ls -la src-tauri/keystore/ || echo "Keystore directory not found"
         fi
-        
+
         echo "=== Environment variables ==="
         echo "ANDROID_HOME: $ANDROID_HOME"
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
@@ -582,11 +593,11 @@ jobs:
         echo "=== Xcode Environment Check ==="
         xcodebuild -version
         xcrun --show-sdk-version --sdk iphoneos || echo "iPhone SDK not found"
-        
+
         # Check Xcode version compatibility
         XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
         echo "Detected Xcode version: $XCODE_VERSION"
-        
+
         # Tauri 2.x typically requires Xcode 15.0+ for iOS builds
         if [[ $(echo "$XCODE_VERSION 15.0" | tr " " "\n" | sort -V | head -1) != "15.0" ]]; then
           echo "⚠️  Warning: Xcode version may be too old for Tauri 2.x iOS builds"
@@ -600,7 +611,7 @@ jobs:
     - name: Install Tauri CLI
       run: |
         echo "Installing Tauri CLI..."
-        
+
         # Try to install the latest version first
         if npm install -g @tauri-apps/cli@latest; then
           TAURI_VERSION=$(npm list -g @tauri-apps/cli --depth=0 | grep @tauri-apps/cli)
@@ -740,7 +751,7 @@ jobs:
             grep -i "project.*format\|future.*xcode\|adjust.*project.*format" ios_build.log | tail -5
             echo "=== Checking for code signing issues ==="
             grep -i "sign\|certificate\|team\|provision" ios_build.log | tail -5
-            
+
             # Check for specific Xcode project format error
             if grep -q "future Xcode project file format" ios_build.log; then
               echo ""
