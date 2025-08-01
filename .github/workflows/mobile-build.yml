@@ -458,10 +458,10 @@ jobs:
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-                <!-- Customize your theme here. -->
-                <item name="colorPrimary">@color/colorPrimary</item>
-                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-                <item name="colorAccent">@color/colorAccent</item>
+                <!-- Use standard Material Design colors -->
+                <item name="colorPrimary">@android:color/holo_blue_bright</item>
+                <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
+                <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
         EOF
@@ -472,10 +472,10 @@ jobs:
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-                <!-- Customize your theme here. -->
-                <item name="colorPrimary">@color/colorPrimary</item>
-                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-                <item name="colorAccent">@color/colorAccent</item>
+                <!-- Use standard Material Design colors -->
+                <item name="colorPrimary">@android:color/holo_blue_bright</item>
+                <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
+                <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
         EOF
@@ -488,10 +488,10 @@ jobs:
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-                <!-- Customize your theme here. -->
-                <item name="colorPrimary">@color/colorPrimary</item>
-                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-                <item name="colorAccent">@color/colorAccent</item>
+                <!-- Use standard Material Design colors -->
+                <item name="colorPrimary">@android:color/holo_blue_bright</item>
+                <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
+                <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
         EOF
@@ -502,10 +502,10 @@ jobs:
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-                <!-- Customize your theme here. -->
-                <item name="colorPrimary">@color/colorPrimary</item>
-                <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-                <item name="colorAccent">@color/colorAccent</item>
+                <!-- Use standard Material Design colors -->
+                <item name="colorPrimary">@android:color/holo_blue_bright</item>
+                <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
+                <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
         EOF
