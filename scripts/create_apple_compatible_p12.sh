@@ -62,7 +62,7 @@ openssl pkcs12 -export \
 echo ""
 echo "🏪 Creating distribution certificate with minimal options..."
 
-# Convert certificate to PEM if needed  
+# Convert certificate to PEM if needed
 openssl x509 -inform DER -in ios_distribution.cer -out ios_distribution.pem 2>/dev/null || cp ios_distribution.cer ios_distribution.pem
 
 # Create P12 with the most basic options that Apple accepts

@@ -54,13 +54,13 @@ echo "Attempting to export certificates from keychain..."
 # Try to export development certificate
 if security find-identity -v -p codesigning | grep -q "Apple Development"; then
     echo "📱 Found Apple Development certificate, attempting export..."
-    
+
     # Get the certificate hash
     DEV_HASH=$(security find-identity -v -p codesigning | grep "Apple Development" | head -1 | awk '{print $2}')
-    
+
     if [ -n "$DEV_HASH" ]; then
         echo "Certificate hash: $DEV_HASH"
-        
+
         # Export the certificate with private key
         if security export -k login.keychain -t identities -f pkcs12 -P "$NEW_PASSWORD" -o "ios_development_new.p12" "$DEV_HASH" 2>/dev/null; then
             mv "ios_development_new.p12" "ios_development.p12"
@@ -82,13 +82,13 @@ fi
 # Try to export distribution certificate
 if security find-identity -v -p codesigning | grep -q "Apple Distribution"; then
     echo "🏪 Found Apple Distribution certificate, attempting export..."
-    
+
     # Get the certificate hash
     DIST_HASH=$(security find-identity -v -p codesigning | grep "Apple Distribution" | head -1 | awk '{print $2}')
-    
+
     if [ -n "$DIST_HASH" ]; then
         echo "Certificate hash: $DIST_HASH"
-        
+
         # Export the certificate with private key
         if security export -k login.keychain -t identities -f pkcs12 -P "$NEW_PASSWORD" -o "ios_distribution_new.p12" "$DIST_HASH" 2>/dev/null; then
             mv "ios_distribution_new.p12" "ios_distribution.p12"
@@ -111,17 +111,17 @@ fi
 if [ "$DEV_SUCCESS" != true ] || [ "$DIST_SUCCESS" != true ]; then
     echo ""
     echo "Method 2: Attempting to recreate from existing certificate files..."
-    
+
     # Look for .cer and .p12 files
     echo "Available files:"
     ls -la *.cer *.p12 *.key 2>/dev/null || echo "No certificate files found"
-    
+
     # Try to find certificate files
     if [ -f "ios_development.cer" ] || [ -f "development.cer" ]; then
         echo "Found development certificate file, but need private key to create P12"
         echo "This requires the original private key that was used to create the certificate"
     fi
-    
+
     if [ -f "ios_distribution.cer" ] || [ -f "distribution.cer" ]; then
         echo "Found distribution certificate file, but need private key to create P12"
         echo "This requires the original private key that was used to create the certificate"
