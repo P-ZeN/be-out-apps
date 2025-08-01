@@ -1313,16 +1313,39 @@ jobs:
         CODE_SIGN_IDENTITY: "Apple Development"
         DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
         PRODUCT_BUNDLE_IDENTIFIER: "com.beout.app"
-{
-  "tauri": {
-    "bundle": {
-      "iOS": {
-        "developmentTeam": "${{ secrets.APPLE_DEVELOPMENT_TEAM }}",
-        "provisioningProfile": "Be Out Development Profile"
-      }
-    }
-  }
-}
+
+    - name: Find and Upload IPA
+      working-directory: ./client
+      run: |
+        echo "=== Searching for IPA files ==="
+        find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
+        
+        echo "=== Searching for app bundles ==="
+        find . -name "*.app" -type d 2>/dev/null | head -5 || echo "No .app bundles found"
+        
+        echo "=== Checking Xcode build directories ==="
+        find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
+
+    - name: Upload IPA (if found)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ios-ipa
+        path: |
+          client/src-tauri/gen/ios/**/Build/Products/**/*.ipa
+          client/src-tauri/gen/apple/**/Build/Products/**/*.ipa
+          client/src-tauri/target/**/release/*.ipa
+          client/**/*.ipa
+        if-no-files-found: warn
+
+    - name: Cleanup Keychain
+      if: always()
+      run: |
+        if [ -n "$KEYCHAIN_PASSWORD" ]; then
+          echo "🧹 Cleaning up build keychain..."
+          security delete-keychain build.keychain || echo "Keychain already deleted"
+          echo "✅ Keychain cleanup completed"
+        fi
 EOF
           
           echo "✅ Tauri iOS configuration created"
