@@ -1928,24 +1928,24 @@ jobs:
 
           # Create export options plist using environment variable
           TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
-          cat > ExportOptions.plist << EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>development</string>
-    <key>teamID</key>
-    <string>$TEAM_ID</string>
-    <key>compileBitcode</key>
-    <false/>
-    <key>stripSwiftSymbols</key>
-    <true/>
-    <key>thinning</key>
-    <string>&lt;none&gt;</string>
-</dict>
-</plist>
-EOF
+          
+          # Create plist file with proper escaping
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > ExportOptions.plist
+          echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> ExportOptions.plist
+          echo '<plist version="1.0">' >> ExportOptions.plist
+          echo '<dict>' >> ExportOptions.plist
+          echo '    <key>method</key>' >> ExportOptions.plist
+          echo '    <string>development</string>' >> ExportOptions.plist
+          echo '    <key>teamID</key>' >> ExportOptions.plist
+          echo "    <string>$TEAM_ID</string>" >> ExportOptions.plist
+          echo '    <key>compileBitcode</key>' >> ExportOptions.plist
+          echo '    <false/>' >> ExportOptions.plist
+          echo '    <key>stripSwiftSymbols</key>' >> ExportOptions.plist
+          echo '    <true/>' >> ExportOptions.plist
+          echo '    <key>thinning</key>' >> ExportOptions.plist
+          echo '    <string>&lt;none&gt;</string>' >> ExportOptions.plist
+          echo '</dict>' >> ExportOptions.plist
+          echo '</plist>' >> ExportOptions.plist
 
           # Create output directory
           mkdir -p ios-export
