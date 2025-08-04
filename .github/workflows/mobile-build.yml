@@ -1407,26 +1407,37 @@ jobs:
         if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
           echo "📝 Updating Xcode project settings..."
           
+          # Make a backup first
+          cp src-tauri/gen/apple/app.xcodeproj/project.pbxproj src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup
+          
           # Update the project.pbxproj file to use manual code signing
           # This is more reliable than environment variables for Xcode projects
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "iPhone Developer";/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
           
-          # Add the provisioning profile settings if they don't exist
+          # Add DEVELOPMENT_TEAM to all build configurations
+          if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
+            # Set DEVELOPMENT_TEAM for all configurations
+            sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            sed -i '' "s/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            
+            # Add DEVELOPMENT_TEAM if it doesn't exist using a different approach
+            if ! grep -q "DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj; then
+              # Use awk to add DEVELOPMENT_TEAM after CODE_SIGN_STYLE lines
+              awk '/CODE_SIGN_STYLE = Manual;/ { print; print "\t\t\t\tDEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";"; next } 1' src-tauri/gen/apple/app.xcodeproj/project.pbxproj > /tmp/pbxproj_temp
+              mv /tmp/pbxproj_temp src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            fi
+          fi
+          
+          # Add the provisioning profile settings
           if [ -n "$PROFILE_UUID" ]; then
-            # Check if PROVISIONING_PROFILE is already set, if not add it
+            echo "📋 Adding provisioning profile settings: $PROFILE_UUID"
+            
+            # Add provisioning profile settings if they don't exist
             if ! grep -q "PROVISIONING_PROFILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj; then
-              # Add provisioning profile settings after CODE_SIGN_STYLE using a simpler approach
-              echo "Adding provisioning profile settings to Xcode project..."
-              
-              # Create temporary files with the settings
-              echo "				PROVISIONING_PROFILE = \"$PROFILE_UUID\";" > /tmp/profile_settings.txt
-              echo "				PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";" >> /tmp/profile_settings.txt
-              
-              # Insert after CODE_SIGN_STYLE = Manual; lines
-              awk '/CODE_SIGN_STYLE = Manual;/ { print; while ((getline line < "/tmp/profile_settings.txt") > 0) print line; next } 1' src-tauri/gen/apple/app.xcodeproj/project.pbxproj > /tmp/project_updated.pbxproj
-              mv /tmp/project_updated.pbxproj src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-              rm -f /tmp/profile_settings.txt
+              # Use awk to add provisioning profile settings after DEVELOPMENT_TEAM lines
+              awk '/DEVELOPMENT_TEAM = .*'${{ secrets.APPLE_DEVELOPMENT_TEAM }}'/ { print; print "\t\t\t\tPROVISIONING_PROFILE = \"'$PROFILE_UUID'\";"; print "\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"'$PROFILE_NAME'\";"; next } 1' src-tauri/gen/apple/app.xcodeproj/project.pbxproj > /tmp/pbxproj_temp2
+              mv /tmp/pbxproj_temp2 src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             else
               # Update existing provisioning profile settings
               sed -i '' "s/PROVISIONING_PROFILE = .*/PROVISIONING_PROFILE = \"$PROFILE_UUID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
@@ -1436,7 +1447,7 @@ jobs:
           
           echo "✅ Xcode project configured for manual code signing"
           echo "📋 Verifying project settings..."
-          grep -A 2 -B 2 "CODE_SIGN_STYLE\|PROVISIONING_PROFILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -10
+          grep -A 2 -B 2 "CODE_SIGN_STYLE\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -15
         else
           echo "⚠️ Xcode project file not found, manual configuration skipped"
         fi
