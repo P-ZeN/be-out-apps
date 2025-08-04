@@ -1262,7 +1262,9 @@ jobs:
         # Fix Google Auth plugin iOS issue
         echo "🔧 Fixing tauri-plugin-google-auth iOS configuration..."
         if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
-          echo "Creating missing iOS directory for Google Auth plugin..."
+          echo "❌ iOS directory missing for Google Auth plugin!"
+          echo "The required iOS implementation should be in the repository."
+          echo "Creating temporary placeholder to prevent build failure..."
           mkdir -p ../tauri-plugin-google-auth/ios/Sources
           
           # Create a minimal Package.swift
@@ -1280,15 +1282,29 @@ jobs:
           echo 'import Foundation' > ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
           echo 'import UIKit' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
           echo '' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo '@objc public class GoogleAuthPlugin: NSObject {' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo '    @objc public static func setup() {' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo '        print("Google Auth Plugin - iOS setup placeholder")' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo '    }' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo '}' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo '@_cdecl("init_plugin_google_auth")' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo 'func initPluginGoogleAuth() -> UnsafeMutableRawPointer { return UnsafeMutableRawPointer(bitPattern: 1)! }' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
           
-          echo "✅ Created iOS plugin structure with placeholders"
+          echo "✅ Created temporary iOS plugin structure"
         else
-          echo "✅ iOS directory already exists"
+          echo "✅ iOS directory already exists for Google Auth plugin"
+          echo "📋 Verifying iOS plugin structure..."
+          ls -la ../tauri-plugin-google-auth/ios/
+          if [ -f "../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift" ]; then
+            echo "✅ Swift implementation file found"
+          else
+            echo "⚠️ Swift implementation file missing"
+          fi
+        fi
+
+        # Verify the Cargo.toml fix
+        echo "🔧 Verifying Google Auth plugin Cargo.toml..."
+        if grep -q "links.*tauri-plugin-google-auth" ../tauri-plugin-google-auth/Cargo.toml; then
+          echo "❌ WARNING: 'links' directive still present in Cargo.toml!"
+          echo "This will cause the 'could not find native static library' error."
+          echo "Please ensure the 'links' line is removed from the Cargo.toml file."
+        else
+          echo "✅ Cargo.toml looks correct (no problematic 'links' directive)"
         fi
 
         # Try different methods to initialize iOS project

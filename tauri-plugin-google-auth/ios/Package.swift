@@ -12,10 +12,14 @@ let package = Package(
             targets: ["tauri-plugin-google-auth"]
         )
     ],
+    dependencies: [
+        // Tauri iOS API will be linked at build time
+    ],
     targets: [
         .target(
             name: "tauri-plugin-google-auth",
-            path: "Sources"
+            path: "Sources",
+            publicHeadersPath: "."
         )
     ]
 )
