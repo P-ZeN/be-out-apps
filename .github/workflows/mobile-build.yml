@@ -1259,52 +1259,49 @@ jobs:
         echo "Available npm scripts in client directory:"
         npm run | grep tauri || echo "No tauri scripts found"
 
-        # Fix Google Auth plugin iOS issue
-        echo "🔧 Fixing tauri-plugin-google-auth iOS configuration..."
+        # Verify Google Auth plugin iOS implementation
+        echo "🔧 Verifying tauri-plugin-google-auth iOS configuration..."
         if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
-          echo "❌ iOS directory missing for Google Auth plugin !"
-          echo "The required iOS implementation should be in the repository."
-          echo "Creating temporary placeholder to prevent build failure..."
-          mkdir -p ../tauri-plugin-google-auth/ios/Sources
-
-          # Createe a minimal Package.swift
-          echo '// swift-tools-version:5.3' > ../tauri-plugin-google-auth/ios/Package.swift
-          echo 'import PackageDescription' >> ../tauri-plugin-google-auth/ios/Package.swift
-          echo '' >> ../tauri-plugin-google-auth/ios/Package.swift
-          echo 'let package = Package(' >> ../tauri-plugin-google-auth/ios/Package.swift
-          echo '    name: "tauri-plugin-google-auth",' >> ../tauri-plugin-google-auth/ios/Package.swift
-          echo '    platforms: [.iOS(.v12)],' >> ../tauri-plugin-google-auth/ios/Package.swift
-          echo '    products: [.library(name: "tauri-plugin-google-auth", targets: ["tauri-plugin-google-auth"])],' >> ../tauri-plugin-google-auth/ios/Package.swift
-          echo '    targets: [.target(name: "tauri-plugin-google-auth", path: "Sources")]' >> ../tauri-plugin-google-auth/ios/Package.swift
-          echo ')' >> ../tauri-plugin-google-auth/ios/Package.swift
-
-          # Create a basic Swift file
-          echo 'import Foundation' > ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo 'import UIKit' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo '' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo '@_cdecl("init_plugin_google_auth")' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          echo 'func initPluginGoogleAuth() -> UnsafeMutableRawPointer { return UnsafeMutableRawPointer(bitPattern: 1)! }' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-
-          echo "✅ Created temporary iOS plugin structure"
+          echo "❌ CRITICAL: iOS directory missing for Google Auth plugin!"
+          echo "The iOS implementation should be in the repository."
+          echo "Please ensure the tauri-plugin-google-auth/ios directory exists with proper Package.swift and Sources."
+          exit 1
         else
-          echo "✅ iOS directory already exists for Google Auth plugin"
+          echo "✅ iOS directory exists for Google Auth plugin"
           echo "📋 Verifying iOS plugin structure..."
           ls -la ../tauri-plugin-google-auth/ios/
+          
+          # Verify Package.swift exists and has correct iOS version
+          if [ -f "../tauri-plugin-google-auth/ios/Package.swift" ]; then
+            echo "✅ Package.swift found"
+            if grep -q "iOS(.v15)" ../tauri-plugin-google-auth/ios/Package.swift; then
+              echo "✅ Package.swift correctly configured for iOS 15"
+            else
+              echo "⚠️ Package.swift may not be configured for iOS 15"
+              echo "Current Package.swift content:"
+              head -10 ../tauri-plugin-google-auth/ios/Package.swift
+            fi
+          else
+            echo "❌ CRITICAL: Package.swift missing!"
+            exit 1
+          fi
+          
+          # Verify Swift implementation exists
           if [ -f "../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift" ]; then
             echo "✅ Swift implementation file found"
           else
-            echo "⚠️ Swift implementation file missing"
+            echo "❌ CRITICAL: Swift implementation file missing!"
+            exit 1
           fi
         fi
 
-        # Verify the Cargo.toml fix
+        # Verify the Cargo.toml configuration
         echo "🔧 Verifying Google Auth plugin Cargo.toml..."
         if grep -q "links.*tauri-plugin-google-auth" ../tauri-plugin-google-auth/Cargo.toml; then
-          echo "❌ WARNING: 'links' directive still present in Cargo.toml!"
-          echo "This will cause the 'could not find native static library' error."
-          echo "Please ensure the 'links' line is removed from the Cargo.toml file."
+          echo "✅ Cargo.toml correctly has 'links' directive for tauri-plugin builder"
         else
-          echo "✅ Cargo.toml looks correct (no problematic 'links' directive)"
+          echo "❌ WARNING: 'links' directive missing in Cargo.toml!"
+          echo "This may cause plugin compilation issues."
         fi
 
         # Try different methods to initialize iOS project
