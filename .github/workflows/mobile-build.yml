@@ -1581,7 +1581,35 @@ jobs:
         echo ""
         echo "🔥 Pre-warming Cargo cache..."
         cd src-tauri
-        timeout 600 cargo fetch --target aarch64-apple-ios || echo "⚠️ Cargo fetch completed or timed out"
+        
+        # Use a background process with timeout since macOS doesn't have timeout by default
+        cargo fetch --target aarch64-apple-ios &
+        FETCH_PID=$!
+        
+        # Wait up to 600 seconds (10 minutes) for cargo fetch
+        COUNTER=0
+        while [ $COUNTER -lt 600 ]; do
+          if ! kill -0 $FETCH_PID 2>/dev/null; then
+            wait $FETCH_PID
+            FETCH_EXIT_CODE=$?
+            if [ $FETCH_EXIT_CODE -eq 0 ]; then
+              echo "✅ Cargo fetch completed successfully"
+            else
+              echo "⚠️ Cargo fetch completed with exit code: $FETCH_EXIT_CODE"
+            fi
+            break
+          fi
+          sleep 5
+          COUNTER=$((COUNTER + 5))
+        done
+        
+        # If still running after timeout, kill it
+        if kill -0 $FETCH_PID 2>/dev/null; then
+          echo "⚠️ Cargo fetch timed out after 10 minutes, terminating..."
+          kill $FETCH_PID 2>/dev/null || true
+          wait $FETCH_PID 2>/dev/null || true
+        fi
+        
         cd ..
 
         # Method 1: npm script with proper exit code handling
@@ -1614,9 +1642,30 @@ jobs:
         ) &
         MONITOR_PID=$!
         
-        # Use timeout command to prevent hanging
-        timeout 3600 npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1
-        BUILD_EXIT_CODE=$?
+        # Use background process with timeout instead of timeout command (macOS compatible)
+        echo "🚀 Starting iOS build with 1-hour timeout..."
+        npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1 &
+        BUILD_PID=$!
+        
+        # Wait up to 3600 seconds (1 hour) for the build
+        COUNTER=0
+        while [ $COUNTER -lt 3600 ]; do
+          if ! kill -0 $BUILD_PID 2>/dev/null; then
+            wait $BUILD_PID
+            BUILD_EXIT_CODE=$?
+            break
+          fi
+          sleep 10
+          COUNTER=$((COUNTER + 10))
+        done
+        
+        # If still running after timeout, kill it
+        if kill -0 $BUILD_PID 2>/dev/null; then
+          echo "❌ Build timed out after 1 hour, terminating..."
+          kill $BUILD_PID 2>/dev/null || true
+          wait $BUILD_PID 2>/dev/null || true
+          BUILD_EXIT_CODE=124  # Timeout exit code
+        fi
         
         # Stop the monitoring process
         kill $MONITOR_PID 2>/dev/null || true
@@ -1637,8 +1686,29 @@ jobs:
           # Method 2: Try npx tauri directly with explicit target
           echo ""
           echo "🚀 Trying npx tauri ios build with explicit target..."
-          timeout 3600 npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1
-          BUILD_EXIT_CODE2=$?
+          
+          npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1 &
+          BUILD_PID2=$!
+          
+          # Wait up to 3600 seconds (1 hour) for the second build attempt
+          COUNTER2=0
+          while [ $COUNTER2 -lt 3600 ]; do
+            if ! kill -0 $BUILD_PID2 2>/dev/null; then
+              wait $BUILD_PID2
+              BUILD_EXIT_CODE2=$?
+              break
+            fi
+            sleep 10
+            COUNTER2=$((COUNTER2 + 10))
+          done
+          
+          # If still running after timeout, kill it
+          if kill -0 $BUILD_PID2 2>/dev/null; then
+            echo "❌ npx tauri build timed out after 1 hour, terminating..."
+            kill $BUILD_PID2 2>/dev/null || true
+            wait $BUILD_PID2 2>/dev/null || true
+            BUILD_EXIT_CODE2=124  # Timeout exit code
+          fi
           
           if [ $BUILD_EXIT_CODE2 -eq 0 ]; then
             echo "✅ Build succeeded with npx tauri"
@@ -1656,8 +1726,29 @@ jobs:
             # Method 3: Try without target specification (let Tauri decide)
             echo ""
             echo "🚀 Trying npx tauri ios build without target..."
-            timeout 3600 npx tauri ios build --verbose > ios_build3.log 2>&1
-            BUILD_EXIT_CODE3=$?
+            
+            npx tauri ios build --verbose > ios_build3.log 2>&1 &
+            BUILD_PID3=$!
+            
+            # Wait up to 3600 seconds (1 hour) for the third build attempt
+            COUNTER3=0
+            while [ $COUNTER3 -lt 3600 ]; do
+              if ! kill -0 $BUILD_PID3 2>/dev/null; then
+                wait $BUILD_PID3
+                BUILD_EXIT_CODE3=$?
+                break
+              fi
+              sleep 10
+              COUNTER3=$((COUNTER3 + 10))
+            done
+            
+            # If still running after timeout, kill it
+            if kill -0 $BUILD_PID3 2>/dev/null; then
+              echo "❌ Final build method timed out after 1 hour, terminating..."
+              kill $BUILD_PID3 2>/dev/null || true
+              wait $BUILD_PID3 2>/dev/null || true
+              BUILD_EXIT_CODE3=124  # Timeout exit code
+            fi
             
             if [ $BUILD_EXIT_CODE3 -eq 0 ]; then
               echo "✅ Build succeeded with npx tauri (no target)"
