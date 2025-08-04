@@ -1661,6 +1661,30 @@ jobs:
         export CARGO_HTTP_MULTIPLEXING=false
         export CARGO_NET_GIT_FETCH_WITH_CLI=true
 
+        # Set additional iOS-specific build environment variables
+        export TAURI_CLI_VERBOSITY=5
+        export RUST_LOG=debug
+        export CARGO_INCREMENTAL=0
+
+        # Ensure iOS SDK paths are available
+        export IOS_SDK_PATH=$(xcrun --show-sdk-path --sdk iphoneos)
+        echo "📋 iOS SDK Path: $IOS_SDK_PATH"
+
+        # Test Rust compilation for iOS target before full build
+        echo ""
+        echo "🧪 Pre-testing Rust compilation for iOS target..."
+        cd src-tauri
+        if cargo check --target aarch64-apple-ios --verbose 2>&1 | tee ../rust_ios_check.log; then
+          echo "✅ Rust iOS target check passed"
+        else
+          echo "❌ Rust iOS target check failed - this will help diagnose the issue:"
+          tail -30 ../rust_ios_check.log
+          echo ""
+          echo "🔍 Looking for specific errors:"
+          grep -A 5 -B 5 "error:" ../rust_ios_check.log | tail -15 || echo "No specific errors found"
+        fi
+        cd ..
+
         # Add timeout and memory monitoring
         echo "📊 System resources before build:"
         echo "Available memory:"
@@ -1683,6 +1707,11 @@ jobs:
 
         # Try the build without background process first to see immediate errors
         echo "🚀 Starting iOS build (initial attempt without timeout)..."
+
+        # Set environment variable to get full backtraces for build errors
+        export CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG=true
+        export RUST_BACKTRACE=full
+
         BUILD_SUCCESS=false
         if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with npm script"
@@ -1692,7 +1721,15 @@ jobs:
           BUILD_EXIT_CODE=$?
           echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
           echo "📋 Build log content:"
-          tail -30 ios_build.log
+          tail -50 ios_build.log
+
+          # Look for Rust compilation errors specifically
+          echo "📋 Searching for Rust compilation errors:"
+          grep -A 10 -B 5 "error:" ios_build.log | tail -20 || echo "No Rust errors found in log"
+
+          # Look for Swift compilation errors
+          echo "📋 Searching for Swift compilation errors:"
+          grep -A 10 -B 5 "Swift.*error\|swift.*error" ios_build.log | tail -20 || echo "No Swift errors found in log"
 
           # If it fails immediately, try without arguments
           echo ""
@@ -1808,6 +1845,27 @@ jobs:
             echo ""
             echo "   Error details from build log:"
             grep -A 5 -B 5 "tauri-plugin-google-auth" ios_build.log | tail -15
+          fi
+
+          if [ -f "ios_build.log" ] && grep -q "PhaseScriptExecution Build.*Rust.*Code" ios_build.log; then
+            echo ""
+            echo "🔧 XCODE BUILD RUST CODE PHASE FAILURE DETECTED:"
+            echo "   The Xcode build is failing during the 'Build Rust Code' phase."
+            echo "   This indicates the Rust compilation within Xcode is failing."
+            echo "   Common causes:"
+            echo "   1. Rust dependencies not properly configured for iOS"
+            echo "   2. Missing system libraries or frameworks"
+            echo "   3. Architecture mismatch (arm64 vs x86_64)"
+            echo "   4. Plugin-specific iOS compilation issues"
+            echo ""
+            echo "   Detailed error analysis:"
+            echo "   🔍 Looking for the actual Rust error (often truncated in output):"
+            grep -A 20 -B 5 "Building for production" ios_build.log | tail -30 || echo "No detailed Rust build info found"
+            echo ""
+            echo "   🔍 Looking for Swift/Xcode compilation errors:"
+            grep -A 10 -B 5 "BUILD FAILED\|error:\|failed:" ios_build.log | tail -20 || echo "No specific Swift/Xcode errors found"
+            echo ""
+            echo "   💡 Try enabling RUST_BACKTRACE=full for more details in next run"
           fi
 
           if [ -f "ios_build.log" ] && grep -q "link_xcode_library\|No such file or directory.*Os.*code: 2" ios_build.log; then
