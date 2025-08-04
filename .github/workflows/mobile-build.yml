@@ -1538,13 +1538,89 @@ jobs:
         echo "📋 Available signing identities before build:"
         security find-identity -v -p codesigning | head -5
 
+        # Configure Cargo for better CI performance
+        echo ""
+        echo "🔧 Configuring Cargo for CI environment..."
+        mkdir -p ~/.cargo
+        cat > ~/.cargo/config.toml << 'EOF'
+[net]
+retry = 10
+timeout = 300
+
+[http]
+timeout = 300
+multiplexing = false
+
+[build]
+jobs = 2
+
+[registry]
+default = "crates-io"
+
+[source.crates-io]
+replace-with = "crates-io"
+
+[net.git]
+fetch-with-cli = true
+EOF
+
+        echo "✅ Cargo configuration complete"
+        echo "📋 Cargo config:"
+        cat ~/.cargo/config.toml
+
+        # Pre-warm Cargo cache to reduce build time
+        echo ""
+        echo "🔥 Pre-warming Cargo cache..."
+        cd src-tauri
+        timeout 600 cargo fetch --target aarch64-apple-ios || echo "⚠️ Cargo fetch completed or timed out"
+        cd ..
+
         # Method 1: npm script with proper exit code handling
         echo "🚀 Trying npm run tauri:ios:build..."
-        if npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1; then
+        
+        # Set Rust/Cargo optimizations for CI
+        export CARGO_NET_RETRY=10
+        export CARGO_NET_TIMEOUT=300
+        export CARGO_HTTP_TIMEOUT=300
+        export CARGO_HTTP_MULTIPLEXING=false
+        export CARGO_NET_GIT_FETCH_WITH_CLI=true
+        
+        # Add timeout and memory monitoring
+        echo "📊 System resources before build:"
+        echo "Available memory:"
+        vm_stat | grep "Pages free\|Pages active\|Pages inactive\|Pages speculative\|Pages wired"
+        echo "Available disk space:"
+        df -h /
+        
+        # Start a background process to monitor build progress
+        (
+          sleep 60
+          while true; do
+            echo "⏱️ Build still running... $(date)"
+            echo "📊 Current memory usage:"
+            vm_stat | grep "Pages free" | head -1
+            echo "📊 Build log size: $(wc -l < ios_build.log 2>/dev/null || echo 0) lines"
+            sleep 300  # Log every 5 minutes
+          done
+        ) &
+        MONITOR_PID=$!
+        
+        # Use timeout command to prevent hanging
+        timeout 3600 npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1
+        BUILD_EXIT_CODE=$?
+        
+        # Stop the monitoring process
+        kill $MONITOR_PID 2>/dev/null || true
+        
+        if [ $BUILD_EXIT_CODE -eq 0 ]; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
+        elif [ $BUILD_EXIT_CODE -eq 124 ]; then
+          echo "❌ Build timed out after 1 hour"
+          echo "📋 Build log content (last 100 lines):"
+          tail -100 ios_build.log
+          BUILD_SUCCESS=false
         else
-          BUILD_EXIT_CODE=$?
           echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
           echo "📋 Build log content:"
           cat ios_build.log
@@ -1552,11 +1628,19 @@ jobs:
           # Method 2: Try npx tauri directly with explicit target
           echo ""
           echo "🚀 Trying npx tauri ios build with explicit target..."
-          if npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1; then
+          timeout 3600 npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1
+          BUILD_EXIT_CODE2=$?
+          
+          if [ $BUILD_EXIT_CODE2 -eq 0 ]; then
+          if [ $BUILD_EXIT_CODE2 -eq 0 ]; then
             echo "✅ Build succeeded with npx tauri"
             BUILD_SUCCESS=true
+          elif [ $BUILD_EXIT_CODE2 -eq 124 ]; then
+            echo "❌ npx tauri build also timed out after 1 hour"
+            echo "📋 Second build log content (last 100 lines):"
+            tail -100 ios_build2.log
+            BUILD_SUCCESS=false
           else
-            BUILD_EXIT_CODE2=$?
             echo "❌ npx tauri also failed with exit code: $BUILD_EXIT_CODE2"
             echo "📋 Second build log content:"
             cat ios_build2.log
@@ -1564,17 +1648,25 @@ jobs:
             # Method 3: Try without target specification (let Tauri decide)
             echo ""
             echo "🚀 Trying npx tauri ios build without target..."
-            if npx tauri ios build --verbose > ios_build3.log 2>&1; then
+            timeout 3600 npx tauri ios build --verbose > ios_build3.log 2>&1
+            BUILD_EXIT_CODE3=$?
+            
+            if [ $BUILD_EXIT_CODE3 -eq 0 ]; then
               echo "✅ Build succeeded with npx tauri (no target)"
               BUILD_SUCCESS=true
+            elif [ $BUILD_EXIT_CODE3 -eq 124 ]; then
+              echo "❌ All build methods timed out"
+              echo "📋 Third build log content (last 100 lines):"
+              tail -100 ios_build3.log
+              BUILD_SUCCESS=false
             else
-              BUILD_EXIT_CODE3=$?
               echo "❌ All build methods failed"
               echo "📋 Third build log content:"
               cat ios_build3.log
               BUILD_SUCCESS=false
             fi
           fi
+        fi
         fi
 
         if [ "$BUILD_SUCCESS" = true ]; then
