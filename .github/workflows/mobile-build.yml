@@ -1262,7 +1262,7 @@ jobs:
         # Fix Google Auth plugin iOS issue
         echo "🔧 Fixing tauri-plugin-google-auth iOS configuration..."
         if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
-          echo "❌ iOS directory missing for Google Auth plugin!"
+          echo "❌ iOS directory missing for Google Auth plugin !"
           echo "The required iOS implementation should be in the repository."
           echo "Creating temporary placeholder to prevent build failure..."
           mkdir -p ../tauri-plugin-google-auth/ios/Sources
