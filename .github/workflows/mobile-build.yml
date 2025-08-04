@@ -1026,7 +1026,7 @@ jobs:
           else
             echo "❌ IOS_DEVELOPMENT_PROVISIONING_PROFILE not found"
           fi
-          
+
           if [ -n "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" ]; then
             DIST_PROFILE_LENGTH=$(echo "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" | wc -c)
             echo "✅ IOS_DISTRIBUTION_PROVISIONING_PROFILE found (length: $DIST_PROFILE_LENGTH chars)"
@@ -1146,15 +1146,21 @@ jobs:
           if [ -n "${{ secrets.IOS_DEVELOPMENT_PROVISIONING_PROFILE }}" ]; then
             echo "🔧 Installing development provisioning profile..."
             echo "${{ secrets.IOS_DEVELOPMENT_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision
-            
+
             # Verify the profile was installed correctly
             if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision ]; then
               PROFILE_SIZE=$(ls -l ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision | awk '{print $5}')
               echo "✅ Development provisioning profile installed (size: $PROFILE_SIZE bytes)"
-              
-              # Extract and show profile info
-              echo "📋 Profile information:"
-              security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A5 -B5 "com.beout.app\|AppIDName\|TeamName\|UUID" || echo "Could not extract profile info"
+
+          # Extract profile UUID for manual code signing
+          if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision ]; then
+            PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            echo "📋 Development Profile UUID: $PROFILE_UUID"
+            
+            # Also extract the profile name for manual signing
+            PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            echo "📋 Development Profile Name: $PROFILE_NAME"
+          fi
             else
               echo "❌ Development provisioning profile file was not created"
             fi
@@ -1166,7 +1172,7 @@ jobs:
           if [ -n "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" ]; then
             echo "📦 Installing distribution provisioning profile..."
             echo "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision
-            
+
             # Verify the profile was installed correctly
             if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision ]; then
               PROFILE_SIZE=$(ls -l ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision | awk '{print $5}')
@@ -1187,7 +1193,7 @@ jobs:
 
           echo "Installed provisioning profiles:"
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
-          
+
           echo "Profile details:"
           for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
             if [ -f "$profile" ]; then
@@ -1315,17 +1321,27 @@ jobs:
           export APPLE_DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export APPLE_TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
 
-          # Use automatic code signing instead of manual
-          export CODE_SIGN_IDENTITY="Apple Development"
-          export CODE_SIGN_STYLE="Automatic"
+          # Use manual code signing with specific profile
+          export CODE_SIGN_IDENTITY="iPhone Developer"
+          export CODE_SIGN_STYLE="Manual"
           export DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export PRODUCT_BUNDLE_IDENTIFIER="com.beout.app"
+          
+          # Set the provisioning profile if we extracted it
+          if [ -n "$PROFILE_UUID" ]; then
+            export PROVISIONING_PROFILE="$PROFILE_UUID"
+            echo "  Provisioning Profile UUID: $PROFILE_UUID"
+          fi
+          if [ -n "$PROFILE_NAME" ]; then
+            export PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
+            echo "  Provisioning Profile Name: $PROFILE_NAME"
+          fi
 
           echo "Code signing configuration:"
           echo "  Team ID: $APPLE_DEVELOPMENT_TEAM"
           echo "  Bundle ID: $PRODUCT_BUNDLE_IDENTIFIER"
           echo "  Identity: $CODE_SIGN_IDENTITY"
-          echo "  Style: $CODE_SIGN_STYLE (Automatic - Xcode will select profile)"
+          echo "  Style: $CODE_SIGN_STYLE (Manual - using specific profile)"
         else
           echo "⚠️  Warning: No code signing certificates configured."
           echo "   The build will attempt to proceed but may fail at the signing step."
@@ -1341,9 +1357,38 @@ jobs:
         # Try different methods to build iOS
         echo "=== Attempting Tauri iOS Build ==="
 
+        # Debug Xcode project first
+        echo "🔍 Looking for Xcode project..."
+        find tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "No Xcode project found yet"
+        
+        echo ""
+        echo "🔍 Checking tauri directory structure..."
+        ls -la tauri/ || echo "No tauri directory"
+        ls -la tauri/gen/ 2>/dev/null || echo "No tauri/gen directory"
+        ls -la tauri/gen/apple/ 2>/dev/null || echo "No tauri/gen/apple directory"
+        
+        echo ""
+        echo "🔍 Checking for any .xcodeproj files..."
+        find . -name "*.xcodeproj" -type d 2>/dev/null || echo "No .xcodeproj files found"
+
+        # Initialize iOS project if needed
+        echo ""
+        echo "🚀 Ensuring iOS project is initialized..."
+        if [ ! -d "tauri/gen/apple" ]; then
+          echo "📱 Initializing iOS project..."
+          npx tauri ios init || echo "iOS init failed or already done"
+        else
+          echo "✅ iOS project directory already exists"
+        fi
+
+        # Check if we now have an Xcode project
+        echo ""
+        echo "🔍 Post-init: Looking for Xcode project..."
+        find tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"
+
         # Method 1: npm script with proper exit code handling
         echo "🚀 Trying npm run tauri:ios:build..."
-        if npm run tauri:ios:build -- --verbose > ios_build.log 2>&1; then
+        if npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
         else
@@ -1352,10 +1397,10 @@ jobs:
           echo "📋 Build log content:"
           cat ios_build.log
           
-          # Method 2: Try npx tauri directly
+          # Method 2: Try npx tauri directly with explicit target
           echo ""
-          echo "🚀 Trying npx tauri ios build..."
-          if npx tauri ios build --verbose > ios_build2.log 2>&1; then
+          echo "🚀 Trying npx tauri ios build with explicit target..."
+          if npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1; then
             echo "✅ Build succeeded with npx tauri"
             BUILD_SUCCESS=true
           else
@@ -1363,11 +1408,22 @@ jobs:
             echo "❌ npx tauri also failed with exit code: $BUILD_EXIT_CODE2"
             echo "📋 Second build log content:"
             cat ios_build2.log
-            BUILD_SUCCESS=false
+            
+            # Method 3: Try without target specification (let Tauri decide)
+            echo ""
+            echo "🚀 Trying npx tauri ios build without target..."
+            if npx tauri ios build --verbose > ios_build3.log 2>&1; then
+              echo "✅ Build succeeded with npx tauri (no target)"
+              BUILD_SUCCESS=true
+            else
+              BUILD_EXIT_CODE3=$?
+              echo "❌ All build methods failed"
+              echo "📋 Third build log content:"
+              cat ios_build3.log
+              BUILD_SUCCESS=false
+            fi
           fi
-        fi
-
-        if [ "$BUILD_SUCCESS" = true ]; then
+        fi        if [ "$BUILD_SUCCESS" = true ]; then
           echo "✅ Build completed! Looking for IPA files..."
           echo "=== Searching for IPA files ==="
           find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
