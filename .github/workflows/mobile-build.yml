@@ -1635,130 +1635,67 @@ jobs:
         ) &
         MONITOR_PID=$!
         
-        # Use background process with timeout instead of timeout command (macOS compatible)
-        echo "🚀 Starting iOS build with 1-hour timeout..."
-        npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1 &
-        BUILD_PID=$!
-        
-        # Wait up to 3600 seconds (1 hour) for the build
-        COUNTER=0
-        while [ $COUNTER -lt 3600 ]; do
-          if ! kill -0 $BUILD_PID 2>/dev/null; then
-            wait $BUILD_PID
-            BUILD_EXIT_CODE=$?
-            break
+        # Try the build without background process first to see immediate errors
+        echo "🚀 Starting iOS build (initial attempt without timeout)..."
+        if npm run tauri:ios:build -- --verbose --target aarch64-apple-ios 2>&1 | tee ios_build.log; then
+          echo "✅ Build succeeded with npm script"
+          BUILD_SUCCESS=true
+          BUILD_EXIT_CODE=0
+        else
+          BUILD_EXIT_CODE=$?
+          echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
+          echo "📋 Build log content:"
+          cat ios_build.log
+          
+          # If it fails immediately, try without arguments
+          echo ""
+          echo "🚀 Trying npm run tauri:ios:build without arguments..."
+          if npm run tauri:ios:build 2>&1 | tee ios_build2.log; then
+            echo "✅ Build succeeded with npm script (no args)"
+            BUILD_SUCCESS=true
+            BUILD_EXIT_CODE=0
+          else
+            BUILD_EXIT_CODE2=$?
+            echo "❌ npm script also failed without args, exit code: $BUILD_EXIT_CODE2"
+            echo "📋 Second build log content:"
+            cat ios_build2.log
+
+            # Method 2: Try npx tauri directly with explicit target
+            echo ""
+            echo "🚀 Trying npx tauri ios build with explicit target..."
+            
+            if npx tauri ios build --verbose --target aarch64-apple-ios 2>&1 | tee ios_build3.log; then
+              echo "✅ Build succeeded with npx tauri"
+              BUILD_SUCCESS=true
+              BUILD_EXIT_CODE=0
+            else
+              BUILD_EXIT_CODE3=$?
+              echo "❌ npx tauri also failed with exit code: $BUILD_EXIT_CODE3"
+              echo "📋 Third build log content:"
+              cat ios_build3.log
+
+              # Method 3: Try without target specification (let Tauri decide)
+              echo ""
+              echo "🚀 Trying npx tauri ios build without target..."
+              
+              if npx tauri ios build --verbose 2>&1 | tee ios_build4.log; then
+                echo "✅ Build succeeded with npx tauri (no target)"
+                BUILD_SUCCESS=true
+                BUILD_EXIT_CODE=0
+              else
+                BUILD_EXIT_CODE4=$?
+                echo "❌ All build methods failed"
+                echo "📋 Fourth build log content:"
+                cat ios_build4.log
+                BUILD_SUCCESS=false
+                BUILD_EXIT_CODE=$BUILD_EXIT_CODE4
+              fi
+            fi
           fi
-          sleep 10
-          COUNTER=$((COUNTER + 10))
-        done
-        
-        # If still running after timeout, kill it
-        if kill -0 $BUILD_PID 2>/dev/null; then
-          echo "❌ Build timed out after 1 hour, terminating..."
-          kill $BUILD_PID 2>/dev/null || true
-          wait $BUILD_PID 2>/dev/null || true
-          BUILD_EXIT_CODE=124  # Timeout exit code
         fi
         
         # Stop the monitoring process
         kill $MONITOR_PID 2>/dev/null || true
-        
-        if [ $BUILD_EXIT_CODE -eq 0 ]; then
-          echo "✅ Build succeeded with npm script"
-          BUILD_SUCCESS=true
-        elif [ $BUILD_EXIT_CODE -eq 124 ]; then
-          echo "❌ Build timed out after 1 hour"
-          echo "📋 Build log content (last 100 lines):"
-          tail -100 ios_build.log
-          BUILD_SUCCESS=false
-        else
-          echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
-          echo "📋 Build log content:"
-          cat ios_build.log
-
-          # Method 2: Try npx tauri directly with explicit target
-          echo ""
-          echo "🚀 Trying npx tauri ios build with explicit target..."
-          
-          npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1 &
-          BUILD_PID2=$!
-          
-          # Wait up to 3600 seconds (1 hour) for the second build attempt
-          COUNTER2=0
-          while [ $COUNTER2 -lt 3600 ]; do
-            if ! kill -0 $BUILD_PID2 2>/dev/null; then
-              wait $BUILD_PID2
-              BUILD_EXIT_CODE2=$?
-              break
-            fi
-            sleep 10
-            COUNTER2=$((COUNTER2 + 10))
-          done
-          
-          # If still running after timeout, kill it
-          if kill -0 $BUILD_PID2 2>/dev/null; then
-            echo "❌ npx tauri build timed out after 1 hour, terminating..."
-            kill $BUILD_PID2 2>/dev/null || true
-            wait $BUILD_PID2 2>/dev/null || true
-            BUILD_EXIT_CODE2=124  # Timeout exit code
-          fi
-          
-          if [ $BUILD_EXIT_CODE2 -eq 0 ]; then
-            echo "✅ Build succeeded with npx tauri"
-            BUILD_SUCCESS=true
-          elif [ $BUILD_EXIT_CODE2 -eq 124 ]; then
-            echo "❌ npx tauri build also timed out after 1 hour"
-            echo "📋 Second build log content (last 100 lines):"
-            tail -100 ios_build2.log
-            BUILD_SUCCESS=false
-          else
-            echo "❌ npx tauri also failed with exit code: $BUILD_EXIT_CODE2"
-            echo "📋 Second build log content:"
-            cat ios_build2.log
-
-            # Method 3: Try without target specification (let Tauri decide)
-            echo ""
-            echo "🚀 Trying npx tauri ios build without target..."
-            
-            npx tauri ios build --verbose > ios_build3.log 2>&1 &
-            BUILD_PID3=$!
-            
-            # Wait up to 3600 seconds (1 hour) for the third build attempt
-            COUNTER3=0
-            while [ $COUNTER3 -lt 3600 ]; do
-              if ! kill -0 $BUILD_PID3 2>/dev/null; then
-                wait $BUILD_PID3
-                BUILD_EXIT_CODE3=$?
-                break
-              fi
-              sleep 10
-              COUNTER3=$((COUNTER3 + 10))
-            done
-            
-            # If still running after timeout, kill it
-            if kill -0 $BUILD_PID3 2>/dev/null; then
-              echo "❌ Final build method timed out after 1 hour, terminating..."
-              kill $BUILD_PID3 2>/dev/null || true
-              wait $BUILD_PID3 2>/dev/null || true
-              BUILD_EXIT_CODE3=124  # Timeout exit code
-            fi
-            
-            if [ $BUILD_EXIT_CODE3 -eq 0 ]; then
-              echo "✅ Build succeeded with npx tauri (no target)"
-              BUILD_SUCCESS=true
-            elif [ $BUILD_EXIT_CODE3 -eq 124 ]; then
-              echo "❌ All build methods timed out"
-              echo "📋 Third build log content (last 100 lines):"
-              tail -100 ios_build3.log
-              BUILD_SUCCESS=false
-            else
-              echo "❌ All build methods failed"
-              echo "📋 Third build log content:"
-              cat ios_build3.log
-              BUILD_SUCCESS=false
-            fi
-          fi
-        fi
 
         if [ "$BUILD_SUCCESS" = true ]; then
           echo "✅ Build completed! Looking for IPA files..."
@@ -1773,50 +1710,65 @@ jobs:
 
         else
           echo "=== BUILD FAILED - Analyzing logs ==="
-          if [ -f "ios_build.log" ]; then
-            echo "Last 50 lines of build log:"
-            tail -50 ios_build.log
-            echo ""
-            echo "=== Checking for common error patterns ==="
-            grep -i "error\|failed\|exception" ios_build.log | tail -10
-            echo ""
-            echo "=== Checking for code signing issues ==="
-            grep -i "sign\|certificate\|team\|provision\|identity" ios_build.log | tail -10
-            echo ""
-            echo "=== Checking for Xcode project format issues ==="
-            grep -i "project.*format\|future.*xcode\|adjust.*project.*format" ios_build.log | tail -5
-
-            # Check for specific errors and provide guidance
-            if grep -q "No signing certificate" ios_build.log; then
+          echo "Final exit code: $BUILD_EXIT_CODE"
+          
+          # Check all log files that might exist
+          for log_file in ios_build.log ios_build2.log ios_build3.log ios_build4.log; do
+            if [ -f "$log_file" ]; then
               echo ""
-              echo "🔧 CODE SIGNING ISSUE DETECTED:"
-              echo "   No valid signing certificate found."
-              echo "   Solutions:"
-              echo "   1. Ensure certificates are properly configured in GitHub Secrets"
-              echo "   2. Check that APPLE_DEVELOPMENT_TEAM is set correctly"
-              echo "   3. Verify certificates haven't expired"
-              echo "   4. See docs/IOS_CODE_SIGNING_SETUP.md for setup instructions"
-            fi
-
-            if grep -q "future Xcode project file format" ios_build.log; then
+              echo "=== Analysis of $log_file ==="
+              echo "Last 50 lines of $log_file:"
+              tail -50 "$log_file"
               echo ""
-              echo "🔧 XCODE PROJECT FORMAT ISSUE DETECTED:"
-              echo "   The generated iOS project uses a newer format than this Xcode version supports."
-              echo "   Solutions:"
-              echo "   1. Update to a newer macOS runner (using macos-15)"
-              echo "   2. Use an older Tauri CLI version that generates compatible projects"
-              echo "   3. Update the GitHub Actions runner to use Xcode 16+"
-            fi
-
-            if grep -q "Provisioning profile.*doesn't include signing certificate" ios_build.log; then
+              echo "=== Checking for common error patterns in $log_file ==="
+              grep -i "error\|failed\|exception" "$log_file" | tail -10
               echo ""
-              echo "🔧 PROVISIONING PROFILE MISMATCH:"
-              echo "   The provisioning profile doesn't include the signing certificate."
-              echo "   Solutions:"
-              echo "   1. Regenerate the provisioning profile with the correct certificate"
-              echo "   2. Ensure the certificate and profile were created with the same Apple ID"
-              echo "   3. Check that the bundle ID matches exactly"
+              echo "=== Checking for code signing issues in $log_file ==="
+              grep -i "sign\|certificate\|team\|provision\|identity" "$log_file" | tail -10
+              echo ""
+              echo "=== Checking for Xcode project format issues in $log_file ==="
+              grep -i "project.*format\|future.*xcode\|adjust.*project.*format" "$log_file" | tail -5
             fi
+          done
+
+          # Check for specific errors and provide guidance based on first log file
+          if [ -f "ios_build.log" ] && grep -q "No signing certificate" ios_build.log; then
+            echo ""
+            echo "🔧 CODE SIGNING ISSUE DETECTED:"
+            echo "   No valid signing certificate found."
+            echo "   Solutions:"
+            echo "   1. Ensure certificates are properly configured in GitHub Secrets"
+            echo "   2. Check that APPLE_DEVELOPMENT_TEAM is set correctly"
+            echo "   3. Verify certificates haven't expired"
+            echo "   4. See docs/IOS_CODE_SIGNING_SETUP.md for setup instructions"
+          fi
+
+          if [ -f "ios_build.log" ] && grep -q "future Xcode project file format" ios_build.log; then
+            echo ""
+            echo "🔧 XCODE PROJECT FORMAT ISSUE DETECTED:"
+            echo "   The generated iOS project uses a newer format than this Xcode version supports."
+            echo "   Solutions:"
+            echo "   1. Update to a newer macOS runner (using macos-15)"
+            echo "   2. Use an older Tauri CLI version that generates compatible projects"
+            echo "   3. Update the GitHub Actions runner to use Xcode 16+"
+          fi
+
+          if [ -f "ios_build.log" ] && grep -q "Provisioning profile.*doesn't include signing certificate" ios_build.log; then
+            echo ""
+            echo "🔧 PROVISIONING PROFILE MISMATCH:"
+            echo "   The provisioning profile doesn't include the signing certificate."
+            echo "   Solutions:"
+            echo "   1. Regenerate the provisioning profile with the correct certificate"
+            echo "   2. Ensure the certificate and profile were created with the same Apple ID"
+            echo "   3. Check that the bundle ID matches exactly"
+          fi
+
+          # Check for npm script issues
+          if [ -f "ios_build.log" ] && grep -q "Unknown command" ios_build.log; then
+            echo ""
+            echo "🔧 NPM SCRIPT ISSUE DETECTED:"
+            echo "   The npm script might not be properly configured."
+            echo "   This could be due to package.json script definition or argument passing."
           fi
 
           echo ""
