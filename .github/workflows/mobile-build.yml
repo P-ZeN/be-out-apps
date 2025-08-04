@@ -1156,10 +1156,12 @@ jobs:
           if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision ]; then
             PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
             echo "📋 Development Profile UUID: $PROFILE_UUID"
+            echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
 
             # Also extract the profile name for manual signing
             PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
             echo "📋 Development Profile Name: $PROFILE_NAME"
+            echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
           fi
             else
               echo "❌ Development provisioning profile file was not created"
@@ -1386,7 +1388,7 @@ jobs:
         echo "🔍 Post-init: Looking for Xcode project..."
         find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"        # Method 1: npm script with proper exit code handling
         echo "🚀 Trying npm run tauri:ios:build..."
-        if npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1; then
+        if npm run tauri:ios:build -- --verbose --target aarch64 > ios_build.log 2>&1; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
         else
@@ -1398,7 +1400,7 @@ jobs:
           # Method 2: Try npx tauri directly with explicit target
           echo ""
           echo "🚀 Trying npx tauri ios build with explicit target..."
-          if npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1; then
+          if npx tauri ios build --verbose --target aarch64 > ios_build2.log 2>&1; then
             echo "✅ Build succeeded with npx tauri"
             BUILD_SUCCESS=true
           else
@@ -1493,10 +1495,12 @@ jobs:
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
         APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
         APPLE_TEAM_ID: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
-        CODE_SIGN_IDENTITY: "Apple Development"
-        CODE_SIGN_STYLE: "Automatic"
+        CODE_SIGN_IDENTITY: "iPhone Developer"
+        CODE_SIGN_STYLE: "Manual"
         DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
         PRODUCT_BUNDLE_IDENTIFIER: "com.beout.app"
+        PROVISIONING_PROFILE: ${{ env.PROFILE_UUID }}
+        PROVISIONING_PROFILE_SPECIFIER: ${{ env.PROFILE_NAME }}
 
     - name: Find and Upload IPA
       working-directory: ./client
@@ -1535,7 +1539,7 @@ jobs:
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
         APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
         APPLE_TEAM_ID: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
-        CODE_SIGN_IDENTITY: "Apple Development"
+        CODE_SIGN_IDENTITY: "iPhone Developer"
         PROVISIONING_PROFILE_SPECIFIER: "Be Out Development Profile"
         CODE_SIGN_STYLE: "Manual"
         DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
