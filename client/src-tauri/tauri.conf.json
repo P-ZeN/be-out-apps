@@ -69,13 +69,20 @@
         },
         "deep-link": {
             "schemes": [
-                "beout"
+                {
+                    "protocol": "beout",
+                    "host": "auth",
+                    "associatedDomains": [
+                        "server.be-out-app.dedibox2.philippezenone.net"
+                    ]
+                }
             ]
         },
         "google-signin": {
             "clientId": {
                 "android": "1064619689471-7lr8e71tr6h55as83o8gn4bdnhabavpu.apps.googleusercontent.com",
-                "desktop": "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
+                "desktop": "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com",
+                "ios": "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
             }
         }
     }

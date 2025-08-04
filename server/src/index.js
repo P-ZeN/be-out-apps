@@ -103,6 +103,17 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Serve static files from public directory (for AASA file and other static content)
+app.use(express.static(path.join(process.cwd(), "public"), {
+    setHeaders: (res, filePath) => {
+        // Special handling for Apple App Site Association file
+        if (filePath.endsWith('apple-app-site-association')) {
+            res.setHeader("Content-Type", "application/json");
+            res.setHeader("Access-Control-Allow-Origin", "*");
+        }
+    }
+}));
+
 // Serve static files from uploads directory with optimized headers
 const uploadsPath = process.env.UPLOAD_PATH || path.join(process.cwd(), "uploads");
 app.use(
@@ -143,7 +154,7 @@ app.use("/api/emails", emailsRoutes);
 app.use("/api/files", filesRoutes);
 app.use("/api", addressesRoutes);
 
-// Public translation endpoints for client apps
+// Public translation endpoints for client apps// Public translation endpoints for client apps
 app.get("/api/translations/:language/:namespace", async (req, res) => {
     try {
         const { language, namespace } = req.params;

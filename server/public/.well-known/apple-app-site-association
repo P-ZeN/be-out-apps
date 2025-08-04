@@ -1,0 +1,27 @@
+{
+    "applinks": {
+        "details": [
+            {
+                "appIDs": [
+                    "FAC78H56RB.com.beout.app"
+                ],
+                "components": [
+                    {
+                        "/": "/deeplink/*",
+                        "comment": "App deep links for iOS"
+                    }
+                ]
+            }
+        ]
+    },
+    "activitycontinuation": {
+        "apps": [
+            "FAC78H56RB.com.beout.app"
+        ]
+    },
+    "webcredentials": {
+        "apps": [
+            "FAC78H56RB.com.beout.app"
+        ]
+    }
+}
