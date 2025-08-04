@@ -1928,7 +1928,7 @@ jobs:
 
           # Create export options plist using environment variable
           TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
-          
+
           # Create plist file with proper escaping
           echo '<?xml version="1.0" encoding="UTF-8"?>' > ExportOptions.plist
           echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> ExportOptions.plist
