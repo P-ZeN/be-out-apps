@@ -57,7 +57,7 @@
         "shortDescription": "Discover events in your community",
         "targets": "all",
         "iOS": {
-            "minimumSystemVersion": "13.0"
+            "minimumSystemVersion": "15.0"
         },
         "android": {
             "minSdkVersion": 24

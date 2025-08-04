@@ -1267,7 +1267,7 @@ jobs:
           echo "Creating temporary placeholder to prevent build failure..."
           mkdir -p ../tauri-plugin-google-auth/ios/Sources
 
-          # Create a minimal Package.swift
+          # Createe a minimal Package.swift
           echo '// swift-tools-version:5.3' > ../tauri-plugin-google-auth/ios/Package.swift
           echo 'import PackageDescription' >> ../tauri-plugin-google-auth/ios/Package.swift
           echo '' >> ../tauri-plugin-google-auth/ios/Package.swift
