@@ -1018,6 +1018,22 @@ jobs:
         if [ "$SKIP_CODESIGN" = "false" ]; then
           echo "🔑 Installing certificates and provisioning profiles..."
 
+          # Debug: Check if provisioning profile secrets are available
+          echo "🔍 Checking provisioning profile secrets availability..."
+          if [ -n "${{ secrets.IOS_DEVELOPMENT_PROVISIONING_PROFILE }}" ]; then
+            DEV_PROFILE_LENGTH=$(echo "${{ secrets.IOS_DEVELOPMENT_PROVISIONING_PROFILE }}" | wc -c)
+            echo "✅ IOS_DEVELOPMENT_PROVISIONING_PROFILE found (length: $DEV_PROFILE_LENGTH chars)"
+          else
+            echo "❌ IOS_DEVELOPMENT_PROVISIONING_PROFILE not found"
+          fi
+          
+          if [ -n "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" ]; then
+            DIST_PROFILE_LENGTH=$(echo "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" | wc -c)
+            echo "✅ IOS_DISTRIBUTION_PROVISIONING_PROFILE found (length: $DIST_PROFILE_LENGTH chars)"
+          else
+            echo "❌ IOS_DISTRIBUTION_PROVISIONING_PROFILE not found"
+          fi
+
           # Create temporary keychain
           KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
           echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
