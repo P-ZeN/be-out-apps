@@ -1926,8 +1926,9 @@ jobs:
         if [ -n "$XCARCHIVE" ]; then
           echo "✅ Found xcarchive: $XCARCHIVE"
 
-          # Create export options plist
-          cat > ExportOptions.plist << 'EOF'
+          # Create export options plist using environment variable
+          TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
+          cat > ExportOptions.plist << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -1935,7 +1936,7 @@ jobs:
     <key>method</key>
     <string>development</string>
     <key>teamID</key>
-    <string>${{ secrets.APPLE_DEVELOPMENT_TEAM }}</string>
+    <string>$TEAM_ID</string>
     <key>compileBitcode</key>
     <false/>
     <key>stripSwiftSymbols</key>
