@@ -1200,7 +1200,20 @@ jobs:
           for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
             if [ -f "$profile" ]; then
               echo "--- $(basename "$profile") ---"
-              security cms -D -i "$profile" 2>/dev/null | grep -E "TeamName|AppIDName|UUID|application-identifier" | head -10 || echo "Could not read profile"
+              # Extract more detailed information about the profile
+              PROFILE_CONTENT=$(security cms -D -i "$profile" 2>/dev/null)
+              echo "$PROFILE_CONTENT" | grep -E "TeamName|AppIDName|UUID|application-identifier" | head -10 || echo "Could not read profile"
+              
+              # Check if this profile matches our bundle ID
+              BUNDLE_ID_MATCH=$(echo "$PROFILE_CONTENT" | grep -A1 "application-identifier" | grep "com.beout.app")
+              if [ -n "$BUNDLE_ID_MATCH" ]; then
+                echo "✅ This profile matches bundle ID: com.beout.app"
+                echo "   Bundle ID pattern: $BUNDLE_ID_MATCH"
+              else
+                echo "❌ This profile does NOT match bundle ID: com.beout.app"
+                ACTUAL_BUNDLE=$(echo "$PROFILE_CONTENT" | grep -A1 "application-identifier" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+                echo "   Actual bundle ID pattern: $ACTUAL_BUNDLE"
+              fi
             fi
           done
 
@@ -1386,7 +1399,61 @@ jobs:
         # Check if we now have an Xcode project
         echo ""
         echo "🔍 Post-init: Looking for Xcode project..."
-        find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"        # Method 1: npm script with proper exit code handling
+        find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"
+
+        # Configure Xcode project for manual code signing
+        echo ""
+        echo "🔧 Configuring Xcode project for manual code signing..."
+        if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
+          echo "📝 Updating Xcode project settings..."
+          
+          # Update the project.pbxproj file to use manual code signing
+          # This is more reliable than environment variables for Xcode projects
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "iPhone Developer";/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+          
+          # Add the provisioning profile settings if they don't exist
+          if [ -n "$PROFILE_UUID" ]; then
+            # Check if PROVISIONING_PROFILE is already set, if not add it
+            if ! grep -q "PROVISIONING_PROFILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj; then
+              # Add provisioning profile settings after CODE_SIGN_STYLE
+              sed -i '' "/CODE_SIGN_STYLE = Manual;/a\\
+\\t\\t\\t\\tPROVISIONING_PROFILE = \"$PROFILE_UUID\";\\
+\\t\\t\\t\\tPROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            else
+              # Update existing provisioning profile settings
+              sed -i '' "s/PROVISIONING_PROFILE = .*/PROVISIONING_PROFILE = \"$PROFILE_UUID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            fi
+          fi
+          
+          echo "✅ Xcode project configured for manual code signing"
+          echo "📋 Verifying project settings..."
+          grep -A 2 -B 2 "CODE_SIGN_STYLE\|PROVISIONING_PROFILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -10
+        else
+          echo "⚠️ Xcode project file not found, manual configuration skipped"
+        fi
+
+        # Verify the final Xcode project configuration
+        echo ""
+        echo "🔍 Final verification of Xcode project configuration..."
+        if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
+          echo "📋 Code signing settings in Xcode project:"
+          grep -n "CODE_SIGN_STYLE\|CODE_SIGN_IDENTITY\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -20
+          
+          echo ""
+          echo "📋 Bundle identifier settings:"
+          grep -n "PRODUCT_BUNDLE_IDENTIFIER" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -5
+        fi
+
+        # Verify provisioning profiles one more time
+        echo ""
+        echo "🔍 Final verification of installed provisioning profiles..."
+        ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
+        
+        echo ""
+        echo "📋 Available signing identities before build:"
+        security find-identity -v -p codesigning | head -5        # Method 1: npm script with proper exit code handling
         echo "🚀 Trying npm run tauri:ios:build..."
         if npm run tauri:ios:build -- --verbose --target aarch64 > ios_build.log 2>&1; then
           echo "✅ Build succeeded with npm script"
