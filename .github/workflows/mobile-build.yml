@@ -1421,10 +1421,15 @@ jobs:
             sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             sed -i '' "s/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             
-            # Add DEVELOPMENT_TEAM if it doesn't exist using a different approach
+            # Add DEVELOPMENT_TEAM if it doesn't exist using echo/printf approach
             if ! grep -q "DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj; then
-              # Use awk to add DEVELOPMENT_TEAM after CODE_SIGN_STYLE lines
-              awk '/CODE_SIGN_STYLE = Manual;/ { print; print "\t\t\t\tDEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";"; next } 1' src-tauri/gen/apple/app.xcodeproj/project.pbxproj > /tmp/pbxproj_temp
+              # Create a temp file with the added line
+              while IFS= read -r line; do
+                echo "$line"
+                if [[ $line == *"CODE_SIGN_STYLE = Manual;"* ]]; then
+                  echo "				DEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";"
+                fi
+              done < src-tauri/gen/apple/app.xcodeproj/project.pbxproj > /tmp/pbxproj_temp
               mv /tmp/pbxproj_temp src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             fi
           fi
@@ -1435,8 +1440,14 @@ jobs:
             
             # Add provisioning profile settings if they don't exist
             if ! grep -q "PROVISIONING_PROFILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj; then
-              # Use awk to add provisioning profile settings after DEVELOPMENT_TEAM lines
-              awk '/DEVELOPMENT_TEAM = .*'${{ secrets.APPLE_DEVELOPMENT_TEAM }}'/ { print; print "\t\t\t\tPROVISIONING_PROFILE = \"'$PROFILE_UUID'\";"; print "\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"'$PROFILE_NAME'\";"; next } 1' src-tauri/gen/apple/app.xcodeproj/project.pbxproj > /tmp/pbxproj_temp2
+              # Create a temp file with the added lines
+              while IFS= read -r line; do
+                echo "$line"
+                if [[ $line == *"DEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";"* ]]; then
+                  echo "				PROVISIONING_PROFILE = \"$PROFILE_UUID\";"
+                  echo "				PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";"
+                fi
+              done < src-tauri/gen/apple/app.xcodeproj/project.pbxproj > /tmp/pbxproj_temp2
               mv /tmp/pbxproj_temp2 src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             else
               # Update existing provisioning profile settings
