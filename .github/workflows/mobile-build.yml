@@ -1435,6 +1435,13 @@ jobs:
           sed -i '' '/buildSettings = {/r /tmp/code_sign_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
           rm /tmp/code_sign_line
 
+          # Set explicit architecture for iOS device builds
+          printf '\t\t\t\tARCHS = arm64;\n' > /tmp/archs_line
+          printf '\t\t\t\tVALID_ARCHS = arm64;\n' > /tmp/valid_archs_line
+          sed -i '' '/buildSettings = {/r /tmp/archs_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+          sed -i '' '/buildSettings = {/r /tmp/valid_archs_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+          rm /tmp/archs_line /tmp/valid_archs_line
+
           # Add the provisioning profile settings
           if [ -n "$PROFILE_UUID" ]; then
             echo "📋 Adding provisioning profile settings: $PROFILE_UUID"
@@ -1533,7 +1540,7 @@ jobs:
 
         # Method 1: npm script with proper exit code handling
         echo "🚀 Trying npm run tauri:ios:build..."
-        if npm run tauri:ios:build -- --verbose --target aarch64 > ios_build.log 2>&1; then
+        if npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
         else
@@ -1545,7 +1552,7 @@ jobs:
           # Method 2: Try npx tauri directly with explicit target
           echo ""
           echo "🚀 Trying npx tauri ios build with explicit target..."
-          if npx tauri ios build --verbose --target aarch64 > ios_build2.log 2>&1; then
+          if npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1; then
             echo "✅ Build succeeded with npx tauri"
             BUILD_SUCCESS=true
           else
