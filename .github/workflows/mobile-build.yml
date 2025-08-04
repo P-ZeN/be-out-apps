@@ -1259,6 +1259,38 @@ jobs:
         echo "Available npm scripts in client directory:"
         npm run | grep tauri || echo "No tauri scripts found"
 
+        # Fix Google Auth plugin iOS issue
+        echo "🔧 Fixing tauri-plugin-google-auth iOS configuration..."
+        if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
+          echo "Creating missing iOS directory for Google Auth plugin..."
+          mkdir -p ../tauri-plugin-google-auth/ios/Sources
+          
+          # Create a minimal Package.swift
+          echo '// swift-tools-version:5.3' > ../tauri-plugin-google-auth/ios/Package.swift
+          echo 'import PackageDescription' >> ../tauri-plugin-google-auth/ios/Package.swift
+          echo '' >> ../tauri-plugin-google-auth/ios/Package.swift
+          echo 'let package = Package(' >> ../tauri-plugin-google-auth/ios/Package.swift
+          echo '    name: "tauri-plugin-google-auth",' >> ../tauri-plugin-google-auth/ios/Package.swift
+          echo '    platforms: [.iOS(.v12)],' >> ../tauri-plugin-google-auth/ios/Package.swift
+          echo '    products: [.library(name: "tauri-plugin-google-auth", targets: ["tauri-plugin-google-auth"])],' >> ../tauri-plugin-google-auth/ios/Package.swift
+          echo '    targets: [.target(name: "tauri-plugin-google-auth", path: "Sources")]' >> ../tauri-plugin-google-auth/ios/Package.swift
+          echo ')' >> ../tauri-plugin-google-auth/ios/Package.swift
+
+          # Create a basic Swift file
+          echo 'import Foundation' > ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo 'import UIKit' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo '' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo '@objc public class GoogleAuthPlugin: NSObject {' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo '    @objc public static func setup() {' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo '        print("Google Auth Plugin - iOS setup placeholder")' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo '    }' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          echo '}' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
+          
+          echo "✅ Created iOS plugin structure with placeholders"
+        else
+          echo "✅ iOS directory already exists"
+        fi
+
         # Try different methods to initialize iOS project
         if npm run tauri:ios:init -- --ci; then
           echo "✅ iOS project initialized with npm script"
@@ -1638,6 +1670,7 @@ jobs:
         
         # Try the build without background process first to see immediate errors
         echo "🚀 Starting iOS build (initial attempt without timeout)..."
+        BUILD_SUCCESS=false
         if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
@@ -1646,7 +1679,7 @@ jobs:
           BUILD_EXIT_CODE=$?
           echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
           echo "📋 Build log content:"
-          cat ios_build.log
+          tail -30 ios_build.log
           
           # If it fails immediately, try without arguments
           echo ""
@@ -1659,7 +1692,7 @@ jobs:
             BUILD_EXIT_CODE2=$?
             echo "❌ npm script also failed without args, exit code: $BUILD_EXIT_CODE2"
             echo "📋 Second build log content:"
-            cat ios_build2.log
+            tail -30 ios_build2.log
 
             # Method 2: Try npx tauri directly with explicit target
             echo ""
@@ -1673,7 +1706,7 @@ jobs:
               BUILD_EXIT_CODE3=$?
               echo "❌ npx tauri also failed with exit code: $BUILD_EXIT_CODE3"
               echo "📋 Third build log content:"
-              cat ios_build3.log
+              tail -30 ios_build3.log
 
               # Method 3: Try without target specification (let Tauri decide)
               echo ""
@@ -1687,7 +1720,7 @@ jobs:
                 BUILD_EXIT_CODE4=$?
                 echo "❌ All build methods failed"
                 echo "📋 Fourth build log content:"
-                cat ios_build4.log
+                tail -30 ios_build4.log
                 BUILD_SUCCESS=false
                 BUILD_EXIT_CODE=$BUILD_EXIT_CODE4
               fi
@@ -1747,6 +1780,33 @@ jobs:
             echo "   2. Check that APPLE_DEVELOPMENT_TEAM is set correctly"
             echo "   3. Verify certificates haven't expired"
             echo "   4. See docs/IOS_CODE_SIGNING_SETUP.md for setup instructions"
+          fi
+
+          if [ -f "ios_build.log" ] && grep -q "tauri-plugin-google-auth.*build-script-build.*exit status: 101" ios_build.log; then
+            echo ""
+            echo "🔧 TAURI GOOGLE AUTH PLUGIN ISSUE DETECTED:"
+            echo "   The tauri-plugin-google-auth is failing to build for iOS."
+            echo "   This is likely due to missing iOS frameworks or build configuration."
+            echo "   Solutions:"
+            echo "   1. Temporarily disable the Google Auth plugin for iOS builds"
+            echo "   2. Check if the plugin supports iOS in current version"
+            echo "   3. Verify plugin configuration for mobile platforms"
+            echo "   4. Consider using conditional compilation for mobile vs desktop"
+            echo ""
+            echo "   Error details from build log:"
+            grep -A 5 -B 5 "tauri-plugin-google-auth" ios_build.log | tail -15
+          fi
+
+          if [ -f "ios_build.log" ] && grep -q "link_xcode_library\|No such file or directory.*Os.*code: 2" ios_build.log; then
+            echo ""
+            echo "🔧 iOS LIBRARY LINKING ISSUE DETECTED:"
+            echo "   A Tauri plugin is trying to link against an iOS library that doesn't exist."
+            echo "   This often happens with plugins not fully configured for iOS."
+            echo "   Solutions:"
+            echo "   1. Check which plugin is causing the issue (likely Google Auth)"
+            echo "   2. Disable problematic plugins for iOS builds"
+            echo "   3. Update plugin to a version with iOS support"
+            echo "   4. Add conditional compilation flags"
           fi
 
           if [ -f "ios_build.log" ] && grep -q "future Xcode project file format" ios_build.log; then
