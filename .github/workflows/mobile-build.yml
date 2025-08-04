@@ -1473,6 +1473,20 @@ jobs:
           echo ""
           echo "📋 Bundle identifier settings:"
           grep -n "PRODUCT_BUNDLE_IDENTIFIER" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -5
+          
+          echo ""
+          echo "📋 Detailed verification of manual code signing configuration:"
+          echo "   Looking for manual CODE_SIGN_STYLE entries:"
+          grep -n "CODE_SIGN_STYLE.*Manual" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No manual code signing found"
+          
+          echo "   Looking for DEVELOPMENT_TEAM entries:"
+          grep -n "DEVELOPMENT_TEAM.*${{ secrets.APPLE_DEVELOPMENT_TEAM }}" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No development team found"
+          
+          echo "   Looking for PROVISIONING_PROFILE entries:"
+          grep -n "PROVISIONING_PROFILE.*$PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No provisioning profile UUID found"
+          
+          echo "   Looking for PROVISIONING_PROFILE_SPECIFIER entries:"
+          grep -n "PROVISIONING_PROFILE_SPECIFIER.*$PROFILE_NAME" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No provisioning profile specifier found"
         fi
 
         # Verify provisioning profiles one more time
@@ -1481,10 +1495,52 @@ jobs:
         ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
         
         echo ""
+        echo "📋 Detailed analysis of installed provisioning profiles:"
+        for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+          if [ -f "$profile" ]; then
+            echo "--- Profile: $(basename "$profile") ---"
+            PROFILE_CONTENT=$(security cms -D -i "$profile" 2>/dev/null)
+            
+            # Extract key information
+            PROFILE_UUID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            PROFILE_NAME_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            BUNDLE_ID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "application-identifier" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            TEAM_ID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>TeamIdentifier</key>" -A2 | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            
+            echo "  UUID: $PROFILE_UUID_CHECK"
+            echo "  Name: $PROFILE_NAME_CHECK"
+            echo "  Bundle ID pattern: $BUNDLE_ID_CHECK"
+            echo "  Team ID: $TEAM_ID_CHECK"
+            
+            # Check if this matches our expected values
+            if [ "$PROFILE_UUID_CHECK" = "$PROFILE_UUID" ]; then
+              echo "  ✅ This profile matches our PROFILE_UUID"
+            else
+              echo "  ❌ This profile does NOT match our PROFILE_UUID ($PROFILE_UUID)"
+            fi
+            
+            if [[ "$BUNDLE_ID_CHECK" == *"com.beout.app"* ]]; then
+              echo "  ✅ This profile matches bundle ID com.beout.app"
+            else
+              echo "  ❌ This profile does NOT match bundle ID com.beout.app"
+            fi
+            
+            if [ "$TEAM_ID_CHECK" = "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
+              echo "  ✅ This profile matches our team ID"
+            else
+              echo "  ❌ This profile does NOT match our team ID (${{ secrets.APPLE_DEVELOPMENT_TEAM }})"
+            fi
+            echo ""
+          fi
+        done
+        
+        echo ""
         echo "📋 Available signing identities before build:"
-        security find-identity -v -p codesigning | head -5        # Method 1: npm script with proper exit code handling
+        security find-identity -v -p codesigning | head -5
+
+        # Method 1: npm script with proper exit code handling
         echo "🚀 Trying npm run tauri:ios:build..."
-        if npm run tauri:ios:build -- --verbose --target aarch64 > ios_build.log 2>&1; then
+        if npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
         else
@@ -1496,7 +1552,7 @@ jobs:
           # Method 2: Try npx tauri directly with explicit target
           echo ""
           echo "🚀 Trying npx tauri ios build with explicit target..."
-          if npx tauri ios build --verbose --target aarch64 > ios_build2.log 2>&1; then
+          if npx tauri ios build --verbose --target aarch64-apple-ios > ios_build2.log 2>&1; then
             echo "✅ Build succeeded with npx tauri"
             BUILD_SUCCESS=true
           else
