@@ -1260,7 +1260,7 @@ jobs:
         npm run | grep tauri || echo "No tauri scripts found"
 
         # Verify Google Auth plugin iOS implementation
-        echo "🔧 Verifying tauri-plugin-google-auth iOS configuration..."
+        echo "🔧 Verifyinggg tauri-plugin-google-auth iOS configuration..."
         if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
           echo "❌ CRITICAL: iOS directory missing for Google Auth plugin!"
           echo "The iOS implementation should be in the repository."
@@ -1270,7 +1270,7 @@ jobs:
           echo "✅ iOS directory exists for Google Auth plugin"
           echo "📋 Verifying iOS plugin structure..."
           ls -la ../tauri-plugin-google-auth/ios/
-          
+
           # Verify Package.swift exists and has correct iOS version
           if [ -f "../tauri-plugin-google-auth/ios/Package.swift" ]; then
             echo "✅ Package.swift found"
@@ -1285,7 +1285,7 @@ jobs:
             echo "❌ CRITICAL: Package.swift missing!"
             exit 1
           fi
-          
+
           # Verify Swift implementation exists
           if [ -f "../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift" ]; then
             echo "✅ Swift implementation file found"
