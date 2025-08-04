@@ -1156,7 +1156,7 @@ jobs:
           if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision ]; then
             PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
             echo "📋 Development Profile UUID: $PROFILE_UUID"
-            
+
             # Also extract the profile name for manual signing
             PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
             echo "📋 Development Profile Name: $PROFILE_NAME"
@@ -1326,7 +1326,7 @@ jobs:
           export CODE_SIGN_STYLE="Manual"
           export DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export PRODUCT_BUNDLE_IDENTIFIER="com.beout.app"
-          
+
           # Set the provisioning profile if we extracted it
           if [ -n "$PROFILE_UUID" ]; then
             export PROVISIONING_PROFILE="$PROFILE_UUID"
@@ -1359,13 +1359,13 @@ jobs:
 
         # Debug Xcode project first
         echo "🔍 Looking for Xcode project..."
-        find tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "No Xcode project found yet"
+        find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "No Xcode project found yet"
         
         echo ""
         echo "🔍 Checking tauri directory structure..."
-        ls -la tauri/ || echo "No tauri directory"
-        ls -la tauri/gen/ 2>/dev/null || echo "No tauri/gen directory"
-        ls -la tauri/gen/apple/ 2>/dev/null || echo "No tauri/gen/apple directory"
+        ls -la src-tauri/ || echo "No src-tauri directory"
+        ls -la src-tauri/gen/ 2>/dev/null || echo "No src-tauri/gen directory"
+        ls -la src-tauri/gen/apple/ 2>/dev/null || echo "No src-tauri/gen/apple directory"
         
         echo ""
         echo "🔍 Checking for any .xcodeproj files..."
@@ -1374,7 +1374,7 @@ jobs:
         # Initialize iOS project if needed
         echo ""
         echo "🚀 Ensuring iOS project is initialized..."
-        if [ ! -d "tauri/gen/apple" ]; then
+        if [ ! -d "src-tauri/gen/apple" ]; then
           echo "📱 Initializing iOS project..."
           npx tauri ios init || echo "iOS init failed or already done"
         else
@@ -1384,9 +1384,7 @@ jobs:
         # Check if we now have an Xcode project
         echo ""
         echo "🔍 Post-init: Looking for Xcode project..."
-        find tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"
-
-        # Method 1: npm script with proper exit code handling
+        find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"        # Method 1: npm script with proper exit code handling
         echo "🚀 Trying npm run tauri:ios:build..."
         if npm run tauri:ios:build -- --verbose --target aarch64-apple-ios > ios_build.log 2>&1; then
           echo "✅ Build succeeded with npm script"
@@ -1396,7 +1394,7 @@ jobs:
           echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
           echo "📋 Build log content:"
           cat ios_build.log
-          
+
           # Method 2: Try npx tauri directly with explicit target
           echo ""
           echo "🚀 Trying npx tauri ios build with explicit target..."
@@ -1408,7 +1406,7 @@ jobs:
             echo "❌ npx tauri also failed with exit code: $BUILD_EXIT_CODE2"
             echo "📋 Second build log content:"
             cat ios_build2.log
-            
+
             # Method 3: Try without target specification (let Tauri decide)
             echo ""
             echo "🚀 Trying npx tauri ios build without target..."
@@ -1423,7 +1421,9 @@ jobs:
               BUILD_SUCCESS=false
             fi
           fi
-        fi        if [ "$BUILD_SUCCESS" = true ]; then
+        fi
+        
+        if [ "$BUILD_SUCCESS" = true ]; then
           echo "✅ Build completed! Looking for IPA files..."
           echo "=== Searching for IPA files ==="
           find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
