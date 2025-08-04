@@ -9,17 +9,22 @@ let package = Package(
     products: [
         .library(
             name: "tauri-plugin-google-auth",
+            type: .static,
             targets: ["tauri-plugin-google-auth"]
         )
     ],
     dependencies: [
-        // Tauri iOS API will be linked at build time
+        .package(name: "Tauri", path: "../.tauri/tauri-api"),
+        .package(name: "GoogleSignIn", url: "https://github.com/google/GoogleSignIn-iOS", from: "7.0.0")
     ],
     targets: [
         .target(
             name: "tauri-plugin-google-auth",
-            path: "Sources",
-            publicHeadersPath: "."
+            dependencies: [
+                .byName(name: "Tauri"),
+                .product(name: "GoogleSignIn", package: "GoogleSignIn")
+            ],
+            path: "Sources"
         )
     ]
 )

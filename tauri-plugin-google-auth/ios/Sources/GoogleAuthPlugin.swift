@@ -1,54 +1,121 @@
 import Foundation
 import UIKit
+import GoogleSignIn
+import SwiftRs
+import Tauri
+import WebKit
 
-@objc public class GoogleAuthPlugin: NSObject {
+class GoogleAuthPlugin: Plugin {
     
-    @objc public static func setup() {
-        print("Google Auth Plugin - iOS setup (placeholder)")
-    }
-    
-    @objc public func ping(_ value: String?) -> [String: Any] {
-        print("Google Auth Plugin - ping called with value: \(value ?? "nil")")
-        return ["value": value ?? ""]
-    }
-    
-    @objc public func googleSignIn(
-        _ filterByAuthorizedAccounts: Bool,
-        autoSelectEnabled: Bool,
-        nonce: String?,
-        webClientId: String?
-    ) -> [String: Any] {
-        print("Google Auth Plugin - googleSignIn called (placeholder implementation)")
-        print("  filterByAuthorizedAccounts: \(filterByAuthorizedAccounts)")
-        print("  autoSelectEnabled: \(autoSelectEnabled)")
-        print("  nonce: \(nonce ?? "nil")")
-        print("  webClientId: \(webClientId ?? "nil")")
+    public override func load(webview: WKWebView) {
+        super.load(webview)
         
-        // TODO: Implement actual Google Sign-In for iOS using Google Sign-In SDK
-        // For now, return a placeholder response
-        return [
-            "token": "placeholder_ios_token_\(Int.random(in: 1000...9999))",
-            "displayName": "iOS Placeholder User",
-            "email": "ios.placeholder@example.com",
-            "userId": "ios_placeholder_user_\(Int.random(in: 100...999))"
-        ]
+        // Configure Google Sign-In
+        if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+           let clientId = getClientIdFromPlist(path: path) {
+            guard let config = GIDConfiguration(clientID: clientId) else {
+                print("GoogleAuthPlugin: Failed to create GIDConfiguration")
+                return
+            }
+            GIDSignIn.sharedInstance.configuration = config
+            print("GoogleAuthPlugin: Configured with client ID: \(clientId)")
+        } else {
+            print("GoogleAuthPlugin: Warning - GoogleService-Info.plist not found or invalid")
+        }
+    }
+    
+    private func getClientIdFromPlist(path: String) -> String? {
+        guard let plist = NSDictionary(contentsOfFile: path),
+              let clientId = plist["CLIENT_ID"] as? String else {
+            return nil
+        }
+        return clientId
+    }
+    
+    @objc func ping(_ invoke: Invoke) {
+        let args = invoke.parseArgs(PingRequest.self)
+        let value = args?.value ?? "default"
+        invoke.resolve(["value": value])
+    }
+    
+    @objc func googleSignIn(_ invoke: Invoke) throws {
+        let args = try invoke.parseArgs(GoogleSignInRequest.self)
+        
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = windowScene.windows.first?.rootViewController else {
+            invoke.reject("No root view controller found", code: "NO_VIEW_CONTROLLER")
+            return
+        }
+        
+        // Configure additional options if provided
+        if let webClientId = args.webClientId,
+           let config = GIDConfiguration(clientID: webClientId) {
+            GIDSignIn.sharedInstance.configuration = config
+        }
+        
+        // Perform sign-in
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { [weak self] result, error in
+            if let error = error {
+                invoke.reject("Google Sign-In failed: \(error.localizedDescription)", code: "SIGNIN_FAILED")
+                return
+            }
+            
+            guard let result = result else {
+                invoke.reject("No sign-in result", code: "NO_RESULT")
+                return
+            }
+            
+            let user = result.user
+            let profile = user.profile
+            let idToken = user.idToken?.tokenString
+            let accessToken = user.accessToken.tokenString
+            
+            let response: [String: Any] = [
+                "token": accessToken,
+                "idToken": idToken ?? "",
+                "displayName": profile?.name ?? "",
+                "email": profile?.email ?? "",
+                "userId": user.userID ?? "",
+                "photoUrl": profile?.imageURL(withDimension: 320)?.absoluteString ?? "",
+                "givenName": profile?.givenName ?? "",
+                "familyName": profile?.familyName ?? ""
+            ]
+            
+            invoke.resolve(response)
+        }
+    }
+    
+    @objc func googleSignOut(_ invoke: Invoke) {
+        GIDSignIn.sharedInstance.signOut()
+        invoke.resolve(["success": true])
+    }
+    
+    @objc func isSignedIn(_ invoke: Invoke) {
+        let isSignedIn = GIDSignIn.sharedInstance.currentUser != nil
+        invoke.resolve(["isSignedIn": isSignedIn])
     }
 }
 
-// MARK: - C-compatible functions for Tauri binding
+// MARK: - Request/Response Models
+
+struct PingRequest: Decodable {
+    let value: String?
+}
+
+struct GoogleSignInRequest: Decodable {
+    let filterByAuthorizedAccounts: Bool?
+    let autoSelectEnabled: Bool?
+    let nonce: String?
+    let webClientId: String?
+}
+
+// MARK: - Plugin Registration
 
 @_cdecl("init_plugin_google_auth")
-func initPluginGoogleAuth() -> UnsafeMutableRawPointer {
-    let plugin = GoogleAuthPlugin()
-    return Unmanaged.passRetained(plugin).toOpaque()
+func initPluginGoogleAuth() -> Plugin {
+    return GoogleAuthPlugin()
 }
 
-@_cdecl("plugin_google_auth_ping")
-func pluginGoogleAuthPing(plugin: UnsafeMutableRawPointer, value: UnsafePointer<CChar>?) -> UnsafePointer<CChar>? {
-    let pluginInstance = Unmanaged<GoogleAuthPlugin>.fromOpaque(plugin).takeUnretainedValue()
-    let valueString = value != nil ? String(cString: value!) : nil
-    let result = pluginInstance.ping(valueString)
-    
     // Convert result to JSON string
     if let jsonData = try? JSONSerialization.data(withJSONObject: result),
        let jsonString = String(data: jsonData, encoding: .utf8) {
@@ -68,14 +135,14 @@ func pluginGoogleAuthSignIn(
     let pluginInstance = Unmanaged<GoogleAuthPlugin>.fromOpaque(plugin).takeUnretainedValue()
     let nonceString = nonce != nil ? String(cString: nonce!) : nil
     let webClientIdString = webClientId != nil ? String(cString: webClientId!) : nil
-    
+
     let result = pluginInstance.googleSignIn(
         filterByAuthorizedAccounts,
         autoSelectEnabled: autoSelectEnabled,
         nonce: nonceString,
         webClientId: webClientIdString
     )
-    
+
     // Convert result to JSON string
     if let jsonData = try? JSONSerialization.data(withJSONObject: result),
        let jsonString = String(data: jsonData, encoding: .utf8) {

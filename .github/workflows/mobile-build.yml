@@ -1266,7 +1266,7 @@ jobs:
           echo "The required iOS implementation should be in the repository."
           echo "Creating temporary placeholder to prevent build failure..."
           mkdir -p ../tauri-plugin-google-auth/ios/Sources
-          
+
           # Create a minimal Package.swift
           echo '// swift-tools-version:5.3' > ../tauri-plugin-google-auth/ios/Package.swift
           echo 'import PackageDescription' >> ../tauri-plugin-google-auth/ios/Package.swift
@@ -1284,7 +1284,7 @@ jobs:
           echo '' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
           echo '@_cdecl("init_plugin_google_auth")' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
           echo 'func initPluginGoogleAuth() -> UnsafeMutableRawPointer { return UnsafeMutableRawPointer(bitPattern: 1)! }' >> ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift
-          
+
           echo "✅ Created temporary iOS plugin structure"
         else
           echo "✅ iOS directory already exists for Google Auth plugin"
@@ -1496,14 +1496,14 @@ jobs:
           # Add the provisioning profile settings
           if [ -n "$PROFILE_UUID" ]; then
             echo "📋 Adding provisioning profile settings: $PROFILE_UUID"
-            
+
             # Add provisioning profile settings using printf
             printf '\t\t\t\tPROVISIONING_PROFILE = "%s";\n' "$PROFILE_UUID" > /tmp/profile_uuid_line
             printf '\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "%s";\n' "$PROFILE_NAME" > /tmp/profile_name_line
-            
+
             sed -i '' '/buildSettings = {/r /tmp/profile_uuid_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             sed -i '' '/buildSettings = {/r /tmp/profile_name_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            
+
             rm /tmp/profile_uuid_line /tmp/profile_name_line
           fi
 
@@ -1622,12 +1622,12 @@ jobs:
         echo ""
         echo "🔥 Pre-warming Cargo cache..."
         cd src-tauri
-        
+
         # Use a background process with timeout since macOS doesn't have timeout by default
         # Note: Use aarch64-apple-ios for Rust, but aarch64 for Tauri CLI
         cargo fetch --target aarch64-apple-ios &
         FETCH_PID=$!
-        
+
         # Wait up to 600 seconds (10 minutes) for cargo fetch
         COUNTER=0
         while [ $COUNTER -lt 600 ]; do
@@ -1644,33 +1644,33 @@ jobs:
           sleep 5
           COUNTER=$((COUNTER + 5))
         done
-        
+
         # If still running after timeout, kill it
         if kill -0 $FETCH_PID 2>/dev/null; then
           echo "⚠️ Cargo fetch timed out after 10 minutes, terminating..."
           kill $FETCH_PID 2>/dev/null || true
           wait $FETCH_PID 2>/dev/null || true
         fi
-        
+
         cd ..
 
         # Method 1: npm script with proper exit code handling
         echo "🚀 Trying npm run tauri:ios:build..."
-        
+
         # Set Rust/Cargo optimizations for CI
         export CARGO_NET_RETRY=10
         export CARGO_NET_TIMEOUT=300
         export CARGO_HTTP_TIMEOUT=300
         export CARGO_HTTP_MULTIPLEXING=false
         export CARGO_NET_GIT_FETCH_WITH_CLI=true
-        
+
         # Add timeout and memory monitoring
         echo "📊 System resources before build:"
         echo "Available memory:"
         vm_stat | grep "Pages free\|Pages active\|Pages inactive\|Pages speculative\|Pages wired"
         echo "Available disk space:"
         df -h /
-        
+
         # Start a background process to monitor build progress
         (
           sleep 60
@@ -1683,7 +1683,7 @@ jobs:
           done
         ) &
         MONITOR_PID=$!
-        
+
         # Try the build without background process first to see immediate errors
         echo "🚀 Starting iOS build (initial attempt without timeout)..."
         BUILD_SUCCESS=false
@@ -1696,7 +1696,7 @@ jobs:
           echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
           echo "📋 Build log content:"
           tail -30 ios_build.log
-          
+
           # If it fails immediately, try without arguments
           echo ""
           echo "🚀 Trying npm run tauri:ios:build without arguments..."
@@ -1713,7 +1713,7 @@ jobs:
             # Method 2: Try npx tauri directly with explicit target
             echo ""
             echo "🚀 Trying npx tauri ios build with explicit target..."
-            
+
             if npx tauri ios build --verbose --target aarch64 2>&1 | tee ios_build3.log; then
               echo "✅ Build succeeded with npx tauri"
               BUILD_SUCCESS=true
@@ -1727,7 +1727,7 @@ jobs:
               # Method 3: Try without target specification (let Tauri decide)
               echo ""
               echo "🚀 Trying npx tauri ios build without target..."
-              
+
               if npx tauri ios build --verbose 2>&1 | tee ios_build4.log; then
                 echo "✅ Build succeeded with npx tauri (no target)"
                 BUILD_SUCCESS=true
@@ -1743,7 +1743,7 @@ jobs:
             fi
           fi
         fi
-        
+
         # Stop the monitoring process
         kill $MONITOR_PID 2>/dev/null || true
 
@@ -1766,7 +1766,7 @@ jobs:
         else
           echo "=== BUILD FAILED - Analyzing logs ==="
           echo "Final exit code: $BUILD_EXIT_CODE"
-          
+
           # Check all log files that might exist
           for log_file in ios_build.log ios_build2.log ios_build3.log ios_build4.log; do
             if [ -f "$log_file" ]; then
