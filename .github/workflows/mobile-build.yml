@@ -1130,7 +1130,18 @@ jobs:
           if [ -n "${{ secrets.IOS_DEVELOPMENT_PROVISIONING_PROFILE }}" ]; then
             echo "🔧 Installing development provisioning profile..."
             echo "${{ secrets.IOS_DEVELOPMENT_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision
-            echo "✅ Development provisioning profile installed"
+            
+            # Verify the profile was installed correctly
+            if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision ]; then
+              PROFILE_SIZE=$(ls -l ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision | awk '{print $5}')
+              echo "✅ Development provisioning profile installed (size: $PROFILE_SIZE bytes)"
+              
+              # Extract and show profile info
+              echo "📋 Profile information:"
+              security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A5 -B5 "com.beout.app\|AppIDName\|TeamName\|UUID" || echo "Could not extract profile info"
+            else
+              echo "❌ Development provisioning profile file was not created"
+            fi
           else
             echo "⚠️  Development provisioning profile not found in secrets"
           fi
@@ -1139,7 +1150,14 @@ jobs:
           if [ -n "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" ]; then
             echo "📦 Installing distribution provisioning profile..."
             echo "${{ secrets.IOS_DISTRIBUTION_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision
-            echo "✅ Distribution provisioning profile installed"
+            
+            # Verify the profile was installed correctly
+            if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision ]; then
+              PROFILE_SIZE=$(ls -l ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision | awk '{print $5}')
+              echo "✅ Distribution provisioning profile installed (size: $PROFILE_SIZE bytes)"
+            else
+              echo "❌ Distribution provisioning profile file was not created"
+            fi
           else
             echo "⚠️  Distribution provisioning profile not found in secrets"
           fi
@@ -1153,6 +1171,14 @@ jobs:
 
           echo "Installed provisioning profiles:"
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
+          
+          echo "Profile details:"
+          for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            if [ -f "$profile" ]; then
+              echo "--- $(basename "$profile") ---"
+              security cms -D -i "$profile" 2>/dev/null | grep -E "TeamName|AppIDName|UUID|application-identifier" | head -10 || echo "Could not read profile"
+            fi
+          done
 
           echo "✅ Code signing setup completed"
         else
