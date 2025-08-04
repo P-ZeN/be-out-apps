@@ -1554,7 +1554,6 @@ jobs:
         cat > ~/.cargo/config.toml << 'EOF'
         [net]
         retry = 10
-        timeout = 300
 
         [http]
         timeout = 300
@@ -1562,12 +1561,6 @@ jobs:
 
         [build]
         jobs = 2
-
-        [registry]
-        default = "crates-io"
-
-        [source.crates-io]
-        replace-with = "crates-io"
 
         [net.git]
         fetch-with-cli = true
