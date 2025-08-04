@@ -1632,7 +1632,6 @@ EOF
           BUILD_EXIT_CODE2=$?
           
           if [ $BUILD_EXIT_CODE2 -eq 0 ]; then
-          if [ $BUILD_EXIT_CODE2 -eq 0 ]; then
             echo "✅ Build succeeded with npx tauri"
             BUILD_SUCCESS=true
           elif [ $BUILD_EXIT_CODE2 -eq 124 ]; then
@@ -1666,7 +1665,6 @@ EOF
               BUILD_SUCCESS=false
             fi
           fi
-        fi
         fi
 
         if [ "$BUILD_SUCCESS" = true ]; then
