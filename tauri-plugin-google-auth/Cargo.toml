@@ -6,7 +6,6 @@ description = ""
 edition = "2021"
 rust-version = "1.77.2"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
-# Removed 'links' directive - not needed for Tauri plugins
 
 [dependencies]
 tauri = { version = "2.6.2" }
