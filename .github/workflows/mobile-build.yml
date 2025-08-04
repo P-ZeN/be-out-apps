@@ -1576,6 +1576,7 @@ jobs:
         cd src-tauri
         
         # Use a background process with timeout since macOS doesn't have timeout by default
+        # Note: Use aarch64-apple-ios for Rust, but aarch64 for Tauri CLI
         cargo fetch --target aarch64-apple-ios &
         FETCH_PID=$!
         
@@ -1637,7 +1638,7 @@ jobs:
         
         # Try the build without background process first to see immediate errors
         echo "🚀 Starting iOS build (initial attempt without timeout)..."
-        if npm run tauri:ios:build -- --verbose --target aarch64-apple-ios 2>&1 | tee ios_build.log; then
+        if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
           BUILD_EXIT_CODE=0
@@ -1664,7 +1665,7 @@ jobs:
             echo ""
             echo "🚀 Trying npx tauri ios build with explicit target..."
             
-            if npx tauri ios build --verbose --target aarch64-apple-ios 2>&1 | tee ios_build3.log; then
+            if npx tauri ios build --verbose --target aarch64 2>&1 | tee ios_build3.log; then
               echo "✅ Build succeeded with npx tauri"
               BUILD_SUCCESS=true
               BUILD_EXIT_CODE=0
@@ -1696,6 +1697,11 @@ jobs:
         
         # Stop the monitoring process
         kill $MONITOR_PID 2>/dev/null || true
+
+        # Ensure BUILD_SUCCESS is properly set
+        if [ -z "$BUILD_SUCCESS" ]; then
+          BUILD_SUCCESS=false
+        fi
 
         if [ "$BUILD_SUCCESS" = true ]; then
           echo "✅ Build completed! Looking for IPA files..."
