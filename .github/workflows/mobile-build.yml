@@ -1260,7 +1260,7 @@ jobs:
         npm run | grep tauri || echo "No tauri scripts found"
 
         # Verify Google Auth plugin iOS implementation
-        echo "🔧 Verifyinggg tauri-plugin-google-auth iOS configuration..."
+        echo "🔧 Verifying tauri-plugin-google-auth iOS configuration..."
         if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
           echo "❌ CRITICAL: iOS directory missing for Google Auth plugin!"
           echo "The iOS implementation should be in the repository."

@@ -11,7 +11,8 @@ The iOS build was failing with multiple sequential issues:
 1. **Missing links field**: Tauri 2.x plugin system requires `links = "plugin-name"` in Cargo.toml
 2. **iOS version mismatch**: The Google Sign-In iOS SDK (version 7.1.0) requires **iOS 15.0+** as minimum deployment target
 3. **Swift tools version incompatibility**: Using `swift-tools-version:5.3` but `.iOS(.v15)` requires PackageDescription 5.5+
-4. **CI workflow fallback logic**: Created iOS 12 placeholder instead of using repository implementation
+4. **Missing macOS platform specification**: GoogleSignIn supports both iOS and macOS, requiring macOS 10.15+ deployment target
+5. **CI workflow fallback logic**: Created iOS 12 placeholder instead of using repository implementation
 
 ## Changes Made
 
@@ -34,7 +35,8 @@ platforms: [
 // After  
 // swift-tools-version:5.5  
 platforms: [
-    .iOS(.v15)  // ✅ Available in PackageDescription 5.5+
+    .iOS(.v15),      // ✅ Available in PackageDescription 5.5+
+    .macOS(.v10_15)  // ✅ Added for GoogleSignIn macOS 10.15+ requirement
 ],
 ```
 
@@ -70,7 +72,8 @@ platforms: [
 1. **Initial**: `package.links field not set` → **Fixed** with Cargo.toml links field
 2. **Second**: iOS version compatibility mismatch → **Fixed** with iOS 15 alignment  
 3. **Third**: `'v15' is unavailable` Swift error → **Fixed** with swift-tools-version 5.5
-4. **Final**: CI creates iOS 12 placeholder → **Fixed** with workflow verification
+4. **Fourth**: `requires macos 10.13, but depends on GoogleSignIn which requires macos 10.15` → **Fixed** with macOS(.v10_15) platform
+5. **Final**: CI creates iOS 12 placeholder → **Fixed** with workflow verification
 - ❌ Previous: Failed at Swift compatibility with iOS 12 vs iOS 15 requirement  
 - ✅ Current: Passes plugin compilation completely
 - ✅ Current: Passes Swift package dependency resolution
