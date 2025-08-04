@@ -1914,6 +1914,67 @@ jobs:
           echo "If you see code signing errors, that's expected without proper setup."
           echo "Complete the setup in docs/IOS_CODE_SIGNING_SETUP.md to enable signing."
         fi
+
+    - name: Export IPA from Archive
+      working-directory: ./client
+      if: always()
+      run: |
+        echo "=== Attempting to Export IPA from Archive ==="
+
+        # Find the xcarchive
+        XCARCHIVE=$(find . -name "*.xcarchive" -type d 2>/dev/null | head -1)
+        if [ -n "$XCARCHIVE" ]; then
+          echo "✅ Found xcarchive: $XCARCHIVE"
+
+          # Create export options plist
+          cat > ExportOptions.plist << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>development</string>
+    <key>teamID</key>
+    <string>${{ secrets.APPLE_DEVELOPMENT_TEAM }}</string>
+    <key>compileBitcode</key>
+    <false/>
+    <key>stripSwiftSymbols</key>
+    <true/>
+    <key>thinning</key>
+    <string>&lt;none&gt;</string>
+</dict>
+</plist>
+EOF
+
+          # Create output directory
+          mkdir -p ios-export
+
+          # Try to export IPA
+          echo "🚀 Attempting to export IPA..."
+          if xcodebuild -exportArchive \
+            -archivePath "$XCARCHIVE" \
+            -exportPath ./ios-export \
+            -exportOptionsPlist ExportOptions.plist \
+            -allowProvisioningUpdates 2>&1 | tee ipa_export.log; then
+            echo "✅ IPA export succeeded"
+
+            # Find the generated IPA
+            find ./ios-export -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found in export directory"
+            ls -la ./ios-export/ || echo "Export directory is empty"
+          else
+            echo "❌ IPA export failed, but we have the .app bundle"
+            echo "📋 Export log:"
+            tail -20 ipa_export.log || echo "No export log found"
+
+            # Check what's in the archive
+            echo "📋 Archive contents:"
+            find "$XCARCHIVE" -type f | head -10 || echo "Cannot list archive contents"
+          fi
+        else
+          echo "❌ No xcarchive found for IPA export"
+          echo "📋 Looking for any archives:"
+          find . -name "*archive*" -type d 2>/dev/null | head -5 || echo "No archives found"
+        fi
       env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
@@ -1930,6 +1991,8 @@ jobs:
       working-directory: ./client
       if: always()
       run: |
+        echo "=== iOS Build Artifacts Search ==="
+
         echo "=== Searching for IPA files ==="
         find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
 
@@ -1939,15 +2002,46 @@ jobs:
         echo "=== Checking Xcode build directories ==="
         find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
 
+        echo "=== Checking for xcarchive ==="
+        find . -name "*.xcarchive" -type d 2>/dev/null || echo "No xcarchive found"
+
+        # Check if we have a successful app bundle
+        APP_BUNDLE=$(find . -name "BeOut.app" -type d 2>/dev/null | head -1)
+        if [ -n "$APP_BUNDLE" ]; then
+          echo "✅ iOS App Bundle found: $APP_BUNDLE"
+          echo "📱 App bundle contents:"
+          ls -la "$APP_BUNDLE" | head -10
+
+          # Check if it's signed
+          if [ -f "$APP_BUNDLE/Info.plist" ]; then
+            echo "✅ App bundle appears complete (has Info.plist)"
+
+            # Show bundle info
+            echo "📋 Bundle identifier:"
+            /usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP_BUNDLE/Info.plist" 2>/dev/null || echo "Could not read bundle ID"
+
+            echo "📋 Bundle version:"
+            /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP_BUNDLE/Info.plist" 2>/dev/null || echo "Could not read version"
+          fi
+
+          # Check if it's properly signed
+          echo "📋 Code signing status:"
+          codesign -dv "$APP_BUNDLE" 2>&1 | head -5 || echo "Could not check code signing"
+        else
+          echo "❌ No iOS app bundle found"
+        fi
+
     - name: Upload IPA (if found)
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: ios-ipa
+        name: ios-build-artifacts
         path: |
-          client/src-tauri/gen/ios/**/Build/Products/**/*.ipa
-          client/src-tauri/gen/apple/**/Build/Products/**/*.ipa
-          client/src-tauri/target/**/release/*.ipa
+          client/src-tauri/gen/apple/build/app_iOS.xcarchive/Products/Applications/BeOut.app
+          client/ios-export/**/*.ipa
+          client/src-tauri/gen/apple/build/**/*.ipa
+          client/src-tauri/gen/apple/**/*.xcarchive
+          client/src-tauri/gen/apple/**/*.app
           client/**/*.ipa
         if-no-files-found: warn
 
