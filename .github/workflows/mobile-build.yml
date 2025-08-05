@@ -1950,6 +1950,11 @@ jobs:
           # Create output directory
           mkdir -p ios-export
 
+          # Quick check: Are provisioning profiles still available at export time?
+          echo "🔍 Pre-export check: Provisioning profiles status..."
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null | wc -l | xargs echo "   Profile count:"
+          security find-identity -v -p codesigning 2>/dev/null | wc -l | xargs echo "   Identity count:"
+
           # Try to export IPA
           echo "🚀 Attempting to export IPA..."
           if xcodebuild -exportArchive \
@@ -1957,11 +1962,19 @@ jobs:
             -exportPath ./ios-export \
             -exportOptionsPlist ExportOptions.plist \
             -allowProvisioningUpdates 2>&1 | tee ipa_export.log; then
-            echo "✅ IPA export succeeded"
 
-            # Find the generated IPA
-            find ./ios-export -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found in export directory"
-            ls -la ./ios-export/ || echo "Export directory is empty"
+            # Check if IPA was actually created (xcodebuild can exit 0 but still fail)
+            if find ./ios-export -name "*.ipa" -type f 2>/dev/null | grep -q ".ipa"; then
+              echo "✅ IPA export succeeded"
+              find ./ios-export -name "*.ipa" -type f 2>/dev/null
+              ls -la ./ios-export/
+            else
+              echo "❌ IPA export completed but no IPA was generated"
+              echo "📋 Export directory contents:"
+              ls -la ./ios-export/ || echo "Export directory is empty"
+              echo "📋 Export log (last 30 lines):"
+              tail -30 ipa_export.log || echo "No export log found"
+            fi
           else
             echo "❌ IPA export failed, but we have the .app bundle"
             echo "📋 Export log:"
