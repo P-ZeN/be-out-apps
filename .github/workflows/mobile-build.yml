@@ -1930,12 +1930,13 @@ jobs:
           TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
 
           # Create plist file with proper escaping
+          # Use "debugging" instead of deprecated "development" method
           echo '<?xml version="1.0" encoding="UTF-8"?>' > ExportOptions.plist
           echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> ExportOptions.plist
           echo '<plist version="1.0">' >> ExportOptions.plist
           echo '<dict>' >> ExportOptions.plist
           echo '    <key>method</key>' >> ExportOptions.plist
-          echo '    <string>development</string>' >> ExportOptions.plist
+          echo '    <string>debugging</string>' >> ExportOptions.plist
           echo '    <key>teamID</key>' >> ExportOptions.plist
           echo "    <string>$TEAM_ID</string>" >> ExportOptions.plist
           echo '    <key>compileBitcode</key>' >> ExportOptions.plist
@@ -1944,8 +1945,13 @@ jobs:
           echo '    <true/>' >> ExportOptions.plist
           echo '    <key>thinning</key>' >> ExportOptions.plist
           echo '    <string>&lt;none&gt;</string>' >> ExportOptions.plist
+          echo '    <key>signingStyle</key>' >> ExportOptions.plist
+          echo '    <string>manual</string>' >> ExportOptions.plist
           echo '</dict>' >> ExportOptions.plist
           echo '</plist>' >> ExportOptions.plist
+          
+          echo "📋 Created ExportOptions.plist:"
+          cat ExportOptions.plist
 
           # Create output directory
           mkdir -p ios-export
