@@ -131,24 +131,24 @@ class GoogleAuthPlugin: Plugin {
         }
     }
 
-    @objc func google_sign_in(_ invoke: Invoke) {
+    @objc func google_sign_in(_ invoke: Invoke) throws {
         // Enhanced error handling and logging
-        print("GoogleAuthPlugin: googleSignIn called")
+        print("GoogleAuthPlugin: google_sign_in called")
+        
+        do {
+            let args = try invoke.parseArgs(GoogleSignInRequest.self)
+            print("GoogleAuthPlugin: Parsed arguments successfully")
+            
+            // Check if Google Sign-In is properly configured
+            guard GIDSignIn.sharedInstance.configuration != nil else {
+                print("GoogleAuthPlugin: ERROR - Google Sign-In not configured")
+                invoke.reject("Google Sign-In not configured. Missing GoogleService-Info.plist or configuration setup.", code: "NOT_CONFIGURED")
+                return
+            }
+            print("GoogleAuthPlugin: Google Sign-In configuration verified")
 
-        // Ensure we're on the main thread for UI operations
-        DispatchQueue.main.async {
-            do {
-                let args = try invoke.parseArgs(GoogleSignInRequest.self)
-                print("GoogleAuthPlugin: Parsed arguments successfully")
-
-                // Check if Google Sign-In is properly configured
-                guard GIDSignIn.sharedInstance.configuration != nil else {
-                    print("GoogleAuthPlugin: ERROR - Google Sign-In not configured")
-                    invoke.reject("Google Sign-In not configured. Missing GoogleService-Info.plist or configuration setup.", code: "NOT_CONFIGURED")
-                    return
-                }
-                print("GoogleAuthPlugin: Google Sign-In configuration verified")
-
+            // Ensure UI operations happen on main thread
+            DispatchQueue.main.async {
                 guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                       let rootViewController = windowScene.windows.first?.rootViewController else {
                     print("GoogleAuthPlugin: ERROR - No root view controller found")
@@ -165,11 +165,11 @@ class GoogleAuthPlugin: Plugin {
                 }
 
                 print("GoogleAuthPlugin: Starting sign-in process")
-
+                
                 // Perform sign-in with enhanced error handling
                 GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { result, error in
                     print("GoogleAuthPlugin: Sign-in completion handler called")
-
+                    
                     if let error = error {
                         print("GoogleAuthPlugin: Sign-in failed with error: \(error.localizedDescription)")
                         print("GoogleAuthPlugin: Error details: \(error)")
@@ -184,7 +184,7 @@ class GoogleAuthPlugin: Plugin {
                     }
 
                     print("GoogleAuthPlugin: Sign-in successful, processing result")
-
+                    
                     let user = result.user
                     let profile = user.profile
                     let idToken = user.idToken?.tokenString
@@ -209,14 +209,12 @@ class GoogleAuthPlugin: Plugin {
                     print("GoogleAuthPlugin: Resolving with success response")
                     invoke.resolve(response)
                 }
-            } catch {
-                print("GoogleAuthPlugin: Failed to parse arguments: \(error)")
-                invoke.reject("Failed to parse arguments: \(error.localizedDescription)", code: "PARSE_ERROR")
             }
+        } catch {
+            print("GoogleAuthPlugin: Failed to parse arguments: \(error)")
+            invoke.reject("Failed to parse arguments: \(error.localizedDescription)", code: "PARSE_ERROR")
         }
-    }
-
-    @objc func google_sign_out(_ invoke: Invoke) {
+    }    @objc func google_sign_out(_ invoke: Invoke) {
         GIDSignIn.sharedInstance.signOut()
         invoke.resolve(["success": true])
     }
