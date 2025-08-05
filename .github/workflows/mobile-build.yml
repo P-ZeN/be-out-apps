@@ -290,39 +290,6 @@ jobs:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
-    - name: Generate App Icons
-      working-directory: ./client
-      run: |
-        echo "Generating app icons for mobile platformsss..."
-
-        # Check if the icon file exists
-        ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
-        if [ -f "$ICON_FILE" ]; then
-          echo "✅ Found icon file: $ICON_FILE"
-          ls -la "$ICON_FILE"
-
-          echo "Generating icons using Tauri CLI..."
-          if npx tauri icon "$ICON_FILE"; then
-            echo "✅ Icons generated successfully"
-
-            # Show generated icons
-            echo "=== Generated icons ==="
-            find src-tauri/icons -name "*.png" -o -name "*.ico" | head -10
-          else
-            echo "❌ Failed to generate icons"
-            echo "Trying with local Tauri CLI..."
-            cargo tauri icon "$ICON_FILE" || echo "Local cargo tauri also failed"
-          fi
-        else
-          echo "⚠️  Icon file not found: $ICON_FILE"
-          echo "Available files in src-tauri/icons/:"
-          ls -la src-tauri/icons/ || echo "Icons directory not found"
-
-          # Try to find any PNG files that could be used as icons
-          echo "Looking for alternative icon files..."
-          find src-tauri -name "*.png" | head -5
-        fi
-
     - name: Initialize Android project
       working-directory: ./client
       run: |
@@ -443,6 +410,68 @@ jobs:
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
+
+    - name: Generate Android App Icons
+      working-directory: ./client
+      run: |
+        echo "🎨 Generating Android app icons AFTER project initialization..."
+
+        # Verify Android project exists before generating icons
+        if [ ! -d "src-tauri/gen/android" ]; then
+          echo "❌ Android project not found, cannot generate icons"
+          exit 1
+        fi
+
+        # Check if the icon file exists
+        ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
+        if [ -f "$ICON_FILE" ]; then
+          echo "✅ Found icon file: $ICON_FILE"
+          ls -la "$ICON_FILE"
+
+          echo "=== Icons BEFORE generation ==="
+          find src-tauri/icons -name "*.png" -o -name "*.ico" | head -10
+
+          echo "Generating icons using Tauri CLI..."
+          if npx tauri icon "$ICON_FILE" --verbose; then
+            echo "✅ Icons generated successfully"
+
+            echo "=== Icons AFTER generation ==="
+            find src-tauri/icons -name "*.png" -o -name "*.ico" | head -15
+
+            # Verify Android-specific icon files were created
+            echo "=== Android-specific icons ==="
+            find src-tauri/icons -name "android-icon-*.png" -o -name "*android*" | head -10
+
+            # Also check if icons were copied to the Android project
+            echo "=== Android project icon resources ==="
+            find src-tauri/gen/android -path "*/res/drawable*" -name "*.png" | head -10 || echo "No drawable icons found in Android project"
+            find src-tauri/gen/android -path "*/res/mipmap*" -name "*.png" | head -10 || echo "No mipmap icons found in Android project"
+          else
+            echo "❌ Failed to generate icons with npx tauri"
+            echo "Trying alternative methods..."
+            
+            # Try with cargo tauri
+            if command -v cargo >/dev/null 2>&1; then
+              echo "Trying with cargo tauri icon..."
+              cargo tauri icon "$ICON_FILE" --verbose || echo "cargo tauri icon also failed"
+            fi
+            
+            # Try with global tauri command
+            if command -v tauri >/dev/null 2>&1; then
+              echo "Trying with global tauri command..."
+              tauri icon "$ICON_FILE" --verbose || echo "global tauri icon also failed"
+            fi
+          fi
+        else
+          echo "❌ Icon file not found: $ICON_FILE"
+          echo "Available files in src-tauri/icons/:"
+          ls -la src-tauri/icons/ || echo "Icons directory not found"
+
+          # Try to find any PNG files that could be used as icons
+          echo "Looking for alternative icon files..."
+          find src-tauri -name "*.png" | head -5
+          exit 1
+        fi
 
     - name: Fix Android Themes for Status Bar
       working-directory: ./client
@@ -789,6 +818,33 @@ jobs:
         NDK_HOME: ${{ env.NDK_HOME }}
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         JAVA_HOME: ${{ env.JAVA_HOME }}
+
+    - name: Verify Icons Before Android Build
+      working-directory: ./client
+      run: |
+        echo "🔍 Final verification of icons before Android build..."
+        
+        # Check if icons are in place
+        echo "=== Current icon files ==="
+        find src-tauri/icons -name "*.png" -o -name "*.ico" | head -15
+        
+        # Check for custom icon
+        if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
+          echo "✅ Custom icon source file exists"
+        else
+          echo "❌ Custom icon source file missing!"
+        fi
+        
+        # Check for generated Android icons
+        echo "=== Android-specific generated icons ==="
+        find src-tauri/icons -name "android-icon-*.png" | head -10
+        
+        # If Android project exists, check for icons there too
+        if [ -d "src-tauri/gen/android" ]; then
+          echo "=== Icons in Android project ==="
+          find src-tauri/gen/android -path "*/res/drawable*" -name "*.png" | head -5 || echo "No drawable icons"
+          find src-tauri/gen/android -path "*/res/mipmap*" -name "*.png" | head -5 || echo "No mipmap icons"
+        fi
 
     - name: Build Android APK
       working-directory: ./client
@@ -1361,6 +1417,106 @@ jobs:
           echo "❌ iOS/Apple project directory not found"
           echo "Searching for alternative iOS/Apple paths..."
           find src-tauri -type d -name "*ios*" -o -name "*apple*" 2>/dev/null || echo "No iOS/Apple directories found"
+        fi
+
+    - name: Generate iOS App Icons
+      working-directory: ./client
+      run: |
+        echo "🎨 Generating iOS app icons AFTER project initialization..."
+
+        # Verify iOS/Apple project exists before generating icons
+        if [ ! -d "src-tauri/gen/ios" ] && [ ! -d "src-tauri/gen/apple" ]; then
+          echo "❌ iOS/Apple project not found, cannot generate icons"
+          echo "Available directories in src-tauri/gen/:"
+          ls -la src-tauri/gen/ 2>/dev/null || echo "No gen directory found"
+          exit 1
+        fi
+
+        # Check if the icon file exists
+        ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
+        if [ -f "$ICON_FILE" ]; then
+          echo "✅ Found icon file: $ICON_FILE"
+          ls -la "$ICON_FILE"
+
+          echo "=== Icons BEFORE generation ==="
+          find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
+
+          echo "Generating icons using Tauri CLI..."
+          if npx tauri icon "$ICON_FILE" --verbose; then
+            echo "✅ Icons generated successfully"
+
+            echo "=== Icons AFTER generation ==="
+            find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -20
+
+            # Verify iOS-specific icon files were created
+            echo "=== iOS-specific icons ==="
+            find src-tauri/icons -name "*.icns" -o -name "*ios*" | head -10
+            ls -la src-tauri/icons/ios/ 2>/dev/null || echo "No iOS icons directory found"
+
+            # Check if icons were copied to the iOS/Apple project
+            echo "=== iOS/Apple project icon resources ==="
+            if [ -d "src-tauri/gen/ios" ]; then
+              find src-tauri/gen/ios -name "*.png" -o -name "*.icns" | head -10 || echo "No icons found in iOS project"
+            fi
+            if [ -d "src-tauri/gen/apple" ]; then
+              find src-tauri/gen/apple -name "*.png" -o -name "*.icns" | head -10 || echo "No icons found in Apple project"
+            fi
+          else
+            echo "❌ Failed to generate icons with npx tauri"
+            echo "Trying alternative methods..."
+            
+            # Try with cargo tauri
+            if command -v cargo >/dev/null 2>&1; then
+              echo "Trying with cargo tauri icon..."
+              cargo tauri icon "$ICON_FILE" --verbose || echo "cargo tauri icon also failed"
+            fi
+            
+            # Try with global tauri command
+            if command -v tauri >/dev/null 2>&1; then
+              echo "Trying with global tauri command..."
+              tauri icon "$ICON_FILE" --verbose || echo "global tauri icon also failed"
+            fi
+          fi
+        else
+          echo "❌ Icon file not found: $ICON_FILE"
+          echo "Available files in src-tauri/icons/:"
+          ls -la src-tauri/icons/ || echo "Icons directory not found"
+
+          # Try to find any PNG files that could be used as icons
+          echo "Looking for alternative icon files..."
+          find src-tauri -name "*.png" | head -5
+          exit 1
+        fi
+
+    - name: Verify Icons Before iOS Build
+      working-directory: ./client
+      run: |
+        echo "🔍 Final verification of icons before iOS build..."
+        
+        # Check if icons are in place
+        echo "=== Current icon files ==="
+        find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
+        
+        # Check for custom icon
+        if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
+          echo "✅ Custom icon source file exists"
+        else
+          echo "❌ Custom icon source file missing!"
+        fi
+        
+        # Check for generated iOS icons
+        echo "=== iOS-specific generated icons ==="
+        find src-tauri/icons -name "*.icns" | head -10
+        ls -la src-tauri/icons/ios/ 2>/dev/null || echo "No iOS icons directory"
+        
+        # If iOS/Apple project exists, check for icons there too
+        if [ -d "src-tauri/gen/ios" ]; then
+          echo "=== Icons in iOS project ==="
+          find src-tauri/gen/ios -name "*.png" -o -name "*.icns" | head -10 || echo "No icons in iOS project"
+        fi
+        if [ -d "src-tauri/gen/apple" ]; then
+          echo "=== Icons in Apple project ==="
+          find src-tauri/gen/apple -name "*.png" -o -name "*.icns" | head -10 || echo "No icons in Apple project"
         fi
 
     - name: Build iOS IPA
