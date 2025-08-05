@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }) => {
                 console.log("[AUTH_CONTEXT] Using provided token and user data");
                 localStorage.setItem("token", token);
                 localStorage.setItem("userProfile", JSON.stringify(userData));
-                
+
                 // Get full user profile to check onboarding status
                 try {
                     const fullUserData = await userService.getProfile();
