@@ -156,7 +156,7 @@ if [ "$HAS_IOS" = "true" ]; then
                 </ul>
             </div>
 
-            <a href="itms-services://?action=download-manifest&url=${GITHUB_PAGES_URL}/mobile-installer/manifest.plist" class="install-button ios-button">
+            <a href="itms-services://?action=download-manifest&url=${GITHUB_PAGES_URL}/manifest.plist" class="install-button ios-button">
                 📥 Install iOS App
             </a>
 
@@ -200,7 +200,7 @@ if [ "$HAS_ANDROID" = "true" ]; then
                 </ul>
             </div>
 
-            <a href="${GITHUB_PAGES_URL}/mobile-installer/${APK_NAME}" class="install-button android-button" download>
+            <a href="${GITHUB_PAGES_URL}/${APK_NAME}" class="install-button android-button" download>
                 📥 Download Android APK
             </a>
 

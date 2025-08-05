@@ -22,6 +22,9 @@ permissions:
 jobs:
   create-web-installer:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       github.event_name == 'workflow_dispatch'
@@ -174,7 +177,7 @@ jobs:
           echo '                    <key>kind</key>' >> web-installer/manifest.plist
           echo '                    <string>software-package</string>' >> web-installer/manifest.plist
           echo '                    <key>url</key>' >> web-installer/manifest.plist
-          echo "                    <string>${GITHUB_PAGES_URL}/mobile-installer/${IPA_NAME}</string>" >> web-installer/manifest.plist
+          echo "                    <string>${GITHUB_PAGES_URL}/${IPA_NAME}</string>" >> web-installer/manifest.plist
           echo '                </dict>' >> web-installer/manifest.plist
           echo '            </array>' >> web-installer/manifest.plist
           echo '            <key>metadata</key>' >> web-installer/manifest.plist
@@ -211,9 +214,14 @@ jobs:
           "$BUILD_DATE"
         fi
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./web-installer
-        destination_dir: mobile-installer
+        path: ./web-installer
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2
