@@ -1522,7 +1522,7 @@ jobs:
     - name: Build iOS IPA
       working-directory: ./client
       run: |
-        echo "Building iOS IPA..."
+        echo "Building iOS IPA...."
         echo "Checking iOS project directory..."
 
         # Find iOS project directory (Tauri uses 'apple' directory for iOS/macOS)
@@ -2101,7 +2101,7 @@ jobs:
           echo "iOS builds in CI typically fail at code signing without proper certificates."
           echo "If you see code signing errors, that's expected without proper setup."
           echo "Complete the setup in docs/IOS_CODE_SIGNING_SETUP.md to enable signing."
-          
+
           echo ""
           echo "❌ BUILD FAILED - Exiting with error code"
           exit 1
