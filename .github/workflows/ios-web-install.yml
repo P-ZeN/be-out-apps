@@ -11,34 +11,34 @@ jobs:
   create-web-installer:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Download iOS Build Artifacts
       uses: actions/download-artifact@v4
       with:
         name: ios-build-artifacts
         path: ./ios-artifacts
       continue-on-error: true
-        
+
     - name: Download Android Build Artifacts
       uses: actions/download-artifact@v4
       with:
         name: android-apk
         path: ./android-artifacts
       continue-on-error: true
-        
+
     - name: Create Mobile App Installation Page
       run: |
         mkdir -p web-installer
-        
+
         # Initialize variables
         HAS_IOS=false
         HAS_ANDROID=false
         IPA_NAME=""
         APK_NAME=""
-        
+
         # Check for IPA file
         IPA_FILE=$(find ./ios-artifacts -name "*.ipa" 2>/dev/null | head -1)
         if [ -n "$IPA_FILE" ]; then
@@ -49,7 +49,7 @@ jobs:
         else
           echo "❌ No IPA file found in artifacts"
         fi
-        
+
         # Check for APK file
         APK_FILE=$(find ./android-artifacts -name "*.apk" 2>/dev/null | head -1)
         if [ -n "$APK_FILE" ]; then
@@ -60,326 +60,68 @@ jobs:
         else
           echo "❌ No APK file found in artifacts"
         fi
-        
+
         # Exit if no artifacts found
         if [ "$HAS_IOS" = false ] && [ "$HAS_ANDROID" = false ]; then
           echo "❌ No mobile app artifacts found"
           exit 1
         fi
-        
+
         # Get repository name for URLs
         REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
         GITHUB_PAGES_URL="https://${{ github.repository_owner }}.github.io/${REPO_NAME}"
-        
+
         # Create manifest.plist for iOS over-the-air installation (only if IPA exists)
         if [ "$HAS_IOS" = true ]; then
-          cat > web-installer/manifest.plist << 'MANIFEST_EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>items</key>
-    <array>
-        <dict>
-            <key>assets</key>
-            <array>
-                <dict>
-                    <key>kind</key>
-                    <string>software-package</string>
-                    <key>url</key>
-                    <string>GITHUB_PAGES_URL_PLACEHOLDER/mobile-installer/IPA_NAME_PLACEHOLDER</string>
-                </dict>
-            </array>
-            <key>metadata</key>
-            <dict>
-                <key>bundle-identifier</key>
-                <string>com.beout.app</string>
-                <key>bundle-version</key>
-                <string>1.0</string>
-                <key>kind</key>
-                <string>software</string>
-                <key>title</key>
-                <string>BeOut</string>
-            </dict>
-        </dict>
-    </array>
-</dict>
-</plist>
-MANIFEST_EOF
-          
-          # Replace placeholders with actual values
-          sed -i "s|GITHUB_PAGES_URL_PLACEHOLDER|${GITHUB_PAGES_URL}|g" web-installer/manifest.plist
-          sed -i "s|IPA_NAME_PLACEHOLDER|${IPA_NAME}|g" web-installer/manifest.plist
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > web-installer/manifest.plist
+          echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> web-installer/manifest.plist
+          echo '<plist version="1.0">' >> web-installer/manifest.plist
+          echo '<dict>' >> web-installer/manifest.plist
+          echo '    <key>items</key>' >> web-installer/manifest.plist
+          echo '    <array>' >> web-installer/manifest.plist
+          echo '        <dict>' >> web-installer/manifest.plist
+          echo '            <key>assets</key>' >> web-installer/manifest.plist
+          echo '            <array>' >> web-installer/manifest.plist
+          echo '                <dict>' >> web-installer/manifest.plist
+          echo '                    <key>kind</key>' >> web-installer/manifest.plist
+          echo '                    <string>software-package</string>' >> web-installer/manifest.plist
+          echo '                    <key>url</key>' >> web-installer/manifest.plist
+          echo "                    <string>${GITHUB_PAGES_URL}/mobile-installer/${IPA_NAME}</string>" >> web-installer/manifest.plist
+          echo '                </dict>' >> web-installer/manifest.plist
+          echo '            </array>' >> web-installer/manifest.plist
+          echo '            <key>metadata</key>' >> web-installer/manifest.plist
+          echo '            <dict>' >> web-installer/manifest.plist
+          echo '                <key>bundle-identifier</key>' >> web-installer/manifest.plist
+          echo '                <string>com.beout.app</string>' >> web-installer/manifest.plist
+          echo '                <key>bundle-version</key>' >> web-installer/manifest.plist
+          echo '                <string>1.0</string>' >> web-installer/manifest.plist
+          echo '                <key>kind</key>' >> web-installer/manifest.plist
+          echo '                <string>software</string>' >> web-installer/manifest.plist
+          echo '                <key>title</key>' >> web-installer/manifest.plist
+          echo '                <string>BeOut</string>' >> web-installer/manifest.plist
+          echo '            </dict>' >> web-installer/manifest.plist
+          echo '        </dict>' >> web-installer/manifest.plist
+          echo '    </array>' >> web-installer/manifest.plist
+          echo '</dict>' >> web-installer/manifest.plist
+          echo '</plist>' >> web-installer/manifest.plist
         fi
-        
+
         # Create HTML installation page with dynamic content
-        cat > web-installer/index.html << 'HTML_EOF'
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeOut Mobile App Installer</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 700px;
-            margin: 50px auto;
-            padding: 20px;
-            text-align: center;
-            background: #f8f9fa;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .platform-section {
-            margin: 30px 0;
-            padding: 20px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            background: #fff;
-        }
-        .install-button {
-            display: inline-block;
-            color: white;
-            padding: 15px 30px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 18px;
-            margin: 15px 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .ios-button {
-            background: linear-gradient(135deg, #007AFF, #0051D5);
-        }
-        .android-button {
-            background: linear-gradient(135deg, #34A853, #137333);
-        }
-        .install-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            color: #856404;
-        }
-        .step {
-            text-align: left;
-            background: #f8f9fa;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border-left: 4px solid #007AFF;
-        }
-        .android-step {
-            border-left-color: #34A853;
-        }
-        .build-info {
-            margin-top: 40px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            color: #666;
-            font-size: 14px;
-        }
-        .device-detection {
-            margin: 20px 0;
-            padding: 15px;
-            background: #e3f2fd;
-            border-radius: 8px;
-            color: #1565c0;
-        }
-        .not-available {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        .platform-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-    </style>
-    <script>
-        function detectPlatform() {
-            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-            const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-            const isAndroid = /android/i.test(userAgent);
-            
-            return { isIOS, isAndroid };
-        }
-        
-        function updateUI() {
-            const { isIOS, isAndroid } = detectPlatform();
-            const detectionDiv = document.getElementById('device-detection');
-            
-            if (isIOS) {
-                detectionDiv.innerHTML = '📱 iOS device detected - iOS installation recommended';
-                detectionDiv.style.background = '#e3f2fd';
-            } else if (isAndroid) {
-                detectionDiv.innerHTML = '📱 Android device detected - Android installation recommended';
-                detectionDiv.style.background = '#e8f5e8';
-            } else {
-                detectionDiv.innerHTML = '💻 Desktop detected - Choose your mobile platform below';
-                detectionDiv.style.background = '#f3e5f5';
-            }
-        }
-        
-        window.onload = updateUI;
-    </script>
-</head>
-<body>
-    <div class="container">
-        <h1>📱 BeOut Mobile App</h1>
-        <p>Install the latest development build of BeOut on your mobile device</p>
-        
-        <div id="device-detection" class="device-detection">
-            Detecting your device...
-        </div>
-HTML_EOF
-
-        # Add iOS section if IPA exists
-        if [ "$HAS_IOS" = true ]; then
-          cat >> web-installer/index.html << 'IOS_EOF'
-        
-        <div class="platform-section">
-            <div class="platform-icon">🍎</div>
-            <h2>iOS (iPhone/iPad)</h2>
-            
-            <div class="warning">
-                <strong>⚠️ iOS Requirements:</strong>
-                <ul style="text-align: left; margin: 10px 0;">
-                    <li>Your device UDID must be registered in the provisioning profile</li>
-                    <li>Only works in Safari browser (not Chrome or others)</li>
-                    <li>You'll need to trust the developer certificate after installation</li>
-                </ul>
-            </div>
-            
-            <a href="itms-services://?action=download-manifest&url=GITHUB_PAGES_URL_PLACEHOLDER/mobile-installer/manifest.plist" class="install-button ios-button">
-                📥 Install iOS App
-            </a>
-            
-            <h3>iOS Installation Steps:</h3>
-            <div class="step">
-                <strong>1.</strong> Tap "Install iOS App" button above (only works on iOS Safari)
-            </div>
-            <div class="step">
-                <strong>2.</strong> When prompted, tap "Install" to download the app
-            </div>
-            <div class="step">
-                <strong>3.</strong> Go to Settings → General → VPN & Device Management
-            </div>
-            <div class="step">
-                <strong>4.</strong> Find your developer certificate and tap "Trust"
-            </div>
-            <div class="step">
-                <strong>5.</strong> Enable Developer Mode in Settings → Privacy & Security → Developer Mode
-            </div>
-            <div class="step">
-                <strong>6.</strong> The app should now work on your home screen
-            </div>
-        </div>
-IOS_EOF
-          
-          # Replace placeholder with actual URL
-          sed -i "s|GITHUB_PAGES_URL_PLACEHOLDER|${GITHUB_PAGES_URL}|g" web-installer/index.html
-        fi
-
-        # Add Android section if APK exists
-        if [ "$HAS_ANDROID" = true ]; then
-          cat >> web-installer/index.html << 'ANDROID_EOF'
-        
-        <div class="platform-section">
-            <div class="platform-icon">🤖</div>
-            <h2>Android</h2>
-            
-            <div class="warning">
-                <strong>⚠️ Android Requirements:</strong>
-                <ul style="text-align: left; margin: 10px 0;">
-                    <li>Enable "Install unknown apps" for your browser</li>
-                    <li>This is a debug/unsigned APK for testing</li>
-                    <li>You may see security warnings - this is normal for development builds</li>
-                </ul>
-            </div>
-            
-            <a href="GITHUB_PAGES_URL_PLACEHOLDER/mobile-installer/APK_NAME_PLACEHOLDER" class="install-button android-button" download>
-                📥 Download Android APK
-            </a>
-            
-            <h3>Android Installation Steps:</h3>
-            <div class="step android-step">
-                <strong>1.</strong> Tap "Download Android APK" button above
-            </div>
-            <div class="step android-step">
-                <strong>2.</strong> When download completes, tap the APK file in your notifications
-            </div>
-            <div class="step android-step">
-                <strong>3.</strong> If prompted, enable "Install unknown apps" for your browser
-            </div>
-            <div class="step android-step">
-                <strong>4.</strong> Tap "Install" when Android asks for confirmation
-            </div>
-            <div class="step android-step">
-                <strong>5.</strong> The app will appear in your app drawer once installed
-            </div>
-        </div>
-ANDROID_EOF
-          
-          # Replace placeholders with actual values
-          sed -i "s|GITHUB_PAGES_URL_PLACEHOLDER|${GITHUB_PAGES_URL}|g" web-installer/index.html
-          sed -i "s|APK_NAME_PLACEHOLDER|${APK_NAME}|g" web-installer/index.html
-        fi
-
-        # Add footer
-        cat >> web-installer/index.html << 'FOOTER_EOF'
-        
-        <div class="build-info">
-            <h3>📋 Build Information</h3>
-            <p><strong>Build Number:</strong> BUILD_NUMBER_PLACEHOLDER</p>
-            <p><strong>Commit:</strong> <code>COMMIT_SHA_PLACEHOLDER</code></p>
-            <p><strong>Branch:</strong> BRANCH_NAME_PLACEHOLDER</p>
-            <p><strong>Build Date:</strong> BUILD_DATE_PLACEHOLDER</p>
-FOOTER_EOF
-
-        # Replace placeholders with actual values
         BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        sed -i "s|BUILD_NUMBER_PLACEHOLDER|${{ github.run_number }}|g" web-installer/index.html
-        sed -i "s|COMMIT_SHA_PLACEHOLDER|${{ github.sha }}|g" web-installer/index.html
-        sed -i "s|BRANCH_NAME_PLACEHOLDER|${{ github.ref_name }}|g" web-installer/index.html
-        sed -i "s|BUILD_DATE_PLACEHOLDER|${BUILD_DATE}|g" web-installer/index.html
 
-        if [ "$HAS_IOS" = true ]; then
-          echo "            <p><strong>iOS IPA:</strong> ${IPA_NAME}</p>" >> web-installer/index.html
-        fi
-        
-        if [ "$HAS_ANDROID" = true ]; then
-          echo "            <p><strong>Android APK:</strong> ${APK_NAME}</p>" >> web-installer/index.html
-        fi
+        # Make the script executable and run it
+        chmod +x .github/scripts/create-installer-page.sh
+        .github/scripts/create-installer-page.sh \
+          "$HAS_IOS" \
+          "$HAS_ANDROID" \
+          "$GITHUB_PAGES_URL" \
+          "$IPA_NAME" \
+          "$APK_NAME" \
+          "${{ github.run_number }}" \
+          "${{ github.sha }}" \
+          "${{ github.ref_name }}" \
+          "$BUILD_DATE"
 
-        cat >> web-installer/index.html << 'FOOTER_END_EOF'
-        </div>
-        
-        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-            <h3>🆘 Need Help?</h3>
-            <p>If you encounter issues:</p>
-            <ul style="text-align: left;">
-                <li><strong>iOS:</strong> Make sure your device UDID is registered with the developer</li>
-                <li><strong>Android:</strong> Enable "Unknown sources" in Android security settings</li>
-                <li><strong>Both:</strong> These are development builds - some features may not work perfectly</li>
-            </ul>
-            <p>Contact the development team if you continue having problems.</p>
-        </div>
-    </div>
-</body>
-</html>
-FOOTER_END_EOF
-        
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
