@@ -1,0 +1,80 @@
+{
+  "sessionId": "debug_1754398903244_dyuu6pue8c",
+  "deviceInfo": {
+    "sessionId": "debug_1754398903244_dyuu6pue8c",
+    "timestamp": "2025-08-05T13:01:43.244Z",
+    "platform": "web",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "isTauri": false,
+    "url": "http://localhost:5173/#/login",
+    "screen": {
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "logs": [
+    {
+      "timestamp": "2025-08-05T13:01:43.244Z",
+      "level": "info",
+      "message": "Debug logger initialized",
+      "metadata": {
+        "sessionId": "debug_1754398903244_dyuu6pue8c"
+      }
+    },
+    {
+      "timestamp": "2025-08-05T13:01:47.421Z",
+      "level": "info",
+      "message": "OAuth Event: INIT",
+      "metadata": {
+        "sessionId": "debug_1754398903244_dyuu6pue8c",
+        "oauthEvent": "INIT",
+        "message": "Starting Google OAuth flow",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+        "isTauriApp": false,
+        "debugUrl": "http://localhost:3000/api/debug/sessions/debug_1754398903244_dyuu6pue8c/view"
+      }
+    },
+    {
+      "timestamp": "2025-08-05T13:01:47.422Z",
+      "level": "info",
+      "message": "OAuth Event: ENV_DETECT",
+      "metadata": {
+        "0": "B",
+        "1": "e",
+        "2": "g",
+        "3": "i",
+        "4": "n",
+        "5": "n",
+        "6": "i",
+        "7": "n",
+        "8": "g",
+        "9": " ",
+        "10": "e",
+        "11": "n",
+        "12": "v",
+        "13": "i",
+        "14": "r",
+        "15": "o",
+        "16": "n",
+        "17": "m",
+        "18": "e",
+        "19": "n",
+        "20": "t",
+        "21": " ",
+        "22": "d",
+        "23": "e",
+        "24": "t",
+        "25": "e",
+        "26": "c",
+        "27": "t",
+        "28": "i",
+        "29": "o",
+        "30": "n",
+        "sessionId": "debug_1754398903244_dyuu6pue8c",
+        "oauthEvent": "ENV_DETECT"
+      }
+    }
+  ],
+  "createdAt": "2025-08-05T13:01:45.482Z",
+  "lastActivity": "2025-08-05T13:01:45.482Z"
+}

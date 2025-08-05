@@ -20,6 +20,7 @@ import organizerRoutes from "./routes/organizer.js";
 import addressesRoutes from "./routes/addresses.js";
 import emailsRoutes from "./routes/emails.js";
 import filesRoutes from "./routes/files.js";
+import debugRoutes from "./routes/debug.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 
@@ -143,6 +144,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/oauth", oauthRoutes); // Use the new OAuth routes
 app.use("/api/auth/mobile", mobileAuthRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/user", profileRoutes); // Alias for admin client compatibility
 app.use("/api/events", eventsRoutes);
 app.use("/api/bookings", bookingsRoutes);
 app.use("/api/admin", adminRoutes);
@@ -152,6 +154,7 @@ app.use("/api/payments", paymentsRoutes);
 app.use("/api/webhooks", webhooksRoutes);
 app.use("/api/emails", emailsRoutes);
 app.use("/api/files", filesRoutes);
+app.use("/api/debug", debugRoutes);
 app.use("/api", addressesRoutes);
 
 // Public translation endpoints for client apps// Public translation endpoints for client apps

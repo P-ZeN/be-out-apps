@@ -305,6 +305,7 @@ const Onboarding = () => {
             }
 
             // Continue with profile update regardless of address success/failure
+            let profileUpdateSuccess = false;
             try {
                 const profileData = {
                     firstName: formData.firstName,
@@ -313,11 +314,22 @@ const Onboarding = () => {
                     dateOfBirth: formatDateForServer(formData.dateOfBirth),
                 };
 
-                await apiPost("/api/user/complete-onboarding", profileData);
-                console.log("Profile updated successfully");
+                console.log("Sending profile data to server:", profileData);
+                const profileResponse = await apiPost("/api/user/complete-onboarding", profileData);
+                console.log("Profile updated successfully:", profileResponse);
+                profileUpdateSuccess = true;
             } catch (profileError) {
                 console.error("Profile update failed:", profileError);
-                // Don't fail onboarding completely - user can update profile later
+                
+                // Check if this is a critical error that should stop onboarding
+                if (profileError.message && profileError.message.includes("401")) {
+                    throw new Error("Authentication expired. Please log in again.");
+                } else if (profileError.message && profileError.message.includes("400")) {
+                    throw new Error("Invalid profile data. Please check all required fields.");
+                } else {
+                    console.warn("Profile update failed but continuing onboarding - user can update profile later");
+                    // Don't fail onboarding completely for non-critical errors
+                }
             }
 
             // Update user state in AuthContext
@@ -330,10 +342,17 @@ const Onboarding = () => {
                 date_of_birth: formData.dateOfBirth,
             };
 
+            console.log("Updating user state with:", updatedUser);
             updateUser(updatedUser);
-            setSuccess(t("success.completed", { ns: "onboarding" }));
+            
+            const successMessage = profileUpdateSuccess 
+                ? t("success.completed", { ns: "onboarding" })
+                : "Onboarding completed with some non-critical issues. You can update your profile later.";
+            
+            setSuccess(successMessage);
 
             // Redirect to home after a brief delay
+            console.log("Onboarding completed successfully, redirecting to home...");
             setTimeout(() => {
                 navigate("/");
             }, 2000);
