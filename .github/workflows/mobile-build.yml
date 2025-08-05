@@ -1334,17 +1334,6 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Setup iOS Google Sign-In Configuration
-      run: |
-        echo "🔧 Setting up iOS Google Sign-In configuration..."
-        chmod +x scripts/setup-ios-config.sh
-        ./scripts/setup-ios-config.sh
-      env:
-        IOS_GOOGLE_API_KEY: ${{ secrets.IOS_GOOGLE_API_KEY }}
-        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
-        GOOGLE_STORAGE_BUCKET: ${{ secrets.GOOGLE_STORAGE_BUCKET }}
-        IOS_GOOGLE_APP_ID: ${{ secrets.IOS_GOOGLE_APP_ID }}
-
     - name: Build client
       run: npm run build:client
       env:
