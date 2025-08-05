@@ -5,7 +5,14 @@ on:
     workflows: ["Mobile App Build and Release"]
     types:
       - completed
+    branches:
+      - mobile-build
   workflow_dispatch:
+    inputs:
+      download_from_run:
+        description: 'Specific workflow run ID to download artifacts from (optional)'
+        required: false
+        type: string
 
 jobs:
   create-web-installer:
@@ -15,11 +22,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Debug Trigger Information
+      run: |
+        echo "🔍 Workflow triggered by: ${{ github.event_name }}"
+        if [ "${{ github.event_name }}" = "workflow_run" ]; then
+          echo "📋 Source workflow: ${{ github.event.workflow_run.name }}"
+          echo "📋 Source conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "📋 Source run ID: ${{ github.event.workflow_run.id }}"
+          echo "📋 Source head SHA: ${{ github.event.workflow_run.head_sha }}"
+        elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "📋 Manual trigger from: ${{ github.actor }}"
+          echo "📋 Target run ID: ${{ inputs.download_from_run }}"
+        fi
+
     - name: Download iOS Build Artifacts
       uses: actions/download-artifact@v4
       with:
         name: ios-build-artifacts
         path: ./ios-artifacts
+        run-id: ${{ github.event.workflow_run.id || inputs.download_from_run || github.run_id }}
       continue-on-error: true
 
     - name: Download Android Build Artifacts
@@ -27,7 +48,21 @@ jobs:
       with:
         name: android-apk
         path: ./android-artifacts
+        run-id: ${{ github.event.workflow_run.id || inputs.download_from_run || github.run_id }}
       continue-on-error: true
+
+    - name: List Available Artifacts (Debug)
+      if: always()
+      run: |
+        echo "🔍 Checking what artifacts were downloaded..."
+        echo "📁 iOS artifacts directory:"
+        ls -la ./ios-artifacts/ 2>/dev/null || echo "   Directory not found or empty"
+        echo "📁 Android artifacts directory:"
+        ls -la ./android-artifacts/ 2>/dev/null || echo "   Directory not found or empty"
+
+        echo ""
+        echo "🔍 Searching for mobile app files in all downloaded content..."
+        find . -name "*.ipa" -o -name "*.apk" -o -name "*.app" 2>/dev/null || echo "   No mobile app files found"
 
     - name: Create Mobile App Installation Page
       run: |
@@ -64,8 +99,21 @@ jobs:
         # Exit if no artifacts found
         if [ "$HAS_IOS" = false ] && [ "$HAS_ANDROID" = false ]; then
           echo "❌ No mobile app artifacts found"
-          exit 1
-        fi
+          echo "🔧 Creating a placeholder page instead..."
+
+          # Create a simple status page
+          mkdir -p web-installer
+          echo '<!DOCTYPE html>' > web-installer/index.html
+          echo '<html><head><meta charset="UTF-8"><title>BeOut Mobile App - No Builds Available</title></head>' >> web-installer/index.html
+          echo '<body style="font-family: system-ui; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center;">' >> web-installer/index.html
+          echo '<h1>📱 BeOut Mobile App</h1>' >> web-installer/index.html
+          echo '<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px;">' >> web-installer/index.html
+          echo '<h2>⚠️ No Builds Available</h2>' >> web-installer/index.html
+          echo '<p>No mobile app builds were found. Please check the GitHub Actions page for build status.</p>' >> web-installer/index.html
+          echo '</div></body></html>' >> web-installer/index.html
+          echo "✅ Created placeholder page"
+        else
+          echo "✅ Found mobile artifacts, proceeding with installer creation..."
 
         # Get repository name for URLs
         REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
@@ -120,7 +168,8 @@ jobs:
           "${{ github.run_number }}" \
           "${{ github.sha }}" \
           "${{ github.ref_name }}" \
-          "$BUILD_DATE"
+          "          "$BUILD_DATE"
+        fi"
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
