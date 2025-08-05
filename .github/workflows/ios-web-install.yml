@@ -14,6 +14,11 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   create-web-installer:
     runs-on: ubuntu-latest
@@ -35,16 +40,16 @@ jobs:
         elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
           echo "📋 Manual trigger from: ${{ github.actor }}"
           echo "📋 Target run ID: ${{ inputs.download_from_run }}"
-          
+
           # If no specific run ID provided, find the latest successful mobile build
           if [ -z "${{ inputs.download_from_run }}" ]; then
             echo "🔍 No specific run ID provided, searching for latest successful mobile build..."
-            
+
             # Use GitHub API to find the latest successful workflow run
             LATEST_RUN=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/actions/workflows/mobile-build.yml/runs?status=success&per_page=1" \
               | jq -r '.workflow_runs[0].id // empty')
-            
+
             if [ -n "$LATEST_RUN" ]; then
               echo "✅ Found latest successful mobile build: $LATEST_RUN"
               echo "FALLBACK_RUN_ID=$LATEST_RUN" >> $GITHUB_ENV
@@ -60,10 +65,10 @@ jobs:
         echo "   Workflow run ID: ${{ github.event.workflow_run.id }}"
         echo "   Manual input run ID: ${{ inputs.download_from_run }}"
         echo "   Fallback run ID: ${{ env.FALLBACK_RUN_ID }}"
-        
+
         FINAL_RUN_ID="${{ github.event.workflow_run.id || inputs.download_from_run || env.FALLBACK_RUN_ID }}"
         echo "   📋 Will attempt to download from run ID: $FINAL_RUN_ID"
-        
+
         if [ -z "$FINAL_RUN_ID" ]; then
           echo "   ⚠️ No run ID available - artifact download will likely fail"
         fi
