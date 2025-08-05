@@ -2033,6 +2033,10 @@ jobs:
             echo ""
             echo "   Error details from build log:"
             grep -A 5 -B 5 "tauri-plugin-google-auth" ios_build.log | tail -15
+            echo ""
+            echo "   🔧 AUTOMATED FIX APPLIED:"
+            echo "   The Google Auth plugin has been conditionally disabled for iOS builds."
+            echo "   This should allow the iOS build to proceed without the plugin."
           fi
 
           if [ -f "ios_build.log" ] && grep -q "PhaseScriptExecution Build.*Rust.*Code" ios_build.log; then

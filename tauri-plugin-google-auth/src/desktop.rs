@@ -1,11 +1,10 @@
-use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime};
 
 use crate::models::*;
 
-pub fn init<R: Runtime, C: DeserializeOwned>(
+pub fn init<R: Runtime>(
   app: &AppHandle<R>,
-  _api: PluginApi<R, C>,
+  _api: PluginApi<R>,
 ) -> crate::Result<GoogleAuth<R>> {
   Ok(GoogleAuth(app.clone()))
 }

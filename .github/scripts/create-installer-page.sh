@@ -134,6 +134,24 @@ cat > web-installer/index.html << 'EOF'
         <h1>📱 BeOut Mobile App</h1>
         <p>Install the latest development build of BeOut on your mobile device</p>
 
+        <div class="build-info">
+            <h2>📋 Build #${BUILD_NUMBER}</h2>
+            <p><strong>Commit:</strong> <code>${COMMIT_SHA}</code></p>
+            <p><strong>Branch:</strong> ${BRANCH_NAME}</p>
+            <p><strong>Build Date:</strong> ${BUILD_DATE}</p>
+EOF
+
+if [ "$HAS_IOS" = "true" ]; then
+    echo "            <p><strong>iOS IPA:</strong> ${IPA_NAME}</p>" >> web-installer/index.html
+fi
+
+if [ "$HAS_ANDROID" = "true" ]; then
+    echo "            <p><strong>Android APK:</strong> ${APK_NAME}</p>" >> web-installer/index.html
+fi
+
+cat >> web-installer/index.html << 'EOF'
+        </div>
+
         <div id="device-detection" class="device-detection">
             Detecting your device...
         </div>
@@ -225,24 +243,6 @@ EOF
 fi
 
 # Add build information footer
-cat >> web-installer/index.html << EOF
-
-        <div class="build-info">
-            <h3>📋 Build Information</h3>
-            <p><strong>Build Number:</strong> ${BUILD_NUMBER}</p>
-            <p><strong>Commit:</strong> <code>${COMMIT_SHA}</code></p>
-            <p><strong>Branch:</strong> ${BRANCH_NAME}</p>
-            <p><strong>Build Date:</strong> ${BUILD_DATE}</p>
-EOF
-
-if [ "$HAS_IOS" = "true" ]; then
-    echo "            <p><strong>iOS IPA:</strong> ${IPA_NAME}</p>" >> web-installer/index.html
-fi
-
-if [ "$HAS_ANDROID" = "true" ]; then
-    echo "            <p><strong>Android APK:</strong> ${APK_NAME}</p>" >> web-installer/index.html
-fi
-
 cat >> web-installer/index.html << 'EOF'
         </div>
 
