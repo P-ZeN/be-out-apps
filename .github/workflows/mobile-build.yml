@@ -1179,6 +1179,14 @@ jobs:
             if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision ]; then
               PROFILE_SIZE=$(ls -l ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision | awk '{print $5}')
               echo "✅ Distribution provisioning profile installed (size: $PROFILE_SIZE bytes)"
+              
+              # ALSO extract distribution profile UUID for IPA export
+              DIST_PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+              DIST_PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision 2>/dev/null | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+              echo "📋 Distribution Profile UUID: $DIST_PROFILE_UUID"
+              echo "📋 Distribution Profile Name: $DIST_PROFILE_NAME"
+              echo "DIST_PROFILE_UUID=$DIST_PROFILE_UUID" >> $GITHUB_ENV
+              echo "DIST_PROFILE_NAME=$DIST_PROFILE_NAME" >> $GITHUB_ENV
             else
               echo "❌ Distribution provisioning profile file was not created"
             fi
@@ -1930,13 +1938,13 @@ jobs:
           TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
 
           # Create plist file with proper escaping
-          # Use "development" method for development profile with Associated Domains
+          # Use "app-store" method with distribution profile for Associated Domains
           echo '<?xml version="1.0" encoding="UTF-8"?>' > ExportOptions.plist
           echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> ExportOptions.plist
           echo '<plist version="1.0">' >> ExportOptions.plist
           echo '<dict>' >> ExportOptions.plist
           echo '    <key>method</key>' >> ExportOptions.plist
-          echo '    <string>development</string>' >> ExportOptions.plist
+          echo '    <string>app-store</string>' >> ExportOptions.plist
           echo '    <key>teamID</key>' >> ExportOptions.plist
           echo "    <string>$TEAM_ID</string>" >> ExportOptions.plist
           echo '    <key>compileBitcode</key>' >> ExportOptions.plist
@@ -1947,6 +1955,29 @@ jobs:
           echo '    <string>&lt;none&gt;</string>' >> ExportOptions.plist
           echo '    <key>signingStyle</key>' >> ExportOptions.plist
           echo '    <string>manual</string>' >> ExportOptions.plist
+          
+          # Use DISTRIBUTION profile for export (has Associated Domains)
+          if [ -n "${{ env.DIST_PROFILE_UUID }}" ]; then
+            echo '    <key>provisioningProfiles</key>' >> ExportOptions.plist
+            echo '    <dict>' >> ExportOptions.plist
+            echo '        <key>com.beout.app</key>' >> ExportOptions.plist
+            echo "        <string>${{ env.DIST_PROFILE_UUID }}</string>" >> ExportOptions.plist
+            echo '    </dict>' >> ExportOptions.plist
+            echo "📋 Using DISTRIBUTION profile for app-store export: ${{ env.DIST_PROFILE_UUID }}"
+          else
+            echo "⚠️ No distribution profile found, cannot use app-store method"
+            echo "📋 Falling back to development method with development profile"
+            # Change method to development if no distribution profile
+            sed -i 's/<string>app-store<\/string>/<string>development<\/string>/' ExportOptions.plist
+            if [ -n "${{ env.PROFILE_UUID }}" ]; then
+              echo '    <key>provisioningProfiles</key>' >> ExportOptions.plist
+              echo '    <dict>' >> ExportOptions.plist
+              echo '        <key>com.beout.app</key>' >> ExportOptions.plist
+              echo "        <string>${{ env.PROFILE_UUID }}</string>" >> ExportOptions.plist
+              echo '    </dict>' >> ExportOptions.plist
+              echo "📋 Using development profile as fallback: ${{ env.PROFILE_UUID }}"
+            fi
+          fi
           echo '</dict>' >> ExportOptions.plist
           echo '</plist>' >> ExportOptions.plist
           
