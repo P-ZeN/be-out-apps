@@ -73,7 +73,7 @@ jobs:
         
         # Create manifest.plist for iOS over-the-air installation (only if IPA exists)
         if [ "$HAS_IOS" = true ]; then
-          cat > web-installer/manifest.plist << EOF
+          cat > web-installer/manifest.plist << 'MANIFEST_EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -87,7 +87,7 @@ jobs:
                     <key>kind</key>
                     <string>software-package</string>
                     <key>url</key>
-                    <string>${GITHUB_PAGES_URL}/mobile-installer/${IPA_NAME}</string>
+                    <string>GITHUB_PAGES_URL_PLACEHOLDER/mobile-installer/IPA_NAME_PLACEHOLDER</string>
                 </dict>
             </array>
             <key>metadata</key>
@@ -105,11 +105,15 @@ jobs:
     </array>
 </dict>
 </plist>
-EOF
+MANIFEST_EOF
+          
+          # Replace placeholders with actual values
+          sed -i "s|GITHUB_PAGES_URL_PLACEHOLDER|${GITHUB_PAGES_URL}|g" web-installer/manifest.plist
+          sed -i "s|IPA_NAME_PLACEHOLDER|${IPA_NAME}|g" web-installer/manifest.plist
         fi
         
         # Create HTML installation page with dynamic content
-        cat > web-installer/index.html << EOF
+        cat > web-installer/index.html << 'HTML_EOF'
 <!DOCTYPE html>
 <html>
 <head>
@@ -238,11 +242,11 @@ EOF
         <div id="device-detection" class="device-detection">
             Detecting your device...
         </div>
-EOF
+HTML_EOF
 
         # Add iOS section if IPA exists
         if [ "$HAS_IOS" = true ]; then
-          cat >> web-installer/index.html << EOF
+          cat >> web-installer/index.html << 'IOS_EOF'
         
         <div class="platform-section">
             <div class="platform-icon">🍎</div>
@@ -257,7 +261,7 @@ EOF
                 </ul>
             </div>
             
-            <a href="itms-services://?action=download-manifest&url=${GITHUB_PAGES_URL}/mobile-installer/manifest.plist" class="install-button ios-button">
+            <a href="itms-services://?action=download-manifest&url=GITHUB_PAGES_URL_PLACEHOLDER/mobile-installer/manifest.plist" class="install-button ios-button">
                 📥 Install iOS App
             </a>
             
@@ -281,12 +285,15 @@ EOF
                 <strong>6.</strong> The app should now work on your home screen
             </div>
         </div>
-EOF
+IOS_EOF
+          
+          # Replace placeholder with actual URL
+          sed -i "s|GITHUB_PAGES_URL_PLACEHOLDER|${GITHUB_PAGES_URL}|g" web-installer/index.html
         fi
 
         # Add Android section if APK exists
         if [ "$HAS_ANDROID" = true ]; then
-          cat >> web-installer/index.html << EOF
+          cat >> web-installer/index.html << 'ANDROID_EOF'
         
         <div class="platform-section">
             <div class="platform-icon">🤖</div>
@@ -301,7 +308,7 @@ EOF
                 </ul>
             </div>
             
-            <a href="${GITHUB_PAGES_URL}/mobile-installer/${APK_NAME}" class="install-button android-button" download>
+            <a href="GITHUB_PAGES_URL_PLACEHOLDER/mobile-installer/APK_NAME_PLACEHOLDER" class="install-button android-button" download>
                 📥 Download Android APK
             </a>
             
@@ -322,19 +329,30 @@ EOF
                 <strong>5.</strong> The app will appear in your app drawer once installed
             </div>
         </div>
-EOF
+ANDROID_EOF
+          
+          # Replace placeholders with actual values
+          sed -i "s|GITHUB_PAGES_URL_PLACEHOLDER|${GITHUB_PAGES_URL}|g" web-installer/index.html
+          sed -i "s|APK_NAME_PLACEHOLDER|${APK_NAME}|g" web-installer/index.html
         fi
 
         # Add footer
-        cat >> web-installer/index.html << EOF
+        cat >> web-installer/index.html << 'FOOTER_EOF'
         
         <div class="build-info">
             <h3>📋 Build Information</h3>
-            <p><strong>Build Number:</strong> ${{ github.run_number }}</p>
-            <p><strong>Commit:</strong> <code>${{ github.sha }}</code></p>
-            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
-            <p><strong>Build Date:</strong> $(date -u +"%Y-%m-%d %H:%M:%S UTC")</p>
-EOF
+            <p><strong>Build Number:</strong> BUILD_NUMBER_PLACEHOLDER</p>
+            <p><strong>Commit:</strong> <code>COMMIT_SHA_PLACEHOLDER</code></p>
+            <p><strong>Branch:</strong> BRANCH_NAME_PLACEHOLDER</p>
+            <p><strong>Build Date:</strong> BUILD_DATE_PLACEHOLDER</p>
+FOOTER_EOF
+
+        # Replace placeholders with actual values
+        BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        sed -i "s|BUILD_NUMBER_PLACEHOLDER|${{ github.run_number }}|g" web-installer/index.html
+        sed -i "s|COMMIT_SHA_PLACEHOLDER|${{ github.sha }}|g" web-installer/index.html
+        sed -i "s|BRANCH_NAME_PLACEHOLDER|${{ github.ref_name }}|g" web-installer/index.html
+        sed -i "s|BUILD_DATE_PLACEHOLDER|${BUILD_DATE}|g" web-installer/index.html
 
         if [ "$HAS_IOS" = true ]; then
           echo "            <p><strong>iOS IPA:</strong> ${IPA_NAME}</p>" >> web-installer/index.html
@@ -344,7 +362,7 @@ EOF
           echo "            <p><strong>Android APK:</strong> ${APK_NAME}</p>" >> web-installer/index.html
         fi
 
-        cat >> web-installer/index.html << EOF
+        cat >> web-installer/index.html << 'FOOTER_END_EOF'
         </div>
         
         <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
@@ -360,7 +378,7 @@ EOF
     </div>
 </body>
 </html>
-EOF
+FOOTER_END_EOF
         
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
