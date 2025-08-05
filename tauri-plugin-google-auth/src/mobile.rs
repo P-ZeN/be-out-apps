@@ -1,4 +1,3 @@
-use serde::de::DeserializeOwned;
 use tauri::{
   plugin::{PluginApi, PluginHandle},
   AppHandle, Runtime,
@@ -10,9 +9,9 @@ use crate::models::*;
 tauri::ios_plugin_binding!(init_plugin_google_auth);
 
 // initializes the Kotlin or Swift plugin classes
-pub fn init<R: Runtime, C: DeserializeOwned>(
+pub fn init<R: Runtime>(
   _app: &AppHandle<R>,
-  api: PluginApi<R, C>,
+  api: PluginApi<R>,
 ) -> crate::Result<GoogleAuth<R>> {
   #[cfg(target_os = "android")]
   let handle = api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin")?;

@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "tauri-plugin-google-auth",
     platforms: [
-        .iOS(.v15),
+        .iOS(.v13),
         .macOS(.v10_15)
     ],
     products: [
