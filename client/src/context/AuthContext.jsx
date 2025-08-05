@@ -95,6 +95,7 @@ export const AuthProvider = ({ children }) => {
         try {
             setLoading(true);
             console.log("[AUTH_CONTEXT] Starting native login...");
+            console.log("[AUTH_CONTEXT] Token:", !!token, "UserData:", !!userData);
 
             let result;
 
@@ -103,8 +104,18 @@ export const AuthProvider = ({ children }) => {
                 console.log("[AUTH_CONTEXT] Using provided token and user data");
                 localStorage.setItem("token", token);
                 localStorage.setItem("userProfile", JSON.stringify(userData));
-                setUser(userData);
-                result = { user: userData, token };
+                
+                // Get full user profile to check onboarding status
+                try {
+                    const fullUserData = await userService.getProfile();
+                    console.log("[AUTH_CONTEXT] Full user profile retrieved:", fullUserData);
+                    setUser(fullUserData);
+                    result = { user: fullUserData, token };
+                } catch (profileError) {
+                    console.warn("[AUTH_CONTEXT] Could not get full profile, using provided data:", profileError);
+                    setUser(userData);
+                    result = { user: userData, token };
+                }
             } else {
                 // Fallback to native auth service
                 console.log("[AUTH_CONTEXT] Using native auth service");
@@ -113,10 +124,18 @@ export const AuthProvider = ({ children }) => {
             }
 
             console.log("[AUTH_CONTEXT] Native login successful");
+            console.log("[AUTH_CONTEXT] User onboarding complete:", result.user.onboarding_complete);
 
-            // Check if onboarding is complete
-            if (!result.user.onboarding_complete) {
+            // Check if onboarding is complete - navigate to onboarding if not
+            if (result.user.onboarding_complete === false || result.user.onboarding_complete === undefined) {
+                console.log("[AUTH_CONTEXT] Redirecting to onboarding");
                 navigate("/onboarding");
+            } else {
+                console.log("[AUTH_CONTEXT] User already onboarded, staying on current page or going to home");
+                // Only navigate to home if we're on login page
+                if (window.location.pathname === '/login') {
+                    navigate("/");
+                }
             }
 
             return result;

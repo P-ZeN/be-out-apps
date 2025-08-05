@@ -11,7 +11,7 @@ class RemoteLoggerService {
         this.deviceInfo = this.getDeviceInfo();
         this.logQueue = [];
         this.isFlushingLogs = false;
-        
+
         // Initialize logging
         this.init();
     }
@@ -24,7 +24,7 @@ class RemoteLoggerService {
         const userAgent = navigator.userAgent || 'Unknown';
         const platform = navigator.platform || 'Unknown';
         const isTauri = areTauriApisAvailable();
-        
+
         return {
             userAgent,
             platform,
@@ -127,7 +127,7 @@ class RemoteLoggerService {
                 max-height: 200px;
                 overflow-y: auto;
             `;
-            
+
             errorDiv.innerHTML = `
                 <div style="font-weight: bold; margin-bottom: 8px;">DEBUG ERROR (${new Date().toLocaleTimeString()})</div>
                 <div style="margin-bottom: 8px;">${message}</div>

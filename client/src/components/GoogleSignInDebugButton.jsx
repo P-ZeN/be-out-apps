@@ -17,7 +17,7 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
         const timestamp = new Date().toLocaleTimeString();
         const info = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
         setDebugInfo(prev => [...prev, info]);
-        
+
         // Send to remote logger
         remoteLogger.googleAuthStep(`DEBUG_${level.toUpperCase()}`, message);
     };
@@ -25,14 +25,14 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
     const handleGoogleSignIn = async () => {
         setLoading(true);
         setDebugInfo([]);
-        
+
         try {
             addDebugInfo('Starting Google Sign-In process');
-            
+
             // Check environment
             const isTauri = areTauriApisAvailable();
             addDebugInfo(`Environment: ${isTauri ? 'Tauri' : 'Web'}`);
-            
+
             if (!isTauri) {
                 addDebugInfo('Not in Tauri environment - cannot test mobile plugin', 'error');
                 onError('This test component is for Tauri mobile apps only');
@@ -46,7 +46,7 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
                 onError('Tauri APIs not available');
                 return;
             }
-            
+
             addDebugInfo('Tauri APIs available, proceeding with plugin call');
 
             // Generate nonce
@@ -80,7 +80,7 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
 
             if (result.success) {
                 addDebugInfo('Plugin returned success, processing authentication...');
-                
+
                 if (result.idToken) {
                     addDebugInfo('ID token available, authenticating with backend...');
                     try {
@@ -89,7 +89,7 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
                             hasToken: !!authResult.token,
                             userComplete: authResult.user?.onboarding_complete
                         })}`);
-                        
+
                         await nativeLogin(authResult.token, authResult.user);
                         addDebugInfo('Native login completed successfully');
                         onSuccess(authResult);
@@ -106,7 +106,7 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
                         familyName: result.familyName,
                         profilePictureUri: result.photoUrl
                     });
-                    
+
                     await nativeLogin(authResult.token, authResult.user);
                     addDebugInfo('Profile-based authentication completed successfully');
                     onSuccess(authResult);
@@ -134,7 +134,7 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
             <Typography variant="h6" gutterBottom>
                 Google Sign-In Debug Test
             </Typography>
-            
+
             <Button
                 variant="contained"
                 startIcon={<Google />}
@@ -147,11 +147,11 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
             </Button>
 
             {debugInfo.length > 0 && (
-                <Box sx={{ 
-                    bgcolor: '#f5f5f5', 
-                    p: 2, 
-                    borderRadius: 1, 
-                    maxHeight: 300, 
+                <Box sx={{
+                    bgcolor: '#f5f5f5',
+                    p: 2,
+                    borderRadius: 1,
+                    maxHeight: 300,
                     overflow: 'auto',
                     fontFamily: 'monospace',
                     fontSize: '0.85rem'
@@ -160,10 +160,10 @@ const GoogleSignInDebugButton = ({ onSuccess, onError, disabled }) => {
                         Debug Log:
                     </Typography>
                     {debugInfo.map((info, index) => (
-                        <Box 
-                            key={index} 
-                            sx={{ 
-                                color: info.includes('ERROR') ? 'red' : 
+                        <Box
+                            key={index}
+                            sx={{
+                                color: info.includes('ERROR') ? 'red' :
                                        info.includes('WARN') ? 'orange' : 'black',
                                 mb: 0.5
                             }}
