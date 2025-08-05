@@ -1179,7 +1179,7 @@ jobs:
             if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision ]; then
               PROFILE_SIZE=$(ls -l ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision | awk '{print $5}')
               echo "✅ Distribution provisioning profile installed (size: $PROFILE_SIZE bytes)"
-              
+
               # ALSO extract distribution profile UUID for IPA export
               DIST_PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
               DIST_PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/distribution.mobileprovision 2>/dev/null | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
@@ -1192,6 +1192,30 @@ jobs:
             fi
           else
             echo "⚠️  Distribution provisioning profile not found in secrets"
+          fi
+
+          # Install ad hoc provisioning profile for test builds
+          if [ -n "${{ secrets.IOS_AD_HOC_PROVISIONING_PROFILE }}" ]; then
+            echo "🧪 Installing ad hoc provisioning profile..."
+            echo "${{ secrets.IOS_AD_HOC_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/adhoc.mobileprovision
+
+            # Verify the profile was installed correctly
+            if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/adhoc.mobileprovision ]; then
+              PROFILE_SIZE=$(ls -l ~/Library/MobileDevice/Provisioning\ Profiles/adhoc.mobileprovision | awk '{print $5}')
+              echo "✅ Ad hoc provisioning profile installed (size: $PROFILE_SIZE bytes)"
+
+              # Extract ad hoc profile UUID for IPA export
+              ADHOC_PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/adhoc.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+              ADHOC_PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/adhoc.mobileprovision 2>/dev/null | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+              echo "📋 Ad Hoc Profile UUID: $ADHOC_PROFILE_UUID"
+              echo "📋 Ad Hoc Profile Name: $ADHOC_PROFILE_NAME"
+              echo "ADHOC_PROFILE_UUID=$ADHOC_PROFILE_UUID" >> $GITHUB_ENV
+              echo "ADHOC_PROFILE_NAME=$ADHOC_PROFILE_NAME" >> $GITHUB_ENV
+            else
+              echo "❌ Ad hoc provisioning profile file was not created"
+            fi
+          else
+            echo "⚠️  Ad hoc provisioning profile not found in secrets"
           fi
 
           # Set partition list to avoid permission issues
@@ -1938,13 +1962,11 @@ jobs:
           TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
 
           # Create plist file with proper escaping
-          # Use "app-store" method with distribution profile for Associated Domains
+          # Priority: ad hoc -> app-store (distribution) -> development
           echo '<?xml version="1.0" encoding="UTF-8"?>' > ExportOptions.plist
           echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> ExportOptions.plist
           echo '<plist version="1.0">' >> ExportOptions.plist
           echo '<dict>' >> ExportOptions.plist
-          echo '    <key>method</key>' >> ExportOptions.plist
-          echo '    <string>app-store</string>' >> ExportOptions.plist
           echo '    <key>teamID</key>' >> ExportOptions.plist
           echo "    <string>$TEAM_ID</string>" >> ExportOptions.plist
           echo '    <key>compileBitcode</key>' >> ExportOptions.plist
@@ -1955,9 +1977,20 @@ jobs:
           echo '    <string>&lt;none&gt;</string>' >> ExportOptions.plist
           echo '    <key>signingStyle</key>' >> ExportOptions.plist
           echo '    <string>manual</string>' >> ExportOptions.plist
-          
-          # Use DISTRIBUTION profile for export (has Associated Domains)
-          if [ -n "${{ env.DIST_PROFILE_UUID }}" ]; then
+
+          # Decide export method and provisioning profile based on availability
+          if [ -n "${{ env.ADHOC_PROFILE_UUID }}" ]; then
+            echo '    <key>method</key>' >> ExportOptions.plist
+            echo '    <string>ad-hoc</string>' >> ExportOptions.plist
+            echo '    <key>provisioningProfiles</key>' >> ExportOptions.plist
+            echo '    <dict>' >> ExportOptions.plist
+            echo '        <key>com.beout.app</key>' >> ExportOptions.plist
+            echo "        <string>${{ env.ADHOC_PROFILE_UUID }}</string>" >> ExportOptions.plist
+            echo '    </dict>' >> ExportOptions.plist
+            echo "📋 Using AD HOC profile for ad-hoc export: ${{ env.ADHOC_PROFILE_UUID }}"
+          elif [ -n "${{ env.DIST_PROFILE_UUID }}" ]; then
+            echo '    <key>method</key>' >> ExportOptions.plist
+            echo '    <string>app-store</string>' >> ExportOptions.plist
             echo '    <key>provisioningProfiles</key>' >> ExportOptions.plist
             echo '    <dict>' >> ExportOptions.plist
             echo '        <key>com.beout.app</key>' >> ExportOptions.plist
@@ -1965,10 +1998,9 @@ jobs:
             echo '    </dict>' >> ExportOptions.plist
             echo "📋 Using DISTRIBUTION profile for app-store export: ${{ env.DIST_PROFILE_UUID }}"
           else
-            echo "⚠️ No distribution profile found, cannot use app-store method"
-            echo "📋 Falling back to development method with development profile"
-            # Change method to development if no distribution profile
-            sed -i 's/<string>app-store<\/string>/<string>development<\/string>/' ExportOptions.plist
+            echo '    <key>method</key>' >> ExportOptions.plist
+            echo '    <string>development</string>' >> ExportOptions.plist
+            echo "⚠️ No ad hoc or distribution profile found, falling back to development method"
             if [ -n "${{ env.PROFILE_UUID }}" ]; then
               echo '    <key>provisioningProfiles</key>' >> ExportOptions.plist
               echo '    <dict>' >> ExportOptions.plist
@@ -1980,7 +2012,7 @@ jobs:
           fi
           echo '</dict>' >> ExportOptions.plist
           echo '</plist>' >> ExportOptions.plist
-          
+
           echo "📋 Created ExportOptions.plist:"
           cat ExportOptions.plist
 
@@ -1992,20 +2024,30 @@ jobs:
           PROFILE_COUNT=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null | wc -l || echo 0)
           IDENTITY_COUNT=$(security find-identity -v -p codesigning 2>/dev/null | wc -l || echo 0)
           echo "📋 Found $PROFILE_COUNT profiles and $IDENTITY_COUNT identities"
-          
+
           # Quick check for distribution profiles with Associated Domains
           DIST_WITH_DOMAINS=0
+          ADHOC_WITH_DOMAINS=0
           for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
             if [ -f "$profile" ]; then
-              if security cms -D -i "$profile" 2>/dev/null | grep -q "<key>ProvisionedDevices</key>"; then
-                continue  # Skip development profiles
-              fi
-              if security cms -D -i "$profile" 2>/dev/null | grep -q "com.apple.developer.associated-domains"; then
-                DIST_WITH_DOMAINS=$((DIST_WITH_DOMAINS + 1))
+              # Check if it has Associated Domains capability
+              HAS_DOMAINS=$(security cms -D -i "$profile" 2>/dev/null | grep -c "com.apple.developer.associated-domains" || echo 0)
+              
+              if [ "$HAS_DOMAINS" -gt 0 ]; then
+                # Check if it's ad hoc (has ProvisionedDevices but no get-task-allow)
+                if security cms -D -i "$profile" 2>/dev/null | grep -q "<key>ProvisionedDevices</key>"; then
+                  if security cms -D -i "$profile" 2>/dev/null | grep -q "<false/>"; then
+                    ADHOC_WITH_DOMAINS=$((ADHOC_WITH_DOMAINS + 1))
+                  fi
+                else
+                  # No ProvisionedDevices = distribution profile
+                  DIST_WITH_DOMAINS=$((DIST_WITH_DOMAINS + 1))
+                fi
               fi
             fi
           done
-          echo "📋 Distribution profiles with Associated Domains: $DIST_WITH_DOMAINS"          # Try to export IPA
+          echo "📋 Distribution profiles with Associated Domains: $DIST_WITH_DOMAINS"
+          echo "📋 Ad Hoc profiles with Associated Domains: $ADHOC_WITH_DOMAINS"          # Try to export IPA
           echo "🚀 Attempting to export IPA..."
           if xcodebuild -exportArchive \
             -archivePath "$XCARCHIVE" \
