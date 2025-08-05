@@ -2032,7 +2032,7 @@ jobs:
             if [ -f "$profile" ]; then
               # Check if it has Associated Domains capability
               HAS_DOMAINS=$(security cms -D -i "$profile" 2>/dev/null | grep -c "com.apple.developer.associated-domains" || echo 0)
-              
+
               if [ "$HAS_DOMAINS" -gt 0 ]; then
                 # Check if it's ad hoc (has ProvisionedDevices but no get-task-allow)
                 if security cms -D -i "$profile" 2>/dev/null | grep -q "<key>ProvisionedDevices</key>"; then
