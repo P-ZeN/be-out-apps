@@ -170,7 +170,7 @@ const Login = () => {
                                     // Process the token with our backend
                                     const authResult = await authService.loginWithGoogleMobile(result.user.idToken);
                                     if (authResult.token) {
-                                        nativeLogin(authResult.token, authResult.user);
+                                        await nativeLogin(authResult.token, authResult.user);
                                         setMessage(t("auth:login.success"));
                                         resolve();
                                     } else {
@@ -254,7 +254,7 @@ const Login = () => {
                         if (result.idToken) {
                             // If we have an ID token, use the normal flow
                             const response = await authService.loginWithGoogleMobile(result.idToken);
-                            nativeLogin(response.token, response.user);
+                            await nativeLogin(response.token, response.user);
                         } else {
                             // For native Android sign-in, send profile data directly
                             const response = await authService.loginWithGoogleProfileMobile({
@@ -264,7 +264,7 @@ const Login = () => {
                                 familyName: result.familyName,
                                 profilePictureUri: result.profilePictureUri
                             });
-                            nativeLogin(response.token, response.user);
+                            await nativeLogin(response.token, response.user);
                         }
 
                         setMessage(t("auth:login.success"));

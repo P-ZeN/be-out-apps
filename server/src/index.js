@@ -143,6 +143,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/oauth", oauthRoutes); // Use the new OAuth routes
 app.use("/api/auth/mobile", mobileAuthRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/user", profileRoutes); // Alias for admin client compatibility
 app.use("/api/events", eventsRoutes);
 app.use("/api/bookings", bookingsRoutes);
 app.use("/api/admin", adminRoutes);
