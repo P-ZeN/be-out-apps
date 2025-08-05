@@ -1326,7 +1326,7 @@ jobs:
         fi
 
         echo "Verifying Tauri CLI installation..."
-        tauri --version || echo "Failed to get Tauri version"
+        tauri --version || echo "Failed to get Tauri version "
 
         echo "Installing Tauri CLI locally as well..."
         npm install @tauri-apps/cli@latest
