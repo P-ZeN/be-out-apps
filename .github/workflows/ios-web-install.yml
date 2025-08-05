@@ -17,7 +17,9 @@ on:
 jobs:
   create-web-installer:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
 
     steps:
     - uses: actions/checkout@v4
@@ -33,6 +35,37 @@ jobs:
         elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
           echo "📋 Manual trigger from: ${{ github.actor }}"
           echo "📋 Target run ID: ${{ inputs.download_from_run }}"
+          
+          # If no specific run ID provided, find the latest successful mobile build
+          if [ -z "${{ inputs.download_from_run }}" ]; then
+            echo "🔍 No specific run ID provided, searching for latest successful mobile build..."
+            
+            # Use GitHub API to find the latest successful workflow run
+            LATEST_RUN=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/mobile-build.yml/runs?status=success&per_page=1" \
+              | jq -r '.workflow_runs[0].id // empty')
+            
+            if [ -n "$LATEST_RUN" ]; then
+              echo "✅ Found latest successful mobile build: $LATEST_RUN"
+              echo "FALLBACK_RUN_ID=$LATEST_RUN" >> $GITHUB_ENV
+            else
+              echo "❌ No successful mobile builds found"
+            fi
+          fi
+        fi
+
+    - name: Show Download Configuration
+      run: |
+        echo "🔍 Artifact download configuration:"
+        echo "   Workflow run ID: ${{ github.event.workflow_run.id }}"
+        echo "   Manual input run ID: ${{ inputs.download_from_run }}"
+        echo "   Fallback run ID: ${{ env.FALLBACK_RUN_ID }}"
+        
+        FINAL_RUN_ID="${{ github.event.workflow_run.id || inputs.download_from_run || env.FALLBACK_RUN_ID }}"
+        echo "   📋 Will attempt to download from run ID: $FINAL_RUN_ID"
+        
+        if [ -z "$FINAL_RUN_ID" ]; then
+          echo "   ⚠️ No run ID available - artifact download will likely fail"
         fi
 
     - name: Download iOS Build Artifacts
@@ -40,7 +73,8 @@ jobs:
       with:
         name: ios-build-artifacts
         path: ./ios-artifacts
-        run-id: ${{ github.event.workflow_run.id || inputs.download_from_run || github.run_id }}
+        run-id: ${{ github.event.workflow_run.id || inputs.download_from_run || env.FALLBACK_RUN_ID }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
     - name: Download Android Build Artifacts
@@ -48,7 +82,8 @@ jobs:
       with:
         name: android-apk
         path: ./android-artifacts
-        run-id: ${{ github.event.workflow_run.id || inputs.download_from_run || github.run_id }}
+        run-id: ${{ github.event.workflow_run.id || inputs.download_from_run || env.FALLBACK_RUN_ID }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
     - name: List Available Artifacts (Debug)
@@ -168,8 +203,8 @@ jobs:
           "${{ github.run_number }}" \
           "${{ github.sha }}" \
           "${{ github.ref_name }}" \
-          "          "$BUILD_DATE"
-        fi"
+          "$BUILD_DATE"
+        fi
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
