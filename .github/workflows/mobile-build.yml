@@ -293,7 +293,7 @@ jobs:
     - name: Generate App Icons
       working-directory: ./client
       run: |
-        echo "Generating app icons for mobile platforms..."
+        echo "Generating app icons for mobile platformsss..."
 
         # Check if the icon file exists
         ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
