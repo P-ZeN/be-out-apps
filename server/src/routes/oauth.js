@@ -64,6 +64,7 @@ router.post("/google/mobile-callback", async (req, res) => {
                 fullName: user.full_name,
                 profilePictureUrl: user.profile_picture_url,
                 roles: user.roles,
+                onboarding_complete: user.onboarding_complete || false,
             },
         });
 
@@ -146,6 +147,7 @@ router.post("/google/mobile-profile-callback", async (req, res) => {
                 lastName: userWithProfile.last_name,
                 profilePictureUrl: userWithProfile.profile_picture,
                 role: userWithProfile.role,
+                onboarding_complete: userWithProfile.onboarding_complete || false,
             },
         });
 

@@ -449,13 +449,13 @@ jobs:
           else
             echo "❌ Failed to generate icons with npx tauri"
             echo "Trying alternative methods..."
-            
+
             # Try with cargo tauri
             if command -v cargo >/dev/null 2>&1; then
               echo "Trying with cargo tauri icon..."
               cargo tauri icon "$ICON_FILE" --verbose || echo "cargo tauri icon also failed"
             fi
-            
+
             # Try with global tauri command
             if command -v tauri >/dev/null 2>&1; then
               echo "Trying with global tauri command..."
@@ -823,22 +823,22 @@ jobs:
       working-directory: ./client
       run: |
         echo "🔍 Final verification of icons before Android build..."
-        
+
         # Check if icons are in place
         echo "=== Current icon files ==="
         find src-tauri/icons -name "*.png" -o -name "*.ico" | head -15
-        
+
         # Check for custom icon
         if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
           echo "❌ Custom icon source file missing!"
         fi
-        
+
         # Check for generated Android icons
         echo "=== Android-specific generated icons ==="
         find src-tauri/icons -name "android-icon-*.png" | head -10
-        
+
         # If Android project exists, check for icons there too
         if [ -d "src-tauri/gen/android" ]; then
           echo "=== Icons in Android project ==="
@@ -1334,6 +1334,17 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Setup iOS Google Sign-In Configuration
+      run: |
+        echo "🔧 Setting up iOS Google Sign-In configuration..."
+        chmod +x scripts/setup-ios-config.sh
+        ./scripts/setup-ios-config.sh
+      env:
+        IOS_GOOGLE_API_KEY: ${{ secrets.IOS_GOOGLE_API_KEY }}
+        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
+        GOOGLE_STORAGE_BUCKET: ${{ secrets.GOOGLE_STORAGE_BUCKET }}
+        IOS_GOOGLE_APP_ID: ${{ secrets.IOS_GOOGLE_APP_ID }}
+
     - name: Build client
       run: npm run build:client
       env:
@@ -1464,13 +1475,13 @@ jobs:
           else
             echo "❌ Failed to generate icons with npx tauri"
             echo "Trying alternative methods..."
-            
+
             # Try with cargo tauri
             if command -v cargo >/dev/null 2>&1; then
               echo "Trying with cargo tauri icon..."
               cargo tauri icon "$ICON_FILE" --verbose || echo "cargo tauri icon also failed"
             fi
-            
+
             # Try with global tauri command
             if command -v tauri >/dev/null 2>&1; then
               echo "Trying with global tauri command..."
@@ -1492,23 +1503,23 @@ jobs:
       working-directory: ./client
       run: |
         echo "🔍 Final verification of icons before iOS build..."
-        
+
         # Check if icons are in place
         echo "=== Current icon files ==="
         find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
-        
+
         # Check for custom icon
         if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
           echo "❌ Custom icon source file missing!"
         fi
-        
+
         # Check for generated iOS icons
         echo "=== iOS-specific generated icons ==="
         find src-tauri/icons -name "*.icns" | head -10
         ls -la src-tauri/icons/ios/ 2>/dev/null || echo "No iOS icons directory"
-        
+
         # If iOS/Apple project exists, check for icons there too
         if [ -d "src-tauri/gen/ios" ]; then
           echo "=== Icons in iOS project ==="

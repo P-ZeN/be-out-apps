@@ -46,7 +46,7 @@ router.post("/logs", async (req, res) => {
         // Write to file for persistence
         const logFileName = `${sessionId}.json`;
         const logFilePath = path.join(LOG_DIR, logFileName);
-        
+
         try {
             await fs.writeFile(logFilePath, JSON.stringify({
                 sessionId,
@@ -73,10 +73,10 @@ router.post("/logs", async (req, res) => {
             console.log('=== END MOBILE DEBUG ERROR ===\n');
         }
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             received: logs.length,
-            sessionId 
+            sessionId
         });
 
     } catch (error) {
@@ -159,12 +159,12 @@ router.get("/sessions/:sessionId/view", (req, res) => {
             <p><strong>Last Activity:</strong> ${session.lastActivity}</p>
             <p><strong>Total Logs:</strong> ${session.logs.length}</p>
         </div>
-        
+
         ${session.logs.map(log => `
             <div class="log-entry log-${log.level}">
                 <div class="timestamp">[${log.timestamp}] ${log.level.toUpperCase()}</div>
                 <div>${log.message}</div>
-                ${log.metadata && Object.keys(log.metadata).length > 2 ? 
+                ${log.metadata && Object.keys(log.metadata).length > 2 ?
                     `<div class="metadata">${JSON.stringify(log.metadata, null, 2)}</div>` : ''}
             </div>
         `).join('')}
@@ -179,7 +179,7 @@ router.get("/sessions/:sessionId/view", (req, res) => {
 setInterval(() => {
     const now = new Date();
     const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    
+
     for (const [sessionId, session] of debugSessions.entries()) {
         if (session.lastActivity < dayAgo) {
             debugSessions.delete(sessionId);
