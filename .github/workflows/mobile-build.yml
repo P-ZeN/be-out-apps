@@ -2101,6 +2101,10 @@ jobs:
           echo "iOS builds in CI typically fail at code signing without proper certificates."
           echo "If you see code signing errors, that's expected without proper setup."
           echo "Complete the setup in docs/IOS_CODE_SIGNING_SETUP.md to enable signing."
+          
+          echo ""
+          echo "❌ BUILD FAILED - Exiting with error code"
+          exit 1
         fi
 
     - name: Export IPA from Archive

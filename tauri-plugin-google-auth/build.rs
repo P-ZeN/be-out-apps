@@ -1,4 +1,4 @@
-const COMMANDS: &[&str] = &["ping", "google_sign_in", "google_sign_out", "is_signed_in"];
+const COMMANDS: &[&str] = &["ping", "googleSignIn", "googleSignOut", "isSignedIn"];
 
 fn main() {
     let result = tauri_plugin::Builder::new(COMMANDS)

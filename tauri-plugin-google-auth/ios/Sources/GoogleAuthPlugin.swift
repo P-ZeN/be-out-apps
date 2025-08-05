@@ -131,7 +131,7 @@ class GoogleAuthPlugin: Plugin {
         }
     }
 
-    @objc func google_sign_in(_ invoke: Invoke) throws {
+    @objc func googleSignIn(_ invoke: Invoke) throws {
         // Enhanced error handling and logging
         print("GoogleAuthPlugin: google_sign_in called")
         
@@ -214,12 +214,14 @@ class GoogleAuthPlugin: Plugin {
             print("GoogleAuthPlugin: Failed to parse arguments: \(error)")
             invoke.reject("Failed to parse arguments: \(error.localizedDescription)", code: "PARSE_ERROR")
         }
-    }    @objc func google_sign_out(_ invoke: Invoke) {
+    }
+    
+    @objc func googleSignOut(_ invoke: Invoke) {
         GIDSignIn.sharedInstance.signOut()
         invoke.resolve(["success": true])
     }
 
-    @objc func is_signed_in(_ invoke: Invoke) {
+    @objc func isSignedIn(_ invoke: Invoke) {
         let isSignedIn = GIDSignIn.sharedInstance.currentUser != nil
         invoke.resolve(["isSignedIn": isSignedIn])
     }
