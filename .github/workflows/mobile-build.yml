@@ -1950,10 +1950,54 @@ jobs:
           # Create output directory
           mkdir -p ios-export
 
-          # Quick check: Are provisioning profiles still available at export time?
-          echo "🔍 Pre-export check: Provisioning profiles status..."
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null | wc -l | xargs echo "   Profile count:"
-          security find-identity -v -p codesigning 2>/dev/null | wc -l | xargs echo "   Identity count:"
+          # Detailed check: Are the RIGHT provisioning profiles still available at export time?
+          echo "🔍 Pre-export check: Detailed provisioning profiles analysis..."
+          echo "📋 Profile count: $(ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null | wc -l)"
+          echo "📋 Identity count: $(security find-identity -v -p codesigning 2>/dev/null | wc -l)"
+
+          echo ""
+          echo "📋 Available profiles with Associated Domains capability:"
+          for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            if [ -f "$profile" ]; then
+              PROFILE_CONTENT=$(security cms -D -i "$profile" 2>/dev/null)
+              PROFILE_NAME=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+              PROFILE_TYPE=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>ProvisionedDevices</key>" >/dev/null 2>&1 && echo "Development" || echo "Distribution")
+              BUNDLE_ID=$(echo "$PROFILE_CONTENT" | grep -A1 "application-identifier" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+
+              # Check for Associated Domains entitlement
+              HAS_ASSOCIATED_DOMAINS=$(echo "$PROFILE_CONTENT" | grep -q "com.apple.developer.associated-domains" && echo "✅ YES" || echo "❌ NO")
+
+              echo "  Profile: $(basename "$profile")"
+              echo "    Name: $PROFILE_NAME"
+              echo "    Type: $PROFILE_TYPE"
+              echo "    Bundle: $BUNDLE_ID"
+              echo "    Associated Domains: $HAS_ASSOCIATED_DOMAINS"
+              echo ""
+            fi
+          done
+
+          echo "📋 Specifically looking for distribution profiles with Associated Domains..."
+          DISTRIBUTION_WITH_DOMAINS_COUNT=0
+          for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            if [ -f "$profile" ]; then
+              PROFILE_CONTENT=$(security cms -D -i "$profile" 2>/dev/null)
+              # Distribution profiles don't have ProvisionedDevices key
+              if ! echo "$PROFILE_CONTENT" | grep -q "<key>ProvisionedDevices</key>"; then
+                if echo "$PROFILE_CONTENT" | grep -q "com.apple.developer.associated-domains"; then
+                  DISTRIBUTION_WITH_DOMAINS_COUNT=$((DISTRIBUTION_WITH_DOMAINS_COUNT + 1))
+                  DIST_PROFILE_NAME=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+                  echo "  ✅ Found distribution profile with Associated Domains: $DIST_PROFILE_NAME"
+                fi
+              fi
+            fi
+          done
+
+          if [ $DISTRIBUTION_WITH_DOMAINS_COUNT -eq 0 ]; then
+            echo "  ❌ NO distribution profiles with Associated Domains found!"
+            echo "  💡 This is likely why IPA export is failing."
+          else
+            echo "  ✅ Found $DISTRIBUTION_WITH_DOMAINS_COUNT distribution profile(s) with Associated Domains"
+          fi
 
           # Try to export IPA
           echo "🚀 Attempting to export IPA..."
