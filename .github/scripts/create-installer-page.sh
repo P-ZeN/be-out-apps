@@ -13,7 +13,7 @@ BRANCH_NAME="$8"
 BUILD_DATE="$9"
 
 # Create the base HTML structure
-cat > web-installer/index.html << 'EOF'
+cat > web-installer/index.html << EOF
 <!DOCTYPE html>
 <html>
 <head>

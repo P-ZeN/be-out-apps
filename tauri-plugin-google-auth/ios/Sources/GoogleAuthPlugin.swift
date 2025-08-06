@@ -10,14 +10,14 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func ping(_ invoke: Invoke) throws {
-    let value = invoke.getString("value")
+    let value = invoke.parseArgs(as: [String: String].self)?["value"]
     invoke.resolve(["value": value ?? ""])
   }
 
   @objc public func googleSignIn(_ invoke: Invoke) throws {
-    DispatchQueue.main.async {
+    DispatchQueue.main.async { [weak self] in
       var presentingViewController: UIViewController?
-      
+
       if #available(iOS 15.0, *) {
         // iOS 15+ method
         if let windowScene = UIApplication.shared.connectedScenes
@@ -29,27 +29,27 @@ class GoogleAuthPlugin: Plugin {
         // iOS 13-14 fallback
         presentingViewController = UIApplication.shared.windows.first?.rootViewController
       }
-      
+
       guard let viewController = presentingViewController else {
         invoke.reject("No presenting view controller available")
         return
       }
-      
+
       GIDSignIn.sharedInstance.signIn(withPresenting: viewController) { result, error in
         if let error = error {
           invoke.reject("Google Sign In failed: \(error.localizedDescription)")
           return
         }
-        
+
         guard let user = result?.user,
               let idToken = user.idToken?.tokenString else {
           invoke.reject("Failed to get user information")
           return
         }
-        
+
         let accessToken = user.accessToken.tokenString
         let profile = user.profile
-        
+
         let response = [
           "idToken": idToken,
           "accessToken": accessToken,
@@ -57,7 +57,7 @@ class GoogleAuthPlugin: Plugin {
           "email": profile?.email ?? "",
           "photoUrl": profile?.imageURL(withDimension: 120)?.absoluteString ?? ""
         ]
-        
+
         invoke.resolve(response)
       }
     }
