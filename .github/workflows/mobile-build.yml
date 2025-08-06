@@ -1124,6 +1124,86 @@ jobs:
         fi
         rm -f test_swift.swift test_swift
 
+    - name: Test Google Auth Plugin Swift Package
+      working-directory: ./client
+      run: |
+        echo "🔧 Testing tauri-plugin-google-auth Swift package compilation..."
+        
+        # Navigate to the plugin iOS directory
+        if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
+          echo "❌ iOS directory missing for Google Auth plugin!"
+          echo "Expected: ../tauri-plugin-google-auth/ios"
+          echo "This will cause the build to fail."
+          exit 1
+        fi
+        
+        cd ../tauri-plugin-google-auth/ios
+        
+        echo "📋 Package.swift contents:"
+        cat Package.swift
+        
+        echo ""
+        echo "📋 Sources directory structure:"
+        find Sources -name "*.swift" -exec echo "  {}" \; 2>/dev/null || echo "  No Swift sources found"
+        
+        echo ""
+        echo "🧪 Testing Swift package syntax and dependencies..."
+        
+        # Test 1: Package dump to validate Package.swift syntax
+        echo "=== Test 1: Package.swift syntax validation ==="
+        if swift package dump-package 2>&1; then
+          echo "✅ Package.swift syntax is valid"
+        else
+          echo "❌ Package.swift syntax errors detected"
+        fi
+        
+        echo ""
+        echo "=== Test 2: Dependency resolution ==="
+        # Test 2: Try to resolve dependencies (this will download GoogleSignIn-iOS)
+        if timeout 300 swift package resolve --verbose 2>&1; then
+          echo "✅ Package dependencies resolved successfully"
+        else
+          echo "❌ Package dependency resolution failed"
+          echo "This could be due to:"
+          echo "  - Network issues downloading GoogleSignIn-iOS"
+          echo "  - Version conflicts between dependencies"
+          echo "  - Xcode version incompatibility with GoogleSignIn 6.2.4"
+        fi
+        
+        echo ""
+        echo "=== Test 3: Swift source file compilation ==="
+        # Test 3: Try to compile individual Swift files
+        for swift_file in Sources/*.swift; do
+          if [ -f "$swift_file" ]; then
+            echo "Testing compilation of $(basename "$swift_file")..."
+            if swift -frontend -parse "$swift_file" 2>&1; then
+              echo "✅ $(basename "$swift_file") syntax valid"
+            else
+              echo "❌ $(basename "$swift_file") has syntax errors"
+            fi
+          fi
+        done
+        
+        echo ""
+        echo "=== Test 4: Direct Swift package build attempt ==="
+        # Test 4: Try to build the package directly (this is what swift-rs will do)
+        if timeout 600 swift build --verbose 2>&1 | tee ../swift_package_build.log; then
+          echo "✅ Swift package built successfully"
+          echo "This means the issue is likely in swift-rs integration, not the Swift package itself"
+        else
+          echo "❌ Swift package build failed"
+          echo "This is the root cause of the tauri-plugin build failure"
+          echo ""
+          echo "Build log analysis:"
+          echo "=================="
+          tail -50 ../swift_package_build.log
+          echo ""
+          echo "Error patterns:"
+          grep -A 5 -B 5 "error:" ../swift_package_build.log | tail -20 || echo "No specific error patterns found"
+        fi
+        
+        cd ../../client
+
     - name: Install Apple Certificates and Provisioning Profiles
       run: |
         echo "🔐 Setting up iOS code signing..."
