@@ -29,6 +29,12 @@ let package = Package(
                 .product(name: "Tauri", package: "Tauri"),
                 .product(name: "GoogleSignIn", package: "GoogleSignIn")
             ],
-            path: "Sources"),
+            path: "Sources",
+            linkerSettings: [
+                .linkedFramework("UIKit", .when(platforms: [.iOS])),
+                .linkedFramework("WebKit", .when(platforms: [.iOS])),
+                .linkedFramework("Foundation", .when(platforms: [.iOS])),
+            ]
+        ),
     ]
 )
