@@ -1127,7 +1127,7 @@ jobs:
     - name: Test Google Auth Plugin Swift Package
       working-directory: ./client
       run: |
-        echo "🔧 Testing tauri-plugin-google-auth Swift package compilation..."
+        echo "🔧 Testing tauri-plugin-google-auth Swift package compilationss..."
 
         # Navigate to the plugin iOS directory
         if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
@@ -1167,16 +1167,16 @@ jobs:
           TIMEOUT_CMD=""
           echo "⚠️ No timeout command available, running without timeout"
         fi
-        
+
         if $TIMEOUT_CMD swift package resolve --verbose 2>&1; then
           echo "✅ Package dependencies resolved successfully"
           echo "   This is critical for swift-rs to work properly during Rust build"
-          
+
           # Check that dependencies were actually downloaded
           if [ -d ".build/checkouts" ]; then
             echo "📦 Downloaded dependencies:"
             ls -la .build/checkouts/
-            
+
             # Verify GoogleSignIn-iOS was downloaded
             if ls .build/checkouts/ | grep -i googlesignin >/dev/null 2>&1; then
               echo "✅ GoogleSignIn-iOS dependency confirmed downloaded"
@@ -1986,28 +1986,28 @@ jobs:
       working-directory: ./client
       run: |
         echo "🔧 Pre-resolving Swift package dependencies to help swift-rs integration..."
-        
+
         # Navigate to the Google Auth plugin iOS directory
         if [ -d "../tauri-plugin-google-auth/ios" ]; then
           cd ../tauri-plugin-google-auth/ios
-          
+
           echo "📋 Pre-resolving dependencies for tauri-plugin-google-auth..."
-          
+
           # Try to resolve dependencies before Rust build attempts
           if swift package resolve --verbose 2>&1; then
             echo "✅ Swift package dependencies pre-resolved successfully"
             echo "   This should prevent swift-rs from failing during dependency resolution"
-            
+
             # Verify the dependencies are cached
             if [ -d ".build/checkouts" ]; then
               echo "📦 Cached dependencies:"
               ls -la .build/checkouts/
-              
+
               # Check specifically for GoogleSignIn
               if ls .build/checkouts/ | grep -i googlesignin >/dev/null 2>&1; then
                 GOOGLESIGNIN_DIR=$(ls .build/checkouts/ | grep -i googlesignin | head -1)
                 echo "✅ GoogleSignIn-iOS cached at: .build/checkouts/$GOOGLESIGNIN_DIR"
-                
+
                 # Verify it has the expected structure
                 if [ -d ".build/checkouts/$GOOGLESIGNIN_DIR/Sources" ]; then
                   echo "✅ GoogleSignIn-iOS source structure looks correct"
@@ -2025,7 +2025,7 @@ jobs:
             echo "   swift-rs will likely fail during Rust build phase"
             echo "   Continuing anyway to let swift-rs attempt its own resolution..."
           fi
-          
+
           cd ../../client
         else
           echo "⚠️ tauri-plugin-google-auth/ios directory not found"

@@ -5,18 +5,18 @@ import GoogleSignIn
 
 class GoogleAuthPlugin: Plugin {
   private var googleSignInConfig: GIDConfiguration?
-  
+
   @objc public override func load(webview: WKWebView) {
     // Configure Google Sign-In with the client ID from Tauri config
     let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 
     let config = GIDConfiguration(clientID: clientId)
-    
+
     // Store configuration for use in signIn method
     self.googleSignInConfig = config
     print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
   }
-  
+
   @objc public func ping(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs([String: String].self)
     let value = args["value"]
@@ -28,10 +28,10 @@ class GoogleAuthPlugin: Plugin {
       invoke.reject("GoogleSignIn not configured")
       return
     }
-    
+
     // Use modern iOS 15+ method to get the presenting view controller
     var presentingViewController: UIViewController?
-    
+
     if #available(iOS 15.0, *) {
       // iOS 15+ method using UIWindowScene
       if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -42,7 +42,7 @@ class GoogleAuthPlugin: Plugin {
       // Fallback for iOS 12-14
       presentingViewController = UIApplication.shared.windows.first?.rootViewController
     }
-    
+
     guard let presentingVC = presentingViewController else {
       invoke.reject("No presenting view controller available")
       return

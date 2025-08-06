@@ -4,15 +4,15 @@ fn main() {
     // Add more detailed logging for iOS builds
     if cfg!(target_os = "ios") {
         println!("cargo:warning=Building tauri-plugin-google-auth for iOS target");
-        
+
         // Check iOS environment before attempting build
         println!("cargo:warning=iOS Environment Check:");
-        
+
         // Check if we're in a CI environment
         if std::env::var("CI").is_ok() {
             println!("cargo:warning=Running in CI environment");
         }
-        
+
         // Check for required iOS SDK
         if let Ok(output) = std::process::Command::new("xcrun")
             .args(&["--show-sdk-path", "--sdk", "iphoneos"])
@@ -42,12 +42,12 @@ fn main() {
         } else {
             println!("cargo:warning=Swift compiler not available or not in PATH");
         }
-        
+
         // Check if Package.swift exists
         let package_swift_path = std::path::Path::new("ios/Package.swift");
         if package_swift_path.exists() {
             println!("cargo:warning=Package.swift found at ios/Package.swift");
-            
+
             // Try to validate Package.swift syntax
             if let Ok(output) = std::process::Command::new("swift")
                 .args(&["package", "dump-package"])
@@ -89,7 +89,7 @@ fn main() {
                 eprintln!("cargo:warning=3. GoogleSignIn SDK version incompatibility with Xcode version");
                 eprintln!("cargo:warning=4. swift-rs crate compilation failure");
                 eprintln!("cargo:warning=5. Missing or invalid Package.swift configuration");
-                
+
                 // Try to get more specific error information from swift-rs
                 let error_string = format!("{}", e);
                 if error_string.contains("Failed to compile swift package") {
@@ -100,7 +100,7 @@ fn main() {
                     eprintln!("cargo:warning=  - Missing or incompatible system frameworks");
                     eprintln!("cargo:warning=  - Xcode/Swift compiler version incompatibility");
                 }
-                
+
                 if error_string.contains("swift-rs") {
                     eprintln!("cargo:warning=swift-rs crate error detected");
                     eprintln!("cargo:warning=This is typically due to Swift package manager build failures");
