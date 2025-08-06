@@ -1127,7 +1127,7 @@ jobs:
     - name: Test Google Auth Plugin Swift Package
       working-directory: ./client
       run: |
-        echo "🔧 Testing tauri-plugin-google-auth Swift package compilationsss..."
+        echo "🔧 Testing tauri-plugin-google-auth Swift package compilationssss..."
 
         # Navigate to the plugin iOS directory
         if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
