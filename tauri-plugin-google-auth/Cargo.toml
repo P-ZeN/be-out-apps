@@ -18,3 +18,7 @@ thiserror = "2"
 
 [build-dependencies]
 tauri-plugin = { version = "2.3.0", features = ["build"] }
+
+[features]
+default = []
+ios-build = []

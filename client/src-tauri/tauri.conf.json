@@ -75,6 +75,9 @@
                     "associatedDomains": [
                         "server.be-out-app.dedibox2.philippezenone.net"
                     ]
+                },
+                {
+                    "protocol": "com.googleusercontent.apps.1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc"
                 }
             ]
         },

@@ -1,4 +1,3 @@
-import SwiftRs
 import Tauri
 import UIKit
 import WebKit
@@ -6,7 +5,15 @@ import GoogleSignIn
 
 class GoogleAuthPlugin: Plugin {
   @objc public override func load(webview: WKWebView) {
-    // Plugin loaded
+    // Configure Google Sign-In with the client ID from Tauri config
+    let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
+    
+    guard let config = GIDConfiguration(clientID: clientId) else {
+      print("Error: Failed to create GIDConfiguration")
+      return
+    }
+    
+    GIDSignIn.sharedInstance.configuration = config
   }
 
   @objc public func ping(_ invoke: Invoke) throws {
@@ -16,51 +23,35 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func googleSignIn(_ invoke: Invoke) throws {
-    DispatchQueue.main.async {
-      var presentingViewController: UIViewController?
-
-      if #available(iOS 15.0, *) {
-        // iOS 15+ method
-        if let windowScene = UIApplication.shared.connectedScenes
-          .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
-           let window = windowScene.windows.first {
-          presentingViewController = window.rootViewController
-        }
-      } else {
-        // iOS 13-14 fallback
-        presentingViewController = UIApplication.shared.windows.first?.rootViewController
-      }
-
-      guard let viewController = presentingViewController else {
-        invoke.reject("No presenting view controller available")
+    guard let presentingViewController = UIApplication.shared.windows.first?.rootViewController else {
+      invoke.reject("No presenting view controller available")
+      return
+    }
+    
+    GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
+      if let error = error {
+        invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
         return
       }
-
-      GIDSignIn.sharedInstance.signIn(withPresenting: viewController) { result, error in
-        if let error = error {
-          invoke.reject("Google Sign In failed: \(error.localizedDescription)")
-          return
-        }
-
-        guard let user = result?.user,
-              let idToken = user.idToken?.tokenString else {
-          invoke.reject("Failed to get user information")
-          return
-        }
-
-        let accessToken = user.accessToken.tokenString
-        let profile = user.profile
-
-        let response = [
-          "idToken": idToken,
-          "accessToken": accessToken,
-          "displayName": profile?.name ?? "",
-          "email": profile?.email ?? "",
-          "photoUrl": profile?.imageURL(withDimension: 120)?.absoluteString ?? ""
-        ]
-
-        invoke.resolve(response)
+      
+      guard let user = result?.user,
+            let idToken = user.idToken?.tokenString else {
+        invoke.reject("Failed to get user information or ID token")
+        return
       }
+      
+      let accessToken = user.accessToken.tokenString
+      let profile = user.profile
+      
+      invoke.resolve([
+        "success": true,
+        "error": "",
+        "idToken": idToken,
+        "accessToken": accessToken,
+        "displayName": profile?.name ?? "",
+        "email": profile?.email ?? "",
+        "photoUrl": profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
+      ])
     }
   }
 
