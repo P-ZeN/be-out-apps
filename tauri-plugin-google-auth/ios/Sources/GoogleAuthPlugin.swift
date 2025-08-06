@@ -10,15 +10,14 @@ class GoogleAuthPlugin: Plugin {
     // Configure Google Sign-In with the client ID from Tauri config
     let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 
-    guard let config = GIDConfiguration(clientID: clientId) else {
-      print("Error: Failed to create GIDConfiguration")
-      return
-    }
+    let config = GIDConfiguration(clientID: clientId)
     
     // Store configuration for use in signIn method
     self.googleSignInConfig = config
     print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
-  }  @objc public func ping(_ invoke: Invoke) throws {
+  }
+  
+  @objc public func ping(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs([String: String].self)
     let value = args["value"]
     invoke.resolve(["value": value ?? ""])
@@ -57,13 +56,13 @@ class GoogleAuthPlugin: Plugin {
       }
 
       guard let result = result,
-            let idToken = result.user.idToken?.tokenString else {
+            let idToken = result.idToken?.tokenString else {
         invoke.reject("Failed to get user information or ID token")
         return
       }
 
-      let accessToken = result.user.accessToken.tokenString
-      let profile = result.user.profile
+      let accessToken = result.accessToken.tokenString
+      let profile = result.profile
 
       invoke.resolve([
         "success": true,
