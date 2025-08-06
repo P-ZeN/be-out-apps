@@ -14,6 +14,7 @@ class GoogleAuthPlugin: Plugin {
     }
     
     GIDSignIn.sharedInstance.configuration = config
+    print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
   }
 
   @objc public func ping(_ invoke: Invoke) throws {
@@ -28,7 +29,7 @@ class GoogleAuthPlugin: Plugin {
       return
     }
     
-    // Use the older API for better compatibility
+    // Use GoogleSignIn 6.x API
     GIDSignIn.sharedInstance.signIn(with: GIDSignIn.sharedInstance.configuration!, presenting: presentingViewController) { user, error in
       if let error = error {
         invoke.reject("Google Sign-In failed: \(error.localizedDescription)")

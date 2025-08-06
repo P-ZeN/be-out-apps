@@ -5,9 +5,9 @@ Default permissions for the plugin
 #### This default permission set includes the following:
 
 - `allow-ping`
-- `allow-google-sign-in`
-- `allow-google-sign-out`
-- `allow-is-signed-in`
+- `allow-googleSignIn`
+- `allow-googleSignOut`
+- `allow-isSignedIn`
 
 ## Permission Table
 
