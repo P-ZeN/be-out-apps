@@ -1911,7 +1911,7 @@ jobs:
           echo "📋 Build log content:"
           tail -50 ios_build.log
 
-          # Look for Rust compilation errors specifically
+          # Look for Rust compilation errorsss specifically
           echo "📋 Searching for Rust compilation errors:"
           grep -A 10 -B 5 "error:" ios_build.log | tail -20 || echo "No Rust errors found in logsss"
 
