@@ -28,19 +28,21 @@ class GoogleAuthPlugin: Plugin {
       return
     }
     
-    GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
+    // Use the older API for better compatibility
+    GIDSignIn.sharedInstance.signIn(with: GIDSignIn.sharedInstance.configuration!, presenting: presentingViewController) { user, error in
       if let error = error {
         invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
         return
       }
       
-      guard let user = result?.user,
-            let idToken = user.idToken?.tokenString else {
+      guard let user = user,
+            let authentication = user.authentication,
+            let idToken = authentication.idToken else {
         invoke.reject("Failed to get user information or ID token")
         return
       }
       
-      let accessToken = user.accessToken.tokenString
+      let accessToken = authentication.accessToken
       let profile = user.profile
       
       invoke.resolve([
