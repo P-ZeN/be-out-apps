@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "tauri-plugin-google-auth",
     platforms: [
-        .iOS(.v13),
+        .iOS(.v15),
         .macOS(.v10_15)
     ],
     products: [
@@ -15,14 +15,12 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(name: "Tauri", path: "../.tauri/tauri-api"),
         .package(name: "GoogleSignIn", url: "https://github.com/google/GoogleSignIn-iOS", from: "6.2.0")
     ],
     targets: [
         .target(
             name: "tauri-plugin-google-auth",
             dependencies: [
-                .byName(name: "Tauri"),
                 .product(name: "GoogleSignIn", package: "GoogleSignIn")
             ],
             path: "Sources"
