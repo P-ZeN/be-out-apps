@@ -1,7 +1,6 @@
 import Foundation
 import UIKit
 import GoogleSignIn
-import SwiftRs
 import Tauri
 import WebKit
 
@@ -72,9 +71,6 @@ class GoogleAuthPlugin: Plugin {
         }
 
         print("GoogleAuthPlugin: Initialization complete")
-        }
-
-        print("GoogleAuthPlugin: Initialization completed")
     }
 
     private func getClientIdFromPlist(path: String) -> String? {
@@ -142,7 +138,18 @@ class GoogleAuthPlugin: Plugin {
             // Check if Google Sign-In is properly configured
             guard GIDSignIn.sharedInstance.configuration != nil else {
                 print("GoogleAuthPlugin: ERROR - Google Sign-In not configured")
-                invoke.reject("Google Sign-In not configured. Missing GoogleService-Info.plist or configuration setup.", code: "NOT_CONFIGURED")
+                
+                let errorResponse: [String: Any] = [
+                    "success": false,
+                    "idToken": nil as String?,
+                    "displayName": nil as String?,
+                    "givenName": nil as String?,
+                    "familyName": nil as String?,
+                    "profilePictureUri": nil as String?,
+                    "email": nil as String?,
+                    "error": "Google Sign-In not configured. Missing GoogleService-Info.plist or configuration setup."
+                ]
+                invoke.resolve(errorResponse)
                 return
             }
             print("GoogleAuthPlugin: Google Sign-In configuration verified")
@@ -152,7 +159,18 @@ class GoogleAuthPlugin: Plugin {
                 guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                       let rootViewController = windowScene.windows.first?.rootViewController else {
                     print("GoogleAuthPlugin: ERROR - No root view controller found")
-                    invoke.reject("No root view controller found", code: "NO_VIEW_CONTROLLER")
+                    
+                    let errorResponse: [String: Any] = [
+                        "success": false,
+                        "idToken": nil as String?,
+                        "displayName": nil as String?,
+                        "givenName": nil as String?,
+                        "familyName": nil as String?,
+                        "profilePictureUri": nil as String?,
+                        "email": nil as String?,
+                        "error": "No root view controller found"
+                    ]
+                    invoke.resolve(errorResponse)
                     return
                 }
                 print("GoogleAuthPlugin: Root view controller found")
@@ -173,13 +191,35 @@ class GoogleAuthPlugin: Plugin {
                     if let error = error {
                         print("GoogleAuthPlugin: Sign-in failed with error: \(error.localizedDescription)")
                         print("GoogleAuthPlugin: Error details: \(error)")
-                        invoke.reject("Google Sign-In failed: \(error.localizedDescription)", code: "SIGNIN_FAILED")
+                        
+                        let errorResponse: [String: Any] = [
+                            "success": false,
+                            "idToken": nil as String?,
+                            "displayName": nil as String?,
+                            "givenName": nil as String?,
+                            "familyName": nil as String?,
+                            "profilePictureUri": nil as String?,
+                            "email": nil as String?,
+                            "error": error.localizedDescription
+                        ]
+                        invoke.resolve(errorResponse)
                         return
                     }
 
                     guard let result = result else {
                         print("GoogleAuthPlugin: No sign-in result received")
-                        invoke.reject("No sign-in result", code: "NO_RESULT")
+                        
+                        let errorResponse: [String: Any] = [
+                            "success": false,
+                            "idToken": nil as String?,
+                            "displayName": nil as String?,
+                            "givenName": nil as String?,
+                            "familyName": nil as String?,
+                            "profilePictureUri": nil as String?,
+                            "email": nil as String?,
+                            "error": "No sign-in result"
+                        ]
+                        invoke.resolve(errorResponse)
                         return
                     }
 
@@ -196,14 +236,13 @@ class GoogleAuthPlugin: Plugin {
 
                     let response: [String: Any] = [
                         "success": true,
-                        "token": accessToken,
                         "idToken": idToken ?? "",
                         "displayName": profile?.name ?? "",
-                        "email": profile?.email ?? "",
-                        "userId": user.userID ?? "",
-                        "photoUrl": profile?.imageURL(withDimension: 320)?.absoluteString ?? "",
                         "givenName": profile?.givenName ?? "",
-                        "familyName": profile?.familyName ?? ""
+                        "familyName": profile?.familyName ?? "",
+                        "profilePictureUri": profile?.imageURL(withDimension: 320)?.absoluteString ?? "",
+                        "email": profile?.email ?? "",
+                        "error": nil as String?
                     ]
 
                     print("GoogleAuthPlugin: Resolving with success response")
@@ -212,18 +251,43 @@ class GoogleAuthPlugin: Plugin {
             }
         } catch {
             print("GoogleAuthPlugin: Failed to parse arguments: \(error)")
-            invoke.reject("Failed to parse arguments: \(error.localizedDescription)", code: "PARSE_ERROR")
+            
+            let errorResponse: [String: Any] = [
+                "success": false,
+                "idToken": nil as String?,
+                "displayName": nil as String?,
+                "givenName": nil as String?,
+                "familyName": nil as String?,
+                "profilePictureUri": nil as String?,
+                "email": nil as String?,
+                "error": "Failed to parse arguments: \(error.localizedDescription)"
+            ]
+            invoke.resolve(errorResponse)
         }
     }
 
     @objc func googleSignOut(_ invoke: Invoke) {
+        print("GoogleAuthPlugin: google_sign_out called")
         GIDSignIn.sharedInstance.signOut()
-        invoke.resolve(["success": true])
+        print("GoogleAuthPlugin: Sign-out completed")
+        
+        let response: [String: Any] = [
+            "success": true,
+            "error": nil as String?
+        ]
+        invoke.resolve(response)
     }
 
     @objc func isSignedIn(_ invoke: Invoke) {
+        print("GoogleAuthPlugin: is_signed_in called")
         let isSignedIn = GIDSignIn.sharedInstance.currentUser != nil
-        invoke.resolve(["isSignedIn": isSignedIn])
+        print("GoogleAuthPlugin: Current sign-in status: \(isSignedIn)")
+        
+        let response: [String: Any] = [
+            "isSignedIn": isSignedIn,
+            "error": nil as String?
+        ]
+        invoke.resolve(response)
     }
 }
 
