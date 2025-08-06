@@ -57,7 +57,7 @@ jobs:
               echo "✅ Found latest successful mobile build: $LATEST_RUN"
               echo "FALLBACK_RUN_ID=$LATEST_RUN" >> $GITHUB_ENV
             else
-              echo "❌ No successful mobile builds found"
+              echo "❌ No successful mobile buildss found"
             fi
           fi
         fi

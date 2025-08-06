@@ -1915,7 +1915,7 @@ jobs:
           echo "📋 Searching for Rust compilation errors:"
           grep -A 10 -B 5 "error:" ios_build.log | tail -20 || echo "No Rust errors found in logss"
 
-          # Look for Swift compilation errorsssssss
+          # Look for Swift compilation errorssssssss
           echo "📋 Searching for Swift compilation errors:"
           grep -A 10 -B 5 "Swift.*error\|swift.*error" ios_build.log | tail -20 || echo "No Swift errors found in log"
 
