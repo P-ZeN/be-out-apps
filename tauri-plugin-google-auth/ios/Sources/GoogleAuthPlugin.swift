@@ -6,20 +6,6 @@ import GoogleSignIn
 import Tauri
 
 class GoogleAuthPlugin: Plugin {
-#else
-// Fallback stub protocols for standalone compilation
-protocol Plugin {
-    func load(webview: WKWebView)
-}
-
-protocol Invoke {
-    func parseArgs<T: Decodable>(_ type: T.Type) throws -> T
-    func resolve(_ data: [String: Any])
-    func reject(_ message: String)
-}
-
-class GoogleAuthPlugin: Plugin {
-#endif
   private var googleSignInConfig: GIDConfiguration?
 
   @objc public func load(webview: WKWebView) {
@@ -33,7 +19,6 @@ class GoogleAuthPlugin: Plugin {
     print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
   }
 
-#if canImport(Tauri)
   @objc public func ping(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs([String: String].self)
     let value = args["value"]
@@ -41,12 +26,11 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func googleSignIn(_ invoke: Invoke) throws {
-    guard let config = self.googleSignInConfig else {
-      invoke.reject("GoogleSignIn not configured")
+    guard let config = googleSignInConfig else {
+      invoke.reject("Google Sign-In not configured")
       return
     }
 
-    // Use modern iOS 15+ method to get the presenting view controller
     var presentingViewController: UIViewController?
 
     if #available(iOS 15.0, *) {
@@ -102,29 +86,53 @@ class GoogleAuthPlugin: Plugin {
     let isSignedIn = GIDSignIn.sharedInstance.currentUser != nil
     invoke.resolve(["isSignedIn": isSignedIn])
   }
-#else
-  // Stub implementations for standalone compilation
-  @objc public func ping() {
-    print("GoogleAuthPlugin: ping method (stub)")
-  }
-  
-  @objc public func googleSignIn() {
-    print("GoogleAuthPlugin: googleSignIn method (stub)")
-  }
-  
-  @objc public func googleSignOut() {
-    print("GoogleAuthPlugin: googleSignOut method (stub)")
-  }
-  
-  @objc public func isSignedIn() {
-    print("GoogleAuthPlugin: isSignedIn method (stub)")
-  }
-#endif
 }
 
-#if canImport(Tauri)
 @_cdecl("init_plugin_google_auth")
 func init_plugin_google_auth() -> UnsafeMutableRawPointer {
     return Unmanaged.passRetained(GoogleAuthPlugin()).toOpaque()
+}
+
+#else
+// Fallback implementation for standalone Swift compilation without Tauri
+protocol Plugin {
+    func load(webview: WKWebView)
+}
+
+protocol Invoke {
+    func parseArgs<T: Decodable>(_ type: T.Type) throws -> T
+    func resolve(_ data: [String: Any])
+    func reject(_ message: String)
+}
+
+class GoogleAuthPlugin: Plugin {
+  private var googleSignInConfig: GIDConfiguration?
+
+  @objc public func load(webview: WKWebView) {
+    // Configure Google Sign-In with the client ID from Tauri config
+    let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
+
+    let config = GIDConfiguration(clientID: clientId)
+
+    // Store configuration for use in signIn method
+    self.googleSignInConfig = config
+    print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
+  }
+
+  @objc public func ping() {
+    print("GoogleAuthPlugin: ping method (stub)")
+  }
+
+  @objc public func googleSignIn() {
+    print("GoogleAuthPlugin: googleSignIn method (stub)")
+  }
+
+  @objc public func googleSignOut() {
+    print("GoogleAuthPlugin: googleSignOut method (stub)")
+  }
+
+  @objc public func isSignedIn() {
+    print("GoogleAuthPlugin: isSignedIn method (stub)")
+  }
 }
 #endif
