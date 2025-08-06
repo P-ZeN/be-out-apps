@@ -17,7 +17,6 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(name: "Tauri", path: "../.tauri/tauri-api"),
         // Use exact version 6.2.4 to avoid compatibility issues
         .package(url: "https://github.com/google/GoogleSignIn-iOS", from: "6.2.4")
     ],
@@ -25,7 +24,6 @@ let package = Package(
         .target(
             name: "tauri-plugin-google-auth",
             dependencies: [
-                .product(name: "Tauri", package: "Tauri"),
                 .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS")
             ],
             path: "Sources",
