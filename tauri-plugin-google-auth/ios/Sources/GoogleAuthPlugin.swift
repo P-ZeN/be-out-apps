@@ -4,15 +4,14 @@ import WebKit
 import GoogleSignIn
 
 class GoogleAuthPlugin: Plugin {
-  @objc public override func load(webview: WKWebView) {
+    @objc public override func load(webview: WKWebView) {
     // Configure Google Sign-In with the client ID from Tauri config
     let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 
-    // GoogleSignIn 6.x: GIDConfiguration initializer doesn't return optional
     let config = GIDConfiguration(clientID: clientId)
     
-    // GoogleSignIn 6.x: Use configure() method instead of setting configuration property
-    GIDSignIn.sharedInstance.configure(with: config)
+    // GoogleSignIn 6.x: Set configuration property directly
+    GIDSignIn.sharedInstance.configuration = config
     print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
   }
 
@@ -23,13 +22,27 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func googleSignIn(_ invoke: Invoke) throws {
-    guard let presentingViewController = UIApplication.shared.windows.first?.rootViewController else {
+    // Use modern iOS 15+ method to get the presenting view controller
+    var presentingViewController: UIViewController?
+    
+    if #available(iOS 15.0, *) {
+      // iOS 15+ method using UIWindowScene
+      if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+         let window = windowScene.windows.first {
+        presentingViewController = window.rootViewController
+      }
+    } else {
+      // Fallback for iOS 12-14
+      presentingViewController = UIApplication.shared.windows.first?.rootViewController
+    }
+    
+    guard let presentingVC = presentingViewController else {
       invoke.reject("No presenting view controller available")
       return
     }
 
-    // GoogleSignIn 6.x API: Use signIn(withPresenting:) method
-    GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
+    // GoogleSignIn 6.x API: Use correct method signature
+    GIDSignIn.sharedInstance.signIn(with: GIDSignIn.sharedInstance.configuration!, presenting: presentingVC) { result, error in
       if let error = error {
         invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
         return
