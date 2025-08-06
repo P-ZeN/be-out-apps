@@ -1,12 +1,33 @@
+#if canImport(Tauri)
 import Tauri
+#endif
 import UIKit
 import WebKit
 import GoogleSignIn
 
+#if canImport(Tauri)
 class GoogleAuthPlugin: Plugin {
+#else
+// Fallback stub for standalone compilation
+protocol Plugin {
+    func load(webview: WKWebView)
+}
+
+protocol Invoke {
+    func parseArgs<T: Decodable>(_ type: T.Type) throws -> T
+    func resolve(_ data: [String: Any])
+    func reject(_ message: String)
+}
+
+class GoogleAuthPlugin: Plugin {
+#endif
   private var googleSignInConfig: GIDConfiguration?
 
+#if canImport(Tauri)
   @objc public override func load(webview: WKWebView) {
+#else
+  @objc public func load(webview: WKWebView) {
+#endif
     // Configure Google Sign-In with the client ID from Tauri config
     let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 
@@ -17,6 +38,7 @@ class GoogleAuthPlugin: Plugin {
     print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
   }
 
+#if canImport(Tauri)
   @objc public func ping(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs([String: String].self)
     let value = args["value"]
@@ -85,9 +107,29 @@ class GoogleAuthPlugin: Plugin {
     let isSignedIn = GIDSignIn.sharedInstance.currentUser != nil
     invoke.resolve(["isSignedIn": isSignedIn])
   }
+#else
+  // Stub implementations for standalone compilation
+  @objc public func ping() {
+    print("GoogleAuthPlugin: ping method (stub)")
+  }
+  
+  @objc public func googleSignIn() {
+    print("GoogleAuthPlugin: googleSignIn method (stub)")
+  }
+  
+  @objc public func googleSignOut() {
+    print("GoogleAuthPlugin: googleSignOut method (stub)")
+  }
+  
+  @objc public func isSignedIn() {
+    print("GoogleAuthPlugin: isSignedIn method (stub)")
+  }
+#endif
 }
 
+#if canImport(Tauri)
 @_cdecl("init_plugin_google_auth")
 func init_plugin_google_auth() -> UnsafeMutableRawPointer {
     return Unmanaged.passRetained(GoogleAuthPlugin()).toOpaque()
 }
+#endif
