@@ -483,7 +483,7 @@ jobs:
           # Fix the main themes.xml file
           if [ -f "src-tauri/gen/android/app/src/main/res/values/themes.xml" ]; then
             echo "📝 Patching main themes.xml..."
-            cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'EOF'
+            cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'XMLEOF1'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -493,11 +493,11 @@ jobs:
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
-        EOF
+        XMLEOF1
           else
             echo "❌ Main themes.xml not found, creating it..."
             mkdir -p src-tauri/gen/android/app/src/main/res/values
-            cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'EOF'
+            cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'XMLEOF2'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -507,13 +507,13 @@ jobs:
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
-        EOF
+        XMLEOF2
           fi
 
           # Fix the night themes.xml file if it exists
           if [ -f "src-tauri/gen/android/app/src/main/res/values-night/themes.xml" ]; then
             echo "📝 Patching night themes.xml..."
-            cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'EOF'
+            cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'XMLEOF3'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -523,11 +523,11 @@ jobs:
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
-        EOF
+        XMLEOF3
           else
             echo "🌙 Night themes.xml not found, creating it..."
             mkdir -p src-tauri/gen/android/app/src/main/res/values-night
-            cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'EOF'
+            cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'XMLEOF4'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -537,7 +537,7 @@ jobs:
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
-        EOF
+        XMLEOF4
           fi
 
           echo "✅ Android themes patched successfully!"
@@ -1060,15 +1060,15 @@ jobs:
       working-directory: ./client
       run: |
         echo "🔍 Checking iOS SDK and Framework availability..."
-        
+
         # Check iOS SDK path
         IOS_SDK_PATH=$(xcrun --show-sdk-path --sdk iphoneos)
         echo "iOS SDK Path: $IOS_SDK_PATH"
-        
+
         # Check required frameworks for GoogleSignIn
         REQUIRED_FRAMEWORKS=(
           "Foundation"
-          "UIKit" 
+          "UIKit"
           "Security"
           "SystemConfiguration"
           "AuthenticationServices"
@@ -1076,7 +1076,7 @@ jobs:
           "SafariServices"
           "WebKit"
         )
-        
+
         echo "Checking required frameworks..."
         for framework in "${REQUIRED_FRAMEWORKS[@]}"; do
           if [ -d "$IOS_SDK_PATH/System/Library/Frameworks/$framework.framework" ]; then
@@ -1085,7 +1085,7 @@ jobs:
             echo "❌ $framework.framework MISSING"
           fi
         done
-        
+
         # Check for Swift libraries
         echo "Checking Swift runtime libraries..."
         SWIFT_LIB_PATH="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos"
@@ -1095,11 +1095,11 @@ jobs:
         else
           echo "❌ Swift iOS libraries not found"
         fi
-        
+
         # Check Xcode version compatibility
         XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
         echo "Xcode version: $XCODE_VERSION"
-        
+
         # GoogleSignIn 6.2.4 requires Xcode 13.0+
         if [[ $(echo "$XCODE_VERSION 13.0" | tr " " "\n" | sort -V | head -1) != "13.0" ]]; then
           echo "⚠️ Warning: Xcode version may be too old for GoogleSignIn 6.2.4"
@@ -1108,15 +1108,15 @@ jobs:
         else
           echo "✅ Xcode version compatible with GoogleSignIn 6.2.4"
         fi
-        
+
         # Test Swift compilation
         echo "Testing basic Swift compilation..."
-        cat > test_swift.swift << 'EOF'
-import Foundation
-import UIKit
-print("Swift compilation test successful")
-EOF
-        
+        cat > test_swift.swift << 'SWIFTEOF'
+        import Foundation
+        import UIKit
+        print("Swift compilation test successful")
+        SWIFTEOF
+
         if xcrun -sdk iphoneos swiftc test_swift.swift -target arm64-apple-ios12.0 2>&1; then
           echo "✅ Basic Swift compilation successful"
         else
@@ -1430,14 +1430,14 @@ EOF
           # Verify Package.swift exists and has correct configuration
           if [ -f "../tauri-plugin-google-auth/ios/Package.swift" ]; then
             echo "✅ Package.swift found"
-            
+
             # Check iOS version requirement
             if grep -q "iOS(.v12)" ../tauri-plugin-google-auth/ios/Package.swift; then
               echo "✅ Package.swift correctly configured for iOS 12+"
             else
               echo "⚠️ Package.swift may not be configured for iOS 12+"
             fi
-            
+
             # Check GoogleSignIn dependency
             if grep -q "GoogleSignIn-iOS.*6.2.4" ../tauri-plugin-google-auth/ios/Package.swift; then
               echo "✅ GoogleSignIn-iOS 6.2.4 dependency found"
@@ -1446,7 +1446,7 @@ EOF
               echo "Current Package.swift GoogleSignIn dependency:"
               grep -A 2 -B 2 "GoogleSignIn" ../tauri-plugin-google-auth/ios/Package.swift || echo "No GoogleSignIn dependency found"
             fi
-            
+
             # Check required frameworks
             REQUIRED_FRAMEWORKS=("Security" "SystemConfiguration" "AuthenticationServices" "SafariServices" "LocalAuthentication")
             for framework in "${REQUIRED_FRAMEWORKS[@]}"; do
@@ -1464,13 +1464,13 @@ EOF
           # Verify Swift implementation exists and imports GoogleSignIn
           if [ -f "../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift" ]; then
             echo "✅ Swift implementation file found"
-            
+
             if grep -q "import GoogleSignIn" ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift; then
               echo "✅ GoogleSignIn import found in Swift implementation"
             else
               echo "❌ GoogleSignIn import NOT found in Swift implementation"
             fi
-            
+
             if grep -q "GIDSignIn.sharedInstance" ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift; then
               echo "✅ GoogleSignIn SDK usage found in Swift implementation"
             else
@@ -2223,10 +2223,10 @@ EOF
       if: failure()
       run: |
         echo "🔍 Attempting to reveal hidden Swift compilation errors..."
-        
+
         # Navigate to the plugin directory
         cd ../tauri-plugin-google-auth/ios
-        
+
         # Try to build the Swift package directly with maximum verbosity
         echo "=== Direct Swift Package Build Test ==="
         if swift build --verbose 2>&1 | tee swift_direct_build.log; then
@@ -2236,7 +2236,7 @@ EOF
           echo "=== Swift build errors ==="
           cat swift_direct_build.log
         fi
-        
+
         # Try swift package resolve to check dependencies
         echo "=== Swift Package Dependency Resolution ==="
         if swift package resolve --verbose 2>&1 | tee swift_resolve.log; then
@@ -2245,11 +2245,11 @@ EOF
           echo "❌ Package resolution failed"
           cat swift_resolve.log
         fi
-        
+
         # Check package dump
         echo "=== Swift Package Dump ==="
         swift package dump-package 2>&1 | tee swift_dump.log || echo "Package dump failed"
-        
+
         # Try building with specific flags that might reveal more errors
         echo "=== Swift Build with Debug Flags ==="
         swift build \
@@ -2259,11 +2259,11 @@ EOF
           -Xswiftc -diagnostic-style=llvm \
           -Xswiftc -Xfrontend \
           -Xswiftc -debug-diagnostic-names 2>&1 | tee swift_debug_build.log || echo "Debug build failed"
-        
+
         # Check the actual Swift source files for syntax errors
         echo "=== Swift Source File Syntax Check ==="
         find Sources -name "*.swift" -exec echo "Checking {}" \; -exec swift -frontend -parse {} \; 2>&1 | tee swift_syntax_check.log || echo "Syntax check completed"
-        
+
         # Try compiling individual Swift files
         echo "=== Individual Swift File Compilation ==="
         for swift_file in Sources/*.swift; do
@@ -2275,7 +2275,7 @@ EOF
               "$swift_file" 2>&1 || echo "Failed to compile $swift_file"
           fi
         done
-        
+
         cd ../../client
 
     - name: Export IPA from Archive

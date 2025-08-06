@@ -7,22 +7,21 @@ let package = Package(
     name: "tauri-plugin-google-auth",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v15),
+        .iOS(.v12),  // Raise minimum to iOS 12 for better GoogleSignIn compatibility
     ],
     products: [
-        // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "tauri-plugin-google-auth",
             type: .static,
-            targets: ["tauri-plugin-google-auth"]),
+            targets: ["tauri-plugin-google-auth"]
+        ),
     ],
     dependencies: [
         .package(name: "Tauri", path: "../.tauri/tauri-api"),
-        .package(url: "https://github.com/google/GoogleSignIn-iOS", from: "7.0.0")
+        // Use exact version 6.2.4 to avoid compatibility issues
+        .package(url: "https://github.com/google/GoogleSignIn-iOS", from: "6.2.4")
     ],
     targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "tauri-plugin-google-auth",
             dependencies: [
@@ -32,8 +31,11 @@ let package = Package(
             path: "Sources",
             linkerSettings: [
                 .linkedFramework("UIKit", .when(platforms: [.iOS])),
-                .linkedFramework("WebKit", .when(platforms: [.iOS])),
-                .linkedFramework("Foundation", .when(platforms: [.iOS])),
+                .linkedFramework("Security", .when(platforms: [.iOS])),
+                .linkedFramework("SystemConfiguration", .when(platforms: [.iOS])),
+                .linkedFramework("AuthenticationServices", .when(platforms: [.iOS])),
+                .linkedFramework("SafariServices", .when(platforms: [.iOS])),
+                .linkedFramework("LocalAuthentication", .when(platforms: [.iOS]))
             ]
         ),
     ]

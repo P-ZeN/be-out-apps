@@ -7,12 +7,12 @@ class GoogleAuthPlugin: Plugin {
   @objc public override func load(webview: WKWebView) {
     // Configure Google Sign-In with the client ID from Tauri config
     let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
-    
+
     guard let config = GIDConfiguration(clientID: clientId) else {
       print("Error: Failed to create GIDConfiguration")
       return
     }
-    
+
     GIDSignIn.sharedInstance.configuration = config
     print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
   }
@@ -28,24 +28,24 @@ class GoogleAuthPlugin: Plugin {
       invoke.reject("No presenting view controller available")
       return
     }
-    
+
     // Use GoogleSignIn 6.x API
     GIDSignIn.sharedInstance.signIn(with: GIDSignIn.sharedInstance.configuration!, presenting: presentingViewController) { user, error in
       if let error = error {
         invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
         return
       }
-      
+
       guard let user = user,
             let authentication = user.authentication,
             let idToken = authentication.idToken else {
         invoke.reject("Failed to get user information or ID token")
         return
       }
-      
+
       let accessToken = authentication.accessToken
       let profile = user.profile
-      
+
       invoke.resolve([
         "success": true,
         "error": "",
