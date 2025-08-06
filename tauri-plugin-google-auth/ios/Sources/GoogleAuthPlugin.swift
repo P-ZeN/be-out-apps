@@ -4,24 +4,32 @@ import WebKit
 import GoogleSignIn
 
 class GoogleAuthPlugin: Plugin {
-    @objc public override func load(webview: WKWebView) {
+  private var googleSignInConfig: GIDConfiguration?
+  
+  @objc public override func load(webview: WKWebView) {
     // Configure Google Sign-In with the client ID from Tauri config
     let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 
-    let config = GIDConfiguration(clientID: clientId)
+    guard let config = GIDConfiguration(clientID: clientId) else {
+      print("Error: Failed to create GIDConfiguration")
+      return
+    }
     
-    // GoogleSignIn 6.x: Set configuration property directly
-    GIDSignIn.sharedInstance.configuration = config
+    // Store configuration for use in signIn method
+    self.googleSignInConfig = config
     print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
-  }
-
-  @objc public func ping(_ invoke: Invoke) throws {
+  }  @objc public func ping(_ invoke: Invoke) throws {
     let args = try invoke.parseArgs([String: String].self)
     let value = args["value"]
     invoke.resolve(["value": value ?? ""])
   }
 
   @objc public func googleSignIn(_ invoke: Invoke) throws {
+    guard let config = self.googleSignInConfig else {
+      invoke.reject("GoogleSignIn not configured")
+      return
+    }
+    
     // Use modern iOS 15+ method to get the presenting view controller
     var presentingViewController: UIViewController?
     
@@ -41,22 +49,21 @@ class GoogleAuthPlugin: Plugin {
       return
     }
 
-    // GoogleSignIn 6.x API: Use correct method signature
-    GIDSignIn.sharedInstance.signIn(with: GIDSignIn.sharedInstance.configuration!, presenting: presentingVC) { result, error in
+    // GoogleSignIn 6.x API: Pass configuration directly to signIn method
+    GIDSignIn.sharedInstance.signIn(with: config, presenting: presentingVC) { result, error in
       if let error = error {
         invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
         return
       }
 
       guard let result = result,
-            let user = result.user,
-            let idToken = user.idToken?.tokenString else {
+            let idToken = result.user.idToken?.tokenString else {
         invoke.reject("Failed to get user information or ID token")
         return
       }
 
-      let accessToken = user.accessToken.tokenString
-      let profile = user.profile
+      let accessToken = result.user.accessToken.tokenString
+      let profile = result.user.profile
 
       invoke.resolve([
         "success": true,

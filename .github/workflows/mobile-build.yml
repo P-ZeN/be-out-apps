@@ -2230,7 +2230,7 @@ jobs:
             echo ""
             echo "🔧 XCODE BUILD RUST CODE PHASE FAILURE DETECTED:"
             echo "   The Xcode build is failing during the 'Build Rust Code' phase."
-            echo "   This indicates the Russst compilation within Xcode is failing."
+            echo "   This indicates the Russsst compilation within Xcode is failing."
             echo "   Common S:"
             echo "   1. Rust dependencies not properly configured for iOS"
             echo "   2. Missing system libraries or frameworks"
