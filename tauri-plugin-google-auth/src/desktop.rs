@@ -4,7 +4,7 @@ use crate::models::*;
 
 pub fn init<R: Runtime>(
   app: &AppHandle<R>,
-  _api: PluginApi<R>,
+  _api: PluginApi<R, ()>,
 ) -> crate::Result<GoogleAuth<R>> {
   Ok(GoogleAuth(app.clone()))
 }

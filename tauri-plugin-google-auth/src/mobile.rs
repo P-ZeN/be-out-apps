@@ -11,7 +11,7 @@ tauri::ios_plugin_binding!(init_plugin_google_auth);
 // initializes the Kotlin or Swift plugin classes
 pub fn init<R: Runtime>(
   _app: &AppHandle<R>,
-  api: PluginApi<R>,
+  api: PluginApi<R, ()>,
 ) -> crate::Result<GoogleAuth<R>> {
   #[cfg(target_os = "android")]
   let handle = api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin")?;

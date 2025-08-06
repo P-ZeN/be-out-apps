@@ -1,16 +1,4 @@
-use tauri::{AppHandle,#[command]
-pub(crate) async fn google_sign_out<R: Runtime>(
-    app: AppHandle<R>,
-) -> Result<GoogleSignOutResponse> {
-    app.google_auth().google_sign_out().await
-}
-
-#[command]
-pub(crate) async fn is_signed_in<R: Runtime>(
-    app: AppHandle<R>,
-) -> Result<IsSignedInResponse> {
-    app.google_auth().is_signed_in().await
-}time};
+use tauri::{AppHandle, command, Runtime};
 
 use crate::models::*;
 use crate::Result;
@@ -35,13 +23,13 @@ pub(crate) async fn google_sign_in<R: Runtime>(
 #[command]
 pub(crate) async fn google_sign_out<R: Runtime>(
     app: AppHandle<R>,
-) -> Result<()> {
-    app.google_auth().google_sign_out()
+) -> Result<GoogleSignOutResponse> {
+    app.google_auth().google_sign_out().await
 }
 
 #[command]
 pub(crate) async fn is_signed_in<R: Runtime>(
     app: AppHandle<R>,
-) -> Result<bool> {
-    app.google_auth().is_signed_in()
+) -> Result<IsSignedInResponse> {
+    app.google_auth().is_signed_in().await
 }
