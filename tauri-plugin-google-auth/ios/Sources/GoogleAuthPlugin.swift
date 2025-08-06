@@ -1,14 +1,13 @@
-#if canImport(Tauri)
-import Tauri
-#endif
 import UIKit
 import WebKit
 import GoogleSignIn
 
 #if canImport(Tauri)
+import Tauri
+
 class GoogleAuthPlugin: Plugin {
 #else
-// Fallback stub for standalone compilation
+// Fallback stub protocols for standalone compilation
 protocol Plugin {
     func load(webview: WKWebView)
 }
@@ -23,11 +22,7 @@ class GoogleAuthPlugin: Plugin {
 #endif
   private var googleSignInConfig: GIDConfiguration?
 
-#if canImport(Tauri)
-  @objc public override func load(webview: WKWebView) {
-#else
   @objc public func load(webview: WKWebView) {
-#endif
     // Configure Google Sign-In with the client ID from Tauri config
     let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 
