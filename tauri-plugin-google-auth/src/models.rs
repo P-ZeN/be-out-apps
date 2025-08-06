@@ -32,3 +32,17 @@ pub struct GoogleSignInResponse {
   pub email: Option<String>,
   pub error: Option<String>,
 }
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GoogleSignOutResponse {
+  pub success: bool,
+  pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IsSignedInResponse {
+  pub is_signed_in: bool,
+  pub error: Option<String>,
+}

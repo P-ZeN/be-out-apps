@@ -18,4 +18,35 @@ impl<R: Runtime> GoogleAuth<R> {
       value: payload.value,
     })
   }
+
+  pub fn google_sign_in(&self, _payload: GoogleSignInRequest) -> crate::Result<GoogleSignInResponse> {
+    // Desktop implementation would use web-based OAuth flow
+    // For now, return a placeholder response
+    Ok(GoogleSignInResponse {
+      success: true,
+      id_token: Some("desktop_placeholder_token".to_string()),
+      display_name: Some("Desktop User".to_string()),
+      given_name: Some("Desktop".to_string()),
+      family_name: Some("User".to_string()),
+      profile_picture_uri: None,
+      email: Some("desktop@example.com".to_string()),
+      error: None,
+    })
+  }
+
+  pub fn google_sign_out(&self) -> crate::Result<GoogleSignOutResponse> {
+    // Desktop implementation would clear stored tokens
+    Ok(GoogleSignOutResponse {
+      success: true,
+      error: None,
+    })
+  }
+
+  pub fn is_signed_in(&self) -> crate::Result<IsSignedInResponse> {
+    // Desktop implementation would check stored tokens
+    Ok(IsSignedInResponse {
+      is_signed_in: false,
+      error: None,
+    })
+  }
 }

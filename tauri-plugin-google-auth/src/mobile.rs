@@ -15,8 +15,10 @@ pub fn init<R: Runtime>(
 ) -> crate::Result<GoogleAuth<R>> {
   #[cfg(target_os = "android")]
   let handle = api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin")?;
+  
   #[cfg(target_os = "ios")]
   let handle = api.register_ios_plugin(init_plugin_google_auth)?;
+  
   Ok(GoogleAuth(handle))
 }
 
@@ -35,6 +37,20 @@ impl<R: Runtime> GoogleAuth<R> {
     self
       .0
       .run_mobile_plugin("googleSignIn", payload)
+      .map_err(Into::into)
+  }
+
+  pub fn google_sign_out(&self) -> crate::Result<GoogleSignOutResponse> {
+    self
+      .0
+      .run_mobile_plugin("googleSignOut", ())
+      .map_err(Into::into)
+  }
+
+  pub fn is_signed_in(&self) -> crate::Result<IsSignedInResponse> {
+    self
+      .0
+      .run_mobile_plugin("isSignedIn", ())
       .map_err(Into::into)
   }
 }

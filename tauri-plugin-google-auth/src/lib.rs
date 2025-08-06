@@ -35,7 +35,12 @@ impl<R: Runtime, T: Manager<R>> crate::GoogleAuthExt<R> for T {
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
   Builder::new("google-auth")
-    .invoke_handler(tauri::generate_handler![commands::ping, commands::google_sign_in])
+    .invoke_handler(tauri::generate_handler![
+      commands::ping, 
+      commands::google_sign_in,
+      commands::google_sign_out,
+      commands::is_signed_in
+    ])
     .setup(|app, api| {
       #[cfg(mobile)]
       let google_auth = mobile::init(app, api)?;
