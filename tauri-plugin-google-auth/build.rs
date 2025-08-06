@@ -7,7 +7,7 @@ fn main() {
         .try_build();
 
     // when building documentation for Android the plugin build result is always Err() and is irrelevant to the crate documentation build
-    if !(cfg!(docsrs) && std::env::var("TARGET").unwrap().contains("android")) {
+    if !(cfg!(docsrs) && std::env::var("TARGET").unwrap_or_default().contains("android")) {
         result.unwrap();
     }
 }

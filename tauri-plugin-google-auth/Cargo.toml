@@ -8,6 +8,9 @@ rust-version = "1.77.2"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
 links = "tauri-plugin-google-auth"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 tauri = { version = "2.6.2" }
 serde = "1.0"

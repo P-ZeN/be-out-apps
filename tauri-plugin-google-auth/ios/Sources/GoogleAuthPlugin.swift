@@ -10,12 +10,13 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func ping(_ invoke: Invoke) throws {
-    let value = invoke.parseArgs(as: [String: String].self)?["value"]
+    let args = invoke.parseArgs([String: String].self)
+    let value = args["value"]
     invoke.resolve(["value": value ?? ""])
   }
 
   @objc public func googleSignIn(_ invoke: Invoke) throws {
-    DispatchQueue.main.async { [weak self] in
+    DispatchQueue.main.async {
       var presentingViewController: UIViewController?
 
       if #available(iOS 15.0, *) {

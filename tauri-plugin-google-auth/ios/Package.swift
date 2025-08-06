@@ -34,6 +34,8 @@ let package = Package(
                 .linkedFramework("UIKit", .when(platforms: [.iOS])),
                 .linkedFramework("WebKit", .when(platforms: [.iOS])),
                 .linkedFramework("Foundation", .when(platforms: [.iOS])),
+                .linkedFramework("AuthenticationServices", .when(platforms: [.iOS])),
+                .linkedFramework("SafariServices", .when(platforms: [.iOS])),
             ]
         ),
     ]
