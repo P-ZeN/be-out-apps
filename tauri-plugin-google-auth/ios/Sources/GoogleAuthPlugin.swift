@@ -122,17 +122,23 @@ class GoogleAuthPlugin: Plugin {
   @objc public func ping() {
     print("GoogleAuthPlugin: ping method (stub)")
   }
-
+  
   @objc public func googleSignIn() {
     print("GoogleAuthPlugin: googleSignIn method (stub)")
   }
-
+  
   @objc public func googleSignOut() {
     print("GoogleAuthPlugin: googleSignOut method (stub)")
   }
-
+  
   @objc public func isSignedIn() {
     print("GoogleAuthPlugin: isSignedIn method (stub)")
   }
+}
+
+// CRITICAL: Export function must be available in both compilation paths for swift-rs
+@_cdecl("init_plugin_google_auth")
+func init_plugin_google_auth() -> UnsafeMutableRawPointer {
+    return Unmanaged.passRetained(GoogleAuthPlugin()).toOpaque()
 }
 #endif

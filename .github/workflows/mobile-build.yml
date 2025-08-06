@@ -1216,6 +1216,45 @@ jobs:
         if timeout 600 swift build --verbose 2>&1 | tee ../swift_package_build.log; then
           echo "✅ Swift package built successfully"
           echo "This means the issue is likely in swift-rs integration, not the Swift package itself"
+
+          # Test 4a: Check for exported symbols in the built library
+          echo ""
+          echo "=== Test 4a: Checking for exported symbols ==="
+          echo "Looking for built Swift package libraries..."
+          find .build -name "*.dylib" -o -name "*.a" 2>/dev/null | head -5
+
+          # Find the built library and check for our exported function
+          SWIFT_LIB=$(find .build -name "*GoogleAuthPlugin*" -o -name "*tauri_plugin_google_auth*" 2>/dev/null | head -1)
+          if [ -n "$SWIFT_LIB" ]; then
+            echo "📋 Found Swift library: $SWIFT_LIB"
+            
+            # Use nm to check for exported symbols
+            echo "🔍 Checking for _init_plugin_google_auth symbol..."
+            if nm "$SWIFT_LIB" 2>/dev/null | grep "_init_plugin_google_auth"; then
+              echo "✅ _init_plugin_google_auth symbol found in Swift library"
+            else
+              echo "❌ _init_plugin_google_auth symbol NOT found in Swift library"
+              echo "📋 Available symbols in library:"
+              nm "$SWIFT_LIB" 2>/dev/null | grep -E "^[0-9a-f]+ [TtSs] " | head -10 || echo "No symbols found"
+            fi
+          else
+            echo "⚠️ Could not find Swift library file to check symbols"
+            echo "📋 Available .build contents:"
+            find .build -type f -name "*" 2>/dev/null | head -10
+          fi
+
+          # Test 4b: Alternative symbol checking methods
+          echo ""
+          echo "=== Test 4b: Alternative symbol export verification ==="
+          
+          # Check object files for the symbol
+          echo "🔍 Checking object files for _init_plugin_google_auth..."
+          find .build -name "*.o" -exec nm {} \; 2>/dev/null | grep "_init_plugin_google_auth" | head -5 || echo "Symbol not found in object files"
+          
+          # Check if there are any C-compatible exports
+          echo "🔍 Checking for any @_cdecl exports..."
+          find .build -name "*.o" -exec nm {} \; 2>/dev/null | grep -E "^[0-9a-f]+ [TtSs] _" | head -10 || echo "No C-compatible exports found"
+
         else
           echo "❌ Swift package build failed"
           echo "This is the root cause of the tauri-plugin build failure"
@@ -2182,6 +2221,10 @@ jobs:
           echo "📋 Searching for swift-rs compilation errors:"
           grep -A 10 -B 5 "swift-rs\|SwiftLinker\|Failed to compile swift package" ios_build.log | tail -20 || echo "No swift-rs errors found"
           grep -A 10 -B 5 "Swift.*error\|swift.*error" ios_build.log | tail -20 || echo "No Swift errors found in log"
+
+          # Look for linker symbol errors (new - this is our current issue)
+          echo "📋 Searching for linker symbol errors:"
+          grep -A 10 -B 5 "Undefined symbols\|_init_plugin_google_auth\|symbol.*not found" ios_build.log | tail -20 || echo "No linker symbol errors found"
 
           # If it fails immediately, try without arguments
           echo ""
