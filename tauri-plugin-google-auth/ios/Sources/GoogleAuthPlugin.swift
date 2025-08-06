@@ -56,13 +56,13 @@ class GoogleAuthPlugin: Plugin {
       }
 
       guard let result = result,
-            let idToken = result.idToken?.tokenString else {
+            let idToken = result.user.idToken?.tokenString else {
         invoke.reject("Failed to get user information or ID token")
         return
       }
 
-      let accessToken = result.accessToken.tokenString
-      let profile = result.profile
+      let accessToken = result.user.accessToken.tokenString
+      let profile = result.user.profile
 
       invoke.resolve([
         "success": true,
