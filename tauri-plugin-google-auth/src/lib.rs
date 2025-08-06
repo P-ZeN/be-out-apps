@@ -36,7 +36,7 @@ impl<R: Runtime, T: Manager<R>> crate::GoogleAuthExt<R> for T {
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
   Builder::new("google-auth")
     .invoke_handler(tauri::generate_handler![
-      commands::ping, 
+      commands::ping,
       commands::google_sign_in,
       commands::google_sign_out,
       commands::is_signed_in

@@ -1,15 +1,5 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
-#[cfg(debug_assertions)]
-#[cfg(target_os = "android")]
-use tauri::Manager;
-
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-
-#[cfg(debug_assertions)]
-#[cfg(target_os = "android")]
-use tauri::Manager;
-
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -60,11 +50,11 @@ async fn setup_android_interface() -> Result<serde_json::Value, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_google_auth::init());
-    
+
     builder
         .invoke_handler(tauri::generate_handler![greet, google_sign_in_android, setup_android_interface])
         .run(tauri::generate_context!())

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-isSignedIn"
+description = "Enables the isSignedIn command without any pre-configured scope."
+commands.allow = ["isSignedIn"]
+
+[[permission]]
+identifier = "deny-isSignedIn"
+description = "Denies the isSignedIn command without any pre-configured scope."
+commands.deny = ["isSignedIn"]

@@ -295,6 +295,30 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the googleSignIn command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-googleSignIn",
+          "markdownDescription": "Enables the googleSignIn command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the googleSignIn command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-googleSignIn",
+          "markdownDescription": "Denies the googleSignIn command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the googleSignOut command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-googleSignOut",
+          "markdownDescription": "Enables the googleSignOut command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the googleSignOut command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-googleSignOut",
+          "markdownDescription": "Denies the googleSignOut command without any pre-configured scope."
+        },
+        {
           "description": "Enables the google_sign_in command without any pre-configured scope.",
           "type": "string",
           "const": "allow-google-sign-in",
@@ -305,6 +329,18 @@
           "type": "string",
           "const": "deny-google-sign-in",
           "markdownDescription": "Denies the google_sign_in command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the isSignedIn command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-isSignedIn",
+          "markdownDescription": "Enables the isSignedIn command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the isSignedIn command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-isSignedIn",
+          "markdownDescription": "Denies the isSignedIn command without any pre-configured scope."
         },
         {
           "description": "Enables the ping command without any pre-configured scope.",

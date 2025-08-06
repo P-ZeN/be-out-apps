@@ -15,10 +15,10 @@ pub fn init<R: Runtime>(
 ) -> crate::Result<GoogleAuth<R>> {
   #[cfg(target_os = "android")]
   let handle = api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin")?;
-  
+
   #[cfg(target_os = "ios")]
   let handle = api.register_ios_plugin(init_plugin_google_auth)?;
-  
+
   Ok(GoogleAuth(handle))
 }
 

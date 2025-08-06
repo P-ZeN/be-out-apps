@@ -24,12 +24,12 @@ pub(crate) async fn google_sign_in<R: Runtime>(
 pub(crate) async fn google_sign_out<R: Runtime>(
     app: AppHandle<R>,
 ) -> Result<GoogleSignOutResponse> {
-    app.google_auth().google_sign_out().await
+    app.google_auth().google_sign_out()
 }
 
 #[command]
 pub(crate) async fn is_signed_in<R: Runtime>(
     app: AppHandle<R>,
 ) -> Result<IsSignedInResponse> {
-    app.google_auth().is_signed_in().await
+    app.google_auth().is_signed_in()
 }
