@@ -131,7 +131,7 @@ cat > web-installer/index.html << 'EOF'
 </head>
 <body>
     <div class="container">
-        <h1>📱 BeOut Mobile App</h1>
+        <h1>📱 Be Out Mobile App</h1>
         <p>Install the latest development build of BeOut on your mobile device</p>
 
         <div class="build-info">
