@@ -1913,7 +1913,7 @@ jobs:
 
           # Look for Rust compilation errors specifically
           echo "📋 Searching for Rust compilation errors:"
-          grep -A 10 -B 5 "error:" ios_build.log | tail -20 || echo "No Rust errors found in logss"
+          grep -A 10 -B 5 "error:" ios_build.log | tail -20 || echo "No Rust errors found in logsss"
 
           # Look for Swift compilation errorss
           echo "📋 Searching for Swift compilation errors:"

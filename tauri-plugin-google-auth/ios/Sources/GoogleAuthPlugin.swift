@@ -16,12 +16,26 @@ class GoogleAuthPlugin: Plugin {
 
   @objc public func googleSignIn(_ invoke: Invoke) throws {
     DispatchQueue.main.async {
-      guard let presentingViewController = UIApplication.shared.windows.first?.rootViewController else {
+      var presentingViewController: UIViewController?
+      
+      if #available(iOS 15.0, *) {
+        // iOS 15+ method
+        if let windowScene = UIApplication.shared.connectedScenes
+          .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+           let window = windowScene.windows.first {
+          presentingViewController = window.rootViewController
+        }
+      } else {
+        // iOS 13-14 fallback
+        presentingViewController = UIApplication.shared.windows.first?.rootViewController
+      }
+      
+      guard let viewController = presentingViewController else {
         invoke.reject("No presenting view controller available")
         return
       }
       
-      GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
+      GIDSignIn.sharedInstance.signIn(withPresenting: viewController) { result, error in
         if let error = error {
           invoke.reject("Google Sign In failed: \(error.localizedDescription)")
           return
