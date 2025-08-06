@@ -8,17 +8,16 @@ class GoogleAuthPlugin: Plugin {
     // Configure Google Sign-In with the client ID from Tauri config
     let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 
-    guard let config = GIDConfiguration(clientID: clientId) else {
-      print("Error: Failed to create GIDConfiguration")
-      return
-    }
-
-    GIDSignIn.sharedInstance.configuration = config
+    // GoogleSignIn 6.x: GIDConfiguration initializer doesn't return optional
+    let config = GIDConfiguration(clientID: clientId)
+    
+    // GoogleSignIn 6.x: Use configure() method instead of setting configuration property
+    GIDSignIn.sharedInstance.configure(with: config)
     print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
   }
 
   @objc public func ping(_ invoke: Invoke) throws {
-    let args = invoke.parseArgs([String: String].self)
+    let args = try invoke.parseArgs([String: String].self)
     let value = args["value"]
     invoke.resolve(["value": value ?? ""])
   }
@@ -29,21 +28,21 @@ class GoogleAuthPlugin: Plugin {
       return
     }
 
-    // Use GoogleSignIn 6.x API
-    GIDSignIn.sharedInstance.signIn(with: GIDSignIn.sharedInstance.configuration!, presenting: presentingViewController) { user, error in
+    // GoogleSignIn 6.x API: Use signIn(withPresenting:) method
+    GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
       if let error = error {
         invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
         return
       }
 
-      guard let user = user,
-            let authentication = user.authentication,
-            let idToken = authentication.idToken else {
+      guard let result = result,
+            let user = result.user,
+            let idToken = user.idToken?.tokenString else {
         invoke.reject("Failed to get user information or ID token")
         return
       }
 
-      let accessToken = authentication.accessToken
+      let accessToken = user.accessToken.tokenString
       let profile = user.profile
 
       invoke.resolve([
