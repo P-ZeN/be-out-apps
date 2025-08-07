@@ -1,17 +1,5 @@
 use tauri::{
-  plugin::{PluginApi,   pub fn google_sign_in(&self, payload: GoogleSignInRequest) -> crate::Result<GoogleSignInResponse> {
-    self
-      .0
-      .run_mobile_plugin("signIn", payload)
-      .map_err(Into::into)
-  }
-
-  pub fn google_sign_out(&self) -> crate::Result<GoogleSignOutResponse> {
-    self
-      .0
-      .run_mobile_plugin("signOut", ())
-      .map_err(Into::into)
-  },
+  plugin::{PluginApi, PluginHandle},
   AppHandle, Runtime,
 };
 
@@ -48,14 +36,14 @@ impl<R: Runtime> GoogleAuth<R> {
   pub fn google_sign_in(&self, payload: GoogleSignInRequest) -> crate::Result<GoogleSignInResponse> {
     self
       .0
-      .run_mobile_plugin("googleSignIn", payload)
+      .run_mobile_plugin("signIn", payload)
       .map_err(Into::into)
   }
 
   pub fn google_sign_out(&self) -> crate::Result<GoogleSignOutResponse> {
     self
       .0
-      .run_mobile_plugin("googleSignOut", ())
+      .run_mobile_plugin("signOut", ())
       .map_err(Into::into)
   }
 
