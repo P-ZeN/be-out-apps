@@ -9,6 +9,9 @@ android {
     defaultConfig {
         minSdk = 24
         consumerProguardFiles("consumer-rules.pro")
+        
+        // Add build config fields for Google Client ID
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"${project.findProperty("googleClientId") ?: System.getenv("GOOGLE_CLIENT_ID_ANDROID") ?: ""}\"")
     }
 
     buildTypes {
@@ -19,6 +22,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+    
+    buildFeatures {
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

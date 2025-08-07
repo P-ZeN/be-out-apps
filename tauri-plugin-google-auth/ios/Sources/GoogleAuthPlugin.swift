@@ -25,7 +25,7 @@ class GoogleAuthPlugin: Plugin {
     invoke.resolve(["value": value ?? ""])
   }
 
-  @objc public func googleSignIn(_ invoke: Invoke) throws {
+  @objc public func signIn(_ invoke: Invoke) throws {
     guard let config = googleSignInConfig else {
       invoke.reject("Google Sign-In not configured")
       return
@@ -77,7 +77,7 @@ class GoogleAuthPlugin: Plugin {
     }
   }
 
-  @objc public func googleSignOut(_ invoke: Invoke) throws {
+  @objc public func signOut(_ invoke: Invoke) throws {
     GIDSignIn.sharedInstance.signOut()
     invoke.resolve(["success": true])
   }

@@ -153,14 +153,14 @@ async function signInWithGoogleTauri() {
       throw new Error('Tauri invoke function not available');
     }
 
-    // Call the mobile plugin command directly
-    const result = await invoke('plugin:google-signin|googleSignIn', {});
+    // Call the mobile plugin command directly with correct plugin name and command
+    const result = await invoke('plugin:google-auth|google_sign_in', {});
 
     console.log('Google sign-in plugin result:', result);
 
-    if (result.success && result.user) {
+    if (result.success && result.idToken) {
       // Authentication successful - process the token
-      const idToken = result.user.idToken;
+      const idToken = result.idToken;
 
       // Send the ID token to the backend for verification and to get JWT
       const authResult = await authService.loginWithGoogleMobile(idToken);

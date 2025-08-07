@@ -28,36 +28,31 @@
         "category": "Lifestyle",
         "copyright": "Copyright © 2025 Be Out!",
         "icon": [
+            "icons/32x32.png",
+            "icons/64x64.png", 
             "icons/128x128.png",
             "icons/128x128@2x.png",
-            "icons/32x32.png",
-            "icons/64x64.png",
             "icons/icon.icns",
             "icons/icon.ico",
             "icons/icon.png",
-            "icons/be-out_icon_512x512.png",
-            "icons/android-icon-48.png",
-            "icons/android-icon-72.png",
-            "icons/android-icon-96.png",
-            "icons/android-icon-144.png",
-            "icons/android-icon-192.png",
-            "icons/Square107x107Logo.png",
-            "icons/Square142x142Logo.png",
-            "icons/Square150x150Logo.png",
-            "icons/Square284x284Logo.png",
-            "icons/Square30x30Logo.png",
-            "icons/Square310x310Logo.png",
-            "icons/Square44x44Logo.png",
-            "icons/Square71x71Logo.png",
-            "icons/Square89x89Logo.png",
-            "icons/StoreLogo.png"
+            "icons/be-out_icon_512x512.png"
         ],
         "longDescription": "Discover amazing events happening around you. Connect with your community and never miss out on experiences that matter.",
         "resources": [],
         "shortDescription": "Discover events in your community",
         "targets": "all",
         "iOS": {
-            "minimumSystemVersion": "15.0"
+            "minimumSystemVersion": "12.0",
+            "developmentTeam": "${APPLE_DEVELOPMENT_TEAM}",
+            "provisioningProfile": "${PROFILE_UUID}",
+            "frameworks": [
+                "Security",
+                "SystemConfiguration", 
+                "AuthenticationServices",
+                "SafariServices",
+                "LocalAuthentication",
+                "WebKit"
+            ]
         },
         "android": {
             "minSdkVersion": 24
@@ -81,11 +76,11 @@
                 }
             ]
         },
-        "google-signin": {
+        "google-auth": {
             "clientId": {
-                "android": "1064619689471-7lr8e71tr6h55as83o8gn4bdnhabavpu.apps.googleusercontent.com",
-                "desktop": "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com",
-                "ios": "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
+                "android": "${GOOGLE_CLIENT_ID_ANDROID}",
+                "desktop": "${GOOGLE_SERVER_CLIENT_ID}",
+                "ios": "${GOOGLE_CLIENT_ID_IOS}"
             }
         }
     }
