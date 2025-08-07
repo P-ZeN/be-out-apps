@@ -7,7 +7,7 @@ echo "🚀 Starting Android OAuth Testing..."
 
 # Check if server is running
 echo "📡 Checking server status..."
-curl -s http://localhost:5001/api/health > /dev/null
+curl -s http://localhost:3000/api/health > /dev/null
 if [ $? -eq 0 ]; then
     echo "✅ Server is running"
 else
@@ -20,7 +20,7 @@ fi
 echo "🔍 Testing mobile OAuth endpoints..."
 
 echo "Testing /api/oauth/google/mobile-callback endpoint..."
-response=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:5001/api/oauth/google/mobile-callback \
+response=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3000/api/oauth/google/mobile-callback \
     -H "Content-Type: application/json" \
     -d '{"idToken": "test"}')
 
@@ -31,7 +31,7 @@ else
 fi
 
 echo "Testing /api/oauth/google/mobile-profile-callback endpoint..."
-response=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:5001/api/oauth/google/mobile-profile-callback \
+response=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3000/api/oauth/google/mobile-profile-callback \
     -H "Content-Type: application/json" \
     -d '{"email": "test@test.com", "displayName": "Test User"}')
 

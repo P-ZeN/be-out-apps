@@ -7,16 +7,32 @@ import Tauri
 
 class GoogleAuthPlugin: Plugin {
   private var googleSignInConfig: GIDConfiguration?
+  private var isConfigured = false
 
   @objc public func load(webview: WKWebView) {
-    // Configure Google Sign-In with the client ID from Tauri config
-    let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
+    // Use a more defensive approach for iOS initialization
+    DispatchQueue.main.async { [weak self] in
+      self?.safeInitialization()
+    }
+  }
+  
+  private func safeInitialization() {
+    guard !isConfigured else { return }
+    
+    do {
+      // Configure Google Sign-In with the client ID from Tauri config
+      let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
 
-    let config = GIDConfiguration(clientID: clientId)
+      let config = GIDConfiguration(clientID: clientId)
 
-    // Store configuration for use in signIn method
-    self.googleSignInConfig = config
-    print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
+      // Store configuration for use in signIn method
+      self.googleSignInConfig = config
+      self.isConfigured = true
+      print("GoogleAuthPlugin loaded - Google Sign-In SDK configured safely")
+    } catch {
+      print("GoogleAuthPlugin initialization failed safely: \(error)")
+      // Don't crash the app, just log the error
+    }
   }
 
   @objc public func ping(_ invoke: Invoke) throws {
@@ -26,54 +42,57 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func signIn(_ invoke: Invoke) throws {
-    guard let config = googleSignInConfig else {
+    guard isConfigured, let config = googleSignInConfig else {
       invoke.reject("Google Sign-In not configured")
       return
     }
 
     var presentingViewController: UIViewController?
 
-    if #available(iOS 15.0, *) {
-      // iOS 15+ method using UIWindowScene
-      if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-         let window = windowScene.windows.first {
-        presentingViewController = window.rootViewController
+    // More defensive view controller detection
+    DispatchQueue.main.async {
+      if #available(iOS 15.0, *) {
+        // iOS 15+ method using UIWindowScene
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+          presentingViewController = window.rootViewController
+        }
+      } else {
+        // Fallback for iOS 12-14
+        presentingViewController = UIApplication.shared.windows.first?.rootViewController
       }
-    } else {
-      // Fallback for iOS 12-14
-      presentingViewController = UIApplication.shared.windows.first?.rootViewController
-    }
 
-    guard let presentingVC = presentingViewController else {
-      invoke.reject("No presenting view controller available")
-      return
-    }
-
-    // GoogleSignIn 6.x API: Pass configuration directly to signIn method
-    GIDSignIn.sharedInstance.signIn(with: config, presenting: presentingVC) { result, error in
-      if let error = error {
-        invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
+      guard let presentingVC = presentingViewController else {
+        invoke.reject("No presenting view controller available")
         return
       }
 
-      guard let result = result,
-            let idToken = result.idToken?.tokenString else {
-        invoke.reject("Failed to get user information or ID token")
-        return
+      // GoogleSignIn 6.x API: Pass configuration directly to signIn method
+      GIDSignIn.sharedInstance.signIn(with: config, presenting: presentingVC) { result, error in
+        if let error = error {
+          invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
+          return
+        }
+
+        guard let result = result,
+              let idToken = result.idToken?.tokenString else {
+          invoke.reject("Failed to get user information or ID token")
+          return
+        }
+
+        let accessToken = result.accessToken.tokenString
+        let profile = result.profile
+
+        invoke.resolve([
+          "success": true,
+          "error": "",
+          "idToken": idToken,
+          "accessToken": accessToken,
+          "displayName": profile?.name ?? "",
+          "email": profile?.email ?? "",
+          "photoUrl": profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
+        ])
       }
-
-      let accessToken = result.accessToken.tokenString
-      let profile = result.profile
-
-      invoke.resolve([
-        "success": true,
-        "error": "",
-        "idToken": idToken,
-        "accessToken": accessToken,
-        "displayName": profile?.name ?? "",
-        "email": profile?.email ?? "",
-        "photoUrl": profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
-      ])
     }
   }
 

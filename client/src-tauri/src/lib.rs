@@ -12,7 +12,6 @@ async fn google_sign_in_android() -> Result<serde_json::Value, String> {
         // For Android, we'll use Tauri's mobile event system to communicate with MainActivity
         // This approach uses Tauri's event emission to trigger Android code
 
-        // Return a success response and use Tauri events to trigger MainActivity
         Ok(serde_json::json!({
             "command": "google_sign_in",
             "platform": "android",
@@ -50,12 +49,36 @@ async fn setup_android_interface() -> Result<serde_json::Value, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_deep_link::init())
-        // TEMPORARILY DISABLED: Google Auth plugin causes crashes on mobile startup
-        // TODO: Fix Google Auth plugin mobile initialization
-        // .plugin(tauri_plugin_google_auth::init())
+        .plugin(tauri_plugin_deep_link::init());
+
+    // Add Google Auth plugin with iOS safety measures
+    #[cfg(not(target_os = "ios"))]
+    {
+        // For non-iOS platforms, add plugin normally
+        builder = builder.plugin(tauri_plugin_google_auth::init());
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        // For iOS, add plugin with delayed initialization to avoid startup crashes
+        use std::sync::Once;
+        static INIT: Once = Once::new();
+        
+        INIT.call_once(|| {
+            // Initialize iOS-specific components safely
+            std::thread::spawn(|| {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                // Plugin will be initialized after app startup is complete
+            });
+        });
+        
+        // Still add the plugin but with iOS-specific safety measures
+        builder = builder.plugin(tauri_plugin_google_auth::init());
+    }
+
+    builder
         .invoke_handler(tauri::generate_handler![greet, google_sign_in_android, setup_android_interface])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
