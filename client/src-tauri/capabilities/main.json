@@ -9,8 +9,7 @@
         "core:default",
         "shell:allow-open",
         "shell:default",
-        "deep-link:default",
-        "google-auth:default"
+        "deep-link:default"
     ],
     "local": true
 }
