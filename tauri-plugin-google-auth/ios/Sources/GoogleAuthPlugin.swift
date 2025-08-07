@@ -10,15 +10,17 @@ class GoogleAuthPlugin: Plugin {
   private var isConfigured = false
 
   @objc public func load(webview: WKWebView) {
-    // Use a more defensive approach for iOS initialization
-    DispatchQueue.main.async { [weak self] in
+    // Delay initialization to prevent startup crashes
+    // Only configure when actually needed, not during app startup
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+      // Safe initialization - don't crash if it fails
       self?.safeInitialization()
     }
   }
-  
+
   private func safeInitialization() {
     guard !isConfigured else { return }
-    
+
     do {
       // Configure Google Sign-In with the client ID from Tauri config
       let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"

@@ -237,11 +237,9 @@ const Login = () => {
                 try {
                     // Use correct payload structure that matches the plugin expectations
                     const result = await invokeApi.invoke('plugin:google-auth|google_sign_in', {
-                        payload: {
-                            filterByAuthorizedAccounts: false,
-                            autoSelectEnabled: false,
-                            nonce: nonce
-                        }
+                        filterByAuthorizedAccounts: false,
+                        autoSelectEnabled: false,
+                        nonce: nonce
                     });
 
                     console.log("Google sign-in result:", result);

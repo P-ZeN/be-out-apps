@@ -137,4 +137,32 @@ class GoogleAuth(private val activity: Activity) {
     fun pong(value: String?): String {
         return value ?: "pong"
     }
+
+    fun signOut(callback: (GoogleSignInResult) -> Unit) {
+        try {
+            googleSignInClient?.signOut()?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d(TAG, "User signed out successfully")
+                    callback(GoogleSignInResult(success = true))
+                } else {
+                    val errorMessage = task.exception?.message ?: "Sign out failed"
+                    Log.e(TAG, "Sign out failed: $errorMessage")
+                    callback(GoogleSignInResult(success = false, error = errorMessage))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during sign out", e)
+            callback(GoogleSignInResult(success = false, error = e.message))
+        }
+    }
+
+    fun isSignedIn(): Boolean {
+        return try {
+            val account = GoogleSignIn.getLastSignedInAccount(activity)
+            account != null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking sign-in status", e)
+            false
+        }
+    }
 }
