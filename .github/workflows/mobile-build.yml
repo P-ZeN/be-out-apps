@@ -2292,6 +2292,122 @@ jobs:
           echo "=== Checking Xcode build directories ==="
           find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
 
+          # Post-build diagnostics for app crash troubleshooting
+          echo ""
+          echo "=== POST-BUILD DIAGNOSTICS FOR APP CRASHES ==="
+          
+          # Find the built .app bundle for analysis
+          APP_BUNDLE=$(find . -name "*.app" -type d 2>/dev/null | head -1)
+          if [ -n "$APP_BUNDLE" ]; then
+            echo "📱 Found app bundle: $APP_BUNDLE"
+            
+            echo ""
+            echo "=== App Bundle Structure Analysis ==="
+            ls -la "$APP_BUNDLE/" || echo "Cannot list app bundle contents"
+            
+            echo ""
+            echo "=== Info.plist Analysis ==="
+            if [ -f "$APP_BUNDLE/Info.plist" ]; then
+              echo "📋 Info.plist exists, checking key settings..."
+              
+              # Check critical Info.plist settings
+              echo "Bundle Identifier:"
+              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleIdentifier" || echo "  Missing CFBundleIdentifier"
+              
+              echo "Bundle Name:"
+              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleName" || echo "  Missing CFBundleName"
+              
+              echo "Bundle Version:"
+              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleVersion" || echo "  Missing CFBundleVersion"
+              
+              echo "Minimum iOS Version:"
+              plutil -p "$APP_BUNDLE/Info.plist" | grep "MinimumOSVersion" || echo "  Missing MinimumOSVersion"
+              
+              echo "Executable:"
+              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleExecutable" || echo "  Missing CFBundleExecutable"
+              
+              echo "Supported Platforms:"
+              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleSupportedPlatforms" || echo "  Missing CFBundleSupportedPlatforms"
+              
+            else
+              echo "❌ CRITICAL: Info.plist missing from app bundle!"
+              echo "This will cause immediate app crash on launch"
+            fi
+            
+            echo ""
+            echo "=== Icon Analysis ==="
+            echo "Checking for app icons in bundle..."
+            find "$APP_BUNDLE" -name "*.png" -o -name "*.icns" | head -10 || echo "No icon files found in app bundle"
+            
+            if ls "$APP_BUNDLE"/*.icns 2>/dev/null; then
+              echo "✅ App icon (.icns) found in bundle"
+            else
+              echo "❌ WARNING: No .icns app icon found - this causes icon display issues"
+            fi
+            
+            echo ""
+            echo "=== Executable Analysis ==="
+            EXECUTABLE_NAME=$(plutil -p "$APP_BUNDLE/Info.plist" 2>/dev/null | grep "CFBundleExecutable" | sed 's/.*=> "\([^"]*\)".*/\1/')
+            if [ -n "$EXECUTABLE_NAME" ] && [ -f "$APP_BUNDLE/$EXECUTABLE_NAME" ]; then
+              echo "✅ Executable found: $APP_BUNDLE/$EXECUTABLE_NAME"
+              
+              # Check executable architecture and linking
+              echo "Architecture:"
+              file "$APP_BUNDLE/$EXECUTABLE_NAME" || echo "Cannot determine architecture"
+              
+              echo "Dynamic libraries:"
+              otool -L "$APP_BUNDLE/$EXECUTABLE_NAME" 2>/dev/null | head -10 || echo "Cannot analyze dynamic libraries"
+              
+              # Check for GoogleSignIn dependencies
+              echo "GoogleSignIn framework dependencies:"
+              otool -L "$APP_BUNDLE/$EXECUTABLE_NAME" 2>/dev/null | grep -i google || echo "No GoogleSignIn dependencies found"
+              
+            else
+              echo "❌ CRITICAL: Executable missing or incorrectly named!"
+              echo "Expected: $APP_BUNDLE/$EXECUTABLE_NAME"
+              echo "This will cause immediate app crash"
+            fi
+            
+            echo ""
+            echo "=== Code Signing Analysis ==="
+            echo "Code signing status:"
+            codesign -v -v "$APP_BUNDLE" 2>&1 || echo "Code signing verification failed"
+            
+            echo "Code signing details:"
+            codesign -d -v -v "$APP_BUNDLE" 2>&1 || echo "Cannot read code signing details"
+            
+            echo ""
+            echo "=== Framework Dependencies Analysis ==="
+            echo "Checking for embedded frameworks..."
+            if [ -d "$APP_BUNDLE/Frameworks" ]; then
+              echo "📦 Embedded frameworks found:"
+              ls -la "$APP_BUNDLE/Frameworks/" || echo "Cannot list frameworks"
+              
+              # Check specifically for GoogleSignIn framework
+              if [ -d "$APP_BUNDLE/Frameworks/GoogleSignIn.framework" ]; then
+                echo "✅ GoogleSignIn.framework is embedded"
+              else
+                echo "❌ WARNING: GoogleSignIn.framework not embedded - may cause runtime crashes"
+              fi
+            else
+              echo "⚠️ No Frameworks directory - external dependencies may be missing"
+            fi
+            
+          else
+            echo "❌ No .app bundle found for analysis"
+          fi
+          
+          echo ""
+          echo "=== Common Crash Fixes ==="
+          echo "If the app crashes on install/open, check:"
+          echo "1. ❌ Code signing: Wrong provisioning profile or certificate"
+          echo "2. ❌ Bundle ID mismatch: Info.plist vs provisioning profile"
+          echo "3. ❌ Missing executable or wrong name in Info.plist"
+          echo "4. ❌ Missing app icons (causes icon display issues)"
+          echo "5. ❌ iOS version compatibility: MinimumOSVersion too high"
+          echo "6. ❌ Missing frameworks: GoogleSignIn or other dependencies"
+          echo "7. ❌ Architecture mismatch: Check if built for correct iOS arch"
+
         else
           echo "=== BUILD FAILED - Analyzing logs ==="
           echo "Final exit code: $BUILD_EXIT_CODE"
