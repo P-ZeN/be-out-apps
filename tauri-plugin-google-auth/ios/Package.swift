@@ -7,7 +7,7 @@ let package = Package(
     name: "tauri-plugin-google-auth",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v12),  // Raise minimum to iOS 12 for better GoogleSignIn compatibility
+        .iOS(.v15),  // Set to iOS 15 for better compatibility with modern GoogleSignIn and Tauri
     ],
     products: [
         .library(
