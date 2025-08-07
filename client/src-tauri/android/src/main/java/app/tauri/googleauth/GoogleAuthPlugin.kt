@@ -39,14 +39,14 @@ class GoogleAuthPlugin(private val activity: Activity) : Plugin(activity) {
             val config = getPluginConfig()
             val clientIdConfig = config?.getJSONObject("clientId")
             val clientId = clientIdConfig?.getString("android")
-            
+
             if (!clientId.isNullOrEmpty()) {
                 Log.d(TAG, "Successfully loaded client ID from Tauri configuration")
                 return clientId
             }
-            
+
             Log.w(TAG, "Client ID not found in Tauri configuration, trying build config...")
-            
+
             // Try BuildConfig constant (set at build time)
             val buildConfigClientId = try {
                 BuildConfig.GOOGLE_CLIENT_ID
@@ -54,21 +54,21 @@ class GoogleAuthPlugin(private val activity: Activity) : Plugin(activity) {
                 Log.w(TAG, "BuildConfig.GOOGLE_CLIENT_ID not available: ${e.message}")
                 null
             }
-            
+
             if (!buildConfigClientId.isNullOrEmpty()) {
                 Log.d(TAG, "Using client ID from BuildConfig")
                 return buildConfigClientId
             }
-            
+
             // Try environment variables as last resort
             val envClientId = System.getenv("GOOGLE_CLIENT_ID_ANDROID")
             if (!envClientId.isNullOrEmpty()) {
                 Log.d(TAG, "Using client ID from environment variable")
                 return envClientId
             }
-            
+
             throw Exception("No Google client ID configured")
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get client ID: ${e.message}")
             throw Exception("Google client ID not configured. Please set it in tauri.conf.json, BuildConfig, or environment variables.")
@@ -163,16 +163,16 @@ class GoogleAuthPlugin(private val activity: Activity) : Plugin(activity) {
     fun signOut(invoke: Invoke) {
         try {
             Log.d(TAG, "Google Sign-Out requested")
-            
+
             // For Google Identity Services, there's no explicit sign-out method
             // The credential is automatically cleared when the app is closed
             val response = JSONObject().apply {
                 put("success", true)
                 put("message", "Sign-out completed")
             }
-            
+
             invoke.resolve(response)
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Google Sign-Out failed", e)
             val errorResponse = JSONObject().apply {
@@ -187,7 +187,7 @@ class GoogleAuthPlugin(private val activity: Activity) : Plugin(activity) {
     fun isSignedIn(invoke: Invoke) {
         try {
             Log.d(TAG, "Checking sign-in status")
-            
+
             // For Google Identity Services, we don't maintain persistent sign-in state
             // Each sign-in is independent
             val response = JSONObject().apply {
@@ -195,9 +195,9 @@ class GoogleAuthPlugin(private val activity: Activity) : Plugin(activity) {
                 put("isSignedIn", false)
                 put("message", "Each sign-in is independent with Google Identity Services")
             }
-            
+
             invoke.resolve(response)
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Check sign-in status failed", e)
             val errorResponse = JSONObject().apply {

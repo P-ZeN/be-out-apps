@@ -9,7 +9,7 @@ android {
     defaultConfig {
         minSdk = 24
         consumerProguardFiles("consumer-rules.pro")
-        
+
         // Add build config fields for Google Client ID
         buildConfigField("String", "GOOGLE_CLIENT_ID", "\"${project.findProperty("googleClientId") ?: System.getenv("GOOGLE_CLIENT_ID_ANDROID") ?: ""}\"")
     }
@@ -23,7 +23,7 @@ android {
             )
         }
     }
-    
+
     buildFeatures {
         buildConfig = true
     }

@@ -449,13 +449,13 @@ jobs:
           else
             echo "❌ Failed to generate icons with npx tauri"
             echo "Trying alternative methods..."
-            
+
             # Try with cargo tauri
             if command -v cargo >/dev/null 2>&1; then
               echo "Trying with cargo tauri icon..."
               cargo tauri icon "$ICON_FILE" --verbose || echo "cargo tauri icon also failed"
             fi
-            
+
             # Try with global tauri command
             if command -v tauri >/dev/null 2>&1; then
               echo "Trying with global tauri command..."
@@ -823,22 +823,22 @@ jobs:
       working-directory: ./client
       run: |
         echo "🔍 Final verification of icons before Android build..."
-        
+
         # Check if icons are in place
         echo "=== Current icon files ==="
         find src-tauri/icons -name "*.png" -o -name "*.ico" | head -15
-        
+
         # Check for custom icon
         if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
           echo "❌ Custom icon source file missing!"
         fi
-        
+
         # Check for generated Android icons
         echo "=== Android-specific generated icons ==="
         find src-tauri/icons -name "android-icon-*.png" | head -10
-        
+
         # If Android project exists, check for icons there too
         if [ -d "src-tauri/gen/android" ]; then
           echo "=== Icons in Android project ==="
@@ -1399,18 +1399,18 @@ jobs:
           echo "✅ iOS project initialized with npx tauri"
         else
           echo "❌ Initial iOS initialization failed, attempting to fix duplicate frameworks..."
-          
+
           # Check if project.yml was created but xcodegen failed due to duplicates
           if [ -f "src-tauri/gen/apple/project.yml" ]; then
             echo "📋 Found project.yml, checking for duplicate framework dependencies..."
-            
+
             # Create a backup
             cp src-tauri/gen/apple/project.yml src-tauri/gen/apple/project.yml.backup
-            
+
             # Show current duplicates
             echo "Current duplicate frameworks:"
             grep -n "Security.framework\|WebKit.framework" src-tauri/gen/apple/project.yml || echo "No framework duplicates found in grep"
-            
+
             # Remove duplicate frameworks using awk to keep only first occurrence
             echo "🔧 Removing duplicate framework dependencies..."
             awk '
@@ -1418,10 +1418,10 @@ jobs:
             /WebKit\.framework/ { if (!seen_webkit) { print; seen_webkit=1 } else { next } }
             !/Security\.framework/ && !/WebKit\.framework/ { print }
             ' src-tauri/gen/apple/project.yml.backup > src-tauri/gen/apple/project.yml
-            
+
             echo "📋 After duplicate removal:"
             grep -n "Security.framework\|WebKit.framework" src-tauri/gen/apple/project.yml || echo "No framework references found"
-            
+
             # Try to regenerate the Xcode project
             echo "🚀 Attempting to regenerate Xcode project after fixing duplicates..."
             cd src-tauri/gen/apple
@@ -1431,24 +1431,24 @@ jobs:
             else
               echo "❌ Still failed after duplicate removal, trying manual cleanup..."
               cd ../../../
-              
+
               # More aggressive cleanup - remove all framework references and re-add unique ones
               echo "🔧 Performing aggressive framework cleanup..."
-              
+
               # Extract the current frameworks (excluding duplicates)
               FRAMEWORKS=$(grep -o "[A-Za-z]*\.framework" src-tauri/gen/apple/project.yml | sort | uniq)
               echo "📋 Unique frameworks found: $FRAMEWORKS"
-              
+
               # Remove all framework lines
               sed '/\.framework/d' src-tauri/gen/apple/project.yml.backup > src-tauri/gen/apple/project.yml.temp
-              
+
               # Find the dependencies section and add frameworks back
               if grep -q "dependencies:" src-tauri/gen/apple/project.yml.temp; then
                 # Add unique frameworks back to dependencies section
                 awk '
-                /dependencies:/ { 
-                  print; 
-                  getline; 
+                /dependencies:/ {
+                  print;
+                  getline;
                   print;
                   print "        - Security.framework";
                   print "        - WebKit.framework";
@@ -1456,13 +1456,13 @@ jobs:
                 }
                 { print }
                 ' src-tauri/gen/apple/project.yml.temp > src-tauri/gen/apple/project.yml
-                
+
                 echo "✅ Frameworks re-added to dependencies section"
               else
                 mv src-tauri/gen/apple/project.yml.temp src-tauri/gen/apple/project.yml
                 echo "⚠️ No dependencies section found, using cleaned file"
               fi
-              
+
               # Try xcodegen again
               cd src-tauri/gen/apple
               if xcodegen generate --spec project.yml; then
@@ -1492,11 +1492,11 @@ jobs:
         elif [ -d "src-tauri/gen/apple" ]; then
           echo "✅ Apple project created successfully at src-tauri/gen/apple"
           ls -la src-tauri/gen/apple/
-          
+
           # Verify the Xcode project was properly generated
           if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
             echo "✅ Xcode project file (project.pbxproj) exists"
-            
+
             # Check that we have the missing project.yml file that caused the build error
             if [ -f "src-tauri/gen/apple/project.yml" ]; then
               echo "✅ project.yml file exists"
@@ -1562,13 +1562,13 @@ jobs:
           else
             echo "❌ Failed to generate icons with npx tauri"
             echo "Trying alternative methods..."
-            
+
             # Try with cargo tauri
             if command -v cargo >/dev/null 2>&1; then
               echo "Trying with cargo tauri icon..."
               cargo tauri icon "$ICON_FILE" --verbose || echo "cargo tauri icon also failed"
             fi
-            
+
             # Try with global tauri command
             if command -v tauri >/dev/null 2>&1; then
               echo "Trying with global tauri command..."
@@ -1590,23 +1590,23 @@ jobs:
       working-directory: ./client
       run: |
         echo "🔍 Final verification of icons before iOS build..."
-        
+
         # Check if icons are in place
         echo "=== Current icon files ==="
         find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
-        
+
         # Check for custom icon
         if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
           echo "❌ Custom icon source file missing!"
         fi
-        
+
         # Check for generated iOS icons
         echo "=== iOS-specific generated icons ==="
         find src-tauri/icons -name "*.icns" | head -10
         ls -la src-tauri/icons/ios/ 2>/dev/null || echo "No iOS icons directory"
-        
+
         # If iOS/Apple project exists, check for icons there too
         if [ -d "src-tauri/gen/ios" ]; then
           echo "=== Icons in iOS project ==="
@@ -1744,55 +1744,111 @@ jobs:
           # Make a backup first
           cp src-tauri/gen/apple/app.xcodeproj/project.pbxproj src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup
 
+          # Show current project structure for debugging
+          echo "📋 Current project.pbxproj structure (buildSettings sections):"
+          grep -n "buildSettings" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -10
+
+          # Check for development team requirement
+          if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
+            TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
+            echo "📋 Using Apple Development Team: $TEAM_ID"
+
+            # Method 1: Direct replacement of existing values
+            echo "🔧 Step 1: Replacing existing DEVELOPMENT_TEAM values..."
+            sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            sed -i '' "s/DEVELOPMENT_TEAM = \"[^\"]*\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+
+            # Method 2: Add DEVELOPMENT_TEAM to all buildSettings sections that don't have it
+            echo "🔧 Step 2: Adding DEVELOPMENT_TEAM to buildSettings sections..."
+            # Use awk for more precise control
+            awk -v team_id="$TEAM_ID" '
+            /buildSettings = {/ {
+              print $0
+              if (getline next_line > 0) {
+                if (next_line !~ /DEVELOPMENT_TEAM/) {
+                  print "\t\t\t\tDEVELOPMENT_TEAM = \"" team_id "\";"
+                }
+                print next_line
+              }
+              next
+            }
+            { print }
+            ' src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup > src-tauri/gen/apple/app.xcodeproj/project.pbxproj.temp1
+
+            mv src-tauri/gen/apple/app.xcodeproj/project.pbxproj.temp1 src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+
+            # Method 3: Force add DEVELOPMENT_TEAM after every buildSettings line
+            echo "🔧 Step 3: Ensuring DEVELOPMENT_TEAM is in every buildSettings section..."
+
+            # Create a temporary file with the team ID setting
+            echo "				DEVELOPMENT_TEAM = \"$TEAM_ID\";" > /tmp/dev_team_setting
+
+            # Add it after each buildSettings line
+            sed -i '' '/buildSettings = {/r /tmp/dev_team_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            rm -f /tmp/dev_team_setting
+
+          else
+            echo "❌ No APPLE_DEVELOPMENT_TEAM provided - build will fail"
+          fi
+
           # Update the project.pbxproj file to use manual code signing
-          # This is more reliable than environment variables for Xcode projects
+          echo "🔧 Setting CODE_SIGN_STYLE to Manual..."
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "iPhone Developer";/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
 
-          # Add DEVELOPMENT_TEAM to all build configurations
-          if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
-            # Set DEVELOPMENT_TEAM for all configurations
-            sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            sed -i '' "s/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = \"${{ secrets.APPLE_DEVELOPMENT_TEAM }}\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-
-            # Add DEVELOPMENT_TEAM if it doesn't exist using printf
-            if ! grep -q "DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj; then
-              # Use printf to add the line with proper formatting
-              printf '\t\t\t\tDEVELOPMENT_TEAM = "%s";\n' "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" > /tmp/dev_team_line
-              sed -i '' '/buildSettings = {/r /tmp/dev_team_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-              rm /tmp/dev_team_line
-            fi
-          fi
-
-          # Force CODE_SIGN_STYLE to Manual everywhere
-          printf '\t\t\t\tCODE_SIGN_STYLE = Manual;\n' > /tmp/code_sign_line
-          sed -i '' '/buildSettings = {/r /tmp/code_sign_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-          rm /tmp/code_sign_line
+          # Force add CODE_SIGN_STYLE = Manual to all buildSettings
+          echo "				CODE_SIGN_STYLE = Manual;" > /tmp/code_sign_setting
+          sed -i '' '/buildSettings = {/r /tmp/code_sign_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+          rm -f /tmp/code_sign_setting
 
           # Set explicit architecture for iOS device builds
-          printf '\t\t\t\tARCHS = arm64;\n' > /tmp/archs_line
-          printf '\t\t\t\tVALID_ARCHS = arm64;\n' > /tmp/valid_archs_line
-          sed -i '' '/buildSettings = {/r /tmp/archs_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-          sed -i '' '/buildSettings = {/r /tmp/valid_archs_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-          rm /tmp/archs_line /tmp/valid_archs_line
+          echo "🔧 Setting iOS architecture to arm64..."
+          echo "				ARCHS = arm64;" > /tmp/archs_setting
+          sed -i '' '/buildSettings = {/r /tmp/archs_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+          rm -f /tmp/archs_setting
+
+          echo "				VALID_ARCHS = arm64;" > /tmp/valid_archs_setting
+          sed -i '' '/buildSettings = {/r /tmp/valid_archs_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+          rm -f /tmp/valid_archs_setting
 
           # Add the provisioning profile settings
-          if [ -n "$PROFILE_UUID" ]; then
+          if [ -n "$PROFILE_UUID" ] && [ -n "$PROFILE_NAME" ]; then
             echo "📋 Adding provisioning profile settings: $PROFILE_UUID"
 
-            # Add provisioning profile settings using printf
-            printf '\t\t\t\tPROVISIONING_PROFILE = "%s";\n' "$PROFILE_UUID" > /tmp/profile_uuid_line
-            printf '\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "%s";\n' "$PROFILE_NAME" > /tmp/profile_name_line
+            # Add provisioning profile to all buildSettings
+            echo "				PROVISIONING_PROFILE = \"$PROFILE_UUID\";" > /tmp/profile_setting
+            sed -i '' '/buildSettings = {/r /tmp/profile_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            rm -f /tmp/profile_setting
 
-            sed -i '' '/buildSettings = {/r /tmp/profile_uuid_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            sed -i '' '/buildSettings = {/r /tmp/profile_name_line' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-
-            rm /tmp/profile_uuid_line /tmp/profile_name_line
+            echo "				PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";" > /tmp/profile_spec_setting
+            sed -i '' '/buildSettings = {/r /tmp/profile_spec_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            rm -f /tmp/profile_spec_setting
+          else
+            echo "⚠️ No provisioning profile UUID/name available"
           fi
 
           echo "✅ Xcode project configured for manual code signing"
-          echo "📋 Verifying project settings..."
-          grep -A 2 -B 2 "CODE_SIGN_STYLE\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -15
+          echo "📋 Verifying final project settings..."
+
+          # Count occurrences to verify they were added
+          DEV_TEAM_COUNT=$(grep -c "DEVELOPMENT_TEAM.*${{ secrets.APPLE_DEVELOPMENT_TEAM }}" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+          CODE_SIGN_COUNT=$(grep -c "CODE_SIGN_STYLE.*Manual" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+          PROFILE_COUNT=$(grep -c "PROVISIONING_PROFILE.*$PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+
+          echo "📋 Configuration verification:"
+          echo "  DEVELOPMENT_TEAM entries: $DEV_TEAM_COUNT"
+          echo "  CODE_SIGN_STYLE Manual entries: $CODE_SIGN_COUNT"
+          echo "  PROVISIONING_PROFILE entries: $PROFILE_COUNT"
+
+          if [ "$DEV_TEAM_COUNT" -eq 0 ]; then
+            echo "❌ CRITICAL: No DEVELOPMENT_TEAM entries found - this will cause build failure"
+          else
+            echo "✅ DEVELOPMENT_TEAM properly configured"
+          fi
+
+          # Show a sample of the configured settings
+          echo "📋 Sample of configured buildSettings:"
+          grep -A 10 -B 2 "buildSettings = {" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -20
         else
           echo "⚠️ Xcode project file not found, manual configuration skipped"
         fi
@@ -2006,6 +2062,13 @@ jobs:
         else
           BUILD_EXIT_CODE=$?
           echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
+
+          # Check for the specific signing error
+          if grep -q "requires a development team" ios_build.log; then
+            echo "🔧 DETECTED: Development team not properly configured in Xcode project"
+            echo "   This means our Xcode project modification didn't work correctly"
+          fi
+
           echo "📋 Build log content:"
           tail -50 ios_build.log
 
@@ -2067,9 +2130,28 @@ jobs:
         # Stop the monitoring process
         kill $MONITOR_PID 2>/dev/null || true
 
-        # Ensure BUILD_SUCCESS is properly set
+        # Ensure BUILD_SUCCESS is properly set based on actual build artifacts
         if [ -z "$BUILD_SUCCESS" ]; then
           BUILD_SUCCESS=false
+        fi
+
+        # Double-check BUILD_SUCCESS by looking for actual build artifacts
+        echo "🔍 Verifying build success by checking for build artifacts..."
+        if [ "$BUILD_SUCCESS" = true ]; then
+          # If we think it succeeded, let's verify we have actual outputs
+          APP_FOUND=$(find . -name "*.app" -type d 2>/dev/null | wc -l)
+          XCARCHIVE_FOUND=$(find . -name "*.xcarchive" -type d 2>/dev/null | wc -l)
+
+          echo "📋 Build artifact verification:"
+          echo "  .app bundles found: $APP_FOUND"
+          echo "  .xcarchive files found: $XCARCHIVE_FOUND"
+
+          if [ "$APP_FOUND" -eq 0 ] && [ "$XCARCHIVE_FOUND" -eq 0 ]; then
+            echo "❌ No build artifacts found despite successful exit code - marking as failed"
+            BUILD_SUCCESS=false
+          else
+            echo "✅ Build artifacts confirmed - build was truly successful"
+          fi
         fi
 
         if [ "$BUILD_SUCCESS" = true ]; then

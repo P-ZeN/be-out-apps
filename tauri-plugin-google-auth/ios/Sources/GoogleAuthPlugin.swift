@@ -122,15 +122,15 @@ class GoogleAuthPlugin: Plugin {
   @objc public func ping() {
     print("GoogleAuthPlugin: ping method (stub)")
   }
-  
+
   @objc public func googleSignIn() {
     print("GoogleAuthPlugin: googleSignIn method (stub)")
   }
-  
+
   @objc public func googleSignOut() {
     print("GoogleAuthPlugin: googleSignOut method (stub)")
   }
-  
+
   @objc public func isSignedIn() {
     print("GoogleAuthPlugin: isSignedIn method (stub)")
   }
