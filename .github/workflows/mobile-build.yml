@@ -1661,13 +1661,82 @@ jobs:
 
         echo "Starting iOS build..."
 
+        # CRITICAL: Configure Xcode project BEFORE building
+        echo ""
+        echo "🔧 Configuring Xcode project for manual code signing..."
+        if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
+          echo "📝 Updating Xcode project settings..."
+
+          # Make a backup first
+          cp src-tauri/gen/apple/app.xcodeproj/project.pbxproj src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup
+
+          # Check for development team requirement
+          if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
+            TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
+            echo "� Using Apple Development Team: $TEAM_ID"
+
+            # Method 1: Replace any existing DEVELOPMENT_TEAM values first
+            echo "🔧 Step 1: Updating existing DEVELOPMENT_TEAM values..."
+            sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            sed -i '' "s/DEVELOPMENT_TEAM = \"[^\"]*\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+
+            # Method 2: Force add DEVELOPMENT_TEAM after every buildSettings line 
+            echo "🔧 Step 2: Adding DEVELOPMENT_TEAM to all buildSettings sections..."
+            
+            # Create temp file and add DEVELOPMENT_TEAM after each buildSettings line
+            TEMP_FILE=$(mktemp)
+            echo "				DEVELOPMENT_TEAM = \"$TEAM_ID\";" > "$TEMP_FILE"
+            sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            rm -f "$TEMP_FILE"
+
+            # Set CODE_SIGN_STYLE to Manual and other settings
+            echo "🔧 Step 3: Setting code signing style to Manual..."
+            sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "iPhone Developer";/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            
+            # Force add CODE_SIGN_STYLE = Manual after every buildSettings line
+            TEMP_FILE=$(mktemp)
+            echo "				CODE_SIGN_STYLE = Manual;" > "$TEMP_FILE"
+            sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            rm -f "$TEMP_FILE"
+
+            # Add provisioning profile settings if available
+            if [ -n "$PROFILE_UUID" ] && [ -n "$PROFILE_NAME" ]; then
+              echo "🔧 Step 4: Adding provisioning profile settings..."
+              sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"[^\"]*\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              sed -i '' "s/PROVISIONING_PROFILE = \"[^\"]*\";/PROVISIONING_PROFILE = \"$PROFILE_UUID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            fi
+
+            echo "✅ Xcode project configured for manual code signing"
+            
+            # Verify configuration
+            DEV_TEAM_COUNT=$(grep -c "DEVELOPMENT_TEAM.*$TEAM_ID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+            CODE_SIGN_COUNT=$(grep -c "CODE_SIGN_STYLE.*Manual" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+            
+            echo "📋 Configuration verification:"
+            echo "  DEVELOPMENT_TEAM entries: $DEV_TEAM_COUNT"
+            echo "  CODE_SIGN_STYLE Manual entries: $CODE_SIGN_COUNT"
+            
+            if [ "$DEV_TEAM_COUNT" -eq 0 ]; then
+              echo "❌ CRITICAL: No DEVELOPMENT_TEAM entries found - this will cause build failure"
+              echo "📋 Showing current buildSettings structure:"
+              grep -A 5 -B 2 "buildSettings = {" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -20
+            else
+              echo "✅ DEVELOPMENT_TEAM properly configured"
+            fi
+          else
+            echo "❌ No APPLE_DEVELOPMENT_TEAM provided - build will fail at signing"
+          fi
+        else
+          echo "⚠️ Xcode project file not found, configuration skipped"
+        fi
+
         # Set up code signing environment variables
         if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
-          echo "🔐 Code signing enabled with Team ID: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
+          echo ""
+          echo "🔐 Setting up code signing environment variables..."
           export APPLE_DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export APPLE_TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
-
-          # Use manual code signing with specific profile
           export CODE_SIGN_IDENTITY="iPhone Developer"
           export CODE_SIGN_STYLE="Manual"
           export DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
@@ -1699,237 +1768,6 @@ jobs:
           echo ""
           echo "   See docs/IOS_CODE_SIGNING_SETUP.md for complete setup instructions."
         fi
-
-    - name: Configure iOS Xcode Project
-      working-directory: ./client
-      run: |
-        # Try different methods to build iOS
-        echo "=== Attempting Tauri iOS Build ==="
-
-        # Debug Xcode project first
-        echo "🔍 Looking for Xcode project..."
-        find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "No Xcode project found yet"
-
-        echo ""
-        echo "🔍 Checking tauri directory structure..."
-        ls -la src-tauri/ || echo "No src-tauri directory"
-        ls -la src-tauri/gen/ 2>/dev/null || echo "No src-tauri/gen directory"
-        ls -la src-tauri/gen/apple/ 2>/dev/null || echo "No src-tauri/gen/apple directory"
-
-        echo ""
-        echo "🔍 Checking for any .xcodeproj files..."
-        find . -name "*.xcodeproj" -type d 2>/dev/null || echo "No .xcodeproj files found"
-
-        # Initialize iOS project if needed
-        echo ""
-        echo "🚀 Ensuring iOS project is initialized..."
-        if [ ! -d "src-tauri/gen/apple" ]; then
-          echo "📱 Initializing iOS project..."
-          npx tauri ios init || echo "iOS init failed or already done"
-        else
-          echo "✅ iOS project directory already exists"
-        fi
-
-        # Check if we now have an Xcode project
-        echo ""
-        echo "🔍 Post-init: Looking for Xcode project..."
-        find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"
-
-        # Configure Xcode project for manual code signing
-        echo ""
-        echo "🔧 Configuring Xcode project for manual code signing..."
-        if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
-          echo "📝 Updating Xcode project settings..."
-
-          # Make a backup first
-          cp src-tauri/gen/apple/app.xcodeproj/project.pbxproj src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup
-
-          # Show current project structure for debugging
-          echo "📋 Current project.pbxproj structure (buildSettings sections):"
-          grep -n "buildSettings" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -10
-
-          # Check for development team requirement
-          if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
-            TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
-            echo "📋 Using Apple Development Team: $TEAM_ID"
-
-            # Method 1: Direct replacement of existing values
-            echo "🔧 Step 1: Replacing existing DEVELOPMENT_TEAM values..."
-            sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            sed -i '' "s/DEVELOPMENT_TEAM = \"[^\"]*\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-
-            # Method 2: Add DEVELOPMENT_TEAM to all buildSettings sections that don't have it
-            echo "🔧 Step 2: Adding DEVELOPMENT_TEAM to buildSettings sections..."
-            # Use awk for more precise control
-            awk -v team_id="$TEAM_ID" '
-            /buildSettings = {/ {
-              print $0
-              if (getline next_line > 0) {
-                if (next_line !~ /DEVELOPMENT_TEAM/) {
-                  print "\t\t\t\tDEVELOPMENT_TEAM = \"" team_id "\";"
-                }
-                print next_line
-              }
-              next
-            }
-            { print }
-            ' src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup > src-tauri/gen/apple/app.xcodeproj/project.pbxproj.temp1
-
-            mv src-tauri/gen/apple/app.xcodeproj/project.pbxproj.temp1 src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-
-            # Method 3: Force add DEVELOPMENT_TEAM after every buildSettings line
-            echo "🔧 Step 3: Ensuring DEVELOPMENT_TEAM is in every buildSettings section..."
-
-            # Create a temporary file with the team ID setting
-            echo "				DEVELOPMENT_TEAM = \"$TEAM_ID\";" > /tmp/dev_team_setting
-
-            # Add it after each buildSettings line
-            sed -i '' '/buildSettings = {/r /tmp/dev_team_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            rm -f /tmp/dev_team_setting
-
-          else
-            echo "❌ No APPLE_DEVELOPMENT_TEAM provided - build will fail"
-          fi
-
-          # Update the project.pbxproj file to use manual code signing
-          echo "🔧 Setting CODE_SIGN_STYLE to Manual..."
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "iPhone Developer";/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-
-          # Force add CODE_SIGN_STYLE = Manual to all buildSettings
-          echo "				CODE_SIGN_STYLE = Manual;" > /tmp/code_sign_setting
-          sed -i '' '/buildSettings = {/r /tmp/code_sign_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-          rm -f /tmp/code_sign_setting
-
-          # Set explicit architecture for iOS device builds
-          echo "🔧 Setting iOS architecture to arm64..."
-          echo "				ARCHS = arm64;" > /tmp/archs_setting
-          sed -i '' '/buildSettings = {/r /tmp/archs_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-          rm -f /tmp/archs_setting
-
-          echo "				VALID_ARCHS = arm64;" > /tmp/valid_archs_setting
-          sed -i '' '/buildSettings = {/r /tmp/valid_archs_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-          rm -f /tmp/valid_archs_setting
-
-          # Add the provisioning profile settings
-          if [ -n "$PROFILE_UUID" ] && [ -n "$PROFILE_NAME" ]; then
-            echo "📋 Adding provisioning profile settings: $PROFILE_UUID"
-
-            # Add provisioning profile to all buildSettings
-            echo "				PROVISIONING_PROFILE = \"$PROFILE_UUID\";" > /tmp/profile_setting
-            sed -i '' '/buildSettings = {/r /tmp/profile_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            rm -f /tmp/profile_setting
-
-            echo "				PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";" > /tmp/profile_spec_setting
-            sed -i '' '/buildSettings = {/r /tmp/profile_spec_setting' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            rm -f /tmp/profile_spec_setting
-          else
-            echo "⚠️ No provisioning profile UUID/name available"
-          fi
-
-          echo "✅ Xcode project configured for manual code signing"
-          echo "📋 Verifying final project settings..."
-
-          # Count occurrences to verify they were added
-          DEV_TEAM_COUNT=$(grep -c "DEVELOPMENT_TEAM.*${{ secrets.APPLE_DEVELOPMENT_TEAM }}" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
-          CODE_SIGN_COUNT=$(grep -c "CODE_SIGN_STYLE.*Manual" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
-          PROFILE_COUNT=$(grep -c "PROVISIONING_PROFILE.*$PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
-
-          echo "📋 Configuration verification:"
-          echo "  DEVELOPMENT_TEAM entries: $DEV_TEAM_COUNT"
-          echo "  CODE_SIGN_STYLE Manual entries: $CODE_SIGN_COUNT"
-          echo "  PROVISIONING_PROFILE entries: $PROFILE_COUNT"
-
-          if [ "$DEV_TEAM_COUNT" -eq 0 ]; then
-            echo "❌ CRITICAL: No DEVELOPMENT_TEAM entries found - this will cause build failure"
-          else
-            echo "✅ DEVELOPMENT_TEAM properly configured"
-          fi
-
-          # Show a sample of the configured settings
-          echo "📋 Sample of configured buildSettings:"
-          grep -A 10 -B 2 "buildSettings = {" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -20
-        else
-          echo "⚠️ Xcode project file not found, manual configuration skipped"
-        fi
-
-    - name: Verify iOS Code Signing Setup
-      working-directory: ./client
-      run: |
-        # Verify the final Xcode project configuration
-        echo ""
-        echo "🔍 Final verification of Xcode project configuration..."
-        if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
-          echo "📋 Code signing settings in Xcode project:"
-          grep -n "CODE_SIGN_STYLE\|CODE_SIGN_IDENTITY\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -20
-
-          echo ""
-          echo "📋 Bundle identifier settings:"
-          grep -n "PRODUCT_BUNDLE_IDENTIFIER" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -5
-
-          echo ""
-          echo "📋 Detailed verification of manual code signing configuration:"
-          echo "   Looking for manual CODE_SIGN_STYLE entries:"
-          grep -n "CODE_SIGN_STYLE.*Manual" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No manual code signing found"
-
-          echo "   Looking for DEVELOPMENT_TEAM entries:"
-          grep -n "DEVELOPMENT_TEAM.*${{ secrets.APPLE_DEVELOPMENT_TEAM }}" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No development team found"
-
-          echo "   Looking for PROVISIONING_PROFILE entries:"
-          grep -n "PROVISIONING_PROFILE.*$PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No provisioning profile UUID found"
-
-          echo "   Looking for PROVISIONING_PROFILE_SPECIFIER entries:"
-          grep -n "PROVISIONING_PROFILE_SPECIFIER.*$PROFILE_NAME" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No provisioning profile specifier found"
-        fi
-
-        # Verify provisioning profiles one more time
-        echo ""
-        echo "🔍 Final verification of installed provisioning profiles..."
-        ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
-
-        echo ""
-        echo "📋 Detailed analysis of installed provisioning profiles:"
-        for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
-          if [ -f "$profile" ]; then
-            echo "--- Profile: $(basename "$profile") ---"
-            PROFILE_CONTENT=$(security cms -D -i "$profile" 2>/dev/null)
-
-            # Extract key information
-            PROFILE_UUID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-            PROFILE_NAME_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-            BUNDLE_ID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "application-identifier" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-            TEAM_ID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>TeamIdentifier</key>" -A2 | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-
-            echo "  UUID: $PROFILE_UUID_CHECK"
-            echo "  Name: $PROFILE_NAME_CHECK"
-            echo "  Bundle ID pattern: $BUNDLE_ID_CHECK"
-            echo "  Team ID: $TEAM_ID_CHECK"
-
-            # Check if this matches our expected values
-            if [ "$PROFILE_UUID_CHECK" = "$PROFILE_UUID" ]; then
-              echo "  ✅ This profile matches our PROFILE_UUID"
-            else
-              echo "  ❌ This profile does NOT match our PROFILE_UUID ($PROFILE_UUID)"
-            fi
-
-            if [[ "$BUNDLE_ID_CHECK" == *"com.beout.app"* ]]; then
-              echo "  ✅ This profile matches bundle ID com.beout.app"
-            else
-              echo "  ❌ This profile does NOT match bundle ID com.beout.app"
-            fi
-
-            if [ "$TEAM_ID_CHECK" = "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
-              echo "  ✅ This profile matches our team ID"
-            else
-              echo "  ❌ This profile does NOT match our team ID (${{ secrets.APPLE_DEVELOPMENT_TEAM }})"
-            fi
-            echo ""
-          fi
-        done
-
-        echo ""
-        echo "📋 Available signing identities before build:"
-        security find-identity -v -p codesigning | head -5
 
     - name: Execute iOS Build
       working-directory: ./client
