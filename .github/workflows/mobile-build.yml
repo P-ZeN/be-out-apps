@@ -19,9 +19,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
-  GOOGLE_CLIENT_ID_ANDROID: ${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
-  GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
 
 jobs:
   test-client:
@@ -452,13 +449,13 @@ jobs:
           else
             echo "❌ Failed to generate icons with npx tauri"
             echo "Trying alternative methods..."
-
+            
             # Try with cargo tauri
             if command -v cargo >/dev/null 2>&1; then
               echo "Trying with cargo tauri icon..."
               cargo tauri icon "$ICON_FILE" --verbose || echo "cargo tauri icon also failed"
             fi
-
+            
             # Try with global tauri command
             if command -v tauri >/dev/null 2>&1; then
               echo "Trying with global tauri command..."
@@ -486,7 +483,7 @@ jobs:
           # Fix the main themes.xml file
           if [ -f "src-tauri/gen/android/app/src/main/res/values/themes.xml" ]; then
             echo "📝 Patching main themes.xml..."
-            cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'XMLEOF1'
+            cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'EOF'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -496,11 +493,11 @@ jobs:
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
-        XMLEOF1
+        EOF
           else
             echo "❌ Main themes.xml not found, creating it..."
             mkdir -p src-tauri/gen/android/app/src/main/res/values
-            cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'XMLEOF2'
+            cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'EOF'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -510,13 +507,13 @@ jobs:
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
-        XMLEOF2
+        EOF
           fi
 
           # Fix the night themes.xml file if it exists
           if [ -f "src-tauri/gen/android/app/src/main/res/values-night/themes.xml" ]; then
             echo "📝 Patching night themes.xml..."
-            cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'XMLEOF3'
+            cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'EOF'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -526,11 +523,11 @@ jobs:
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
-        XMLEOF3
+        EOF
           else
             echo "🌙 Night themes.xml not found, creating it..."
             mkdir -p src-tauri/gen/android/app/src/main/res/values-night
-            cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'XMLEOF4'
+            cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'EOF'
         <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -540,7 +537,7 @@ jobs:
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
         </resources>
-        XMLEOF4
+        EOF
           fi
 
           echo "✅ Android themes patched successfully!"
@@ -826,22 +823,22 @@ jobs:
       working-directory: ./client
       run: |
         echo "🔍 Final verification of icons before Android build..."
-
+        
         # Check if icons are in place
         echo "=== Current icon files ==="
         find src-tauri/icons -name "*.png" -o -name "*.ico" | head -15
-
+        
         # Check for custom icon
         if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
           echo "❌ Custom icon source file missing!"
         fi
-
+        
         # Check for generated Android icons
         echo "=== Android-specific generated icons ==="
         find src-tauri/icons -name "android-icon-*.png" | head -10
-
+        
         # If Android project exists, check for icons there too
         if [ -d "src-tauri/gen/android" ]; then
           echo "=== Icons in Android project ==="
@@ -1058,219 +1055,6 @@ jobs:
         else
           echo "✅ Xcode version appears compatible"
         fi
-
-    - name: Check iOS Frameworks and Dependencies
-      working-directory: ./client
-      run: |
-        echo "🔍 Checking iOS SDK and Framework availability..."
-
-        # Check iOS SDK path
-        IOS_SDK_PATH=$(xcrun --show-sdk-path --sdk iphoneos)
-        echo "iOS SDK Path: $IOS_SDK_PATH"
-
-        # Check required frameworks for GoogleSignIn
-        REQUIRED_FRAMEWORKS=(
-          "Foundation"
-          "UIKit"
-          "Security"
-          "SystemConfiguration"
-          "AuthenticationServices"
-          "LocalAuthentication"
-          "SafariServices"
-          "WebKit"
-        )
-
-        echo "Checking required frameworks..."
-        for framework in "${REQUIRED_FRAMEWORKS[@]}"; do
-          if [ -d "$IOS_SDK_PATH/System/Library/Frameworks/$framework.framework" ]; then
-            echo "✅ $framework.framework found"
-          else
-            echo "❌ $framework.framework MISSING"
-          fi
-        done
-
-        # Check for Swift libraries
-        echo "Checking Swift runtime libraries..."
-        SWIFT_LIB_PATH="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos"
-        if [ -d "$SWIFT_LIB_PATH" ]; then
-          echo "✅ Swift iOS libraries found at $SWIFT_LIB_PATH"
-          ls -la "$SWIFT_LIB_PATH" | head -10
-        else
-          echo "❌ Swift iOS libraries not found"
-        fi
-
-        # Check Xcode version compatibility
-        XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
-        echo "Xcode version: $XCODE_VERSION"
-
-        # GoogleSignIn 6.2.4 requires Xcode 13.0+
-        if [[ $(echo "$XCODE_VERSION 13.0" | tr " " "\n" | sort -V | head -1) != "13.0" ]]; then
-          echo "⚠️ Warning: Xcode version may be too old for GoogleSignIn 6.2.4"
-          echo "   Detected: $XCODE_VERSION"
-          echo "   Required: 13.0 or later"
-        else
-          echo "✅ Xcode version compatible with GoogleSignIn 6.2.4"
-        fi
-
-        # Test Swift compilation
-        echo "Testing basic Swift compilation..."
-        cat > test_swift.swift << 'SWIFTEOF'
-        import Foundation
-        import UIKit
-        print("Swift compilation test successful")
-        SWIFTEOF
-
-        if xcrun -sdk iphoneos swiftc test_swift.swift -target arm64-apple-ios12.0 2>&1; then
-          echo "✅ Basic Swift compilation successful"
-        else
-          echo "❌ Basic Swift compilation failed"
-        fi
-        rm -f test_swift.swift test_swift
-
-    - name: Test Google Auth Plugin Swift Package
-      working-directory: ./client
-      run: |
-        echo "🔧 Testing tauri-plugin-google-auth Swift package compilationssssss..."
-
-        # Navigate to the plugin iOS directory
-        if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
-          echo "❌ iOS directory missing for Google Auth plugin!"
-          echo "Expected: ../tauri-plugin-google-auth/ios"
-          echo "This will cause the build to fail."
-          exit 1
-        fi
-
-        cd ../tauri-plugin-google-auth/ios
-
-        echo "📋 Package.swift contents:"
-        cat Package.swift
-
-        echo ""
-        echo "📋 Sources directory structure:"
-        find Sources -name "*.swift" -exec echo "  {}" \; 2>/dev/null || echo "  No Swift sources found"
-
-        echo ""
-        echo "🧪 Testing Swift package syntax and dependencies..."
-
-        # Test 1: Package dump to validate Package.swift syntax
-        echo "=== Test 1: Package.swift syntax validation ==="
-        if swift package dump-package 2>&1; then
-          echo "✅ Package.swift syntax is valid"
-        else
-          echo "❌ Package.swift syntax errors detected"
-        fi
-
-        echo ""
-        echo "=== Test 2: Dependency resolution ==="
-        # Test 2: Try to resolve dependencies (this will download GoogleSignIn-iOS)
-        # Use gtimeout if available (from coreutils), otherwise just run without timeout
-        if command -v gtimeout >/dev/null 2>&1; then
-          TIMEOUT_CMD="gtimeout 300"
-        else
-          TIMEOUT_CMD=""
-          echo "⚠️ No timeout command available, running without timeout"
-        fi
-
-        if $TIMEOUT_CMD swift package resolve --verbose 2>&1; then
-          echo "✅ Package dependencies resolved successfully"
-          echo "   This is critical for swift-rs to work properly during Rust build"
-
-          # Check that dependencies were actually downloaded
-          if [ -d ".build/checkouts" ]; then
-            echo "📦 Downloaded dependencies:"
-            ls -la .build/checkouts/
-
-            # Verify GoogleSignIn-iOS was downloaded
-            if ls .build/checkouts/ | grep -i googlesignin >/dev/null 2>&1; then
-              echo "✅ GoogleSignIn-iOS dependency confirmed downloaded"
-            else
-              echo "❌ GoogleSignIn-iOS dependency not found in checkouts"
-            fi
-          else
-            echo "⚠️ No .build/checkouts directory found"
-          fi
-        else
-          echo "❌ Package dependency resolution failed"
-          echo "❌ This WILL cause swift-rs compilation to fail during Rust build"
-          echo "Possible causes:"
-          echo "  - Network issues downloading GoogleSignIn-iOS from GitHub"
-          echo "  - Xcode version incompatibility with GoogleSignIn 6.2.4"
-          echo "  - GitHub rate limiting in CI environment"
-          echo "  - SSL/TLS issues with GitHub access"
-        fi
-
-        echo ""
-        echo "=== Test 3: Swift source file compilation ==="
-        # Test 3: Try to compile individual Swift files
-        for swift_file in Sources/*.swift; do
-          if [ -f "$swift_file" ]; then
-            echo "Testing compilation of $(basename "$swift_file")..."
-            if swift -frontend -parse "$swift_file" 2>&1; then
-              echo "✅ $(basename "$swift_file") syntax valid"
-            else
-              echo "❌ $(basename "$swift_file") has syntax errors"
-            fi
-          fi
-        done
-
-        echo ""
-        echo "=== Test 4: Direct Swift package build attempt ==="
-        # Test 4: Try to build the package directly (this is what swift-rs will do)
-        if timeout 600 swift build --verbose 2>&1 | tee ../swift_package_build.log; then
-          echo "✅ Swift package built successfully"
-          echo "This means the issue is likely in swift-rs integration, not the Swift package itself"
-
-          # Test 4a: Check for exported symbols in the built library
-          echo ""
-          echo "=== Test 4a: Checking for exported symbols ==="
-          echo "Looking for built Swift package libraries..."
-          find .build -name "*.dylib" -o -name "*.a" 2>/dev/null | head -5
-
-          # Find the built library and check for our exported function
-          SWIFT_LIB=$(find .build -name "*GoogleAuthPlugin*" -o -name "*tauri_plugin_google_auth*" 2>/dev/null | head -1)
-          if [ -n "$SWIFT_LIB" ]; then
-            echo "📋 Found Swift library: $SWIFT_LIB"
-            
-            # Use nm to check for exported symbols
-            echo "🔍 Checking for _init_plugin_google_auth symbol..."
-            if nm "$SWIFT_LIB" 2>/dev/null | grep "_init_plugin_google_auth"; then
-              echo "✅ _init_plugin_google_auth symbol found in Swift library"
-            else
-              echo "❌ _init_plugin_google_auth symbol NOT found in Swift library"
-              echo "📋 Available symbols in library:"
-              nm "$SWIFT_LIB" 2>/dev/null | grep -E "^[0-9a-f]+ [TtSs] " | head -10 || echo "No symbols found"
-            fi
-          else
-            echo "⚠️ Could not find Swift library file to check symbols"
-            echo "📋 Available .build contents:"
-            find .build -type f -name "*" 2>/dev/null | head -10
-          fi
-
-          # Test 4b: Alternative symbol checking methods
-          echo ""
-          echo "=== Test 4b: Alternative symbol export verification ==="
-          
-          # Check object files for the symbol
-          echo "🔍 Checking object files for _init_plugin_google_auth..."
-          find .build -name "*.o" -exec nm {} \; 2>/dev/null | grep "_init_plugin_google_auth" | head -5 || echo "Symbol not found in object files"
-          
-          # Check if there are any C-compatible exports
-          echo "🔍 Checking for any @_cdecl exports..."
-          find .build -name "*.o" -exec nm {} \; 2>/dev/null | grep -E "^[0-9a-f]+ [TtSs] _" | head -10 || echo "No C-compatible exports found"
-
-        else
-          echo "❌ Swift package build failed"
-          echo "This is the root cause of the tauri-plugin build failure"
-          echo ""
-          echo "Build log analysis:"
-          echo "=================="
-          tail -50 ../swift_package_build.log
-          echo ""
-          echo "Error patterns:"
-          grep -A 5 -B 5 "error:" ../swift_package_build.log | tail -20 || echo "No specific error patterns found"
-        fi
-
-        cd ../../client
 
     - name: Install Apple Certificates and Provisioning Profiles
       run: |
@@ -1542,7 +1326,7 @@ jobs:
         fi
 
         echo "Verifying Tauri CLI installation..."
-        tauri --version || echo "Failed to get Tauri version "
+        tauri --version || echo "Failed to get Tauri version"
 
         echo "Installing Tauri CLI locally as well..."
         npm install @tauri-apps/cli@latest
@@ -1566,7 +1350,7 @@ jobs:
         # Verify Google Auth plugin iOS implementation
         echo "🔧 Verifying tauri-plugin-google-auth iOS configuration..."
         if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
-          echo "❌ CRITICAL: iOS directory missing for Google Auth plugin!"
+          echo "❌ CRITICALLL: iOS directory missing for Google Auth plugin!"
           echo "The iOS implementation should be in the repository."
           echo "Please ensure the tauri-plugin-google-auth/ios directory exists with proper Package.swift and Sources."
           exit 1
@@ -1575,55 +1359,24 @@ jobs:
           echo "📋 Verifying iOS plugin structure..."
           ls -la ../tauri-plugin-google-auth/ios/
 
-          # Verify Package.swift exists and has correct configuration
+          # Verify Package.swift exists and has correct iOS version
           if [ -f "../tauri-plugin-google-auth/ios/Package.swift" ]; then
             echo "✅ Package.swift found"
-
-            # Check iOS version requirement
-            if grep -q "iOS(.v12)" ../tauri-plugin-google-auth/ios/Package.swift; then
-              echo "✅ Package.swift correctly configured for iOS 12+"
+            if grep -q "iOS(.v15)" ../tauri-plugin-google-auth/ios/Package.swift; then
+              echo "✅ Package.swift correctly configured for iOS 15"
             else
-              echo "⚠️ Package.swift may not be configured for iOS 12+"
+              echo "⚠️ Package.swift may not be configured for iOS 15"
+              echo "Current Package.swift content:"
+              head -10 ../tauri-plugin-google-auth/ios/Package.swift
             fi
-
-            # Check GoogleSignIn dependency
-            if grep -q "GoogleSignIn-iOS.*6.2.4" ../tauri-plugin-google-auth/ios/Package.swift; then
-              echo "✅ GoogleSignIn-iOS 6.2.4 dependency found"
-            else
-              echo "⚠️ GoogleSignIn-iOS 6.2.4 dependency not found"
-              echo "Current Package.swift GoogleSignIn dependency:"
-              grep -A 2 -B 2 "GoogleSignIn" ../tauri-plugin-google-auth/ios/Package.swift || echo "No GoogleSignIn dependency found"
-            fi
-
-            # Check required frameworks
-            REQUIRED_FRAMEWORKS=("Security" "SystemConfiguration" "AuthenticationServices" "SafariServices" "LocalAuthentication")
-            for framework in "${REQUIRED_FRAMEWORKS[@]}"; do
-              if grep -q "$framework" ../tauri-plugin-google-auth/ios/Package.swift; then
-                echo "✅ $framework framework linked in Package.swift"
-              else
-                echo "❌ $framework framework NOT linked in Package.swift"
-              fi
-            done
           else
             echo "❌ CRITICAL: Package.swift missing!"
             exit 1
           fi
 
-          # Verify Swift implementation exists and imports GoogleSignIn
+          # Verify Swift implementation exists
           if [ -f "../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift" ]; then
             echo "✅ Swift implementation file found"
-
-            if grep -q "import GoogleSignIn" ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift; then
-              echo "✅ GoogleSignIn import found in Swift implementation"
-            else
-              echo "❌ GoogleSignIn import NOT found in Swift implementation"
-            fi
-
-            if grep -q "GIDSignIn.sharedInstance" ../tauri-plugin-google-auth/ios/Sources/GoogleAuthPlugin.swift; then
-              echo "✅ GoogleSignIn SDK usage found in Swift implementation"
-            else
-              echo "❌ GoogleSignIn SDK usage NOT found in Swift implementation"
-            fi
           else
             echo "❌ CRITICAL: Swift implementation file missing!"
             exit 1
@@ -1665,13 +1418,6 @@ jobs:
           echo "Searching for alternative iOS/Apple paths..."
           find src-tauri -type d -name "*ios*" -o -name "*apple*" 2>/dev/null || echo "No iOS/Apple directories found"
         fi
-      env:
-        APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
-        PROFILE_UUID: ${{ env.PROFILE_UUID }}
-        PROFILE_NAME: ${{ env.PROFILE_NAME }}
-        GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
-        GOOGLE_CLIENT_ID_ANDROID: ${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
-        GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
 
     - name: Generate iOS App Icons
       working-directory: ./client
@@ -1718,13 +1464,13 @@ jobs:
           else
             echo "❌ Failed to generate icons with npx tauri"
             echo "Trying alternative methods..."
-
+            
             # Try with cargo tauri
             if command -v cargo >/dev/null 2>&1; then
               echo "Trying with cargo tauri icon..."
               cargo tauri icon "$ICON_FILE" --verbose || echo "cargo tauri icon also failed"
             fi
-
+            
             # Try with global tauri command
             if command -v tauri >/dev/null 2>&1; then
               echo "Trying with global tauri command..."
@@ -1746,23 +1492,23 @@ jobs:
       working-directory: ./client
       run: |
         echo "🔍 Final verification of icons before iOS build..."
-
+        
         # Check if icons are in place
         echo "=== Current icon files ==="
         find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
-
+        
         # Check for custom icon
         if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
           echo "❌ Custom icon source file missing!"
         fi
-
+        
         # Check for generated iOS icons
         echo "=== iOS-specific generated icons ==="
         find src-tauri/icons -name "*.icns" | head -10
         ls -la src-tauri/icons/ios/ 2>/dev/null || echo "No iOS icons directory"
-
+        
         # If iOS/Apple project exists, check for icons there too
         if [ -d "src-tauri/gen/ios" ]; then
           echo "=== Icons in iOS project ==="
@@ -1776,7 +1522,7 @@ jobs:
     - name: Build iOS IPA
       working-directory: ./client
       run: |
-        echo "Building iOS IPA...."
+        echo "Building iOS IPA..."
         echo "Checking iOS project directory..."
 
         # Find iOS project directory (Tauri uses 'apple' directory for iOS/macOS)
@@ -2031,56 +1777,6 @@ jobs:
         echo "📋 Available signing identities before build:"
         security find-identity -v -p codesigning | head -5
 
-    - name: Pre-resolve Swift Package Dependencies for swift-rs
-      working-directory: ./client
-      run: |
-        echo "🔧 Pre-resolving Swift package dependencies to help swift-rs integration..."
-
-        # Navigate to the Google Auth plugin iOS directory
-        if [ -d "../tauri-plugin-google-auth/ios" ]; then
-          cd ../tauri-plugin-google-auth/ios
-
-          echo "📋 Pre-resolving dependencies for tauri-plugin-google-auth..."
-
-          # Try to resolve dependencies before Rust build attempts
-          if swift package resolve --verbose 2>&1; then
-            echo "✅ Swift package dependencies pre-resolved successfully"
-            echo "   This should prevent swift-rs from failing during dependency resolution"
-
-            # Verify the dependencies are cached
-            if [ -d ".build/checkouts" ]; then
-              echo "📦 Cached dependencies:"
-              ls -la .build/checkouts/
-
-              # Check specifically for GoogleSignIn
-              if ls .build/checkouts/ | grep -i googlesignin >/dev/null 2>&1; then
-                GOOGLESIGNIN_DIR=$(ls .build/checkouts/ | grep -i googlesignin | head -1)
-                echo "✅ GoogleSignIn-iOS cached at: .build/checkouts/$GOOGLESIGNIN_DIR"
-
-                # Verify it has the expected structure
-                if [ -d ".build/checkouts/$GOOGLESIGNIN_DIR/Sources" ]; then
-                  echo "✅ GoogleSignIn-iOS source structure looks correct"
-                else
-                  echo "⚠️ GoogleSignIn-iOS structure may be incomplete"
-                fi
-              else
-                echo "❌ GoogleSignIn-iOS not found in cached dependencies"
-              fi
-            else
-              echo "⚠️ No .build/checkouts directory - dependencies may not be properly cached"
-            fi
-          else
-            echo "❌ Failed to pre-resolve Swift package dependencies"
-            echo "   swift-rs will likely fail during Rust build phase"
-            echo "   Continuing anyway to let swift-rs attempt its own resolution..."
-          fi
-
-          cd ../../client
-        else
-          echo "⚠️ tauri-plugin-google-auth/ios directory not found"
-          echo "   Skipping Swift dependency pre-resolution"
-        fi
-
     - name: Execute iOS Build
       working-directory: ./client
       run: |
@@ -2217,24 +1913,11 @@ jobs:
 
           # Look for Rust compilation errors specifically
           echo "📋 Searching for Rust compilation errors:"
-          grep -A 10 -B 5 "error:" ios_build.log | tail -20 || echo "No Rust errors found in logs"
+          grep -A 10 -B 5 "error:" ios_build.log | tail -20 || echo "No Rust errors found in log"
 
           # Look for Swift compilation errors
           echo "📋 Searching for Swift compilation errors:"
-          grep -A 10 -B 5 "Swift.*error\|swift.*error\|Failed to compile swift package" ios_build.log | tail -20 || echo "No Swift errors found in log"
-
-          # Look for GoogleSignIn specific errors
-          echo "📋 Searching for GoogleSignIn specific errors:"
-          grep -A 10 -B 5 "GoogleSignIn\|tauri-plugin-google-auth" ios_build.log | tail -25 || echo "No GoogleSignIn errors found"
-
-          # Look for swift-rs compilation errors
-          echo "📋 Searching for swift-rs compilation errors:"
-          grep -A 10 -B 5 "swift-rs\|SwiftLinker\|Failed to compile swift package" ios_build.log | tail -20 || echo "No swift-rs errors found"
           grep -A 10 -B 5 "Swift.*error\|swift.*error" ios_build.log | tail -20 || echo "No Swift errors found in log"
-
-          # Look for linker symbol errors (new - this is our current issue)
-          echo "📋 Searching for linker symbol errors:"
-          grep -A 10 -B 5 "Undefined symbols\|_init_plugin_google_auth\|symbol.*not found" ios_build.log | tail -20 || echo "No linker symbol errors found"
 
           # If it fails immediately, try without arguments
           echo ""
@@ -2302,122 +1985,6 @@ jobs:
           echo "=== Checking Xcode build directories ==="
           find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
 
-          # Post-build diagnostics for app crash troubleshooting
-          echo ""
-          echo "=== POST-BUILD DIAGNOSTICS FOR APP CRASHES ==="
-          
-          # Find the built .app bundle for analysis
-          APP_BUNDLE=$(find . -name "*.app" -type d 2>/dev/null | head -1)
-          if [ -n "$APP_BUNDLE" ]; then
-            echo "📱 Found app bundle: $APP_BUNDLE"
-            
-            echo ""
-            echo "=== App Bundle Structure Analysis ==="
-            ls -la "$APP_BUNDLE/" || echo "Cannot list app bundle contents"
-            
-            echo ""
-            echo "=== Info.plist Analysis ==="
-            if [ -f "$APP_BUNDLE/Info.plist" ]; then
-              echo "📋 Info.plist exists, checking key settings..."
-              
-              # Check critical Info.plist settings
-              echo "Bundle Identifier:"
-              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleIdentifier" || echo "  Missing CFBundleIdentifier"
-              
-              echo "Bundle Name:"
-              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleName" || echo "  Missing CFBundleName"
-              
-              echo "Bundle Version:"
-              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleVersion" || echo "  Missing CFBundleVersion"
-              
-              echo "Minimum iOS Version:"
-              plutil -p "$APP_BUNDLE/Info.plist" | grep "MinimumOSVersion" || echo "  Missing MinimumOSVersion"
-              
-              echo "Executable:"
-              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleExecutable" || echo "  Missing CFBundleExecutable"
-              
-              echo "Supported Platforms:"
-              plutil -p "$APP_BUNDLE/Info.plist" | grep "CFBundleSupportedPlatforms" || echo "  Missing CFBundleSupportedPlatforms"
-              
-            else
-              echo "❌ CRITICAL: Info.plist missing from app bundle!"
-              echo "This will cause immediate app crash on launch"
-            fi
-            
-            echo ""
-            echo "=== Icon Analysis ==="
-            echo "Checking for app icons in bundle..."
-            find "$APP_BUNDLE" -name "*.png" -o -name "*.icns" | head -10 || echo "No icon files found in app bundle"
-            
-            if ls "$APP_BUNDLE"/*.icns 2>/dev/null; then
-              echo "✅ App icon (.icns) found in bundle"
-            else
-              echo "❌ WARNING: No .icns app icon found - this causes icon display issues"
-            fi
-            
-            echo ""
-            echo "=== Executable Analysis ==="
-            EXECUTABLE_NAME=$(plutil -p "$APP_BUNDLE/Info.plist" 2>/dev/null | grep "CFBundleExecutable" | sed 's/.*=> "\([^"]*\)".*/\1/')
-            if [ -n "$EXECUTABLE_NAME" ] && [ -f "$APP_BUNDLE/$EXECUTABLE_NAME" ]; then
-              echo "✅ Executable found: $APP_BUNDLE/$EXECUTABLE_NAME"
-              
-              # Check executable architecture and linking
-              echo "Architecture:"
-              file "$APP_BUNDLE/$EXECUTABLE_NAME" || echo "Cannot determine architecture"
-              
-              echo "Dynamic libraries:"
-              otool -L "$APP_BUNDLE/$EXECUTABLE_NAME" 2>/dev/null | head -10 || echo "Cannot analyze dynamic libraries"
-              
-              # Check for GoogleSignIn dependencies
-              echo "GoogleSignIn framework dependencies:"
-              otool -L "$APP_BUNDLE/$EXECUTABLE_NAME" 2>/dev/null | grep -i google || echo "No GoogleSignIn dependencies found"
-              
-            else
-              echo "❌ CRITICAL: Executable missing or incorrectly named!"
-              echo "Expected: $APP_BUNDLE/$EXECUTABLE_NAME"
-              echo "This will cause immediate app crash"
-            fi
-            
-            echo ""
-            echo "=== Code Signing Analysis ==="
-            echo "Code signing status:"
-            codesign -v -v "$APP_BUNDLE" 2>&1 || echo "Code signing verification failed"
-            
-            echo "Code signing details:"
-            codesign -d -v -v "$APP_BUNDLE" 2>&1 || echo "Cannot read code signing details"
-            
-            echo ""
-            echo "=== Framework Dependencies Analysis ==="
-            echo "Checking for embedded frameworks..."
-            if [ -d "$APP_BUNDLE/Frameworks" ]; then
-              echo "📦 Embedded frameworks found:"
-              ls -la "$APP_BUNDLE/Frameworks/" || echo "Cannot list frameworks"
-              
-              # Check specifically for GoogleSignIn framework
-              if [ -d "$APP_BUNDLE/Frameworks/GoogleSignIn.framework" ]; then
-                echo "✅ GoogleSignIn.framework is embedded"
-              else
-                echo "❌ WARNING: GoogleSignIn.framework not embedded - may cause runtime crashes"
-              fi
-            else
-              echo "⚠️ No Frameworks directory - external dependencies may be missing"
-            fi
-            
-          else
-            echo "❌ No .app bundle found for analysis"
-          fi
-          
-          echo ""
-          echo "=== Common Crash Fixes ==="
-          echo "If the app crashes on install/open, check:"
-          echo "1. ❌ Code signing: Wrong provisioning profile or certificate"
-          echo "2. ❌ Bundle ID mismatch: Info.plist vs provisioning profile"
-          echo "3. ❌ Missing executable or wrong name in Info.plist"
-          echo "4. ❌ Missing app icons (causes icon display issues)"
-          echo "5. ❌ iOS version compatibility: MinimumOSVersion too high"
-          echo "6. ❌ Missing frameworks: GoogleSignIn or other dependencies"
-          echo "7. ❌ Architecture mismatch: Check if built for correct iOS arch"
-
         else
           echo "=== BUILD FAILED - Analyzing logs ==="
           echo "Final exit code: $BUILD_EXIT_CODE"
@@ -2457,26 +2024,23 @@ jobs:
             echo ""
             echo "🔧 TAURI GOOGLE AUTH PLUGIN ISSUE DETECTED:"
             echo "   The tauri-plugin-google-auth is failing to build for iOS."
-            echo "   This is likely due to Swift package compilation errors."
+            echo "   This is likely due to missing iOS frameworks or build configuration."
             echo "   Solutions:"
-            echo "   1. Check GoogleSignIn-iOS SDK version compatibility"
-            echo "   2. Verify all required iOS frameworks are available"
-            echo "   3. Check Swift compiler version compatibility"
-            echo "   4. Review Package.swift configuration"
+            echo "   1. Temporarily disable the Google Auth plugin for iOS builds"
+            echo "   2. Check if the plugin supports iOS in current version"
+            echo "   3. Verify plugin configuration for mobile platforms"
+            echo "   4. Consider using conditional compilation for mobile vs desktop"
             echo ""
             echo "   Error details from build log:"
-            grep -A 10 -B 5 "tauri-plugin-google-auth" ios_build.log | tail -20
-            echo ""
-            echo "   Swift compilation errors:"
-            grep -A 5 -B 5 "Failed to compile swift package\|swift-rs.*build.rs.*Failed\|SwiftLinker::link" ios_build.log | tail -15
+            grep -A 5 -B 5 "tauri-plugin-google-auth" ios_build.log | tail -15
           fi
 
           if [ -f "ios_build.log" ] && grep -q "PhaseScriptExecution Build.*Rust.*Code" ios_build.log; then
             echo ""
             echo "🔧 XCODE BUILD RUST CODE PHASE FAILURE DETECTED:"
             echo "   The Xcode build is failing during the 'Build Rust Code' phase."
-            echo "   This indicates the Russssst compilation within Xcode is failing."
-            echo "   Common S:"
+            echo "   This indicates the Rust compilation within Xcode is failing."
+            echo "   Common causes:"
             echo "   1. Rust dependencies not properly configured for iOS"
             echo "   2. Missing system libraries or frameworks"
             echo "   3. Architecture mismatch (arm64 vs x86_64)"
@@ -2537,71 +2101,7 @@ jobs:
           echo "iOS builds in CI typically fail at code signing without proper certificates."
           echo "If you see code signing errors, that's expected without proper setup."
           echo "Complete the setup in docs/IOS_CODE_SIGNING_SETUP.md to enable signing."
-
-          echo ""
-          echo "❌ BUILD FAILED - Exiting with error code"
-          exit 1
         fi
-
-    - name: Debug Swift Package Compilation Issues
-      working-directory: ./client
-      if: failure()
-      run: |
-        echo "🔍 Attempting to reveal hidden Swift compilation errors..."
-
-        # Navigate to the plugin directory
-        cd ../tauri-plugin-google-auth/ios
-
-        # Try to build the Swift package directly with maximum verbosity
-        echo "=== Direct Swift Package Build Test ==="
-        if swift build --verbose 2>&1 | tee swift_direct_build.log; then
-          echo "✅ Direct Swift build succeeded"
-        else
-          echo "❌ Direct Swift build failed"
-          echo "=== Swift build errors ==="
-          cat swift_direct_build.log
-        fi
-
-        # Try swift package resolve to check dependencies
-        echo "=== Swift Package Dependency Resolution ==="
-        if swift package resolve --verbose 2>&1 | tee swift_resolve.log; then
-          echo "✅ Package resolution succeeded"
-        else
-          echo "❌ Package resolution failed"
-          cat swift_resolve.log
-        fi
-
-        # Check package dump
-        echo "=== Swift Package Dump ==="
-        swift package dump-package 2>&1 | tee swift_dump.log || echo "Package dump failed"
-
-        # Try building with specific flags that might reveal more errors
-        echo "=== Swift Build with Debug Flags ==="
-        swift build \
-          --verbose \
-          --enable-test-discovery \
-          --build-tests \
-          -Xswiftc -diagnostic-style=llvm \
-          -Xswiftc -Xfrontend \
-          -Xswiftc -debug-diagnostic-names 2>&1 | tee swift_debug_build.log || echo "Debug build failed"
-
-        # Check the actual Swift source files for syntax errors
-        echo "=== Swift Source File Syntax Check ==="
-        find Sources -name "*.swift" -exec echo "Checking {}" \; -exec swift -frontend -parse {} \; 2>&1 | tee swift_syntax_check.log || echo "Syntax check completed"
-
-        # Try compiling individual Swift files
-        echo "=== Individual Swift File Compilation ==="
-        for swift_file in Sources/*.swift; do
-          if [ -f "$swift_file" ]; then
-            echo "Compiling $swift_file..."
-            xcrun -sdk iphoneos swiftc \
-              -target arm64-apple-ios12.0 \
-              -parse-as-library \
-              "$swift_file" 2>&1 || echo "Failed to compile $swift_file"
-          fi
-        done
-
-        cd ../../client
 
     - name: Export IPA from Archive
       working-directory: ./client
