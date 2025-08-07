@@ -7,7 +7,7 @@ import { useExternalLink } from "../hooks/useExternalLink";
 import { waitForTauri, getTauriInfo } from "../utils/tauriReady";
 import { areTauriApisAvailable } from "../utils/platformDetection";
 import { Button, TextField, Container, Typography, Box, Alert, Divider, CircularProgress } from "@mui/material";
-import { Google, Facebook, Apple, BugReport } from "@mui/icons-material";
+import { Google, Facebook, Apple } from "@mui/icons-material";
 import WebViewOverlay from "./WebViewOverlay";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -19,7 +19,6 @@ const Login = () => {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [oauthLoading, setOauthLoading] = useState(false);
-    const [pluginTestResult, setPluginTestResult] = useState("");
     const { login, nativeLogin } = useAuth();
     const navigate = useNavigate();
     const { t } = useTranslation(["auth", "common"]);
@@ -322,24 +321,6 @@ const Login = () => {
         }
     };
 
-    // Test function for Google Auth plugin
-    const testGoogleAuthPlugin = async () => {
-        setPluginTestResult("Testing...");
-        try {
-            const invokeApi = getTauriInvoke();
-            if (!invokeApi || !invokeApi.invoke) {
-                setPluginTestResult("❌ Tauri not available");
-                return;
-            }
-
-            // Test our custom test command
-            const result = await invokeApi.invoke('test_google_auth_plugin');
-            setPluginTestResult(`✅ ${result}`);
-        } catch (error) {
-            setPluginTestResult(`❌ Plugin test failed: ${error}`);
-        }
-    };
-
     return (
         <Container maxWidth="xs">
             <Box
@@ -392,15 +373,6 @@ const Login = () => {
                     {error}
                 </Alert>
             )}
-            
-            {/* Plugin test result */}
-            {pluginTestResult && (
-                <Alert severity={pluginTestResult.includes('✅') ? "success" : "info"} sx={{ mt: 2 }}>
-                    <Typography variant="body2" component="pre" style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                        {pluginTestResult}
-                    </Typography>
-                </Alert>
-            )}
 
             <Divider sx={{ my: 2 }}>{t("auth:login.orLoginWith")}</Divider>
 
@@ -412,20 +384,6 @@ const Login = () => {
                     disabled={oauthLoading || isLoading}>
                     {oauthLoading ? t("auth:login.authenticating") : t("auth:login.loginWithGoogle")}
                 </Button>
-                
-                {/* Test button for Google Auth plugin - only show in mobile/Tauri environment */}
-                {areTauriApisAvailable() && (
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        color="secondary"
-                        startIcon={<BugReport />}
-                        onClick={testGoogleAuthPlugin}
-                        disabled={oauthLoading || isLoading}>
-                        Test Google Auth Plugin
-                    </Button>
-                )}
-                
                 <Button
                     variant="outlined"
                     startIcon={<Apple />}

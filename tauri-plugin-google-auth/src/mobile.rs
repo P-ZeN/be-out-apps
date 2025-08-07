@@ -14,7 +14,7 @@ pub fn init<R: Runtime>(
   api: PluginApi<R, ()>,
 ) -> crate::Result<GoogleAuth<R>> {
   #[cfg(target_os = "android")]
-  let handle = api.register_android_plugin("app.tauri.googleauth", "GoogleAuthPlugin")?;
+  let handle = api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin")?;
 
   #[cfg(target_os = "ios")]
   let handle = api.register_ios_plugin(init_plugin_google_auth)?;
