@@ -1,23 +1,5 @@
 name: Mobile App Build and Release
 
-# iOS Provisioning Profile Management:
-# This workflow uses DYNAMIC profile UUID extraction to avoid maintenance issues.
-# Profile UUIDs change when profiles are renewed/modified, so we extract them
-# automatically during the certificate installation step rather than storing
-# them as hardcoded GitHub Secrets. This ensures the workflow continues working
-# even when provisioning profiles are updated.
-#
-# Required Secrets for iOS builds:
-# - APPLE_DEVELOPMENT_TEAM: Your Apple Developer Team ID
-# - APPLE_DEVELOPMENT_CERTIFICATE_P12_BASE64: Development certificate (base64)
-# - APPLE_DISTRIBUTION_CERTIFICATE_P12_BASE64: Distribution certificate (base64) 
-# - APPLE_CERTIFICATE_PASSWORD: Password for P12 certificates
-# - IOS_DEVELOPMENT_PROVISIONING_PROFILE: Development profile (base64)
-# - IOS_DISTRIBUTION_PROVISIONING_PROFILE: Distribution profile (base64)
-# - IOS_AD_HOC_PROVISIONING_PROFILE: Ad hoc profile (base64)
-#
-# Profile UUIDs are extracted automatically - no manual UUID management required!
-
 on:
   push:
     branches: [ mobile-build ]  # Only run on mobile-build branch
@@ -40,29 +22,27 @@ env:
   GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
   GOOGLE_CLIENT_ID_ANDROID: ${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
   GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
-  # Note: Profile UUIDs are dynamically extracted during certificate installation
-  # This prevents maintenance issues when provisioning profiles are renewed
 
 jobs:
   test-client:
     name: Test Client App
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
+    - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
         node-version: '18'
         cache: 'npm'
-      - name: Install dependencies
-        run: npm ci
-      - name: Build client
-        run: npm run build:client
-        env:
+    - name: Install dependencies
+      run: npm ci
+    - name: Build client
+      run: npm run build:client
+      env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
-      - name: Test client
-        run: npm run test --workspace=client --if-present
+    - name: Test client
+      run: npm run test --workspace=client --if-present
 
   build-android:
     name: Build Android APK
@@ -70,236 +50,236 @@ jobs:
     needs: test-client
     if: true  # Enabled
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
         node-version: '18'
         cache: 'npm'
 
-      - name: Setup Java JDK
-        uses: actions/setup-java@v4
-        with:
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
         distribution: 'temurin'
         java-version: '17'
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
         targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android
 
-      - name: Install Rust targets for Android
-        run: |
-          echo "Installing Android targets..."
-          rustup target add aarch64-linux-android
-          rustup target add armv7-linux-androideabi
-          rustup target add x86_64-linux-android
-          rustup target add i686-linux-android
-          echo "Installed targets:"
-          rustup target list --installed | grep android
+    - name: Install Rust targets for Android
+      run: |
+        echo "Installing Android targets..."
+        rustup target add aarch64-linux-android
+        rustup target add armv7-linux-androideabi
+        rustup target add x86_64-linux-android
+        rustup target add i686-linux-android
+        echo "Installed targets:"
+        rustup target list --installed | grep android
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
         api-level: 33
         build-tools: 33.0.0
         ndk-version: 25.2.9519653
 
-      - name: Verify Android Environment
-        run: |
-          echo "Android SDK Root: $ANDROID_SDK_ROOT"
-          echo "NDK Home: $ANDROID_SDK_ROOT/ndk/25.2.9519653"
-          echo "Java Home: $JAVA_HOME"
-          ls -la $ANDROID_SDK_ROOT/ndk/ || echo "NDK directory not found"
-          # Find actual NDK directory
-          if [ -d "$ANDROID_SDK_ROOT/ndk" ]; then
-            echo "Available NDK versions:"
-            ls -la $ANDROID_SDK_ROOT/ndk/
-            NDK_DIR=$(ls -1 $ANDROID_SDK_ROOT/ndk/ | head -1)
-            echo "Using NDK: $NDK_DIR"
-            echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_DIR" >> $GITHUB_ENV
-          fi
+    - name: Verify Android Environment
+      run: |
+        echo "Android SDK Root: $ANDROID_SDK_ROOT"
+        echo "NDK Home: $ANDROID_SDK_ROOT/ndk/25.2.9519653"
+        echo "Java Home: $JAVA_HOME"
+        ls -la $ANDROID_SDK_ROOT/ndk/ || echo "NDK directory not found"
+        # Find actual NDK directory
+        if [ -d "$ANDROID_SDK_ROOT/ndk" ]; then
+          echo "Available NDK versions:"
+          ls -la $ANDROID_SDK_ROOT/ndk/
+          NDK_DIR=$(ls -1 $ANDROID_SDK_ROOT/ndk/ | head -1)
+          echo "Using NDK: $NDK_DIR"
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_DIR" >> $GITHUB_ENV
+        fi
 
-      - name: Configure Cargo for Android
-        run: |
-          echo "Setting up Cargo configuration for Android builds..."
-          echo "Using NDK_HOME: $NDK_HOME"
-          mkdir -p ~/.cargo
+    - name: Configure Cargo for Android
+      run: |
+        echo "Setting up Cargo configuration for Android builds..."
+        echo "Using NDK_HOME: $NDK_HOME"
+        mkdir -p ~/.cargo
 
-          # Verify NDK tools exist before creating config
-          NDK_TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          echo "Checking NDK toolchain at: $NDK_TOOLCHAIN"
+        # Verify NDK tools exist before creating config
+        NDK_TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+        echo "Checking NDK toolchain at: $NDK_TOOLCHAIN"
 
-          if [ ! -d "$NDK_TOOLCHAIN" ]; then
+        if [ ! -d "$NDK_TOOLCHAIN" ]; then
           echo "❌ NDK toolchain directory not found: $NDK_TOOLCHAIN"
           echo "Available NDK contents:"
           find "$NDK_HOME" -type d -name "bin" 2>/dev/null | head -5
           exit 1
-          fi
+        fi
 
-          # Find the correct Android API level linkers
-          echo "Looking for Android clang linkers..."
-          AARCH64_LINKER=$(find "$NDK_TOOLCHAIN" -name "*aarch64*android*clang" | head -1)
-          ARMV7_LINKER=$(find "$NDK_TOOLCHAIN" -name "*armv7*android*clang" -o -name "*arm*android*clang" | head -1)
-          X86_64_LINKER=$(find "$NDK_TOOLCHAIN" -name "*x86_64*android*clang" | head -1)
-          I686_LINKER=$(find "$NDK_TOOLCHAIN" -name "*i686*android*clang" | head -1)
+        # Find the correct Android API level linkers
+        echo "Looking for Android clang linkers..."
+        AARCH64_LINKER=$(find "$NDK_TOOLCHAIN" -name "*aarch64*android*clang" | head -1)
+        ARMV7_LINKER=$(find "$NDK_TOOLCHAIN" -name "*armv7*android*clang" -o -name "*arm*android*clang" | head -1)
+        X86_64_LINKER=$(find "$NDK_TOOLCHAIN" -name "*x86_64*android*clang" | head -1)
+        I686_LINKER=$(find "$NDK_TOOLCHAIN" -name "*i686*android*clang" | head -1)
 
-          echo "Found linkers:"
-          echo "AARCH64: $AARCH64_LINKER"
-          echo "ARMV7: $ARMV7_LINKER"
-          echo "X86_64: $X86_64_LINKER"
-          echo "I686: $I686_LINKER"
+        echo "Found linkers:"
+        echo "AARCH64: $AARCH64_LINKER"
+        echo "ARMV7: $ARMV7_LINKER"
+        echo "X86_64: $X86_64_LINKER"
+        echo "I686: $I686_LINKER"
 
-          # Use found linkers or fallback to API level 21
-          AARCH64_LINKER=${AARCH64_LINKER:-"$NDK_TOOLCHAIN/aarch64-linux-android21-clang"}
-          ARMV7_LINKER=${ARMV7_LINKER:-"$NDK_TOOLCHAIN/armv7a-linux-androideabi21-clang"}
-          X86_64_LINKER=${X86_64_LINKER:-"$NDK_TOOLCHAIN/x86_64-linux-android21-clang"}
-          I686_LINKER=${I686_LINKER:-"$NDK_TOOLCHAIN/i686-linux-android21-clang"}
+        # Use found linkers or fallback to API level 21
+        AARCH64_LINKER=${AARCH64_LINKER:-"$NDK_TOOLCHAIN/aarch64-linux-android21-clang"}
+        ARMV7_LINKER=${ARMV7_LINKER:-"$NDK_TOOLCHAIN/armv7a-linux-androideabi21-clang"}
+        X86_64_LINKER=${X86_64_LINKER:-"$NDK_TOOLCHAIN/x86_64-linux-android21-clang"}
+        I686_LINKER=${I686_LINKER:-"$NDK_TOOLCHAIN/i686-linux-android21-clang"}
 
-          # Create Cargo config with discovered linkers
-          cat > ~/.cargo/config.toml << 'CARGO_EOF'
-          [target.aarch64-linux-android]
-          ar = "AR_PLACEHOLDER"
-          linker = "AARCH64_LINKER_PLACEHOLDER"
+        # Create Cargo config with discovered linkers
+        cat > ~/.cargo/config.toml << 'CARGO_EOF'
+        [target.aarch64-linux-android]
+        ar = "AR_PLACEHOLDER"
+        linker = "AARCH64_LINKER_PLACEHOLDER"
 
-          [target.armv7-linux-androideabi]
-          ar = "AR_PLACEHOLDER"
-          linker = "ARMV7_LINKER_PLACEHOLDER"
+        [target.armv7-linux-androideabi]
+        ar = "AR_PLACEHOLDER"
+        linker = "ARMV7_LINKER_PLACEHOLDER"
 
-          [target.x86_64-linux-android]
-          ar = "AR_PLACEHOLDER"
-          linker = "X86_64_LINKER_PLACEHOLDER"
+        [target.x86_64-linux-android]
+        ar = "AR_PLACEHOLDER"
+        linker = "X86_64_LINKER_PLACEHOLDER"
 
-          [target.i686-linux-android]
-          ar = "AR_PLACEHOLDER"
-          linker = "I686_LINKER_PLACEHOLDER"
-          CARGO_EOF
+        [target.i686-linux-android]
+        ar = "AR_PLACEHOLDER"
+        linker = "I686_LINKER_PLACEHOLDER"
+        CARGO_EOF
 
-          # Replace placeholders with actual paths
-          sed -i "s|AR_PLACEHOLDER|$NDK_TOOLCHAIN/llvm-ar|g" ~/.cargo/config.toml
-          sed -i "s|AARCH64_LINKER_PLACEHOLDER|$AARCH64_LINKER|g" ~/.cargo/config.toml
-          sed -i "s|ARMV7_LINKER_PLACEHOLDER|$ARMV7_LINKER|g" ~/.cargo/config.toml
-          sed -i "s|X86_64_LINKER_PLACEHOLDER|$X86_64_LINKER|g" ~/.cargo/config.toml
-          sed -i "s|I686_LINKER_PLACEHOLDER|$I686_LINKER|g" ~/.cargo/config.toml
+        # Replace placeholders with actual paths
+        sed -i "s|AR_PLACEHOLDER|$NDK_TOOLCHAIN/llvm-ar|g" ~/.cargo/config.toml
+        sed -i "s|AARCH64_LINKER_PLACEHOLDER|$AARCH64_LINKER|g" ~/.cargo/config.toml
+        sed -i "s|ARMV7_LINKER_PLACEHOLDER|$ARMV7_LINKER|g" ~/.cargo/config.toml
+        sed -i "s|X86_64_LINKER_PLACEHOLDER|$X86_64_LINKER|g" ~/.cargo/config.toml
+        sed -i "s|I686_LINKER_PLACEHOLDER|$I686_LINKER|g" ~/.cargo/config.toml
 
-          echo "Cargo config created:"
-          cat ~/.cargo/config.toml
+        echo "Cargo config created:"
+        cat ~/.cargo/config.toml
 
-          # Verify all tools exist
-          echo "Verifying all tools exist:"
-          for tool in "$NDK_TOOLCHAIN/llvm-ar" "$AARCH64_LINKER" "$ARMV7_LINKER" "$X86_64_LINKER" "$I686_LINKER"; do
+        # Verify all tools exist
+        echo "Verifying all tools exist:"
+        for tool in "$NDK_TOOLCHAIN/llvm-ar" "$AARCH64_LINKER" "$ARMV7_LINKER" "$X86_64_LINKER" "$I686_LINKER"; do
           if [ -f "$tool" ]; then
             echo "✅ $tool"
           else
             echo "❌ $tool (not found)"
           fi
-          done
-        env:
+        done
+      env:
         NDK_HOME: ${{ env.NDK_HOME }}
 
-      - name: Verify NDK Tools
-        run: |
-          echo "Verifying NDK tools are available..."
-          echo "NDK_HOME: $NDK_HOME"
-          ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | head -10
+    - name: Verify NDK Tools
+      run: |
+        echo "Verifying NDK tools are available..."
+        echo "NDK_HOME: $NDK_HOME"
+        ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | head -10
 
-          # Test if the linkers exist
-          if [ -f "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" ]; then
+        # Test if the linkers exist
+        if [ -f "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" ]; then
           echo "✅ ARM64 linker found"
-          else
+        else
           echo "❌ ARM64 linker not found"
           echo "Available linkers:"
           find "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" -name "*android*clang*" | head -5
-          fi
-        env:
+        fi
+      env:
         NDK_HOME: ${{ env.NDK_HOME }}
 
-      - name: Install Tauri CLI
-        run: |
-          echo "Installing Tauri CLI (latest version)..."
-          npm install -g @tauri-apps/cli@latest
+    - name: Install Tauri CLI
+      run: |
+        echo "Installing Tauri CLI (latest version)..."
+        npm install -g @tauri-apps/cli@latest
 
-          echo "Verifying Tauri CLI installation..."
-          which tauri || echo "Tauri CLI not found in PATH"
-          tauri --version || echo "Failed to get Tauri version"
+        echo "Verifying Tauri CLI installation..."
+        which tauri || echo "Tauri CLI not found in PATH"
+        tauri --version || echo "Failed to get Tauri version"
 
-          echo "Checking if tauri is available via npx..."
-          npx tauri --version || echo "npx tauri failed"
+        echo "Checking if tauri is available via npx..."
+        npx tauri --version || echo "npx tauri failed"
 
-          echo "Installing Tauri CLI locally as well..."
-          npm install @tauri-apps/cli@latest
+        echo "Installing Tauri CLI locally as well..."
+        npm install @tauri-apps/cli@latest
 
-          echo "Verifying local installation..."
-          npx tauri --version || echo "Local npx tauri failed"
+        echo "Verifying local installation..."
+        npx tauri --version || echo "Local npx tauri failed"
 
-          echo "Checking package.json scripts..."
-          cat package.json | grep -A 5 -B 5 "scripts" || echo "No scripts section found"
+        echo "Checking package.json scripts..."
+        cat package.json | grep -A 5 -B 5 "scripts" || echo "No scripts section found"
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Setup Android Code Signing
-        working-directory: ./client
-        run: |
-          echo "Setting up Android code signing for CI..."
+    - name: Setup Android Code Signing
+      working-directory: ./client
+      run: |
+        echo "Setting up Android code signing for CI..."
 
-          # Create keystore directory
-          mkdir -p android/
+        # Create keystore directory
+        mkdir -p android/
 
-          # Decode and save the keystore file with CI environment variables approach
-          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+        # Decode and save the keystore file with CI environment variables approach
+        if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
           echo "✅ Android keystore found in secrets"
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/release.keystore
 
           echo "✅ Android code signing configured with environment variables"
           ls -la android/release.keystore
-          else
+        else
           echo "⚠️  No Android keystore found in secrets - building unsigned APK"
           echo "To enable signed builds, add these secrets to your GitHub repository:"
           echo "- ANDROID_KEYSTORE_BASE64: Base64 encoded keystore file"
           echo "- ANDROID_KEYSTORE_PASSWORD: Keystore password"
           echo "- ANDROID_KEY_ALIAS: Key alias"
           echo "- ANDROID_KEY_PASSWORD: Key password"
-          fi
+        fi
 
-      - name: Debug Signing Setup
-        working-directory: ./client
-        run: |
-          echo "=== Checking CI signing setup ==="
-          if [ -f "android/release.keystore" ]; then
+    - name: Debug Signing Setup
+      working-directory: ./client
+      run: |
+        echo "=== Checking CI signing setup ==="
+        if [ -f "android/release.keystore" ]; then
           echo "✅ Keystore file exists at android/release.keystore"
           ls -la android/release.keystore
-          else
+        else
           echo "❌ Keystore file not found"
           ls -la android/ || echo "Android directory not found"
-          fi
+        fi
 
-          echo "=== Environment variables for signing ==="
-          echo "CI: $CI"
-          echo "KEYSTORE_PATH: $KEYSTORE_PATH"
-          echo "ANDROID_HOME: $ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+        echo "=== Environment variables for signing ==="
+        echo "CI: $CI"
+        echo "KEYSTORE_PATH: $KEYSTORE_PATH"
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
 
-          # Check if all required signing environment variables are set (without showing values)
-          if [ -n "$KEYSTORE_PASSWORD" ]; then
+        # Check if all required signing environment variables are set (without showing values)
+        if [ -n "$KEYSTORE_PASSWORD" ]; then
           echo "✅ KEYSTORE_PASSWORD is set"
-          else
+        else
           echo "❌ KEYSTORE_PASSWORD not set"
-          fi
+        fi
 
-          if [ -n "$KEY_ALIAS" ]; then
+        if [ -n "$KEY_ALIAS" ]; then
           echo "✅ KEY_ALIAS is set"
-          else
+        else
           echo "❌ KEY_ALIAS not set"
-          fi
+        fi
 
-          if [ -n "$KEY_PASSWORD" ]; then
+        if [ -n "$KEY_PASSWORD" ]; then
           echo "✅ KEY_PASSWORD is set"
-          else
+        else
           echo "❌ KEY_PASSWORD not set"
-          fi
-        env:
+        fi
+      env:
         # Android signing environment variables for debugging
         CI: true
         KEYSTORE_PATH: android/release.keystore
@@ -307,43 +287,36 @@ jobs:
         KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Build client
-        run: npm run build:client
-        env:
+    - name: Build client
+      run: npm run build:client
+      env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
-      - name: Initialize Android project
-        working-directory: ./client
-        env:
-        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
-        NDK_HOME: ${{ env.NDK_HOME }}
-        JAVA_HOME: ${{ env.JAVA_HOME }}
-        GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
-        GOOGLE_CLIENT_ID_ANDROID: ${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
-        GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
-        run: |
-          echo "Initializing Tauri Android project..."
-          echo "Environment variables:"
-          echo "ANDROID_HOME: $ANDROID_HOME"
-          echo "NDK_HOME: $NDK_HOME"
-          echo "JAVA_HOME: $JAVA_HOME"
+    - name: Initialize Android project
+      working-directory: ./client
+      run: |
+        echo "Initializing Tauri Android project..."
+        echo "Environment variables:"
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "NDK_HOME: $NDK_HOME"
+        echo "JAVA_HOME: $JAVA_HOME"
 
-          echo "Available npm scripts in client directory:"
-          npm run | grep tauri || echo "No tauri scripts found"
+        echo "Available npm scripts in client directory:"
+        npm run | grep tauri || echo "No tauri scripts found"
 
-          echo "Checking Tauri CLI availability:"
-          npx tauri --version || echo "npx tauri not available"
+        echo "Checking Tauri CLI availability:"
+        npx tauri --version || echo "npx tauri not available"
 
-          # Try different approaches to run tauri android init
-          echo "Attempting to initialize Android project..."
+        # Try different approaches to run tauri android init
+        echo "Attempting to initialize Android project..."
 
-          # Try npm scripts first, then npx
-          if npm run tauri:android:init -- --ci; then
+        # Try npm scripts first, then npx
+        if npm run tauri:android:init -- --ci; then
           echo "✅ Android project initialized with npm script"
-          elif npx tauri android init --ci; then
+        elif npx tauri android init --ci; then
           echo "✅ Android project initialized with npx tauri"
-          else
+        else
           echo "❌ All initialization methods failed"
           echo "Checking Tauri CLI installation..."
 
@@ -352,27 +325,31 @@ jobs:
           ls -la node_modules/.bin/ | grep tauri || echo "No tauri in node_modules/.bin"
           echo "Checking root node_modules:"
           ls -la ../node_modules/.bin/ | grep tauri || echo "No tauri in root node_modules/.bin"
-          fi
+        fi
 
-          echo "Checking for generated project..."
-          find . -name "gen" -type d 2>/dev/null || echo "No gen directory found"
-          find . -name "android" -type d 2>/dev/null || echo "No android directory found"
+        echo "Checking for generated project..."
+        find . -name "gen" -type d 2>/dev/null || echo "No gen directory found"
+        find . -name "android" -type d 2>/dev/null || echo "No android directory found"
 
-          # Check if Android project was created
-          if [ -d "src-tauri/gen/android" ]; then
+        # Check if Android project was created
+        if [ -d "src-tauri/gen/android" ]; then
           echo "✅ Android project created successfully"
           ls -la src-tauri/gen/
-          else
+        else
           echo "❌ Android project directory not found, trying alternative paths..."
           find src-tauri -type d -name "*android*" 2>/dev/null || echo "No Android directories found"
-          fi
+        fi
+      env:
+        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        NDK_HOME: ${{ env.NDK_HOME }}
+        JAVA_HOME: ${{ env.JAVA_HOME }}
 
-      - name: Debug Android Project Generation (Compare with Local)
-        working-directory: ./client
-        run: |
-          echo "=== DEBUGGING: Android Project Generation for Local vs CI Comparison ==="
+    - name: Debug Android Project Generation (Compare with Local)
+      working-directory: ./client
+      run: |
+        echo "=== DEBUGGING: Android Project Generation for Local vs CI Comparison ==="
 
-          if [ -d "src-tauri/gen/android" ]; then
+        if [ -d "src-tauri/gen/android" ]; then
           echo "🔍 Analyzing generated Android project..."
 
           echo "=== 1. Tauri CLI Version Info ==="
@@ -430,27 +407,27 @@ jobs:
           echo "=== 9. Environment Variables During Generation ==="
           env | grep -E "(ANDROID|TAURI|JAVA|SDK)" | sort
 
-          else
+        else
           echo "❌ No Android project found - initialization may have failed"
-          fi
-        env:
+        fi
+      env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
 
-      - name: Generate Android App Icons
-        working-directory: ./client
-        run: |
-          echo "🎨 Generating Android app icons AFTER project initialization..."
+    - name: Generate Android App Icons
+      working-directory: ./client
+      run: |
+        echo "🎨 Generating Android app icons AFTER project initialization..."
 
-          # Verify Android project exists before generating icons
-          if [ ! -d "src-tauri/gen/android" ]; then
+        # Verify Android project exists before generating icons
+        if [ ! -d "src-tauri/gen/android" ]; then
           echo "❌ Android project not found, cannot generate icons"
           exit 1
-          fi
+        fi
 
-          # Check if the icon file exists
-          ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
-          if [ -f "$ICON_FILE" ]; then
+        # Check if the icon file exists
+        ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
+        if [ -f "$ICON_FILE" ]; then
           echo "✅ Found icon file: $ICON_FILE"
           ls -la "$ICON_FILE"
 
@@ -488,7 +465,7 @@ jobs:
               tauri icon "$ICON_FILE" --verbose || echo "global tauri icon also failed"
             fi
           fi
-          else
+        else
           echo "❌ Icon file not found: $ICON_FILE"
           echo "Available files in src-tauri/icons/:"
           ls -la src-tauri/icons/ || echo "Icons directory not found"
@@ -497,20 +474,20 @@ jobs:
           echo "Looking for alternative icon files..."
           find src-tauri -name "*.png" | head -5
           exit 1
-          fi
+        fi
 
-      - name: Fix Android Themes for Status Bar
-        working-directory: ./client
-        run: |
-          echo "🔧 Fixing Android themes to prevent status bar overlap..."
+    - name: Fix Android Themes for Status Bar
+      working-directory: ./client
+      run: |
+        echo "🔧 Fixing Android themes to prevent status bar overlap..."
 
-          # Ensure the generated Android project exists
-          if [ -d "src-tauri/gen/android" ]; then
+        # Ensure the generated Android project exists
+        if [ -d "src-tauri/gen/android" ]; then
           # Fix the main themes.xml file
           if [ -f "src-tauri/gen/android/app/src/main/res/values/themes.xml" ]; then
             echo "📝 Patching main themes.xml..."
             cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'XMLEOF1'
-          <resources xmlns:tools="http://schemas.android.com/tools">
+        <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                 <!-- Use standard Material Design colors -->
@@ -518,13 +495,13 @@ jobs:
                 <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
-          </resources>
-          XMLEOF1
+        </resources>
+        XMLEOF1
           else
             echo "❌ Main themes.xml not found, creating it..."
             mkdir -p src-tauri/gen/android/app/src/main/res/values
             cat > src-tauri/gen/android/app/src/main/res/values/themes.xml << 'XMLEOF2'
-          <resources xmlns:tools="http://schemas.android.com/tools">
+        <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                 <!-- Use standard Material Design colors -->
@@ -532,15 +509,15 @@ jobs:
                 <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
-          </resources>
-          XMLEOF2
+        </resources>
+        XMLEOF2
           fi
 
           # Fix the night themes.xml file if it exists
           if [ -f "src-tauri/gen/android/app/src/main/res/values-night/themes.xml" ]; then
             echo "📝 Patching night themes.xml..."
             cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'XMLEOF3'
-          <resources xmlns:tools="http://schemas.android.com/tools">
+        <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                 <!-- Use standard Material Design colors -->
@@ -548,13 +525,13 @@ jobs:
                 <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
-          </resources>
-          XMLEOF3
+        </resources>
+        XMLEOF3
           else
             echo "🌙 Night themes.xml not found, creating it..."
             mkdir -p src-tauri/gen/android/app/src/main/res/values-night
             cat > src-tauri/gen/android/app/src/main/res/values-night/themes.xml << 'XMLEOF4'
-          <resources xmlns:tools="http://schemas.android.com/tools">
+        <resources xmlns:tools="http://schemas.android.com/tools">
             <!-- Base application theme. -->
             <style name="Theme.app" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                 <!-- Use standard Material Design colors -->
@@ -562,25 +539,25 @@ jobs:
                 <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
                 <item name="colorAccent">@android:color/holo_blue_light</item>
             </style>
-          </resources>
-          XMLEOF4
+        </resources>
+        XMLEOF4
           fi
 
           echo "✅ Android themes patched successfully!"
           echo "📋 Verifying theme files after patching:"
           find src-tauri/gen/android -name "themes.xml" -exec echo "--- {} ---" \; -exec cat {} \;
-          else
+        else
           echo "❌ No Android project found to patch"
-          fi
+        fi
 
-      - name: Patch Android Build for Signing
-        working-directory: ./client
-        run: |
-          echo "=== Patching Android app build.gradle.kts for signing ==="
+    - name: Patch Android Build for Signing
+      working-directory: ./client
+      run: |
+        echo "=== Patching Android app build.gradle.kts for signing ==="
 
-          APP_BUILD_FILE="src-tauri/gen/android/app/build.gradle.kts"
+        APP_BUILD_FILE="src-tauri/gen/android/app/build.gradle.kts"
 
-          if [ -f "$APP_BUILD_FILE" ]; then
+        if [ -f "$APP_BUILD_FILE" ]; then
           echo "✅ Found app build file: $APP_BUILD_FILE"
 
           # Create a backup
@@ -686,18 +663,18 @@ jobs:
             # Clean up
             rm signing_config_patch.txt
           fi
-          else
+        else
           echo "❌ App build file not found: $APP_BUILD_FILE"
           echo "Available files in Android project:"
           find src-tauri/gen/android -name "*.gradle*" 2>/dev/null || echo "No gradle files found"
-          fi
+        fi
 
-      - name: Debug Gradle Build Process Before Tauri
-        working-directory: ./client
-        run: |
-          echo "=== Manual Gradle Build Debug ==="
+    - name: Debug Gradle Build Process Before Tauri
+      working-directory: ./client
+      run: |
+        echo "=== Manual Gradle Build Debug ==="
 
-          if [ -d "src-tauri/gen/android" ]; then
+        if [ -d "src-tauri/gen/android" ]; then
           cd src-tauri/gen/android
 
           echo "=== Gradle Project Structure ==="
@@ -731,10 +708,10 @@ jobs:
             echo "=== Checking for signing-related errors ==="
             grep -i "sign\|keystore\|alias\|password" manual_gradle_build.log | tail -10
           fi
-          else
+        else
           echo "❌ Android project directory not found"
-          fi
-        env:
+        fi
+      env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
         JAVA_HOME: ${{ env.JAVA_HOME }}
@@ -745,145 +722,145 @@ jobs:
         KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Debug Rust Build Environment
-        run: |
-          echo "=== Rust Build Environment Debug ==="
-          echo "Rust version:"
-          rustc --version
-          echo "Cargo version:"
-          cargo --version
-          echo "Installed targets:"
-          rustup target list --installed
-          echo "Cargo config:"
-          cat ~/.cargo/config.toml || echo "No Cargo config found"
-          echo "NDK tools verification:"
-          ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | grep -E "(aarch64|armv7|x86_64|i686).*android.*clang" || echo "No Android clang tools found"
-          echo "Environment variables:"
-          env | grep -E "(ANDROID|NDK|JAVA|CARGO|RUST)" | sort
-        env:
+    - name: Debug Rust Build Environment
+      run: |
+        echo "=== Rust Build Environment Debug ==="
+        echo "Rust version:"
+        rustc --version
+        echo "Cargo version:"
+        cargo --version
+        echo "Installed targets:"
+        rustup target list --installed
+        echo "Cargo config:"
+        cat ~/.cargo/config.toml || echo "No Cargo config found"
+        echo "NDK tools verification:"
+        ls -la "$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/" | grep -E "(aarch64|armv7|x86_64|i686).*android.*clang" || echo "No Android clang tools found"
+        echo "Environment variables:"
+        env | grep -E "(ANDROID|NDK|JAVA|CARGO|RUST)" | sort
+      env:
         NDK_HOME: ${{ env.NDK_HOME }}
 
-      - name: Test Rust Cross-Compilation
-        run: |
-          echo "=== Testing Rust Cross-Compilation for Android ==="
-          echo "Testing if we can compile a simple Rust program for Android targets..."
+    - name: Test Rust Cross-Compilation
+      run: |
+        echo "=== Testing Rust Cross-Compilation for Android ==="
+        echo "Testing if we can compile a simple Rust program for Android targets..."
 
-          # Create a simple test Rust program
-          mkdir -p /tmp/rust_test
-          cd /tmp/rust_test
+        # Create a simple test Rust program
+        mkdir -p /tmp/rust_test
+        cd /tmp/rust_test
 
-          # Create Cargo.toml
-          cat > Cargo.toml << 'CARGO_TOML_EOF'
-          [package]
-          name = "test_android"
-          version = "0.1.0"
-          edition = "2021"
+        # Create Cargo.toml
+        cat > Cargo.toml << 'CARGO_TOML_EOF'
+        [package]
+        name = "test_android"
+        version = "0.1.0"
+        edition = "2021"
 
-          [[bin]]
-          name = "test_android"
-          path = "src/main.rs"
-          CARGO_TOML_EOF
+        [[bin]]
+        name = "test_android"
+        path = "src/main.rs"
+        CARGO_TOML_EOF
 
-          # Create main.rs
-          mkdir -p src
-          cat > src/main.rs << 'MAIN_RS_EOF'
-          fn main() {
+        # Create main.rs
+        mkdir -p src
+        cat > src/main.rs << 'MAIN_RS_EOF'
+        fn main() {
             println!("Hello Android!");
-          }
-          MAIN_RS_EOF
+        }
+        MAIN_RS_EOF
 
-          echo "Created test project, testing compilation for each Android target:"
+        echo "Created test project, testing compilation for each Android target:"
 
-          # Test aarch64-linux-android
-          echo "Testing aarch64-linux-android..."
-          if cargo build --target aarch64-linux-android --verbose 2>&1; then
+        # Test aarch64-linux-android
+        echo "Testing aarch64-linux-android..."
+        if cargo build --target aarch64-linux-android --verbose 2>&1; then
           echo "✅ aarch64-linux-android compilation successful"
-          else
+        else
           echo "❌ Failed to compile for aarch64-linux-android"
           echo "Checking linker configuration..."
           cat ~/.cargo/config.toml | grep -A 2 aarch64-linux-android || echo "No config found"
-          fi
+        fi
 
-          # Test armv7-linux-androideabi
-          echo "Testing armv7-linux-androideabi..."
-          if cargo build --target armv7-linux-androideabi --verbose 2>&1; then
+        # Test armv7-linux-androideabi
+        echo "Testing armv7-linux-androideabi..."
+        if cargo build --target armv7-linux-androideabi --verbose 2>&1; then
           echo "✅ armv7-linux-androideabi compilation successful"
-          else
+        else
           echo "❌ Failed to compile for armv7-linux-androideabi"
           echo "Checking linker configuration..."
           cat ~/.cargo/config.toml | grep -A 2 armv7-linux-androideabi || echo "No config found"
-          fi
+        fi
 
-        env:
+      env:
         NDK_HOME: ${{ env.NDK_HOME }}
 
-      - name: Debug Gradle Build Process
-        working-directory: ./client
-        run: |
-          echo "=== Debugging Gradle Build Process ==="
-          cd src-tauri/gen/android
+    - name: Debug Gradle Build Process
+      working-directory: ./client
+      run: |
+        echo "=== Debugging Gradle Build Process ==="
+        cd src-tauri/gen/android
 
-          echo "Gradle wrapper version:"
-          ./gradlew --version
+        echo "Gradle wrapper version:"
+        ./gradlew --version
 
-          echo "Android project tasks:"
-          ./gradlew tasks --all | grep -E "(rust|Build)" || echo "No rust-related tasks found"
+        echo "Android project tasks:"
+        ./gradlew tasks --all | grep -E "(rust|Build)" || echo "No rust-related tasks found"
 
-          echo "Attempting to run rustBuildArm64Release task manually with more details:"
-          if ./gradlew :app:rustBuildArm64Release --info --stacktrace 2>&1 | tee gradle_rust_debug.log; then
+        echo "Attempting to run rustBuildArm64Release task manually with more details:"
+        if ./gradlew :app:rustBuildArm64Release --info --stacktrace 2>&1 | tee gradle_rust_debug.log; then
           echo "✅ Manual Gradle task succeeded"
-          else
+        else
           echo "❌ Manual Gradle task failed"
           echo "=== Gradle Error Analysis ==="
           tail -50 gradle_rust_debug.log
           echo "=== Looking for Node.js errors ==="
           grep -i "node\|javascript\|process.*finished.*non-zero" gradle_rust_debug.log || echo "No Node.js specific errors found"
-          fi
+        fi
 
-        env:
+      env:
         NDK_HOME: ${{ env.NDK_HOME }}
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         JAVA_HOME: ${{ env.JAVA_HOME }}
 
-      - name: Verify Icons Before Android Build
-        working-directory: ./client
-        run: |
-          echo "🔍 Final verification of icons before Android build..."
+    - name: Verify Icons Before Android Build
+      working-directory: ./client
+      run: |
+        echo "🔍 Final verification of icons before Android build..."
 
-          # Check if icons are in place
-          echo "=== Current icon files ==="
-          find src-tauri/icons -name "*.png" -o -name "*.ico" | head -15
+        # Check if icons are in place
+        echo "=== Current icon files ==="
+        find src-tauri/icons -name "*.png" -o -name "*.ico" | head -15
 
-          # Check for custom icon
-          if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
+        # Check for custom icon
+        if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
-          else
+        else
           echo "❌ Custom icon source file missing!"
-          fi
+        fi
 
-          # Check for generated Android icons
-          echo "=== Android-specific generated icons ==="
-          find src-tauri/icons -name "android-icon-*.png" | head -10
+        # Check for generated Android icons
+        echo "=== Android-specific generated icons ==="
+        find src-tauri/icons -name "android-icon-*.png" | head -10
 
-          # If Android project exists, check for icons there too
-          if [ -d "src-tauri/gen/android" ]; then
+        # If Android project exists, check for icons there too
+        if [ -d "src-tauri/gen/android" ]; then
           echo "=== Icons in Android project ==="
           find src-tauri/gen/android -path "*/res/drawable*" -name "*.png" | head -5 || echo "No drawable icons"
           find src-tauri/gen/android -path "*/res/mipmap*" -name "*.png" | head -5 || echo "No mipmap icons"
-          fi
+        fi
 
-      - name: Build Android APK
-        working-directory: ./client
-        run: |
-          echo "Building Android APK..."
-          echo "Checking Android project directory..."
+    - name: Build Android APK
+      working-directory: ./client
+      run: |
+        echo "Building Android APK..."
+        echo "Checking Android project directory..."
 
-          # Find Android project directory
-          ANDROID_PROJECT_DIR=""
-          if [ -d "src-tauri/gen/android" ]; then
+        # Find Android project directory
+        ANDROID_PROJECT_DIR=""
+        if [ -d "src-tauri/gen/android" ]; then
           ANDROID_PROJECT_DIR="src-tauri/gen/android"
           echo "✅ Found Android project at: $ANDROID_PROJECT_DIR"
-          else
+        else
           echo "🔍 Searching for Android project directory..."
           ANDROID_PROJECT_DIR=$(find src-tauri -type d -name "*android*" 2>/dev/null | head -1)
           if [ -n "$ANDROID_PROJECT_DIR" ]; then
@@ -899,49 +876,49 @@ jobs:
               exit 1
             fi
           fi
-          fi
+        fi
 
-          echo "Android project directory contents:"
-          ls -la "$ANDROID_PROJECT_DIR"/ 2>/dev/null || echo "Cannot list directory contents"
+        echo "Android project directory contents:"
+        ls -la "$ANDROID_PROJECT_DIR"/ 2>/dev/null || echo "Cannot list directory contents"
 
-          echo "Starting Android build..."
-          echo "Environment check before build:"
-          echo "ANDROID_HOME: $ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
-          echo "NDK_HOME: $NDK_HOME"
-          echo "JAVA_HOME: $JAVA_HOME"
-          echo "CI: $CI"
-          echo "KEYSTORE_PATH: $KEYSTORE_PATH"
+        echo "Starting Android build..."
+        echo "Environment check before build:"
+        echo "ANDROID_HOME: $ANDROID_HOME"
+        echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+        echo "NDK_HOME: $NDK_HOME"
+        echo "JAVA_HOME: $JAVA_HOME"
+        echo "CI: $CI"
+        echo "KEYSTORE_PATH: $KEYSTORE_PATH"
 
-          # Set additional environment variables that Tauri might need
-          export ANDROID_NDK_ROOT="$NDK_HOME"
-          export ANDROID_NDK_HOME="$NDK_HOME"
+        # Set additional environment variables that Tauri might need
+        export ANDROID_NDK_ROOT="$NDK_HOME"
+        export ANDROID_NDK_HOME="$NDK_HOME"
 
-          echo "Additional environment variables set:"
-          echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
-          echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
+        echo "Additional environment variables set:"
+        echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
+        echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
 
-          # Try building with more verbose output and error handling
-          echo "Building for Android with detailed logging..."
-          set -x  # Enable command tracing
+        # Try building with more verbose output and error handling
+        echo "Building for Android with detailed logging..."
+        set -x  # Enable command tracing
 
-          # First, let's try a simple build to see what happens
-          echo "=== Starting Tauri Android Build ==="
+        # First, let's try a simple build to see what happens
+        echo "=== Starting Tauri Android Build ==="
 
-          # Use the npm script that's defined in package.json
-          echo "=== Attempting Tauri Build with Enhanced Error Reporting ==="
+        # Use the npm script that's defined in package.json
+        echo "=== Attempting Tauri Build with Enhanced Error Reporting ==="
 
-          # Run with maximum verbosity and capture all output
-          if npm run tauri:android:build -- --verbose 2>&1 | tee android_build.log; then
+        # Run with maximum verbosity and capture all output
+        if npm run tauri:android:build -- --verbose 2>&1 | tee android_build.log; then
           BUILD_EXIT_CODE=0
           echo "✅ Build succeeded with npm run tauri:android:build"
-          elif npm run tauri android build -- --verbose 2>&1 | tee android_build.log; then
+        elif npm run tauri android build -- --verbose 2>&1 | tee android_build.log; then
           BUILD_EXIT_CODE=0
           echo "✅ Build succeeded with npm run tauri android build"
-          elif npx tauri android build --verbose 2>&1 | tee android_build.log; then
+        elif npx tauri android build --verbose 2>&1 | tee android_build.log; then
           BUILD_EXIT_CODE=0
           echo "✅ Build succeeded with npx tauri command"
-          else
+        else
           BUILD_EXIT_CODE=1
           echo "❌ All build methods failed"
 
@@ -966,14 +943,14 @@ jobs:
 
             cd ../../..
           fi
-          fi
+        fi
 
-          echo "=== Build completed with exit code: $BUILD_EXIT_CODE ==="
+        echo "=== Build completed with exit code: $BUILD_EXIT_CODE ==="
 
-          if [ $BUILD_EXIT_CODE -eq 0 ]; then
+        if [ $BUILD_EXIT_CODE -eq 0 ]; then
           echo "✅ Build succeeded! Looking for APK files..."
           find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found despite successful build"
-          else
+        else
           echo "❌ Build failed with exit code $BUILD_EXIT_CODE"
           echo "=== BUILD FAILED - Analyzing logs ==="
           echo "Last 50 lines of build log:"
@@ -986,8 +963,8 @@ jobs:
           # Don't exit immediately - let's still try to find any partial artifacts
           echo "=== Checking for partial build artifacts ==="
           find . -name "*.so" -o -name "*.a" -o -name "*.apk" -o -name "*.aab" 2>/dev/null | head -10 || echo "No build artifacts found"
-          fi
-        env:
+        fi
+      env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         NDK_HOME: ${{ env.NDK_HOME }}
         JAVA_HOME: ${{ env.JAVA_HOME }}
@@ -1000,19 +977,19 @@ jobs:
         KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Find and Upload APK
-        working-directory: ./client
-        run: |
-          echo "=== Searching for APK files ==="
-          echo "Looking for APK files in the workspace..."
-          find . -name "*.apk" -type f 2>/dev/null | head -10 || echo "No APK files found"
+    - name: Find and Upload APK
+      working-directory: ./client
+      run: |
+        echo "=== Searching for APK files ==="
+        echo "Looking for APK files in the workspace..."
+        find . -name "*.apk" -type f 2>/dev/null | head -10 || echo "No APK files found"
 
-          echo "Checking standard Android build directories:"
-          find . -path "*/build/outputs/apk*" -type d 2>/dev/null || echo "No standard APK output directories found"
-          find . -path "*/target/*/release*" -type d 2>/dev/null || echo "No Rust target directories found"
+        echo "Checking standard Android build directories:"
+        find . -path "*/build/outputs/apk*" -type d 2>/dev/null || echo "No standard APK output directories found"
+        find . -path "*/target/*/release*" -type d 2>/dev/null || echo "No Rust target directories found"
 
-          echo "Checking Tauri Android project structure:"
-          if [ -d "src-tauri/gen/android" ]; then
+        echo "Checking Tauri Android project structure:"
+        if [ -d "src-tauri/gen/android" ]; then
           echo "Android project directory structure:"
           find src-tauri/gen/android -type f -name "*.apk" -o -name "*.aab" 2>/dev/null || echo "No APK/AAB files in android directory"
 
@@ -1021,27 +998,27 @@ jobs:
 
           echo "Build outputs directory:"
           find src-tauri/gen/android -path "*/build/outputs*" -type d -exec ls -la {} \; 2>/dev/null || echo "No build outputs found"
-          fi
+        fi
 
-          echo "Checking if build actually succeeded..."
-          if [ -f "android_build.log" ]; then
+        echo "Checking if build actually succeeded..."
+        if [ -f "android_build.log" ]; then
           echo "=== Last 20 lines of build log ==="
           tail -20 android_build.log
           echo "=== Searching for APK creation messages ==="
           grep -i "apk\|assembl\|build.*success" android_build.log || echo "No APK creation messages found"
-          fi
+        fi
 
-      - name: Upload APK (if found)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: android-apk
-          path: |
-            client/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
-            client/src-tauri/gen/android/**/build/outputs/apk/**/*.apk
-            client/src-tauri/target/**/release/*.apk
-            client/**/*.apk
-          if-no-files-found: warn
+    - name: Upload APK (if found)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: android-apk
+        path: |
+          client/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          client/src-tauri/gen/android/**/build/outputs/apk/**/*.apk
+          client/src-tauri/target/**/release/*.apk
+          client/**/*.apk
+        if-no-files-found: warn
 
   build-ios:
     name: Build iOS IPA
@@ -1049,50 +1026,50 @@ jobs:
     needs: test-client
     if: true  # Enable for testing - Tauri 2.x has iOS support
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
         node-version: '18'
         cache: 'npm'
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
         targets: aarch64-apple-ios,x86_64-apple-ios,aarch64-apple-ios-sim
 
-      - name: Verify Xcode Version
-        run: |
-          echo "=== Xcode Environment Check ==="
-          xcodebuild -version
-          xcrun --show-sdk-version --sdk iphoneos || echo "iPhone SDK not found"
+    - name: Verify Xcode Version
+      run: |
+        echo "=== Xcode Environment Check ==="
+        xcodebuild -version
+        xcrun --show-sdk-version --sdk iphoneos || echo "iPhone SDK not found"
 
-          # Check Xcode version compatibility
-          XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
-          echo "Detected Xcode version: $XCODE_VERSION"
+        # Check Xcode version compatibility
+        XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
+        echo "Detected Xcode version: $XCODE_VERSION"
 
-          # Tauri 2.x typically requires Xcode 15.0+ for iOS builds
-          if [[ $(echo "$XCODE_VERSION 15.0" | tr " " "\n" | sort -V | head -1) != "15.0" ]]; then
+        # Tauri 2.x typically requires Xcode 15.0+ for iOS builds
+        if [[ $(echo "$XCODE_VERSION 15.0" | tr " " "\n" | sort -V | head -1) != "15.0" ]]; then
           echo "⚠️  Warning: Xcode version may be too old for Tauri 2.x iOS builds"
           echo "   Detected: $XCODE_VERSION"
           echo "   Required: 15.0 or later"
           echo "   This may cause project format compatibility issues"
-          else
+        else
           echo "✅ Xcode version appears compatible"
-          fi
+        fi
 
-      - name: Check iOS Frameworks and Dependencies
-        working-directory: ./client
-        run: |
-          echo "🔍 Checking iOS SDK and Framework availability..."
+    - name: Check iOS Frameworks and Dependencies
+      working-directory: ./client
+      run: |
+        echo "🔍 Checking iOS SDK and Framework availability..."
 
-          # Check iOS SDK path
-          IOS_SDK_PATH=$(xcrun --show-sdk-path --sdk iphoneos)
-          echo "iOS SDK Path: $IOS_SDK_PATH"
+        # Check iOS SDK path
+        IOS_SDK_PATH=$(xcrun --show-sdk-path --sdk iphoneos)
+        echo "iOS SDK Path: $IOS_SDK_PATH"
 
-          # Check required frameworks for GoogleSignIn
-          REQUIRED_FRAMEWORKS=(
+        # Check required frameworks for GoogleSignIn
+        REQUIRED_FRAMEWORKS=(
           "Foundation"
           "UIKit"
           "Security"
@@ -1101,100 +1078,100 @@ jobs:
           "LocalAuthentication"
           "SafariServices"
           "WebKit"
-          )
+        )
 
-          echo "Checking required frameworks..."
-          for framework in "${REQUIRED_FRAMEWORKS[@]}"; do
+        echo "Checking required frameworks..."
+        for framework in "${REQUIRED_FRAMEWORKS[@]}"; do
           if [ -d "$IOS_SDK_PATH/System/Library/Frameworks/$framework.framework" ]; then
             echo "✅ $framework.framework found"
           else
             echo "❌ $framework.framework MISSING"
           fi
-          done
+        done
 
-          # Check for Swift libraries
-          echo "Checking Swift runtime libraries..."
-          SWIFT_LIB_PATH="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos"
-          if [ -d "$SWIFT_LIB_PATH" ]; then
+        # Check for Swift libraries
+        echo "Checking Swift runtime libraries..."
+        SWIFT_LIB_PATH="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos"
+        if [ -d "$SWIFT_LIB_PATH" ]; then
           echo "✅ Swift iOS libraries found at $SWIFT_LIB_PATH"
           ls -la "$SWIFT_LIB_PATH" | head -10
-          else
+        else
           echo "❌ Swift iOS libraries not found"
-          fi
+        fi
 
-          # Check Xcode version compatibility
-          XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
-          echo "Xcode version: $XCODE_VERSION"
+        # Check Xcode version compatibility
+        XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
+        echo "Xcode version: $XCODE_VERSION"
 
-          # GoogleSignIn 6.2.4 requires Xcode 13.0+
-          if [[ $(echo "$XCODE_VERSION 13.0" | tr " " "\n" | sort -V | head -1) != "13.0" ]]; then
+        # GoogleSignIn 6.2.4 requires Xcode 13.0+
+        if [[ $(echo "$XCODE_VERSION 13.0" | tr " " "\n" | sort -V | head -1) != "13.0" ]]; then
           echo "⚠️ Warning: Xcode version may be too old for GoogleSignIn 6.2.4"
           echo "   Detected: $XCODE_VERSION"
           echo "   Required: 13.0 or later"
-          else
+        else
           echo "✅ Xcode version compatible with GoogleSignIn 6.2.4"
-          fi
+        fi
 
-          # Test Swift compilation
-          echo "Testing basic Swift compilation..."
-          cat > test_swift.swift << 'SWIFTEOF'
-          import Foundation
-          import UIKit
-          print("Swift compilation test successful")
-          SWIFTEOF
+        # Test Swift compilation
+        echo "Testing basic Swift compilation..."
+        cat > test_swift.swift << 'SWIFTEOF'
+        import Foundation
+        import UIKit
+        print("Swift compilation test successful")
+        SWIFTEOF
 
-          if xcrun -sdk iphoneos swiftc test_swift.swift -target arm64-apple-ios12.0 2>&1; then
+        if xcrun -sdk iphoneos swiftc test_swift.swift -target arm64-apple-ios12.0 2>&1; then
           echo "✅ Basic Swift compilation successful"
-          else
+        else
           echo "❌ Basic Swift compilation failed"
-          fi
-          rm -f test_swift.swift test_swift
+        fi
+        rm -f test_swift.swift test_swift
 
-      - name: Test Google Auth Plugin Swift Package
-        working-directory: ./client
-        run: |
-          echo "🔧 Testing tauri-plugin-google-auth Swift package compilationssssss..."
+    - name: Test Google Auth Plugin Swift Package
+      working-directory: ./client
+      run: |
+        echo "🔧 Testing tauri-plugin-google-auth Swift package compilationssssss..."
 
-          # Navigate to the plugin iOS directory
-          if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
+        # Navigate to the plugin iOS directory
+        if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
           echo "❌ iOS directory missing for Google Auth plugin!"
           echo "Expected: ../tauri-plugin-google-auth/ios"
           echo "This will cause the build to fail."
           exit 1
-          fi
+        fi
 
-          cd ../tauri-plugin-google-auth/ios
+        cd ../tauri-plugin-google-auth/ios
 
-          echo "📋 Package.swift contents:"
-          cat Package.swift
+        echo "📋 Package.swift contents:"
+        cat Package.swift
 
-          echo ""
-          echo "📋 Sources directory structure:"
-          find Sources -name "*.swift" -exec echo "  {}" \; 2>/dev/null || echo "  No Swift sources found"
+        echo ""
+        echo "📋 Sources directory structure:"
+        find Sources -name "*.swift" -exec echo "  {}" \; 2>/dev/null || echo "  No Swift sources found"
 
-          echo ""
-          echo "🧪 Testing Swift package syntax and dependencies..."
+        echo ""
+        echo "🧪 Testing Swift package syntax and dependencies..."
 
-          # Test 1: Package dump to validate Package.swift syntax
-          echo "=== Test 1: Package.swift syntax validation ==="
-          if swift package dump-package 2>&1; then
+        # Test 1: Package dump to validate Package.swift syntax
+        echo "=== Test 1: Package.swift syntax validation ==="
+        if swift package dump-package 2>&1; then
           echo "✅ Package.swift syntax is valid"
-          else
+        else
           echo "❌ Package.swift syntax errors detected"
-          fi
+        fi
 
-          echo ""
-          echo "=== Test 2: Dependency resolution ==="
-          # Test 2: Try to resolve dependencies (this will download GoogleSignIn-iOS)
-          # Use gtimeout if available (from coreutils), otherwise just run without timeout
-          if command -v gtimeout >/dev/null 2>&1; then
+        echo ""
+        echo "=== Test 2: Dependency resolution ==="
+        # Test 2: Try to resolve dependencies (this will download GoogleSignIn-iOS)
+        # Use gtimeout if available (from coreutils), otherwise just run without timeout
+        if command -v gtimeout >/dev/null 2>&1; then
           TIMEOUT_CMD="gtimeout 300"
-          else
+        else
           TIMEOUT_CMD=""
           echo "⚠️ No timeout command available, running without timeout"
-          fi
+        fi
 
-          if $TIMEOUT_CMD swift package resolve --verbose 2>&1; then
+        if $TIMEOUT_CMD swift package resolve --verbose 2>&1; then
           echo "✅ Package dependencies resolved successfully"
           echo "   This is critical for swift-rs to work properly during Rust build"
 
@@ -1212,7 +1189,7 @@ jobs:
           else
             echo "⚠️ No .build/checkouts directory found"
           fi
-          else
+        else
           echo "❌ Package dependency resolution failed"
           echo "❌ This WILL cause swift-rs compilation to fail during Rust build"
           echo "Possible causes:"
@@ -1220,12 +1197,12 @@ jobs:
           echo "  - Xcode version incompatibility with GoogleSignIn 6.2.4"
           echo "  - GitHub rate limiting in CI environment"
           echo "  - SSL/TLS issues with GitHub access"
-          fi
+        fi
 
-          echo ""
-          echo "=== Test 3: Swift source file compilation ==="
-          # Test 3: Try to compile individual Swift files
-          for swift_file in Sources/*.swift; do
+        echo ""
+        echo "=== Test 3: Swift source file compilation ==="
+        # Test 3: Try to compile individual Swift files
+        for swift_file in Sources/*.swift; do
           if [ -f "$swift_file" ]; then
             echo "Testing compilation of $(basename "$swift_file")..."
             if swift -frontend -parse "$swift_file" 2>&1; then
@@ -1234,12 +1211,12 @@ jobs:
               echo "❌ $(basename "$swift_file") has syntax errors"
             fi
           fi
-          done
+        done
 
-          echo ""
-          echo "=== Test 4: Direct Swift package build attempt ==="
-          # Test 4: Try to build the package directly (this is what swift-rs will do)
-          if timeout 600 swift build --verbose 2>&1 | tee ../swift_package_build.log; then
+        echo ""
+        echo "=== Test 4: Direct Swift package build attempt ==="
+        # Test 4: Try to build the package directly (this is what swift-rs will do)
+        if timeout 600 swift build --verbose 2>&1 | tee ../swift_package_build.log; then
           echo "✅ Swift package built successfully"
           echo "This means the issue is likely in swift-rs integration, not the Swift package itself"
 
@@ -1281,7 +1258,7 @@ jobs:
           echo "🔍 Checking for any @_cdecl exports..."
           find .build -name "*.o" -exec nm {} \; 2>/dev/null | grep -E "^[0-9a-f]+ [TtSs] _" | head -10 || echo "No C-compatible exports found"
 
-          else
+        else
           echo "❌ Swift package build failed"
           echo "This is the root cause of the tauri-plugin build failure"
           echo ""
@@ -1291,26 +1268,26 @@ jobs:
           echo ""
           echo "Error patterns:"
           grep -A 5 -B 5 "error:" ../swift_package_build.log | tail -20 || echo "No specific error patterns found"
-          fi
+        fi
 
-          cd ../../client
+        cd ../../client
 
-      - name: Install Apple Certificates and Provisioning Profiles
-        run: |
-          echo "🔐 Setting up iOS code signing..."
+    - name: Install Apple Certificates and Provisioning Profiles
+      run: |
+        echo "🔐 Setting up iOS code signing..."
 
-          # Check if we have the required secrets for code signing
-          if [ -z "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
+        # Check if we have the required secrets for code signing
+        if [ -z "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
           echo "⚠️  APPLE_DEVELOPMENT_TEAM secret not found"
           echo "   Code signing will be skipped. The build may fail at signing step."
           echo "   See docs/IOS_CODE_SIGNING_SETUP.md for complete setup instructions."
           export SKIP_CODESIGN=true
-          else
+        else
           echo "✅ Apple Developer Team found: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export SKIP_CODESIGN=false
-          fi
+        fi
 
-          if [ "$SKIP_CODESIGN" = "false" ]; then
+        if [ "$SKIP_CODESIGN" = "false" ]; then
           echo "🔑 Installing certificates and provisioning profiles..."
 
           # Debug: Check if provisioning profile secrets are available
@@ -1447,15 +1424,17 @@ jobs:
               PROFILE_SIZE=$(ls -l ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision | awk '{print $5}')
               echo "✅ Development provisioning profile installed (size: $PROFILE_SIZE bytes)"
 
-              # Extract profile UUID for manual code signing - DYNAMIC approach
-              DEVELOPMENT_PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-              echo "📋 Development Profile UUID (extracted): $DEVELOPMENT_PROFILE_UUID"
-              echo "PROFILE_UUID=$DEVELOPMENT_PROFILE_UUID" >> $GITHUB_ENV
+          # Extract profile UUID for manual code signing
+          if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision ]; then
+            PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            echo "📋 Development Profile UUID: $PROFILE_UUID"
+            echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
 
-              # Also extract the profile name for manual signing
-              DEVELOPMENT_PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-              echo "📋 Development Profile Name (extracted): $DEVELOPMENT_PROFILE_NAME"
-              echo "PROFILE_NAME=$DEVELOPMENT_PROFILE_NAME" >> $GITHUB_ENV
+            # Also extract the profile name for manual signing
+            PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            echo "📋 Development Profile Name: $PROFILE_NAME"
+            echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
+          fi
             else
               echo "❌ Development provisioning profile file was not created"
             fi
@@ -1543,110 +1522,55 @@ jobs:
           done
 
           echo "✅ Code signing setup completed"
-          else
+        else
           echo "⏭️  Skipping code signing setup (no certificates configured)"
-          fi
-        env:
+        fi
+      env:
         APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
-      - name: Install Tauri CLI
-        run: |
-          echo "Installing Tauri CLI..."
+    - name: Install Tauri CLI
+      run: |
+        echo "Installing Tauri CLI..."
 
-          # Try to install the latest version first
-          if npm install -g @tauri-apps/cli@latest; then
+        # Try to install the latest version first
+        if npm install -g @tauri-apps/cli@latest; then
           TAURI_VERSION=$(npm list -g @tauri-apps/cli --depth=0 | grep @tauri-apps/cli)
           echo "✅ Installed: $TAURI_VERSION"
-          else
+        else
           echo "❌ Failed to install latest Tauri CLI"
           exit 1
-          fi
+        fi
 
-          echo "Verifying Tauri CLI installation..."
-          tauri --version || echo "Failed to get Tauri version "
+        echo "Verifying Tauri CLI installation..."
+        tauri --version || echo "Failed to get Tauri version "
 
-          echo "Installing Tauri CLI locally as well..."
-          npm install @tauri-apps/cli@latest
+        echo "Installing Tauri CLI locally as well..."
+        npm install @tauri-apps/cli@latest
 
-      - name: Install dependencies
-        run: npm ci
+    - name: Install dependencies
+      run: npm ci
 
-      - name: Build client
-        run: npm run build:client
-        env:
+    - name: Build client
+      run: npm run build:client
+      env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 
-      - name: Verify Environment Variables for iOS
-        run: |
-          echo "🔍 Verifying critical environment variables before iOS initialization..."
-          echo "APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
-          echo "PROFILE_UUID (from previous step): ${PROFILE_UUID:-'NOT SET'}"
-          echo "PROFILE_NAME (from previous step): ${PROFILE_NAME:-'NOT SET'}"
-        
-          # Check if PROFILE_UUID is available (critical for tauri.conf.json)
-          if [ -z "$PROFILE_UUID" ]; then
-          echo "❌ CRITICAL: PROFILE_UUID not available for tauri.conf.json processing"
-          echo "   This will cause iOS initialization to fail"
-          echo "   Checking if provisioning profile exists for manual extraction..."
-          
-          if [ -f ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision ]; then
-            echo "📱 Found development profile, attempting manual extraction..."
-            MANUAL_PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/development.mobileprovision 2>/dev/null | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-            if [ -n "$MANUAL_PROFILE_UUID" ]; then
-              echo "✅ Manual extraction successful: $MANUAL_PROFILE_UUID"
-              echo "PROFILE_UUID=$MANUAL_PROFILE_UUID" >> $GITHUB_ENV
-            else
-              echo "❌ Manual extraction failed"
-              exit 1
-            fi
-          else
-            echo "❌ No provisioning profile found"
-            exit 1
-          fi
-          else
-          echo "✅ PROFILE_UUID available: $PROFILE_UUID"
-          fi
+    - name: Initialize iOS project
+      working-directory: ./client
+      run: |
+        echo "Initializing Tauri iOS project..."
+        echo "Available npm scripts in client directory:"
+        npm run | grep tauri || echo "No tauri scripts found"
 
-      - name: Initialize iOS project
-        working-directory: ./client
-        env:
-        APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
-        # PROFILE_UUID: Dynamic extraction during certificate installation step
-        GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
-        GOOGLE_CLIENT_ID_ANDROID: ${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
-        GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
-        run: |
-          echo "Initializing Tauri iOS project..."
-          
-          # Verify environment variables are available for tauri.conf.json processing
-          echo "🔍 Environment variables for tauri.conf.json:"
-          echo "  APPLE_DEVELOPMENT_TEAM: ${APPLE_DEVELOPMENT_TEAM:-'NOT SET'}"
-          echo "  PROFILE_UUID: ${PROFILE_UUID:-'NOT SET'}"
-          echo "  GOOGLE_SERVER_CLIENT_ID: ${GOOGLE_SERVER_CLIENT_ID:-'NOT SET'}"
-          echo "  GOOGLE_CLIENT_ID_ANDROID: ${GOOGLE_CLIENT_ID_ANDROID:-'NOT SET'}"
-          echo "  GOOGLE_CLIENT_ID_IOS: ${GOOGLE_CLIENT_ID_IOS:-'NOT SET'}"
-        
-          # Critical check: PROFILE_UUID must be available
-          if [ -z "$PROFILE_UUID" ]; then
-          echo "❌ CRITICAL ERROR: PROFILE_UUID not available"
-          echo "   This will cause tauri.conf.json processing to fail with:"
-          echo "   'provisioningProfile was unexpected' error"
-          echo "   The variable should have been set in the previous step"
-          exit 1
-          fi
-        
-          echo "Available npm scripts in client directory:"
-          npm run | grep tauri || echo "No tauri scripts found"
-
-          # Verify Google Auth plugin iOS implementation
-          echo "🔧 Verifying tauri-plugin-google-auth iOS configuration..."
-          if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
+        # Verify Google Auth plugin iOS implementation
+        echo "🔧 Verifying tauri-plugin-google-auth iOS configuration..."
+        if [ ! -d "../tauri-plugin-google-auth/ios" ]; then
           echo "❌ CRITICAL: iOS directory missing for Google Auth plugin!"
           echo "The iOS implementation should be in the repository."
           echo "Please ensure the tauri-plugin-google-auth/ios directory exists with proper Package.swift and Sources."
           exit 1
-          else
+        else
           echo "✅ iOS directory exists for Google Auth plugin"
           echo "📋 Verifying iOS plugin structure..."
           ls -la ../tauri-plugin-google-auth/ios/
@@ -1704,60 +1628,67 @@ jobs:
             echo "❌ CRITICAL: Swift implementation file missing!"
             exit 1
           fi
-          fi
+        fi
 
-          # Verify the Cargo.toml configuration
-          echo "🔧 Verifying Google Auth plugin Cargo.toml..."
-          if grep -q "links.*tauri-plugin-google-auth" ../tauri-plugin-google-auth/Cargo.toml; then
+        # Verify the Cargo.toml configuration
+        echo "🔧 Verifying Google Auth plugin Cargo.toml..."
+        if grep -q "links.*tauri-plugin-google-auth" ../tauri-plugin-google-auth/Cargo.toml; then
           echo "✅ Cargo.toml correctly has 'links' directive for tauri-plugin builder"
-          else
+        else
           echo "❌ WARNING: 'links' directive missing in Cargo.toml!"
           echo "This may cause plugin compilation issues."
-          fi
+        fi
 
-          # Try different methods to initialize iOS project
-          if npm run tauri:ios:init -- --ci; then
+        # Try different methods to initialize iOS project
+        if npm run tauri:ios:init -- --ci; then
           echo "✅ iOS project initialized with npm script"
-          elif npx tauri ios init --ci; then
+        elif npx tauri ios init --ci; then
           echo "✅ iOS project initialized with npx tauri"
-          else
+        else
           echo "❌ All initialization methods failed"
           echo "Checking available Tauri commands..."
           npx tauri --help || echo "No help available"
-          fi
+        fi
 
-          echo "Checking for generated iOS/Apple project..."
-          find . -name "*ios*" -o -name "*apple*" -type d 2>/dev/null || echo "No iOS/Apple directories found"
+        echo "Checking for generated iOS/Apple project..."
+        find . -name "*ios*" -o -name "*apple*" -type d 2>/dev/null || echo "No iOS/Apple directories found"
 
-          # Check for both ios and apple directories (Tauri uses 'apple' for iOS/macOS)
-          if [ -d "src-tauri/gen/ios" ]; then
+        # Check for both ios and apple directories (Tauri uses 'apple' for iOS/macOS)
+        if [ -d "src-tauri/gen/ios" ]; then
           echo "✅ iOS project created successfully at src-tauri/gen/ios"
           ls -la src-tauri/gen/ios/
-          elif [ -d "src-tauri/gen/apple" ]; then
+        elif [ -d "src-tauri/gen/apple" ]; then
           echo "✅ Apple project created successfully at src-tauri/gen/apple"
           ls -la src-tauri/gen/apple/
-          else
+        else
           echo "❌ iOS/Apple project directory not found"
           echo "Searching for alternative iOS/Apple paths..."
           find src-tauri -type d -name "*ios*" -o -name "*apple*" 2>/dev/null || echo "No iOS/Apple directories found"
-          fi
+        fi
+      env:
+        APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
+        PROFILE_UUID: ${{ env.PROFILE_UUID }}
+        PROFILE_NAME: ${{ env.PROFILE_NAME }}
+        GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+        GOOGLE_CLIENT_ID_ANDROID: ${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
+        GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
 
-      - name: Generate iOS App Icons
-        working-directory: ./client
-        run: |
-          echo "🎨 Generating iOS app icons AFTER project initialization..."
+    - name: Generate iOS App Icons
+      working-directory: ./client
+      run: |
+        echo "🎨 Generating iOS app icons AFTER project initialization..."
 
-          # Verify iOS/Apple project exists before generating icons
-          if [ ! -d "src-tauri/gen/ios" ] && [ ! -d "src-tauri/gen/apple" ]; then
+        # Verify iOS/Apple project exists before generating icons
+        if [ ! -d "src-tauri/gen/ios" ] && [ ! -d "src-tauri/gen/apple" ]; then
           echo "❌ iOS/Apple project not found, cannot generate icons"
           echo "Available directories in src-tauri/gen/:"
           ls -la src-tauri/gen/ 2>/dev/null || echo "No gen directory found"
           exit 1
-          fi
+        fi
 
-          # Check if the icon file exists
-          ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
-          if [ -f "$ICON_FILE" ]; then
+        # Check if the icon file exists
+        ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
+        if [ -f "$ICON_FILE" ]; then
           echo "✅ Found icon file: $ICON_FILE"
           ls -la "$ICON_FILE"
 
@@ -1800,7 +1731,7 @@ jobs:
               tauri icon "$ICON_FILE" --verbose || echo "global tauri icon also failed"
             fi
           fi
-          else
+        else
           echo "❌ Icon file not found: $ICON_FILE"
           echo "Available files in src-tauri/icons/:"
           ls -la src-tauri/icons/ || echo "Icons directory not found"
@@ -1809,54 +1740,54 @@ jobs:
           echo "Looking for alternative icon files..."
           find src-tauri -name "*.png" | head -5
           exit 1
-          fi
+        fi
 
-      - name: Verify Icons Before iOS Build
-        working-directory: ./client
-        run: |
-          echo "🔍 Final verification of icons before iOS build..."
+    - name: Verify Icons Before iOS Build
+      working-directory: ./client
+      run: |
+        echo "🔍 Final verification of icons before iOS build..."
 
-          # Check if icons are in place
-          echo "=== Current icon files ==="
-          find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
+        # Check if icons are in place
+        echo "=== Current icon files ==="
+        find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
 
-          # Check for custom icon
-          if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
+        # Check for custom icon
+        if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
-          else
+        else
           echo "❌ Custom icon source file missing!"
-          fi
+        fi
 
-          # Check for generated iOS icons
-          echo "=== iOS-specific generated icons ==="
-          find src-tauri/icons -name "*.icns" | head -10
-          ls -la src-tauri/icons/ios/ 2>/dev/null || echo "No iOS icons directory"
+        # Check for generated iOS icons
+        echo "=== iOS-specific generated icons ==="
+        find src-tauri/icons -name "*.icns" | head -10
+        ls -la src-tauri/icons/ios/ 2>/dev/null || echo "No iOS icons directory"
 
-          # If iOS/Apple project exists, check for icons there too
-          if [ -d "src-tauri/gen/ios" ]; then
+        # If iOS/Apple project exists, check for icons there too
+        if [ -d "src-tauri/gen/ios" ]; then
           echo "=== Icons in iOS project ==="
           find src-tauri/gen/ios -name "*.png" -o -name "*.icns" | head -10 || echo "No icons in iOS project"
-          fi
-          if [ -d "src-tauri/gen/apple" ]; then
+        fi
+        if [ -d "src-tauri/gen/apple" ]; then
           echo "=== Icons in Apple project ==="
           find src-tauri/gen/apple -name "*.png" -o -name "*.icns" | head -10 || echo "No icons in Apple project"
-          fi
+        fi
 
-      - name: Build iOS IPA
-        working-directory: ./client
-        run: |
-          echo "Building iOS IPA...."
-          echo "Checking iOS project directory..."
+    - name: Build iOS IPA
+      working-directory: ./client
+      run: |
+        echo "Building iOS IPA...."
+        echo "Checking iOS project directory..."
 
-          # Find iOS project directory (Tauri uses 'apple' directory for iOS/macOS)
-          IOS_PROJECT_DIR=""
-          if [ -d "src-tauri/gen/ios" ]; then
+        # Find iOS project directory (Tauri uses 'apple' directory for iOS/macOS)
+        IOS_PROJECT_DIR=""
+        if [ -d "src-tauri/gen/ios" ]; then
           IOS_PROJECT_DIR="src-tauri/gen/ios"
           echo "✅ Found iOS project at: $IOS_PROJECT_DIR"
-          elif [ -d "src-tauri/gen/apple" ]; then
+        elif [ -d "src-tauri/gen/apple" ]; then
           IOS_PROJECT_DIR="src-tauri/gen/apple"
           echo "✅ Found Apple project at: $IOS_PROJECT_DIR"
-          else
+        else
           echo "🔍 Searching for iOS/Apple project directory..."
           IOS_PROJECT_DIR=$(find src-tauri -type d -name "*ios*" -o -name "*apple*" 2>/dev/null | head -1)
           if [ -n "$IOS_PROJECT_DIR" ]; then
@@ -1879,15 +1810,15 @@ jobs:
               exit 1
             fi
           fi
-          fi
+        fi
 
-          echo "iOS/Apple project directory contents:"
-          ls -la "$IOS_PROJECT_DIR"/ 2>/dev/null || echo "Cannot list directory contents"
+        echo "iOS/Apple project directory contents:"
+        ls -la "$IOS_PROJECT_DIR"/ 2>/dev/null || echo "Cannot list directory contents"
 
-          echo "Starting iOS build..."
+        echo "Starting iOS build..."
 
-          # Set up code signing environment variables
-          if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
+        # Set up code signing environment variables
+        if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
           echo "🔐 Code signing enabled with Team ID: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export APPLE_DEVELOPMENT_TEAM="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
           export APPLE_TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
@@ -1913,7 +1844,7 @@ jobs:
           echo "  Bundle ID: $PRODUCT_BUNDLE_IDENTIFIER"
           echo "  Identity: $CODE_SIGN_IDENTITY"
           echo "  Style: $CODE_SIGN_STYLE (Manual - using specific profile)"
-          else
+        else
           echo "⚠️  Warning: No code signing certificates configured."
           echo "   The build will attempt to proceed but may fail at the signing step."
           echo "   Add the required secrets to enable code signing:"
@@ -1923,47 +1854,47 @@ jobs:
           echo "   - APPLE_CERTIFICATE_PASSWORD"
           echo ""
           echo "   See docs/IOS_CODE_SIGNING_SETUP.md for complete setup instructions."
-          fi
+        fi
 
-      - name: Configure iOS Xcode Project
-        working-directory: ./client
-        run: |
-          # Try different methods to build iOS
-          echo "=== Attempting Tauri iOS Build ==="
+    - name: Configure iOS Xcode Project
+      working-directory: ./client
+      run: |
+        # Try different methods to build iOS
+        echo "=== Attempting Tauri iOS Build ==="
 
-          # Debug Xcode project first
-          echo "🔍 Looking for Xcode project..."
-          find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "No Xcode project found yet"
+        # Debug Xcode project first
+        echo "🔍 Looking for Xcode project..."
+        find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "No Xcode project found yet"
 
-          echo ""
-          echo "🔍 Checking tauri directory structure..."
-          ls -la src-tauri/ || echo "No src-tauri directory"
-          ls -la src-tauri/gen/ 2>/dev/null || echo "No src-tauri/gen directory"
-          ls -la src-tauri/gen/apple/ 2>/dev/null || echo "No src-tauri/gen/apple directory"
+        echo ""
+        echo "🔍 Checking tauri directory structure..."
+        ls -la src-tauri/ || echo "No src-tauri directory"
+        ls -la src-tauri/gen/ 2>/dev/null || echo "No src-tauri/gen directory"
+        ls -la src-tauri/gen/apple/ 2>/dev/null || echo "No src-tauri/gen/apple directory"
 
-          echo ""
-          echo "🔍 Checking for any .xcodeproj files..."
-          find . -name "*.xcodeproj" -type d 2>/dev/null || echo "No .xcodeproj files found"
+        echo ""
+        echo "🔍 Checking for any .xcodeproj files..."
+        find . -name "*.xcodeproj" -type d 2>/dev/null || echo "No .xcodeproj files found"
 
-          # Initialize iOS project if needed
-          echo ""
-          echo "🚀 Ensuring iOS project is initialized..."
-          if [ ! -d "src-tauri/gen/apple" ]; then
+        # Initialize iOS project if needed
+        echo ""
+        echo "🚀 Ensuring iOS project is initialized..."
+        if [ ! -d "src-tauri/gen/apple" ]; then
           echo "📱 Initializing iOS project..."
           npx tauri ios init || echo "iOS init failed or already done"
-          else
+        else
           echo "✅ iOS project directory already exists"
-          fi
+        fi
 
-          # Check if we now have an Xcode project
-          echo ""
-          echo "🔍 Post-init: Looking for Xcode project..."
-          find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"
+        # Check if we now have an Xcode project
+        echo ""
+        echo "🔍 Post-init: Looking for Xcode project..."
+        find src-tauri/gen/apple -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null || echo "Still no Xcode project found"
 
-          # Configure Xcode project for manual code signing
-          echo ""
-          echo "🔧 Configuring Xcode project for manual code signing..."
-          if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
+        # Configure Xcode project for manual code signing
+        echo ""
+        echo "🔧 Configuring Xcode project for manual code signing..."
+        if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
           echo "📝 Updating Xcode project settings..."
 
           # Make a backup first
@@ -2018,176 +1949,177 @@ jobs:
           echo "✅ Xcode project configured for manual code signing"
           echo "📋 Verifying project settings..."
           grep -A 2 -B 2 "CODE_SIGN_STYLE\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -15
-          else
+        else
           echo "⚠️ Xcode project file not found, manual configuration skipped"
-          fi
+        fi
 
-      - name: Verify iOS Code Signing Setup
-        working-directory: ./client
-        run: |
-          # Verify the final Xcode project configuration
-          echo ""
-          echo "🔍 Final verification of Xcode project configuration..."
-          if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
-            echo "📋 Code signing settings in Xcode project:"
-            grep -n "CODE_SIGN_STYLE\|CODE_SIGN_IDENTITY\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -20
-
-            echo ""
-            echo "📋 Bundle identifier settings:"
-            grep -n "PRODUCT_BUNDLE_IDENTIFIER" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -5
-
-            echo ""
-            echo "📋 Detailed verification of manual code signing configuration:"
-            echo "   Looking for manual CODE_SIGN_STYLE entries:"
-            grep -n "CODE_SIGN_STYLE.*Manual" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No manual code signing found"
-
-            echo "   Looking for DEVELOPMENT_TEAM entries:"
-            grep -n "DEVELOPMENT_TEAM.*${{ secrets.APPLE_DEVELOPMENT_TEAM }}" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No development team found"
-
-            echo "   Looking for PROVISIONING_PROFILE entries:"
-            grep -n "PROVISIONING_PROFILE.*$PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No provisioning profile UUID found"
-
-            echo "   Looking for PROVISIONING_PROFILE_SPECIFIER entries:"
-            grep -n "PROVISIONING_PROFILE_SPECIFIER.*$PROFILE_NAME" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No provisioning profile specifier found"
-          fi
-
-          # Verify provisioning profiles one more time
-          echo ""
-          echo "🔍 Final verification of installed provisioning profiles..."
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
+    - name: Verify iOS Code Signing Setup
+      working-directory: ./client
+      run: |
+        # Verify the final Xcode project configuration
+        echo ""
+        echo "🔍 Final verification of Xcode project configuration..."
+        if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
+          echo "📋 Code signing settings in Xcode project:"
+          grep -n "CODE_SIGN_STYLE\|CODE_SIGN_IDENTITY\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -20
 
           echo ""
-          echo "📋 Detailed analysis of installed provisioning profiles:"
-          for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
-            if [ -f "$profile" ]; then
-              echo "--- Profile: $(basename "$profile") ---"
-              PROFILE_CONTENT=$(security cms -D -i "$profile" 2>/dev/null)
+          echo "📋 Bundle identifier settings:"
+          grep -n "PRODUCT_BUNDLE_IDENTIFIER" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -5
 
-              # Extract key information
-              PROFILE_UUID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-              PROFILE_NAME_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-              BUNDLE_ID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "application-identifier" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-              TEAM_ID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>TeamIdentifier</key>" -A2 | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          echo ""
+          echo "📋 Detailed verification of manual code signing configuration:"
+          echo "   Looking for manual CODE_SIGN_STYLE entries:"
+          grep -n "CODE_SIGN_STYLE.*Manual" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No manual code signing found"
 
-              echo "  UUID: $PROFILE_UUID_CHECK"
-              echo "  Name: $PROFILE_NAME_CHECK"
-              echo "  Bundle ID pattern: $BUNDLE_ID_CHECK"
-              echo "  Team ID: $TEAM_ID_CHECK"
+          echo "   Looking for DEVELOPMENT_TEAM entries:"
+          grep -n "DEVELOPMENT_TEAM.*${{ secrets.APPLE_DEVELOPMENT_TEAM }}" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No development team found"
 
-              # Check if this matches our expected values
-              if [ "$PROFILE_UUID_CHECK" = "$PROFILE_UUID" ]; then
-                echo "  ✅ This profile matches our PROFILE_UUID"
-                echo "  ❌ This profile does NOT match our PROFILE_UUID ($PROFILE_UUID)"
-              fi
+          echo "   Looking for PROVISIONING_PROFILE entries:"
+          grep -n "PROVISIONING_PROFILE.*$PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No provisioning profile UUID found"
 
-              if [[ "$BUNDLE_ID_CHECK" == *"com.beout.app"* ]]; then
-                echo "  ✅ This profile matches bundle ID com.beout.app"
-              else
-                echo "  ❌ This profile does NOT match bundle ID com.beout.app"
-              fi
+          echo "   Looking for PROVISIONING_PROFILE_SPECIFIER entries:"
+          grep -n "PROVISIONING_PROFILE_SPECIFIER.*$PROFILE_NAME" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo "   ❌ No provisioning profile specifier found"
+        fi
 
-              if [ "$TEAM_ID_CHECK" = "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
-                echo "  ✅ This profile matches our team ID"
-              else
-                echo "  ❌ This profile does NOT match our team ID (${{ secrets.APPLE_DEVELOPMENT_TEAM }})"
-              fi
-              echo ""
+        # Verify provisioning profiles one more time
+        echo ""
+        echo "🔍 Final verification of installed provisioning profiles..."
+        ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
+
+        echo ""
+        echo "📋 Detailed analysis of installed provisioning profiles:"
+        for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+          if [ -f "$profile" ]; then
+            echo "--- Profile: $(basename "$profile") ---"
+            PROFILE_CONTENT=$(security cms -D -i "$profile" 2>/dev/null)
+
+            # Extract key information
+            PROFILE_UUID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>UUID</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            PROFILE_NAME_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>Name</key>" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            BUNDLE_ID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "application-identifier" | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+            TEAM_ID_CHECK=$(echo "$PROFILE_CONTENT" | grep -A1 "<key>TeamIdentifier</key>" -A2 | grep "<string>" | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+
+            echo "  UUID: $PROFILE_UUID_CHECK"
+            echo "  Name: $PROFILE_NAME_CHECK"
+            echo "  Bundle ID pattern: $BUNDLE_ID_CHECK"
+            echo "  Team ID: $TEAM_ID_CHECK"
+
+            # Check if this matches our expected values
+            if [ "$PROFILE_UUID_CHECK" = "$PROFILE_UUID" ]; then
+              echo "  ✅ This profile matches our PROFILE_UUID"
+            else
+              echo "  ❌ This profile does NOT match our PROFILE_UUID ($PROFILE_UUID)"
             fi
-          done
 
-          echo ""
-          echo "📋 Available signing identities before build:"
-          security find-identity -v -p codesigning | head -5
+            if [[ "$BUNDLE_ID_CHECK" == *"com.beout.app"* ]]; then
+              echo "  ✅ This profile matches bundle ID com.beout.app"
+            else
+              echo "  ❌ This profile does NOT match bundle ID com.beout.app"
+            fi
 
-      - name: Pre-resolve Swift Package Dependencies for swift-rs
-        working-directory: ./client
-        run: |
-          echo "🔧 Pre-resolving Swift package dependencies to help swift-rs integration..."
+            if [ "$TEAM_ID_CHECK" = "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
+              echo "  ✅ This profile matches our team ID"
+            else
+              echo "  ❌ This profile does NOT match our team ID (${{ secrets.APPLE_DEVELOPMENT_TEAM }})"
+            fi
+            echo ""
+          fi
+        done
 
-          # Navigate to the Google Auth plugin iOS directory
-          if [ -d "../tauri-plugin-google-auth/ios" ]; then
-            cd ../tauri-plugin-google-auth/ios
+        echo ""
+        echo "📋 Available signing identities before build:"
+        security find-identity -v -p codesigning | head -5
 
-            echo "📋 Pre-resolving dependencies for tauri-plugin-google-auth..."
+    - name: Pre-resolve Swift Package Dependencies for swift-rs
+      working-directory: ./client
+      run: |
+        echo "🔧 Pre-resolving Swift package dependencies to help swift-rs integration..."
 
-            # Try to resolve dependencies before Rust build attempts
-            if swift package resolve --verbose 2>&1; then
-              echo "✅ Swift package dependencies pre-resolved successfully"
-              echo "   This should prevent swift-rs from failing during dependency resolution"
+        # Navigate to the Google Auth plugin iOS directory
+        if [ -d "../tauri-plugin-google-auth/ios" ]; then
+          cd ../tauri-plugin-google-auth/ios
 
-              # Verify the dependencies are cached
-              if [ -d ".build/checkouts" ]; then
-                echo "📦 Cached dependencies:"
-                ls -la .build/checkouts/
+          echo "📋 Pre-resolving dependencies for tauri-plugin-google-auth..."
 
-                # Check specifically for GoogleSignIn
-                if ls .build/checkouts/ | grep -i googlesignin >/dev/null 2>&1; then
-                  GOOGLESIGNIN_DIR=$(ls .build/checkouts/ | grep -i googlesignin | head -1)
-                  echo "✅ GoogleSignIn-iOS cached at: .build/checkouts/$GOOGLESIGNIN_DIR"
+          # Try to resolve dependencies before Rust build attempts
+          if swift package resolve --verbose 2>&1; then
+            echo "✅ Swift package dependencies pre-resolved successfully"
+            echo "   This should prevent swift-rs from failing during dependency resolution"
 
-                  # Verify it has the expected structure
-                  if [ -d ".build/checkouts/$GOOGLESIGNIN_DIR/Sources" ]; then
-                    echo "✅ GoogleSignIn-iOS source structure looks correct"
-                  else
-                    echo "⚠️ GoogleSignIn-iOS structure may be incomplete"
-                  fi
+            # Verify the dependencies are cached
+            if [ -d ".build/checkouts" ]; then
+              echo "📦 Cached dependencies:"
+              ls -la .build/checkouts/
+
+              # Check specifically for GoogleSignIn
+              if ls .build/checkouts/ | grep -i googlesignin >/dev/null 2>&1; then
+                GOOGLESIGNIN_DIR=$(ls .build/checkouts/ | grep -i googlesignin | head -1)
+                echo "✅ GoogleSignIn-iOS cached at: .build/checkouts/$GOOGLESIGNIN_DIR"
+
+                # Verify it has the expected structure
+                if [ -d ".build/checkouts/$GOOGLESIGNIN_DIR/Sources" ]; then
+                  echo "✅ GoogleSignIn-iOS source structure looks correct"
                 else
-                  echo "❌ GoogleSignIn-iOS not found in cached dependencies"
+                  echo "⚠️ GoogleSignIn-iOS structure may be incomplete"
                 fi
               else
-                echo "⚠️ No .build/checkouts directory - dependencies may not be properly cached"
+                echo "❌ GoogleSignIn-iOS not found in cached dependencies"
               fi
             else
-              echo "❌ Failed to pre-resolve Swift package dependencies"
-              echo "   swift-rs will likely fail during Rust build phase"
-              echo "   Continuing anyway to let swift-rs attempt its own resolution..."
+              echo "⚠️ No .build/checkouts directory - dependencies may not be properly cached"
             fi
-
-            cd ../../client
           else
-            echo "⚠️ tauri-plugin-google-auth/ios directory not found"
-            echo "   Skipping Swift dependency pre-resolution"
+            echo "❌ Failed to pre-resolve Swift package dependencies"
+            echo "   swift-rs will likely fail during Rust build phase"
+            echo "   Continuing anyway to let swift-rs attempt its own resolution..."
           fi
 
-      - name: Execute iOS Build
-        working-directory: ./client
-        run: |
-          # Configure Cargo for better CI performance
-          echo ""
-          echo "🔧 Configuring Cargo for CI environment..."
-          mkdir -p ~/.cargo
-          cat > ~/.cargo/config.toml << 'EOF'
-          [net]
-          retry = 10
+          cd ../../client
+        else
+          echo "⚠️ tauri-plugin-google-auth/ios directory not found"
+          echo "   Skipping Swift dependency pre-resolution"
+        fi
 
-          [http]
-          timeout = 300
-          multiplexing = false
+    - name: Execute iOS Build
+      working-directory: ./client
+      run: |
+        # Configure Cargo for better CI performance
+        echo ""
+        echo "🔧 Configuring Cargo for CI environment..."
+        mkdir -p ~/.cargo
+        cat > ~/.cargo/config.toml << 'EOF'
+        [net]
+        retry = 10
 
-          [build]
-          jobs = 2
+        [http]
+        timeout = 300
+        multiplexing = false
 
-          [net.git]
-          fetch-with-cli = true
-          EOF
+        [build]
+        jobs = 2
 
-          echo "✅ Cargo configuration complete"
-          echo "📋 Cargo config:"
-          cat ~/.cargo/config.toml
+        [net.git]
+        fetch-with-cli = true
+        EOF
 
-          # Pre-warm Cargo cache to reduce build time
-          echo ""
-          echo "🔥 Pre-warming Cargo cache..."
-          cd src-tauri
+        echo "✅ Cargo configuration complete"
+        echo "📋 Cargo config:"
+        cat ~/.cargo/config.toml
 
-          # Use a background process with timeout since macOS doesn't have timeout by default
-          # Note: Use aarch64-apple-ios for Rust, but aarch64 for Tauri CLI
-          cargo fetch --target aarch64-apple-ios &
-          FETCH_PID=$!
+        # Pre-warm Cargo cache to reduce build time
+        echo ""
+        echo "🔥 Pre-warming Cargo cache..."
+        cd src-tauri
 
-          # Wait up to 600 seconds (10 minutes) for cargo fetch
-          COUNTER=0
-          while [ $COUNTER -lt 600 ]; do
+        # Use a background process with timeout since macOS doesn't have timeout by default
+        # Note: Use aarch64-apple-ios for Rust, but aarch64 for Tauri CLI
+        cargo fetch --target aarch64-apple-ios &
+        FETCH_PID=$!
+
+        # Wait up to 600 seconds (10 minutes) for cargo fetch
+        COUNTER=0
+        while [ $COUNTER -lt 600 ]; do
           if ! kill -0 $FETCH_PID 2>/dev/null; then
             wait $FETCH_PID
             FETCH_EXIT_CODE=$?
@@ -2200,60 +2132,60 @@ jobs:
           fi
           sleep 5
           COUNTER=$((COUNTER + 5))
-          done
+        done
 
-          # If still running after timeout, kill it
-          if kill -0 $FETCH_PID 2>/dev/null; then
+        # If still running after timeout, kill it
+        if kill -0 $FETCH_PID 2>/dev/null; then
           echo "⚠️ Cargo fetch timed out after 10 minutes, terminating..."
           kill $FETCH_PID 2>/dev/null || true
           wait $FETCH_PID 2>/dev/null || true
-          fi
+        fi
 
-          cd ..
+        cd ..
 
-          # Method 1: npm script with proper exit code handling
-          echo "🚀 Trying npm run tauri:ios:build..."
+        # Method 1: npm script with proper exit code handling
+        echo "🚀 Trying npm run tauri:ios:build..."
 
-          # Set Rust/Cargo optimizations for CI
-          export CARGO_NET_RETRY=10
-          export CARGO_NET_TIMEOUT=300
-          export CARGO_HTTP_TIMEOUT=300
-          export CARGO_HTTP_MULTIPLEXING=false
-          export CARGO_NET_GIT_FETCH_WITH_CLI=true
+        # Set Rust/Cargo optimizations for CI
+        export CARGO_NET_RETRY=10
+        export CARGO_NET_TIMEOUT=300
+        export CARGO_HTTP_TIMEOUT=300
+        export CARGO_HTTP_MULTIPLEXING=false
+        export CARGO_NET_GIT_FETCH_WITH_CLI=true
 
-          # Set additional iOS-specific build environment variables
-          export TAURI_CLI_VERBOSITY=5
-          export RUST_LOG=debug
-          export CARGO_INCREMENTAL=0
+        # Set additional iOS-specific build environment variables
+        export TAURI_CLI_VERBOSITY=5
+        export RUST_LOG=debug
+        export CARGO_INCREMENTAL=0
 
-          # Ensure iOS SDK paths are available
-          export IOS_SDK_PATH=$(xcrun --show-sdk-path --sdk iphoneos)
-          echo "📋 iOS SDK Path: $IOS_SDK_PATH"
+        # Ensure iOS SDK paths are available
+        export IOS_SDK_PATH=$(xcrun --show-sdk-path --sdk iphoneos)
+        echo "📋 iOS SDK Path: $IOS_SDK_PATH"
 
-          # Test Rust compilation for iOS target before full build
-          echo ""
-          echo "🧪 Pre-testing Rust compilation for iOS target..."
-          cd src-tauri
-          if cargo check --target aarch64-apple-ios --verbose 2>&1 | tee ../rust_ios_check.log; then
+        # Test Rust compilation for iOS target before full build
+        echo ""
+        echo "🧪 Pre-testing Rust compilation for iOS target..."
+        cd src-tauri
+        if cargo check --target aarch64-apple-ios --verbose 2>&1 | tee ../rust_ios_check.log; then
           echo "✅ Rust iOS target check passed"
-          else
+        else
           echo "❌ Rust iOS target check failed - this will help diagnose the issue:"
           tail -30 ../rust_ios_check.log
           echo ""
           echo "🔍 Looking for specific errors:"
           grep -A 5 -B 5 "error:" ../rust_ios_check.log | tail -15 || echo "No specific errors found"
-          fi
-          cd ..
+        fi
+        cd ..
 
-          # Add timeout and memory monitoring
-          echo "📊 System resources before build:"
-          echo "Available memory:"
-          vm_stat | grep "Pages free\|Pages active\|Pages inactive\|Pages speculative\|Pages wired"
-          echo "Available disk space:"
-          df -h /
+        # Add timeout and memory monitoring
+        echo "📊 System resources before build:"
+        echo "Available memory:"
+        vm_stat | grep "Pages free\|Pages active\|Pages inactive\|Pages speculative\|Pages wired"
+        echo "Available disk space:"
+        df -h /
 
-          # Start a background process to monitor build progress
-          (
+        # Start a background process to monitor build progress
+        (
           sleep 60
           while true; do
             echo "⏱️ Build still running... $(date)"
@@ -2262,22 +2194,22 @@ jobs:
             echo "📊 Build log size: $(wc -l < ios_build.log 2>/dev/null || echo 0) lines"
             sleep 300  # Log every 5 minutes
           done
-          ) &
-          MONITOR_PID=$!
+        ) &
+        MONITOR_PID=$!
 
-          # Try the build without background process first to see immediate errors
-          echo "🚀 Starting iOS build (initial attempt without timeout)..."
+        # Try the build without background process first to see immediate errors
+        echo "🚀 Starting iOS build (initial attempt without timeout)..."
 
-          # Set environment variable to get full backtraces for build errors
-          export CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG=true
-          export RUST_BACKTRACE=full
+        # Set environment variable to get full backtraces for build errors
+        export CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG=true
+        export RUST_BACKTRACE=full
 
-          BUILD_SUCCESS=false
-          if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
+        BUILD_SUCCESS=false
+        if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
           echo "✅ Build succeeded with npm script"
           BUILD_SUCCESS=true
           BUILD_EXIT_CODE=0
-          else
+        else
           BUILD_EXIT_CODE=$?
           echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
           echo "📋 Build log content:"
@@ -2349,17 +2281,17 @@ jobs:
               fi
             fi
           fi
-          fi
+        fi
 
-          # Stop the monitoring process
-          kill $MONITOR_PID 2>/dev/null || true
+        # Stop the monitoring process
+        kill $MONITOR_PID 2>/dev/null || true
 
-          # Ensure BUILD_SUCCESS is properly set
-          if [ -z "$BUILD_SUCCESS" ]; then
+        # Ensure BUILD_SUCCESS is properly set
+        if [ -z "$BUILD_SUCCESS" ]; then
           BUILD_SUCCESS=false
-          fi
+        fi
 
-          if [ "$BUILD_SUCCESS" = true ]; then
+        if [ "$BUILD_SUCCESS" = true ]; then
           echo "✅ Build completed! Looking for IPA files..."
           echo "=== Searching for IPA files ==="
           find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
@@ -2486,7 +2418,7 @@ jobs:
           echo "6. ❌ Missing frameworks: GoogleSignIn or other dependencies"
           echo "7. ❌ Architecture mismatch: Check if built for correct iOS arch"
 
-          else
+        else
           echo "=== BUILD FAILED - Analyzing logs ==="
           echo "Final exit code: $BUILD_EXIT_CODE"
 
@@ -2609,43 +2541,43 @@ jobs:
           echo ""
           echo "❌ BUILD FAILED - Exiting with error code"
           exit 1
-          fi
+        fi
 
-      - name: Debug Swift Package Compilation Issues
-        working-directory: ./client
-        if: failure()
-        run: |
-          echo "🔍 Attempting to reveal hidden Swift compilation errors..."
+    - name: Debug Swift Package Compilation Issues
+      working-directory: ./client
+      if: failure()
+      run: |
+        echo "🔍 Attempting to reveal hidden Swift compilation errors..."
 
-          # Navigate to the plugin directory
-          cd ../tauri-plugin-google-auth/ios
+        # Navigate to the plugin directory
+        cd ../tauri-plugin-google-auth/ios
 
-          # Try to build the Swift package directly with maximum verbosity
-          echo "=== Direct Swift Package Build Test ==="
-          if swift build --verbose 2>&1 | tee swift_direct_build.log; then
+        # Try to build the Swift package directly with maximum verbosity
+        echo "=== Direct Swift Package Build Test ==="
+        if swift build --verbose 2>&1 | tee swift_direct_build.log; then
           echo "✅ Direct Swift build succeeded"
-          else
+        else
           echo "❌ Direct Swift build failed"
           echo "=== Swift build errors ==="
           cat swift_direct_build.log
-          fi
+        fi
 
-          # Try swift package resolve to check dependencies
-          echo "=== Swift Package Dependency Resolution ==="
-          if swift package resolve --verbose 2>&1 | tee swift_resolve.log; then
+        # Try swift package resolve to check dependencies
+        echo "=== Swift Package Dependency Resolution ==="
+        if swift package resolve --verbose 2>&1 | tee swift_resolve.log; then
           echo "✅ Package resolution succeeded"
-          else
+        else
           echo "❌ Package resolution failed"
           cat swift_resolve.log
-          fi
+        fi
 
-          # Check package dump
-          echo "=== Swift Package Dump ==="
-          swift package dump-package 2>&1 | tee swift_dump.log || echo "Package dump failed"
+        # Check package dump
+        echo "=== Swift Package Dump ==="
+        swift package dump-package 2>&1 | tee swift_dump.log || echo "Package dump failed"
 
-          # Try building with specific flags that might reveal more errors
-          echo "=== Swift Build with Debug Flags ==="
-          swift build \
+        # Try building with specific flags that might reveal more errors
+        echo "=== Swift Build with Debug Flags ==="
+        swift build \
           --verbose \
           --enable-test-discovery \
           --build-tests \
@@ -2653,13 +2585,13 @@ jobs:
           -Xswiftc -Xfrontend \
           -Xswiftc -debug-diagnostic-names 2>&1 | tee swift_debug_build.log || echo "Debug build failed"
 
-          # Check the actual Swift source files for syntax errors
-          echo "=== Swift Source File Syntax Check ==="
-          find Sources -name "*.swift" -exec echo "Checking {}" \; -exec swift -frontend -parse {} \; 2>&1 | tee swift_syntax_check.log || echo "Syntax check completed"
+        # Check the actual Swift source files for syntax errors
+        echo "=== Swift Source File Syntax Check ==="
+        find Sources -name "*.swift" -exec echo "Checking {}" \; -exec swift -frontend -parse {} \; 2>&1 | tee swift_syntax_check.log || echo "Syntax check completed"
 
-          # Try compiling individual Swift files
-          echo "=== Individual Swift File Compilation ==="
-          for swift_file in Sources/*.swift; do
+        # Try compiling individual Swift files
+        echo "=== Individual Swift File Compilation ==="
+        for swift_file in Sources/*.swift; do
           if [ -f "$swift_file" ]; then
             echo "Compiling $swift_file..."
             xcrun -sdk iphoneos swiftc \
@@ -2667,19 +2599,19 @@ jobs:
               -parse-as-library \
               "$swift_file" 2>&1 || echo "Failed to compile $swift_file"
           fi
-          done
+        done
 
-          cd ../../client
+        cd ../../client
 
-      - name: Export IPA from Archive
-        working-directory: ./client
-        if: always()
-        run: |
-          echo "=== Attempting to Export IPA from Archive ==="
+    - name: Export IPA from Archive
+      working-directory: ./client
+      if: always()
+      run: |
+        echo "=== Attempting to Export IPA from Archive ==="
 
-          # Find the xcarchive
-          XCARCHIVE=$(find . -name "*.xcarchive" -type d 2>/dev/null | head -1)
-          if [ -n "$XCARCHIVE" ]; then
+        # Find the xcarchive
+        XCARCHIVE=$(find . -name "*.xcarchive" -type d 2>/dev/null | head -1)
+        if [ -n "$XCARCHIVE" ]; then
           echo "✅ Found xcarchive: $XCARCHIVE"
 
           # Create export options plist using environment variable
@@ -2800,12 +2732,12 @@ jobs:
             echo "📋 Archive contents:"
             find "$XCARCHIVE" -type f | head -10 || echo "Cannot list archive contents"
           fi
-          else
+        else
           echo "❌ No xcarchive found for IPA export"
           echo "📋 Looking for any archives:"
           find . -name "*archive*" -type d 2>/dev/null | head -5 || echo "No archives found"
-          fi
-        env:
+        fi
+      env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
         APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
@@ -2817,27 +2749,27 @@ jobs:
         PROVISIONING_PROFILE: ${{ env.PROFILE_UUID }}
         PROVISIONING_PROFILE_SPECIFIER: ${{ env.PROFILE_NAME }}
 
-      - name: Find and Upload IPA
-        working-directory: ./client
-        if: always()
-        run: |
-          echo "=== iOS Build Artifacts Search ==="
+    - name: Find and Upload IPA
+      working-directory: ./client
+      if: always()
+      run: |
+        echo "=== iOS Build Artifacts Search ==="
 
-          echo "=== Searching for IPA files ==="
-          find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
+        echo "=== Searching for IPA files ==="
+        find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
 
-          echo "=== Searching for app bundles ==="
-          find . -name "*.app" -type d 2>/dev/null | head -5 || echo "No .app bundles found"
+        echo "=== Searching for app bundles ==="
+        find . -name "*.app" -type d 2>/dev/null | head -5 || echo "No .app bundles found"
 
-          echo "=== Checking Xcode build directories ==="
-          find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
+        echo "=== Checking Xcode build directories ==="
+        find . -path "*/Build/Products/*" -type f 2>/dev/null | head -10 || echo "No Xcode build products found"
 
-          echo "=== Checking for xcarchive ==="
-          find . -name "*.xcarchive" -type d 2>/dev/null || echo "No xcarchive found"
+        echo "=== Checking for xcarchive ==="
+        find . -name "*.xcarchive" -type d 2>/dev/null || echo "No xcarchive found"
 
-          # Check if we have a successful app bundle
-          APP_BUNDLE=$(find . -name "BeOut.app" -type d 2>/dev/null | head -1)
-          if [ -n "$APP_BUNDLE" ]; then
+        # Check if we have a successful app bundle
+        APP_BUNDLE=$(find . -name "BeOut.app" -type d 2>/dev/null | head -1)
+        if [ -n "$APP_BUNDLE" ]; then
           echo "✅ iOS App Bundle found: $APP_BUNDLE"
           echo "📱 App bundle contents:"
           ls -la "$APP_BUNDLE" | head -10
@@ -2857,33 +2789,33 @@ jobs:
           # Check if it's properly signed
           echo "📋 Code signing status:"
           codesign -dv "$APP_BUNDLE" 2>&1 | head -5 || echo "Could not check code signing"
-          else
+        else
           echo "❌ No iOS app bundle found"
-          fi
+        fi
 
-      - name: Upload IPA (if found)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ios-build-artifacts
-          path: |
-            client/src-tauri/gen/apple/build/app_iOS.xcarchive/Products/Applications/BeOut.app
-            client/ios-export/**/*.ipa
-            client/src-tauri/gen/apple/build/**/*.ipa
-            client/src-tauri/gen/apple/**/*.xcarchive
-            client/src-tauri/gen/apple/**/*.app
-            client/**/*.ipa
+    - name: Upload IPA (if found)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ios-build-artifacts
+        path: |
+          client/src-tauri/gen/apple/build/app_iOS.xcarchive/Products/Applications/BeOut.app
+          client/ios-export/**/*.ipa
+          client/src-tauri/gen/apple/build/**/*.ipa
+          client/src-tauri/gen/apple/**/*.xcarchive
+          client/src-tauri/gen/apple/**/*.app
+          client/**/*.ipa
         if-no-files-found: warn
 
-      - name: Cleanup Keychain
-        if: always()
-        run: |
-          echo "🧹 Cleaning up keychain..."
-          if [ -n "$KEYCHAIN_PASSWORD" ]; then
+    - name: Cleanup Keychain
+      if: always()
+      run: |
+        echo "🧹 Cleaning up keychain..."
+        if [ -n "$KEYCHAIN_PASSWORD" ]; then
           security delete-keychain build.keychain || echo "Keychain already deleted or not found"
-          fi
-          echo "✅ Cleanup completed"
-        env:
+        fi
+        echo "✅ Cleanup completed"
+      env:
         KEYCHAIN_PASSWORD: ${{ env.KEYCHAIN_PASSWORD }}
 
   release:
@@ -2892,36 +2824,36 @@ jobs:
     needs: [build-android, build-ios]  # Now depends on both builds
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Download Android APK
-        uses: actions/download-artifact@v4
-        with:
-          name: android-apk
-          path: ./artifacts/
-        continue-on-error: true
+    - name: Download Android APK
+      uses: actions/download-artifact@v4
+      with:
+        name: android-apk
+        path: ./artifacts/
+      continue-on-error: true
 
-      - name: Download iOS IPA
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-ipa
-          path: ./artifacts/
-        continue-on-error: true
+    - name: Download iOS IPA
+      uses: actions/download-artifact@v4
+      with:
+        name: ios-ipa
+        path: ./artifacts/
+      continue-on-error: true
 
-      - name: List artifacts
-        run: |
-          echo "Available artifacts:"
-          find ./artifacts -type f -name "*.apk" -o -name "*.ipa" 2>/dev/null || echo "No APK or IPA files found"
-          ls -la ./artifacts/ 2>/dev/null || echo "No artifacts directory"
+    - name: List artifacts
+      run: |
+        echo "Available artifacts:"
+        find ./artifacts -type f -name "*.apk" -o -name "*.ipa" 2>/dev/null || echo "No APK or IPA files found"
+        ls -la ./artifacts/ 2>/dev/null || echo "No artifacts directory"
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            ./artifacts/*.apk
-            ./artifacts/*.ipa
-          draft: true
-          prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ./artifacts/*.apk
+          ./artifacts/*.ipa
+        draft: true
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
