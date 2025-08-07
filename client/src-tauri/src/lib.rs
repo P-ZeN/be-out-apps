@@ -53,30 +53,9 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init());
 
-    // Add Google Auth plugin with iOS safety measures
-    #[cfg(not(target_os = "ios"))]
-    {
-        // For non-iOS platforms, add plugin normally
-        builder = builder.plugin(tauri_plugin_google_auth::init());
-    }
-
-    #[cfg(target_os = "ios")]
-    {
-        // For iOS, add plugin with delayed initialization to avoid startup crashes
-        use std::sync::Once;
-        static INIT: Once = Once::new();
-        
-        INIT.call_once(|| {
-            // Initialize iOS-specific components safely
-            std::thread::spawn(|| {
-                std::thread::sleep(std::time::Duration::from_millis(500));
-                // Plugin will be initialized after app startup is complete
-            });
-        });
-        
-        // Still add the plugin but with iOS-specific safety measures
-        builder = builder.plugin(tauri_plugin_google_auth::init());
-    }
+    // Re-enable Google Auth plugin for all platforms
+    // The plugin is properly implemented for desktop, Android, and iOS
+    builder = builder.plugin(tauri_plugin_google_auth::init());
 
     builder
         .invoke_handler(tauri::generate_handler![greet, google_sign_in_android, setup_android_interface])
