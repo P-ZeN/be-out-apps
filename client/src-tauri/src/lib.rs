@@ -53,7 +53,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_google_auth::init())
+        // TODO: Re-enable Google Auth plugin after fixing configuration
+        // .plugin(tauri_plugin_google_auth::init())
         .invoke_handler(tauri::generate_handler![greet, google_sign_in_android, setup_android_interface])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
