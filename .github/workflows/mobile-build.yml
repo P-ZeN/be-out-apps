@@ -1664,6 +1664,14 @@ jobs:
         # CRITICAL: Configure Xcode project BEFORE building
         echo ""
         echo "🔧 Configuring Xcode project for manual code signing..."
+        
+        # Debug: Check if provisioning profile variables are available
+        echo "📋 Provisioning profile environment check:"
+        echo "  PROFILE_UUID: ${PROFILE_UUID:-NOT_SET}"
+        echo "  PROFILE_NAME: ${PROFILE_NAME:-NOT_SET}"
+        echo "  DIST_PROFILE_UUID: ${DIST_PROFILE_UUID:-NOT_SET}"
+        echo "  ADHOC_PROFILE_UUID: ${ADHOC_PROFILE_UUID:-NOT_SET}"
+        
         if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
           echo "📝 Updating Xcode project settings..."
 
@@ -1703,8 +1711,68 @@ jobs:
             # Add provisioning profile settings if available
             if [ -n "$PROFILE_UUID" ] && [ -n "$PROFILE_NAME" ]; then
               echo "🔧 Step 4: Adding provisioning profile settings..."
+              
+              # Method A: Replace existing provisioning profile settings
               sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"[^\"]*\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
               sed -i '' "s/PROVISIONING_PROFILE = \"[^\"]*\";/PROVISIONING_PROFILE = \"$PROFILE_UUID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              
+              # Method B: Force add provisioning profile settings to all buildSettings sections
+              TEMP_FILE=$(mktemp)
+              echo "				PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";" > "$TEMP_FILE"
+              sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              rm -f "$TEMP_FILE"
+              
+              TEMP_FILE=$(mktemp)
+              echo "				PROVISIONING_PROFILE = \"$PROFILE_UUID\";" > "$TEMP_FILE"
+              sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              rm -f "$TEMP_FILE"
+              
+              echo "📋 Provisioning profile settings added:"
+              echo "  Profile Name: $PROFILE_NAME"
+              echo "  Profile UUID: $PROFILE_UUID"
+            elif [ -n "$DIST_PROFILE_UUID" ] && [ -n "$DIST_PROFILE_NAME" ]; then
+              echo "🔧 Step 4: Using distribution provisioning profile as fallback..."
+              
+              # Use distribution profile if development profile is not available
+              TEMP_FILE=$(mktemp)
+              echo "				PROVISIONING_PROFILE_SPECIFIER = \"$DIST_PROFILE_NAME\";" > "$TEMP_FILE"
+              sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              rm -f "$TEMP_FILE"
+              
+              TEMP_FILE=$(mktemp)
+              echo "				PROVISIONING_PROFILE = \"$DIST_PROFILE_UUID\";" > "$TEMP_FILE"
+              sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              rm -f "$TEMP_FILE"
+              
+              echo "📋 Distribution provisioning profile settings added:"
+              echo "  Profile Name: $DIST_PROFILE_NAME"
+              echo "  Profile UUID: $DIST_PROFILE_UUID"
+            elif [ -n "$ADHOC_PROFILE_UUID" ] && [ -n "$ADHOC_PROFILE_NAME" ]; then
+              echo "🔧 Step 4: Using ad hoc provisioning profile as fallback..."
+              
+              # Use ad hoc profile if others are not available
+              TEMP_FILE=$(mktemp)
+              echo "				PROVISIONING_PROFILE_SPECIFIER = \"$ADHOC_PROFILE_NAME\";" > "$TEMP_FILE"
+              sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              rm -f "$TEMP_FILE"
+              
+              TEMP_FILE=$(mktemp)
+              echo "				PROVISIONING_PROFILE = \"$ADHOC_PROFILE_UUID\";" > "$TEMP_FILE"
+              sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+              rm -f "$TEMP_FILE"
+              
+              echo "📋 Ad hoc provisioning profile settings added:"
+              echo "  Profile Name: $ADHOC_PROFILE_NAME"
+              echo "  Profile UUID: $ADHOC_PROFILE_UUID"
+            else
+              echo "⚠️ No provisioning profile UUID/name available - this will cause signing failure"
+              echo "   Available environment variables:"
+              echo "   PROFILE_UUID: ${PROFILE_UUID:-NOT_SET}"
+              echo "   PROFILE_NAME: ${PROFILE_NAME:-NOT_SET}"
+              echo "   DIST_PROFILE_UUID: ${DIST_PROFILE_UUID:-NOT_SET}"
+              echo "   DIST_PROFILE_NAME: ${DIST_PROFILE_NAME:-NOT_SET}"
+              echo "   ADHOC_PROFILE_UUID: ${ADHOC_PROFILE_UUID:-NOT_SET}"
+              echo "   ADHOC_PROFILE_NAME: ${ADHOC_PROFILE_NAME:-NOT_SET}"
             fi
 
             echo "✅ Xcode project configured for manual code signing"
@@ -1713,9 +1781,35 @@ jobs:
             DEV_TEAM_COUNT=$(grep -c "DEVELOPMENT_TEAM.*$TEAM_ID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
             CODE_SIGN_COUNT=$(grep -c "CODE_SIGN_STYLE.*Manual" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
             
+            # Check for any provisioning profile configuration
+            PROFILE_UUID_COUNT=0
+            PROFILE_NAME_COUNT=0
+            ACTIVE_PROFILE_NAME=""
+            ACTIVE_PROFILE_UUID=""
+            
+            if [ -n "$PROFILE_UUID" ]; then
+              PROFILE_UUID_COUNT=$(grep -c "PROVISIONING_PROFILE.*$PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+              PROFILE_NAME_COUNT=$(grep -c "PROVISIONING_PROFILE_SPECIFIER.*$PROFILE_NAME" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+              ACTIVE_PROFILE_NAME="$PROFILE_NAME"
+              ACTIVE_PROFILE_UUID="$PROFILE_UUID"
+            elif [ -n "$DIST_PROFILE_UUID" ]; then
+              PROFILE_UUID_COUNT=$(grep -c "PROVISIONING_PROFILE.*$DIST_PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+              PROFILE_NAME_COUNT=$(grep -c "PROVISIONING_PROFILE_SPECIFIER.*$DIST_PROFILE_NAME" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+              ACTIVE_PROFILE_NAME="$DIST_PROFILE_NAME"
+              ACTIVE_PROFILE_UUID="$DIST_PROFILE_UUID"
+            elif [ -n "$ADHOC_PROFILE_UUID" ]; then
+              PROFILE_UUID_COUNT=$(grep -c "PROVISIONING_PROFILE.*$ADHOC_PROFILE_UUID" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+              PROFILE_NAME_COUNT=$(grep -c "PROVISIONING_PROFILE_SPECIFIER.*$ADHOC_PROFILE_NAME" src-tauri/gen/apple/app.xcodeproj/project.pbxproj || echo 0)
+              ACTIVE_PROFILE_NAME="$ADHOC_PROFILE_NAME"
+              ACTIVE_PROFILE_UUID="$ADHOC_PROFILE_UUID"
+            fi
+            
             echo "📋 Configuration verification:"
             echo "  DEVELOPMENT_TEAM entries: $DEV_TEAM_COUNT"
             echo "  CODE_SIGN_STYLE Manual entries: $CODE_SIGN_COUNT"
+            echo "  PROVISIONING_PROFILE UUID entries: $PROFILE_UUID_COUNT"
+            echo "  PROVISIONING_PROFILE_SPECIFIER entries: $PROFILE_NAME_COUNT"
+            echo "  Active Profile: $ACTIVE_PROFILE_NAME ($ACTIVE_PROFILE_UUID)"
             
             if [ "$DEV_TEAM_COUNT" -eq 0 ]; then
               echo "❌ CRITICAL: No DEVELOPMENT_TEAM entries found - this will cause build failure"
@@ -1724,6 +1818,19 @@ jobs:
             else
               echo "✅ DEVELOPMENT_TEAM properly configured"
             fi
+            
+            if [ "$PROFILE_UUID_COUNT" -eq 0 ] || [ "$PROFILE_NAME_COUNT" -eq 0 ]; then
+              echo "❌ CRITICAL: Provisioning profile not properly configured"
+              echo "   This will cause 'requires a provisioning profile' error"
+              echo "   Profile UUID entries: $PROFILE_UUID_COUNT"
+              echo "   Profile Name entries: $PROFILE_NAME_COUNT"
+            else
+              echo "✅ Provisioning profile properly configured"
+            fi
+            
+            # Show a sample of the actual configured settings
+            echo "📋 Sample of configured buildSettings:"
+            grep -A 8 -B 2 "buildSettings = {" src-tauri/gen/apple/app.xcodeproj/project.pbxproj | head -25
           else
             echo "❌ No APPLE_DEVELOPMENT_TEAM provided - build will fail at signing"
           fi
