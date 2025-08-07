@@ -1398,9 +1398,88 @@ jobs:
         elif npx tauri ios init --ci; then
           echo "✅ iOS project initialized with npx tauri"
         else
-          echo "❌ All initialization methods failed"
-          echo "Checking available Tauri commands..."
-          npx tauri --help || echo "No help available"
+          echo "❌ Initial iOS initialization failed, attempting to fix duplicate frameworks..."
+          
+          # Check if project.yml was created but xcodegen failed due to duplicates
+          if [ -f "src-tauri/gen/apple/project.yml" ]; then
+            echo "📋 Found project.yml, checking for duplicate framework dependencies..."
+            
+            # Create a backup
+            cp src-tauri/gen/apple/project.yml src-tauri/gen/apple/project.yml.backup
+            
+            # Show current duplicates
+            echo "Current duplicate frameworks:"
+            grep -n "Security.framework\|WebKit.framework" src-tauri/gen/apple/project.yml || echo "No framework duplicates found in grep"
+            
+            # Remove duplicate frameworks using awk to keep only first occurrence
+            echo "🔧 Removing duplicate framework dependencies..."
+            awk '
+            /Security\.framework/ { if (!seen_security) { print; seen_security=1 } else { next } }
+            /WebKit\.framework/ { if (!seen_webkit) { print; seen_webkit=1 } else { next } }
+            !/Security\.framework/ && !/WebKit\.framework/ { print }
+            ' src-tauri/gen/apple/project.yml.backup > src-tauri/gen/apple/project.yml
+            
+            echo "📋 After duplicate removal:"
+            grep -n "Security.framework\|WebKit.framework" src-tauri/gen/apple/project.yml || echo "No framework references found"
+            
+            # Try to regenerate the Xcode project
+            echo "🚀 Attempting to regenerate Xcode project after fixing duplicates..."
+            cd src-tauri/gen/apple
+            if xcodegen generate --spec project.yml; then
+              echo "✅ Xcode project generated successfully after fixing duplicates"
+              cd ../../../
+            else
+              echo "❌ Still failed after duplicate removal, trying manual cleanup..."
+              cd ../../../
+              
+              # More aggressive cleanup - remove all framework references and re-add unique ones
+              echo "🔧 Performing aggressive framework cleanup..."
+              
+              # Extract the current frameworks (excluding duplicates)
+              FRAMEWORKS=$(grep -o "[A-Za-z]*\.framework" src-tauri/gen/apple/project.yml | sort | uniq)
+              echo "📋 Unique frameworks found: $FRAMEWORKS"
+              
+              # Remove all framework lines
+              sed '/\.framework/d' src-tauri/gen/apple/project.yml.backup > src-tauri/gen/apple/project.yml.temp
+              
+              # Find the dependencies section and add frameworks back
+              if grep -q "dependencies:" src-tauri/gen/apple/project.yml.temp; then
+                # Add unique frameworks back to dependencies section
+                awk '
+                /dependencies:/ { 
+                  print; 
+                  getline; 
+                  print;
+                  print "        - Security.framework";
+                  print "        - WebKit.framework";
+                  next;
+                }
+                { print }
+                ' src-tauri/gen/apple/project.yml.temp > src-tauri/gen/apple/project.yml
+                
+                echo "✅ Frameworks re-added to dependencies section"
+              else
+                mv src-tauri/gen/apple/project.yml.temp src-tauri/gen/apple/project.yml
+                echo "⚠️ No dependencies section found, using cleaned file"
+              fi
+              
+              # Try xcodegen again
+              cd src-tauri/gen/apple
+              if xcodegen generate --spec project.yml; then
+                echo "✅ Xcode project generated successfully after aggressive cleanup"
+                cd ../../../
+              else
+                echo "❌ Still failed after aggressive cleanup"
+                echo "📋 Final project.yml content (first 50 lines):"
+                head -50 project.yml
+                cd ../../../
+              fi
+            fi
+          else
+            echo "❌ No project.yml found, initialization completely failed"
+            echo "Checking available Tauri commands..."
+            npx tauri --help || echo "No help available"
+          fi
         fi
 
         echo "Checking for generated iOS/Apple project..."
@@ -1413,6 +1492,25 @@ jobs:
         elif [ -d "src-tauri/gen/apple" ]; then
           echo "✅ Apple project created successfully at src-tauri/gen/apple"
           ls -la src-tauri/gen/apple/
+          
+          # Verify the Xcode project was properly generated
+          if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
+            echo "✅ Xcode project file (project.pbxproj) exists"
+            
+            # Check that we have the missing project.yml file that caused the build error
+            if [ -f "src-tauri/gen/apple/project.yml" ]; then
+              echo "✅ project.yml file exists"
+              echo "📋 Final project.yml framework dependencies:"
+              grep -A 5 -B 5 "dependencies:" src-tauri/gen/apple/project.yml | head -15 || echo "No dependencies section found"
+              echo "📋 Framework count verification:"
+              echo "  Security.framework occurrences: $(grep -c "Security.framework" src-tauri/gen/apple/project.yml || echo 0)"
+              echo "  WebKit.framework occurrences: $(grep -c "WebKit.framework" src-tauri/gen/apple/project.yml || echo 0)"
+            else
+              echo "❌ project.yml file missing - this will cause build failures"
+            fi
+          else
+            echo "❌ Xcode project.pbxproj file missing - Xcode project generation failed"
+          fi
         else
           echo "❌ iOS/Apple project directory not found"
           echo "Searching for alternative iOS/Apple paths..."
