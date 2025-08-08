@@ -69,18 +69,8 @@
                     "associatedDomains": [
                         "server.be-out-app.dedibox2.philippezenone.net"
                     ]
-                },
-                {
-                    "protocol": "com.googleusercontent.apps.1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc"
                 }
             ]
-        },
-        "google-auth": {
-            "clientId": {
-                "android": "${GOOGLE_CLIENT_ID_ANDROID}",
-                "desktop": "${GOOGLE_SERVER_CLIENT_ID}",
-                "ios": "${GOOGLE_CLIENT_ID_IOS}"
-            }
         }
     }
 }
