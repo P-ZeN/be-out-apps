@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.util.Log
 
-// Create minimal data classes that don't depend on Google SDK
+// Simple data class that doesn't require Google SDK imports
 data class GoogleSignInResult(
     val success: Boolean,
     val idToken: String? = null,
@@ -21,43 +21,26 @@ class GoogleAuth(private val activity: Activity) {
         private const val SIGN_IN_REQUEST_CODE = 9001
     }
 
-    // Use lazy initialization to completely defer all Google SDK imports/usage
     private val TAG = "GoogleAuth"
 
     init {
-        Log.d(TAG, "GoogleAuth plugin created - Google SDK imports deferred")
+        Log.d(TAG, "GoogleAuth plugin created - Google SDK loading deferred")
     }
 
     fun signIn(callback: (GoogleSignInResult) -> Unit) {
-        try {
-            // Import Google SDK classes only when actually needed
-            val gmsAuthSignIn = Class.forName("com.google.android.gms.auth.api.signin.GoogleSignIn")
-            val gmsSignInOptions = Class.forName("com.google.android.gms.auth.api.signin.GoogleSignInOptions")
-            
-            Log.d(TAG, "Google SDK classes loaded successfully")
-            
-            // Perform actual sign-in logic here
-            performActualSignIn(callback)
-            
-        } catch (e: ClassNotFoundException) {
-            Log.e(TAG, "Google Play Services not available", e)
-            callback(GoogleSignInResult(false, error = "Google Play Services not available"))
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during sign-in", e)
-            callback(GoogleSignInResult(false, error = "Sign-in error: ${e.message}"))
-        }
-    }
-    
-    private fun performActualSignIn(callback: (GoogleSignInResult) -> Unit) {
-        // TODO: Implement actual Google Sign-In logic here
-        // For now, return a placeholder
-        Log.d(TAG, "Placeholder sign-in implementation")
-        callback(GoogleSignInResult(false, error = "Sign-in implementation not yet complete"))
+        Log.d(TAG, "signIn called - implementing dynamic Google SDK loading")
+        
+        // TODO: Implement dynamic loading of Google Play Services
+        // For now, return a placeholder response
+        callback(GoogleSignInResult(
+            success = false,
+            error = "Google Sign-In not yet implemented - dynamic loading required"
+        ))
     }
 
     fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == SIGN_IN_REQUEST_CODE) {
-            Log.d(TAG, "Received sign-in activity result - placeholder implementation")
+            Log.d(TAG, "Activity result received - placeholder implementation")
         }
     }
 
@@ -66,12 +49,12 @@ class GoogleAuth(private val activity: Activity) {
     }
 
     fun signOut(callback: (GoogleSignInResult) -> Unit) {
-        Log.d(TAG, "Sign out - placeholder implementation")
+        Log.d(TAG, "signOut called - placeholder implementation")
         callback(GoogleSignInResult(success = true))
     }
 
     fun isSignedIn(): Boolean {
-        Log.d(TAG, "Is signed in check - placeholder implementation")
+        Log.d(TAG, "isSignedIn called - placeholder implementation")
         return false
     }
 }

@@ -5,20 +5,9 @@ import WebKit
 import Tauri
 
 class GoogleAuthPlugin: Plugin {
-  private var isConfigured = false
-
   @objc public func load(webview: WKWebView) {
-    // No Google SDK initialization during load to prevent startup crashes
-    print("GoogleAuthPlugin loaded - Google SDK imports completely deferred")
-  }
-
-  private func ensureGoogleSDKAvailable() -> Bool {
-    // Check if GoogleSignIn SDK is available at runtime
-    guard NSClassFromString("GIDSignIn") != nil else {
-      print("GoogleSignIn SDK not available")
-      return false
-    }
-    return true
+    // Completely defer all Google SDK dependencies
+    print("GoogleAuthPlugin loaded - all Google SDK interaction deferred")
   }
 
   @objc public func ping(_ invoke: Invoke) throws {
@@ -28,16 +17,8 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func signIn(_ invoke: Invoke) throws {
-    // Check Google SDK availability before attempting to use it
-    guard ensureGoogleSDKAvailable() else {
-      invoke.reject("Google Sign-In SDK not available")
-      return
-    }
-
-    // TODO: Implement dynamic loading of GoogleSignIn classes
-    // For now, return placeholder
     print("GoogleAuthPlugin signIn called - placeholder implementation")
-    invoke.reject("Google Sign-In implementation not yet complete")
+    invoke.reject("Google Sign-In not yet implemented - requires dynamic SDK loading")
   }
 
   @objc public func signOut(_ invoke: Invoke) throws {

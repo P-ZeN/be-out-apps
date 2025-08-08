@@ -7,7 +7,7 @@ let package = Package(
     name: "tauri-plugin-google-auth",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v15),  // Set to iOS 15 for better compatibility with modern GoogleSignIn and Tauri
+        .iOS(.v15),  // Set to iOS 15 for better compatibility
     ],
     products: [
         .library(
@@ -17,14 +17,14 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // Use exact version 6.2.4 to avoid compatibility issues
-        .package(url: "https://github.com/google/GoogleSignIn-iOS", from: "6.2.4")
+        // Remove GoogleSignIn dependency for now to avoid compilation issues
+        // Will be dynamically loaded when needed
     ],
     targets: [
         .target(
             name: "tauri-plugin-google-auth",
             dependencies: [
-                .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS")
+                // Remove GoogleSignIn dependency
             ],
             path: "Sources",
             linkerSettings: [
