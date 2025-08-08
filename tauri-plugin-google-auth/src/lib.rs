@@ -42,19 +42,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
       commands::is_signed_in
     ])
     .setup(|app, api| {
-      // Add error handling to prevent startup crashes
       #[cfg(mobile)]
-      let google_auth = mobile::init(app, api).map_err(|e| {
-        eprintln!("Mobile Google Auth plugin initialization failed: {}", e);
-        e
-      })?;
+      let google_auth = mobile::init(app, api)?;
       #[cfg(desktop)]
-      let google_auth = desktop::init(app, api).map_err(|e| {
-        eprintln!("Desktop Google Auth plugin initialization failed: {}", e);
-        e
-      })?;
+      let google_auth = desktop::init(app, api)?;
       app.manage(google_auth);
-      println!("Google Auth plugin initialized successfully");
       Ok(())
     })
     .build()

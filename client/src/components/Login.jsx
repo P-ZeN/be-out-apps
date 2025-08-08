@@ -272,10 +272,10 @@ const Login = () => {
                     }
                 } catch (pluginError) {
                     console.log('Plugin invocation failed:', pluginError);
-                    
+
                     // Check if this is due to plugin being disabled (temporary fix for iOS crashes)
                     if (pluginError.message && (
-                        pluginError.message.includes('unknown command') || 
+                        pluginError.message.includes('unknown command') ||
                         pluginError.message.includes('not found') ||
                         pluginError.message.includes('plugin not loaded')
                     )) {

@@ -29,7 +29,7 @@ class GoogleAuth(private val activity: Activity) {
 
     fun signIn(callback: (GoogleSignInResult) -> Unit) {
         Log.d(TAG, "signIn called - implementing dynamic Google SDK loading")
-        
+
         // TODO: Implement dynamic loading of Google Play Services
         // For now, return a placeholder response
         callback(GoogleSignInResult(

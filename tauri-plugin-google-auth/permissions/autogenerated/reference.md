@@ -6,6 +6,7 @@ Default permissions for the plugin
 
 - `allow-ping`
 - `allow-googleSignIn`
+- `allow-google-sign-in`
 - `allow-googleSignOut`
 - `allow-isSignedIn`
 
@@ -144,6 +145,58 @@ Enables the ping command without any pre-configured scope.
 <td>
 
 Denies the ping command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`google-auth:allow-signIn`
+
+</td>
+<td>
+
+Enables the signIn command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`google-auth:deny-signIn`
+
+</td>
+<td>
+
+Denies the signIn command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`google-auth:allow-signOut`
+
+</td>
+<td>
+
+Enables the signOut command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`google-auth:deny-signOut`
+
+</td>
+<td>
+
+Denies the signOut command without any pre-configured scope.
 
 </td>
 </tr>

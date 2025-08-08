@@ -87,10 +87,10 @@ const Register = () => {
             }
         } catch (error) {
             console.error("Google OAuth error:", error);
-            
+
             // Check if this is due to plugin being disabled (temporary fix for iOS crashes)
             if (error.message && (
-                error.message.includes('unknown command') || 
+                error.message.includes('unknown command') ||
                 error.message.includes('not found') ||
                 error.message.includes('plugin not loaded')
             )) {

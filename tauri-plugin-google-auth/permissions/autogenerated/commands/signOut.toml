@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-signOut"
+description = "Enables the signOut command without any pre-configured scope."
+commands.allow = ["signOut"]
+
+[[permission]]
+identifier = "deny-signOut"
+description = "Denies the signOut command without any pre-configured scope."
+commands.deny = ["signOut"]
