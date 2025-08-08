@@ -30,7 +30,19 @@ const MainMenu = () => {
     const theme = useTheme();
 
     useEffect(() => {
-        setIsTauriApp(getIsTauriApp());
+        const detectedTauriApp = getIsTauriApp();
+        setIsTauriApp(detectedTauriApp);
+        
+        // Debug logging for mobile status bar fix
+        console.log('🔍 MainMenu Platform Detection:', {
+            isTauriApp: detectedTauriApp,
+            location: window.location.href,
+            userAgent: navigator.userAgent.substring(0, 100)
+        });
+        
+        if (detectedTauriApp) {
+            console.log('📱 MainMenu: Tauri mobile detected - AppBar will use safe area positioning');
+        }
     }, []);
 
     const handleMenuOpen = (event) => {
@@ -78,10 +90,13 @@ const MainMenu = () => {
                 color: theme.palette.mainMenu.text,
                 borderBottom: `1px solid #FF9966`, // Same lightened orange as menu borders
                 boxShadow: "none",
-                // Handle mobile status bar for Tauri apps
+                // Handle mobile status bar for Tauri apps using proven GitHub solution
                 ...(isTauriApp && {
                     // Position AppBar below status bar on mobile
                     top: 'env(safe-area-inset-top, 0px)',
+                    // Ensure content doesn't overflow safe areas on sides
+                    paddingLeft: 'env(safe-area-inset-left, 0px)',
+                    paddingRight: 'env(safe-area-inset-right, 0px)',
                     zIndex: 1300, // Ensure it's above other content
                 }),
             }}>

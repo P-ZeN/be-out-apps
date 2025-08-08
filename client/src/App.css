@@ -20,11 +20,28 @@ body {
 
 /* Tauri mobile specific styles */
 body.tauri-mobile {
-    /* Prevent content from appearing behind status bar */
+    /* Apply safe area insets using the proven GitHub issue approach */
     padding-top: env(safe-area-inset-top, 0px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* Use max() function for bottom padding as shown in the working solution */
+    padding-bottom: max(env(safe-area-inset-bottom), 20px);
+    
+    /* DEBUG: Add visual indicator when tauri-mobile class is active */
+    position: relative;
+}
+
+body.tauri-mobile::before {
+    content: "🔧 TAURI MOBILE MODE ACTIVE";
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    font-size: 10px;
+    z-index: 9999;
+    pointer-events: none;
 }
 
 /* Add top padding to main content to avoid being hidden under AppBar */
