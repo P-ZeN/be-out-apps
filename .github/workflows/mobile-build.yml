@@ -435,7 +435,7 @@ jobs:
         fi
 
         # Check if the icon file exists
-        ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
+        ICON_FILE="src-tauri/icons/be-out_icon_orange_512x512.png"
         if [ -f "$ICON_FILE" ]; then
           echo "✅ Found icon file: $ICON_FILE"
           ls -la "$ICON_FILE"
@@ -841,7 +841,7 @@ jobs:
         find src-tauri/icons -name "*.png" -o -name "*.ico" | head -15
 
         # Check for custom icon
-        if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
+        if [ -f "src-tauri/icons/be-out_icon_orange_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
           echo "❌ Custom icon source file missing!"
@@ -1555,7 +1555,7 @@ jobs:
         fi
 
         # Check if the icon file exists
-        ICON_FILE="src-tauri/icons/be-out_icon_512x512.png"
+        ICON_FILE="src-tauri/icons/be-out_icon_orange_512x512.png"
         if [ -f "$ICON_FILE" ]; then
           echo "✅ Found icon file: $ICON_FILE"
           ls -la "$ICON_FILE"
@@ -1620,7 +1620,7 @@ jobs:
         find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
 
         # Check for custom icon
-        if [ -f "src-tauri/icons/be-out_icon_512x512.png" ]; then
+        if [ -f "src-tauri/icons/be-out_icon_orange_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
           echo "❌ Custom icon source file missing!"

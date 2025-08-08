@@ -1,6 +1,5 @@
 import UIKit
 import WebKit
-import SwiftRs
 import Tauri
 
 class GoogleAuthPlugin: Plugin {

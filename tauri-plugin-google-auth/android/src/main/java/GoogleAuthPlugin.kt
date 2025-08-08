@@ -56,7 +56,7 @@ class GoogleAuthPlugin(private val activity: Activity): Plugin(activity) {
     }
 
     @Command
-    fun signIn(invoke: Invoke) {
+    fun google_sign_in(invoke: Invoke) {
         val args = invoke.parseArgs(GoogleSignInArgs::class.java)
 
         implementation.signIn { result ->
@@ -77,7 +77,7 @@ class GoogleAuthPlugin(private val activity: Activity): Plugin(activity) {
     }
 
     @Command
-    fun signOut(invoke: Invoke) {
+    fun google_sign_out(invoke: Invoke) {
         implementation.signOut { result ->
             val ret = JSObject()
             ret.put("success", result.success)
@@ -89,7 +89,7 @@ class GoogleAuthPlugin(private val activity: Activity): Plugin(activity) {
     }
 
     @Command
-    fun isSignedIn(invoke: Invoke) {
+    fun is_signed_in(invoke: Invoke) {
         val isSignedIn = implementation.isSignedIn()
         val ret = JSObject()
         ret.put("isSignedIn", isSignedIn)

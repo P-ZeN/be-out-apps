@@ -17,14 +17,14 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // Remove GoogleSignIn dependency for now to avoid compilation issues
-        // Will be dynamically loaded when needed
+        // No external dependencies needed for basic Tauri plugin
+        // SwiftRs is not required for Tauri 2.x mobile plugins
     ],
     targets: [
         .target(
             name: "tauri-plugin-google-auth",
             dependencies: [
-                // Remove GoogleSignIn dependency
+                // No external dependencies for basic plugin
             ],
             path: "Sources",
             linkerSettings: [
