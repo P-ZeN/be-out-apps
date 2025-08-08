@@ -5,7 +5,7 @@ This implementation is based on the proven solution from GitHub Issue [#11475](h
 ## Problem Solved
 
 - **iOS**: AppBar was appearing behind the status bar/notch area
-- **Android**: Content was overlapping with system UI elements 
+- **Android**: Content was overlapping with system UI elements
 
 ## Solution Implementation
 
@@ -31,7 +31,7 @@ This implementation is based on the proven solution from GitHub Issue [#11475](h
 ## Key Insights from GitHub Issue
 
 1. **iOS works with viewport-fit=cover + CSS env()** ✅
-2. **Android requires enableEdgeToEdge() in MainActivity** ✅  
+2. **Android requires enableEdgeToEdge() in MainActivity** ✅
 3. **CSS env() variables only work after native Android setup** ✅
 4. **Using max() function for bottom padding provides better fallback** ✅
 

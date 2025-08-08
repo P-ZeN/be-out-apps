@@ -32,14 +32,14 @@ const AppContent = () => {
                 __TAURI_INTERNALS__: !!window.__TAURI_INTERNALS__
             }
         });
-        
+
         if (isTauriApp) {
             document.body.classList.add('tauri-mobile');
             console.log('✅ Added tauri-mobile class to body for proper mobile safe area handling');
         } else {
             console.log('ℹ️ Not a Tauri app - using web layout');
         }
-        
+
         return () => {
             document.body.classList.remove('tauri-mobile');
         };

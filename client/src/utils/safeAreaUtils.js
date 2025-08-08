@@ -15,7 +15,7 @@ let safeAreaInsets = {
  */
 export const getSafeAreaInsets = () => {
     if (typeof window === 'undefined') return safeAreaInsets;
-    
+
     // Try to get values from CSS env() function
     const testElement = document.createElement('div');
     testElement.style.position = 'fixed';
@@ -25,33 +25,33 @@ export const getSafeAreaInsets = () => {
     testElement.style.bottom = 'env(safe-area-inset-bottom, 0px)';
     testElement.style.visibility = 'hidden';
     testElement.style.pointerEvents = 'none';
-    
+
     document.body.appendChild(testElement);
-    
+
     const computedStyle = getComputedStyle(testElement);
     const rect = testElement.getBoundingClientRect();
-    
+
     // Parse CSS values
     const parseValue = (value) => {
         const num = parseFloat(value);
         return isNaN(num) ? 0 : num;
     };
-    
+
     safeAreaInsets = {
         top: parseValue(computedStyle.top),
         left: parseValue(computedStyle.left),
         right: parseValue(computedStyle.right),
         bottom: parseValue(computedStyle.bottom)
     };
-    
+
     document.body.removeChild(testElement);
-    
+
     // Fallback detection for specific mobile environments
     if (safeAreaInsets.top === 0) {
         // Basic status bar detection
         const isAndroid = /Android/i.test(navigator.userAgent);
         const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent);
-        
+
         if (isAndroid) {
             // Android status bar is typically 24-48px
             safeAreaInsets.top = 24;
@@ -69,7 +69,7 @@ export const getSafeAreaInsets = () => {
             }
         }
     }
-    
+
     console.log('📱 Detected Safe Area Insets:', safeAreaInsets);
     return safeAreaInsets;
 };
@@ -79,24 +79,24 @@ export const getSafeAreaInsets = () => {
  */
 export const applySafeAreaInsets = (element, options = {}) => {
     const insets = getSafeAreaInsets();
-    const { 
-        includeTop = true, 
-        includeLeft = true, 
-        includeRight = true, 
+    const {
+        includeTop = true,
+        includeLeft = true,
+        includeRight = true,
         includeBottom = true,
-        addToPadding = true 
+        addToPadding = true
     } = options;
-    
+
     if (!element) return;
-    
+
     const currentStyle = getComputedStyle(element);
-    
+
     if (addToPadding) {
         const currentPaddingTop = parseFloat(currentStyle.paddingTop) || 0;
         const currentPaddingLeft = parseFloat(currentStyle.paddingLeft) || 0;
         const currentPaddingRight = parseFloat(currentStyle.paddingRight) || 0;
         const currentPaddingBottom = parseFloat(currentStyle.paddingBottom) || 0;
-        
+
         if (includeTop) element.style.paddingTop = `${currentPaddingTop + insets.top}px`;
         if (includeLeft) element.style.paddingLeft = `${currentPaddingLeft + insets.left}px`;
         if (includeRight) element.style.paddingRight = `${currentPaddingRight + insets.right}px`;
@@ -107,7 +107,7 @@ export const applySafeAreaInsets = (element, options = {}) => {
         if (includeRight) element.style.marginRight = `${insets.right}px`;
         if (includeBottom) element.style.marginBottom = `${insets.bottom}px`;
     }
-    
+
     console.log('✅ Applied safe area insets to element:', { insets, options });
 };
 
@@ -116,11 +116,11 @@ export const applySafeAreaInsets = (element, options = {}) => {
  */
 export const useSafeAreaInsets = () => {
     const [insets, setInsets] = React.useState(safeAreaInsets);
-    
+
     React.useEffect(() => {
         const detectedInsets = getSafeAreaInsets();
         setInsets(detectedInsets);
-        
+
         // Listen for orientation changes
         const handleOrientationChange = () => {
             setTimeout(() => {
@@ -128,15 +128,15 @@ export const useSafeAreaInsets = () => {
                 setInsets(newInsets);
             }, 100);
         };
-        
+
         window.addEventListener('orientationchange', handleOrientationChange);
         window.addEventListener('resize', handleOrientationChange);
-        
+
         return () => {
             window.removeEventListener('orientationchange', handleOrientationChange);
             window.removeEventListener('resize', handleOrientationChange);
         };
     }, []);
-    
+
     return insets;
 };

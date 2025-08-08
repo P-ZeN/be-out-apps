@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@mui/material/styles";
 import { getIsTauriApp } from "../utils/platformDetection";
+import { isAndroid } from "../utils/platform";
 import {
     AppBar,
     Toolbar,
@@ -24,6 +25,7 @@ const MainMenu = () => {
     const { user, logout } = useAuth();
     const [anchorEl, setAnchorEl] = useState(null);
     const [isTauriApp, setIsTauriApp] = useState(false);
+    const [androidStatusBarHeight, setAndroidStatusBarHeight] = useState(0);
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation("navigation");
@@ -32,14 +34,47 @@ const MainMenu = () => {
     useEffect(() => {
         const detectedTauriApp = getIsTauriApp();
         setIsTauriApp(detectedTauriApp);
-        
+
         // Debug logging for mobile status bar fix
         console.log('🔍 MainMenu Platform Detection:', {
             isTauriApp: detectedTauriApp,
+            isAndroid: isAndroid(),
             location: window.location.href,
             userAgent: navigator.userAgent.substring(0, 100)
         });
-        
+
+        // Android-specific status bar height detection for Tauri apps
+        if (detectedTauriApp && isAndroid()) {
+            console.log('📱 Android Tauri detected - calculating status bar height');
+            
+            // Method 1: Try to get actual safe area value via CSS
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'fixed';
+            tempDiv.style.top = 'env(safe-area-inset-top, 0px)';
+            tempDiv.style.visibility = 'hidden';
+            tempDiv.style.pointerEvents = 'none';
+            document.body.appendChild(tempDiv);
+            
+            const computedStyle = getComputedStyle(tempDiv);
+            const topValue = computedStyle.top;
+            document.body.removeChild(tempDiv);
+            
+            let statusBarHeight = 0;
+            if (topValue && topValue !== '0px' && !topValue.includes('env(')) {
+                // CSS env() worked, parse the value
+                statusBarHeight = parseInt(topValue, 10) || 0;
+                console.log('✅ Got status bar height from CSS env():', statusBarHeight + 'px');
+            } else {
+                // Fallback: Use common Android status bar heights
+                // Most Android devices have 24dp status bar, which is ~48px on 2x density
+                const devicePixelRatio = window.devicePixelRatio || 1;
+                statusBarHeight = Math.round(24 * devicePixelRatio); // 24dp converted to px
+                console.log('⚠️ CSS env() not working, using fallback height:', statusBarHeight + 'px');
+            }
+            
+            setAndroidStatusBarHeight(statusBarHeight);
+        }
+
         if (detectedTauriApp) {
             console.log('📱 MainMenu: Tauri mobile detected - AppBar will use safe area positioning');
         }
@@ -90,10 +125,15 @@ const MainMenu = () => {
                 color: theme.palette.mainMenu.text,
                 borderBottom: `1px solid #FF9966`, // Same lightened orange as menu borders
                 boxShadow: "none",
-                // Handle mobile status bar for Tauri apps using proven GitHub solution
+                // Handle mobile status bar for Tauri apps
                 ...(isTauriApp && {
-                    // Position AppBar below status bar on mobile
-                    top: 'env(safe-area-inset-top, 0px)',
+                    // For Android: Use JavaScript-calculated height since CSS env() might not work properly
+                    ...(isAndroid() ? {
+                        top: `${androidStatusBarHeight}px`,
+                    } : {
+                        // For iOS: CSS env() works well
+                        top: 'env(safe-area-inset-top, 0px)',
+                    }),
                     // Ensure content doesn't overflow safe areas on sides
                     left: 'env(safe-area-inset-left, 0px)',
                     right: 'env(safe-area-inset-right, 0px)',
