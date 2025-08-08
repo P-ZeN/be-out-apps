@@ -17,14 +17,13 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // No external dependencies needed for basic Tauri plugin
-        // SwiftRs is not required for Tauri 2.x mobile plugins
+        .package(url: "https://github.com/Brendonovich/swift-rs", from: "1.0.6"),
     ],
     targets: [
         .target(
             name: "tauri-plugin-google-auth",
             dependencies: [
-                // No external dependencies for basic plugin
+                .product(name: "SwiftRs", package: "swift-rs"),
             ],
             path: "Sources",
             linkerSettings: [

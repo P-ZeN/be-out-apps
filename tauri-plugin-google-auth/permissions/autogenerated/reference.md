@@ -100,6 +100,32 @@ Denies the google_sign_in command without any pre-configured scope.
 <tr>
 <td>
 
+`google-auth:allow-google-sign-out`
+
+</td>
+<td>
+
+Enables the google_sign_out command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`google-auth:deny-google-sign-out`
+
+</td>
+<td>
+
+Denies the google_sign_out command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `google-auth:allow-isSignedIn`
 
 </td>
@@ -119,6 +145,32 @@ Enables the isSignedIn command without any pre-configured scope.
 <td>
 
 Denies the isSignedIn command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`google-auth:allow-is-signed-in`
+
+</td>
+<td>
+
+Enables the is_signed_in command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`google-auth:deny-is-signed-in`
+
+</td>
+<td>
+
+Denies the is_signed_in command without any pre-configured scope.
 
 </td>
 </tr>

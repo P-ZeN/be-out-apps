@@ -331,6 +331,18 @@
           "markdownDescription": "Denies the google_sign_in command without any pre-configured scope."
         },
         {
+          "description": "Enables the google_sign_out command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-google-sign-out",
+          "markdownDescription": "Enables the google_sign_out command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the google_sign_out command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-google-sign-out",
+          "markdownDescription": "Denies the google_sign_out command without any pre-configured scope."
+        },
+        {
           "description": "Enables the isSignedIn command without any pre-configured scope.",
           "type": "string",
           "const": "allow-isSignedIn",
@@ -341,6 +353,18 @@
           "type": "string",
           "const": "deny-isSignedIn",
           "markdownDescription": "Denies the isSignedIn command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the is_signed_in command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-is-signed-in",
+          "markdownDescription": "Enables the is_signed_in command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the is_signed_in command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-is-signed-in",
+          "markdownDescription": "Denies the is_signed_in command without any pre-configured scope."
         },
         {
           "description": "Enables the ping command without any pre-configured scope.",
