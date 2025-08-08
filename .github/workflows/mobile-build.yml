@@ -1355,14 +1355,14 @@ jobs:
       env:
         VITE_API_URL: ${{ secrets.VITE_API_URL }}
         VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
-        # Google Auth environment variables for iOS builds
-        GOOGLE_CLIENT_ID_WEB: ${{ secrets.GOOGLE_CLIENT_ID_WEB }}
-        GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
-        GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
-        VITE_GOOGLE_CLIENT_ID_WEB: ${{ secrets.GOOGLE_CLIENT_ID_WEB }}
-        VITE_GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
-        VITE_GOOGLE_CLIENT_ID_ANDROID: ${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
-        VITE_GOOGLE_CLIENT_ID_DESKTOP: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+        # Google Auth environment variables temporarily disabled
+        # GOOGLE_CLIENT_ID_WEB: ${{ secrets.GOOGLE_CLIENT_ID_WEB }}
+        # GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
+        # GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+        # VITE_GOOGLE_CLIENT_ID_WEB: ${{ secrets.GOOGLE_CLIENT_ID_WEB }}
+        # VITE_GOOGLE_CLIENT_ID_IOS: ${{ secrets.GOOGLE_CLIENT_ID_IOS }}
+        # VITE_GOOGLE_CLIENT_ID_ANDROID: ${{ secrets.GOOGLE_CLIENT_ID_ANDROID }}
+        # VITE_GOOGLE_CLIENT_ID_DESKTOP: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
     - name: Initialize iOS project
       working-directory: ./client
@@ -1619,7 +1619,7 @@ jobs:
         echo "=== Current icon files ==="
         find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
 
-        # Check for custom iconsssssss
+        # Check for custom icons
         if [ -f "src-tauri/icons/be-out_icon_orange_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else

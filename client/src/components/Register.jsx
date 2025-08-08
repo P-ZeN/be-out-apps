@@ -53,56 +53,8 @@ const Register = () => {
 
     const handleGoogleLogin = async () => {
         setError("");
-        try {
-            if (window.__TAURI__) {
-                // Native mobile flow using our new google-signin plugin
-                console.log("=== REGISTER GOOGLE START (Tauri) ===");
-
-                // Generate a random nonce for security
-                const nonce = Math.random().toString(36).substring(2, 15);
-
-                // Call our new plugin's sign-in method
-                const result = await window.__TAURI__.invoke('plugin:google-signin|google_sign_in', {
-                    filterByAuthorizedAccounts: false,
-                    autoSelectEnabled: false,
-                    nonce: nonce
-                });
-
-                console.log("Google sign-in result:", result);
-
-                if (result.success && result.id_token) {
-                    const response = await authService.loginWithGoogleMobile(result.id_token);
-                    nativeLogin(response.token, response.user);
-                    setMessage(t("auth:login.success"));
-                    // Redirect to onboarding as this is a new user
-                    navigate("/onboarding");
-                } else {
-                    throw new Error(result.error || "Google Sign-In failed to return an ID token.");
-                }
-            } else {
-                // Web flow
-                console.log("=== REGISTER GOOGLE START (Web) ===");
-                const googleAuthUrl = `${API_BASE_URL}/api/oauth/google/login`;
-                window.location.href = googleAuthUrl;
-            }
-        } catch (error) {
-            console.error("Google OAuth error:", error);
-
-            // Check if this is due to plugin being disabled (temporary fix for iOS crashes)
-            if (error.message && (
-                error.message.includes('unknown command') ||
-                error.message.includes('not found') ||
-                error.message.includes('plugin not loaded')
-            )) {
-                console.log('Google Auth plugin temporarily disabled - falling back to web flow');
-                setMessage('Redirecting to web authentication...');
-                // Fallback to web flow
-                const googleAuthUrl = `${API_BASE_URL}/api/oauth/google/login`;
-                window.location.href = googleAuthUrl;
-            } else {
-                setError("Google authentication failed: " + (error.message || "Unknown error"));
-            }
-        }
+        // Google Sign-In temporarily disabled
+        setMessage("🚀 Google Sign-In coming soon! Stay tuned for this exciting feature.");
     };
 
     const handleAppleLogin = async () => {
@@ -189,7 +141,7 @@ const Register = () => {
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <Button variant="outlined" startIcon={<Google />} onClick={handleGoogleLogin}>
-                    {t("auth:login.loginWithGoogle")}
+                    🚀 Google Sign-In (Coming Soon)
                 </Button>
                 <Button variant="outlined" startIcon={<Apple />} onClick={handleAppleLogin}>
                     Sign in with Apple

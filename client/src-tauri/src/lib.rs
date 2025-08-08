@@ -32,8 +32,9 @@ pub fn run() {
 
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_google_auth::init());
+        .plugin(tauri_plugin_deep_link::init());
+        // Google Auth plugin temporarily disabled
+        // .plugin(tauri_plugin_google_auth::init());
 
     log::info!("Plugins initialized, starting app...");
 
