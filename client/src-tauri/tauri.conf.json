@@ -71,13 +71,6 @@
                     ]
                 }
             ]
-        },
-        "google-auth": {
-            "permissions": [
-                "allow-google-sign-in",
-                "allow-google-sign-out", 
-                "allow-is-signed-in"
-            ]
         }
     }
 }
