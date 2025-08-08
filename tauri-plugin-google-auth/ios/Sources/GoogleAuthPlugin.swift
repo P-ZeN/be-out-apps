@@ -1,20 +1,18 @@
 import SwiftRs
-import Tauri
 import UIKit
 import WebKit
 import GoogleSignIn
 
-// Decodable structs for command arguments
-class GoogleSignInArgs: Decodable {
-  let value: String?
-}
-
-class GoogleAuthPlugin: Plugin {
+public class GoogleAuthPlugin: NSObject {
   
-  // Override load method to initialize Google Sign-In when webview is created
-  override func load(webview: WKWebView) {
-    super.load(webview: webview)
+  public override init() {
+    super.init()
+    print("GoogleAuthPlugin initialized")
     configureGoogleSignIn()
+  }
+  
+  deinit {
+    print("GoogleAuthPlugin deinitialized")
   }
   
   private func configureGoogleSignIn() {
@@ -37,31 +35,25 @@ class GoogleAuthPlugin: Plugin {
     print("GoogleAuthPlugin: Configured with client ID from plist: \(clientId)")
   }
 
-  @objc public func google_sign_in(_ invoke: Invoke) throws {
+  @objc public func google_sign_in(_ args: [String: Any]) -> [String: Any] {
     print("GoogleAuthPlugin google_sign_in called")
     
-    guard let presentingViewController = manager.viewController else {
-      invoke.reject("Unable to get presenting view controller")
-      return
+    guard let presentingViewController = getRootViewController() else {
+      return ["error": "Unable to get presenting view controller"]
     }
     
+    var result: [String: Any] = [:]
+    let semaphore = DispatchSemaphore(value: 0)
+    
     // Perform async Google Sign-In
-    GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { [weak self] result, error in
-      DispatchQueue.main.async {
-        if let error = error {
-          invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
-          return
-        }
-        
-        guard let user = result?.user,
-              let idToken = user.idToken?.tokenString else {
-          invoke.reject("Failed to get user or ID token")
-          return
-        }
-        
+    GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { signInResult, error in
+      if let error = error {
+        result = ["error": "Google Sign-In failed: \(error.localizedDescription)"]
+      } else if let user = signInResult?.user,
+                let idToken = user.idToken?.tokenString {
         let accessToken = user.accessToken.tokenString
         
-        let response: [String: Any] = [
+        result = [
           "idToken": idToken,
           "accessToken": accessToken,
           "user": [
@@ -71,27 +63,42 @@ class GoogleAuthPlugin: Plugin {
             "imageUrl": user.profile?.imageURL(withDimension: 120)?.absoluteString ?? ""
           ]
         ]
-        
-        invoke.resolve(response)
+      } else {
+        result = ["error": "Failed to get user or ID token"]
       }
+      
+      semaphore.signal()
     }
+    
+    // Wait for the async operation to complete
+    semaphore.wait()
+    return result
   }
 
-  @objc public func google_sign_out(_ invoke: Invoke) throws {
+  @objc public func google_sign_out(_ args: [String: Any]) -> [String: Any] {
     print("GoogleAuthPlugin google_sign_out called")
     
     GIDSignIn.sharedInstance.signOut()
-    invoke.resolve(["success": true])
+    return ["success": true]
   }
 
-  @objc public func is_signed_in(_ invoke: Invoke) throws {
+  @objc public func is_signed_in(_ args: [String: Any]) -> [String: Any] {
     print("GoogleAuthPlugin is_signed_in called")
     let isSignedIn = GIDSignIn.sharedInstance.currentUser != nil
-    invoke.resolve(["isSignedIn": isSignedIn])
+    return ["isSignedIn": isSignedIn]
+  }
+  
+  private func getRootViewController() -> UIViewController? {
+    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+          let window = windowScene.windows.first else {
+      return nil
+    }
+    return window.rootViewController
   }
 }
 
 @_cdecl("init_plugin_google_auth")
-func initPlugin() -> Plugin {
-  return GoogleAuthPlugin()
+func initPlugin() -> UnsafeMutableRawPointer {
+  let plugin = GoogleAuthPlugin()
+  return Unmanaged.passRetained(plugin).toOpaque()
 }
