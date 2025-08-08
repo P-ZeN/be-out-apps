@@ -53,8 +53,17 @@ const Register = () => {
 
     const handleGoogleLogin = async () => {
         setError("");
-        // Google Sign-In temporarily disabled
-        setMessage("🚀 Google Sign-In coming soon! Stay tuned for this exciting feature.");
+        
+        // Check if we're in a Tauri (mobile) environment
+        if (isTauriAvailable) {
+            // Google Sign-In temporarily disabled for mobile apps
+            setMessage("🚀 Google Sign-In coming soon for mobile! Stay tuned for this exciting feature.");
+            return;
+        }
+        
+        // For web version, use the normal Google OAuth flow
+        const googleAuthUrl = `${API_BASE_URL}/auth/google`;
+        window.location.href = googleAuthUrl;
     };
 
     const handleAppleLogin = async () => {
@@ -141,7 +150,7 @@ const Register = () => {
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <Button variant="outlined" startIcon={<Google />} onClick={handleGoogleLogin}>
-                    🚀 Google Sign-In (Coming Soon)
+                    {isTauriAvailable ? "🚀 Google Sign-In (Coming Soon)" : "Sign in with Google"}
                 </Button>
                 <Button variant="outlined" startIcon={<Apple />} onClick={handleAppleLogin}>
                     Sign in with Apple

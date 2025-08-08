@@ -7,17 +7,15 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Initialize platform-specific loggers with error handling
+    // Initialize platform-specific loggers
     #[cfg(target_os = "android")]
     {
-        match android_logger::init_once(
+        android_logger::init_once(
             android_logger::Config::default()
                 .with_max_level(log::LevelFilter::Info)
                 .with_tag("BeOutApp")
-        ) {
-            Ok(_) => log::info!("Android logger initialized successfully"),
-            Err(e) => eprintln!("Failed to initialize Android logger: {}", e),
-        }
+        );
+        log::info!("Android logger initialized successfully");
     }
 
     #[cfg(target_os = "ios")]

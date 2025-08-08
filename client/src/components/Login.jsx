@@ -44,8 +44,17 @@ const Login = () => {
 
     const handleGoogleLogin = async () => {
         setError("");
-        // Google Sign-In temporarily disabled
-        setMessage("🚀 Google Sign-In coming soon! Stay tuned for this exciting feature.");
+        
+        // Check if we're in a Tauri (mobile) environment
+        if (isTauriApp) {
+            // Google Sign-In temporarily disabled for mobile apps
+            setMessage("🚀 Google Sign-In coming soon for mobile! Stay tuned for this exciting feature.");
+            return;
+        }
+        
+        // For web version, use the normal Google OAuth flow
+        const googleAuthUrl = `${API_BASE_URL}/auth/google`;
+        window.location.href = googleAuthUrl;
     };
     const handleFacebookLogin = () => {
         const facebookAuthUrl = `${API_BASE_URL}/auth/facebook`;
@@ -59,7 +68,7 @@ const Login = () => {
     const handleAppleLogin = async () => {
         setMessage("");
         setError("");
-        setOauthLoading(true);
+        setIsLoading(true);
 
         try {
             if (isTauriApp) {
@@ -75,7 +84,7 @@ const Login = () => {
             console.error("Apple Sign In error:", error);
             setError(error.message || "Apple Sign In failed");
         } finally {
-            setOauthLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -140,20 +149,20 @@ const Login = () => {
                     startIcon={<Google />}
                     onClick={handleGoogleLogin}
                     disabled={isLoading}>
-                    🚀 Google Sign-In (Coming Soon)
+                    {isTauriApp ? "🚀 Google Sign-In (Coming Soon)" : "Sign in with Google"}
                 </Button>
                 <Button
                     variant="outlined"
                     startIcon={<Apple />}
                     onClick={handleAppleLogin}
-                    disabled={oauthLoading || isLoading}>
+                    disabled={isLoading}>
                     Sign in with Apple
                 </Button>
                 <Button
                     variant="outlined"
                     startIcon={<Facebook />}
                     onClick={handleFacebookLogin}
-                    disabled={oauthLoading || isLoading}>
+                    disabled={isLoading}>
                     {t("auth:login.loginWithFacebook")}
                 </Button>
             </Box>
