@@ -11,7 +11,8 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init());
 
-    // Enable Google Auth plugin with fixed Android package name
+    // Re-enable Google Auth plugin with safer lazy initialization
+    // Both Android and iOS now defer Google SDK setup until actually needed
     builder = builder.plugin(tauri_plugin_google_auth::init());
 
     builder

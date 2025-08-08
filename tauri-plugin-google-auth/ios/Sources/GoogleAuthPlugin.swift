@@ -10,16 +10,13 @@ class GoogleAuthPlugin: Plugin {
   private var isConfigured = false
 
   @objc public func load(webview: WKWebView) {
-    // Delay initialization to prevent startup crashes
-    // Only configure when actually needed, not during app startup
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-      // Safe initialization - don't crash if it fails
-      self?.safeInitialization()
-    }
+    // No initialization during load to prevent startup crashes
+    // Initialize only when actually needed (lazy initialization)
+    print("GoogleAuthPlugin loaded - initialization deferred until needed")
   }
 
-  private func safeInitialization() {
-    guard !isConfigured else { return }
+  private func ensureInitialized() -> Bool {
+    guard !isConfigured else { return true }
 
     do {
       // Configure Google Sign-In with the client ID from Tauri config
@@ -30,10 +27,11 @@ class GoogleAuthPlugin: Plugin {
       // Store configuration for use in signIn method
       self.googleSignInConfig = config
       self.isConfigured = true
-      print("GoogleAuthPlugin loaded - Google Sign-In SDK configured safely")
+      print("GoogleAuthPlugin - Google Sign-In SDK configured successfully")
+      return true
     } catch {
-      print("GoogleAuthPlugin initialization failed safely: \(error)")
-      // Don't crash the app, just log the error
+      print("GoogleAuthPlugin initialization failed: \(error)")
+      return false
     }
   }
 
@@ -44,8 +42,9 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func signIn(_ invoke: Invoke) throws {
-    guard isConfigured, let config = googleSignInConfig else {
-      invoke.reject("Google Sign-In not configured")
+    // Ensure Google Sign-In is initialized before use
+    guard ensureInitialized(), let config = googleSignInConfig else {
+      invoke.reject("Google Sign-In not configured or initialization failed")
       return
     }
 

@@ -30,10 +30,17 @@ class GoogleAuth(private val activity: Activity) {
     private val TAG = "GoogleAuth"
 
     init {
-        setupGoogleSignIn()
+        // Delay Google Sign-In setup to prevent startup crashes
+        // Initialize only when actually needed
+        Log.d(TAG, "GoogleAuth plugin created - deferring Google Sign-In setup")
     }
 
     private fun setupGoogleSignIn() {
+        if (googleSignInClient != null) {
+            Log.d(TAG, "Google Sign-In client already initialized")
+            return
+        }
+
         try {
             // Configure Google Sign-In for Android (no web client ID needed)
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -45,11 +52,18 @@ class GoogleAuth(private val activity: Activity) {
             Log.d(TAG, "Google Sign-In client initialized successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to setup Google Sign-In", e)
+            throw e // Re-throw to let caller handle
         }
     }
 
     fun signIn(callback: (GoogleSignInResult) -> Unit) {
         try {
+            // Setup Google Sign-In when actually needed (lazy initialization)
+            if (googleSignInClient == null) {
+                Log.d(TAG, "Setting up Google Sign-In client...")
+                setupGoogleSignIn()
+            }
+
             googleSignInClient?.let { client ->
                 // Check if there's already a signed-in account
                 val lastSignedInAccount = GoogleSignIn.getLastSignedInAccount(activity)
