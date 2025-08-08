@@ -13,11 +13,39 @@ pub fn init<R: Runtime>(
   _app: &AppHandle<R>,
   api: PluginApi<R, ()>,
 ) -> crate::Result<GoogleAuth<R>> {
-  #[cfg(target_os = "android")]
-  let handle = api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin")?;
-
-  #[cfg(target_os = "ios")]
-  let handle = api.register_ios_plugin(init_plugin_google_auth)?;
+  // Wrap plugin registration in error handling to prevent startup crashes
+  let handle = match () {
+    #[cfg(target_os = "android")]
+    () => {
+      match api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin") {
+        Ok(h) => {
+          println!("Android Google Auth plugin registered successfully");
+          h
+        },
+        Err(e) => {
+          eprintln!("Failed to register Android Google Auth plugin: {}", e);
+          return Err(e.into());
+        }
+      }
+    },
+    #[cfg(target_os = "ios")]
+    () => {
+      match api.register_ios_plugin(init_plugin_google_auth) {
+        Ok(h) => {
+          println!("iOS Google Auth plugin registered successfully");
+          h
+        },
+        Err(e) => {
+          eprintln!("Failed to register iOS Google Auth plugin: {}", e);
+          return Err(e.into());
+        }
+      }
+    },
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    () => {
+      return Err("Google Auth plugin only supports mobile platforms".into());
+    }
+  };
 
   Ok(GoogleAuth(handle))
 }

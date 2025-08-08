@@ -1,38 +1,24 @@
 import UIKit
 import WebKit
-import GoogleSignIn
 
 #if canImport(Tauri)
 import Tauri
 
 class GoogleAuthPlugin: Plugin {
-  private var googleSignInConfig: GIDConfiguration?
   private var isConfigured = false
 
   @objc public func load(webview: WKWebView) {
-    // No initialization during load to prevent startup crashes
-    // Initialize only when actually needed (lazy initialization)
-    print("GoogleAuthPlugin loaded - initialization deferred until needed")
+    // No Google SDK initialization during load to prevent startup crashes
+    print("GoogleAuthPlugin loaded - Google SDK imports completely deferred")
   }
 
-  private func ensureInitialized() -> Bool {
-    guard !isConfigured else { return true }
-
-    do {
-      // Configure Google Sign-In with the client ID from Tauri config
-      let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
-
-      let config = GIDConfiguration(clientID: clientId)
-
-      // Store configuration for use in signIn method
-      self.googleSignInConfig = config
-      self.isConfigured = true
-      print("GoogleAuthPlugin - Google Sign-In SDK configured successfully")
-      return true
-    } catch {
-      print("GoogleAuthPlugin initialization failed: \(error)")
+  private func ensureGoogleSDKAvailable() -> Bool {
+    // Check if GoogleSignIn SDK is available at runtime
+    guard NSClassFromString("GIDSignIn") != nil else {
+      print("GoogleSignIn SDK not available")
       return false
     }
+    return true
   }
 
   @objc public func ping(_ invoke: Invoke) throws {
@@ -42,69 +28,26 @@ class GoogleAuthPlugin: Plugin {
   }
 
   @objc public func signIn(_ invoke: Invoke) throws {
-    // Ensure Google Sign-In is initialized before use
-    guard ensureInitialized(), let config = googleSignInConfig else {
-      invoke.reject("Google Sign-In not configured or initialization failed")
+    // Check Google SDK availability before attempting to use it
+    guard ensureGoogleSDKAvailable() else {
+      invoke.reject("Google Sign-In SDK not available")
       return
     }
 
-    var presentingViewController: UIViewController?
-
-    // More defensive view controller detection
-    DispatchQueue.main.async {
-      if #available(iOS 15.0, *) {
-        // iOS 15+ method using UIWindowScene
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-          presentingViewController = window.rootViewController
-        }
-      } else {
-        // Fallback for iOS 12-14
-        presentingViewController = UIApplication.shared.windows.first?.rootViewController
-      }
-
-      guard let presentingVC = presentingViewController else {
-        invoke.reject("No presenting view controller available")
-        return
-      }
-
-      // GoogleSignIn 6.x API: Pass configuration directly to signIn method
-      GIDSignIn.sharedInstance.signIn(with: config, presenting: presentingVC) { result, error in
-        if let error = error {
-          invoke.reject("Google Sign-In failed: \(error.localizedDescription)")
-          return
-        }
-
-        guard let result = result,
-              let idToken = result.idToken?.tokenString else {
-          invoke.reject("Failed to get user information or ID token")
-          return
-        }
-
-        let accessToken = result.accessToken.tokenString
-        let profile = result.profile
-
-        invoke.resolve([
-          "success": true,
-          "error": "",
-          "idToken": idToken,
-          "accessToken": accessToken,
-          "displayName": profile?.name ?? "",
-          "email": profile?.email ?? "",
-          "photoUrl": profile?.imageURL(withDimension: 200)?.absoluteString ?? ""
-        ])
-      }
-    }
+    // TODO: Implement dynamic loading of GoogleSignIn classes
+    // For now, return placeholder
+    print("GoogleAuthPlugin signIn called - placeholder implementation")
+    invoke.reject("Google Sign-In implementation not yet complete")
   }
 
   @objc public func signOut(_ invoke: Invoke) throws {
-    GIDSignIn.sharedInstance.signOut()
+    print("GoogleAuthPlugin signOut called - placeholder implementation")
     invoke.resolve(["success": true])
   }
 
   @objc public func isSignedIn(_ invoke: Invoke) throws {
-    let isSignedIn = GIDSignIn.sharedInstance.currentUser != nil
-    invoke.resolve(["isSignedIn": isSignedIn])
+    print("GoogleAuthPlugin isSignedIn called - placeholder implementation")
+    invoke.resolve(["isSignedIn": false])
   }
 }
 
@@ -126,17 +69,8 @@ protocol Invoke {
 }
 
 class GoogleAuthPlugin: Plugin {
-  private var googleSignInConfig: GIDConfiguration?
-
   @objc public func load(webview: WKWebView) {
-    // Configure Google Sign-In with the client ID from Tauri config
-    let clientId = "1064619689471-mrna5dje1h4ojt62d9ckmqi3e8q07sjc.apps.googleusercontent.com"
-
-    let config = GIDConfiguration(clientID: clientId)
-
-    // Store configuration for use in signIn method
-    self.googleSignInConfig = config
-    print("GoogleAuthPlugin loaded - Google Sign-In SDK configured")
+    print("GoogleAuthPlugin loaded - standalone compilation")
   }
 
   @objc public func ping() {
