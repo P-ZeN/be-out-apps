@@ -4,12 +4,12 @@ import CssBaseline from "@mui/material/CssBaseline";
 import AppRoutes from "./components/AppRoutes";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import PlatformDebug from "./components/PlatformDebug";
+// import PlatformDebug from "./components/PlatformDebug"; // Temporarily disabled - might be causing red indicator
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WebViewProvider } from "./context/WebViewContext";
 import { theme } from "./theme";
 import { getIsTauriApp } from "./utils/platformDetection";
-import { getSafeAreaInsets, applySafeAreaInsets } from "./utils/safeAreaUtils";
+// import { getSafeAreaInsets, applySafeAreaInsets } from "./utils/safeAreaUtils"; // Disabled - using CSS approach
 import "./App.css";
 import { useEffect } from "react";
 
@@ -35,41 +35,7 @@ const AppContent = () => {
         
         if (isTauriApp) {
             document.body.classList.add('tauri-mobile');
-            console.log('✅ Added tauri-mobile class to body');
-            
-            // JavaScript-based safe area handling as fallback
-            setTimeout(() => {
-                const safeAreaInsets = getSafeAreaInsets();
-                console.log('📱 Safe Area Insets (JS-based):', safeAreaInsets);
-                
-                // Apply safe areas to body if CSS env() doesn't work
-                if (safeAreaInsets.top > 0) {
-                    document.body.style.paddingTop = `${safeAreaInsets.top}px`;
-                    console.log(`🔧 Applied JS-based top safe area: ${safeAreaInsets.top}px`);
-                }
-                
-                // Apply to main content area
-                const mainContent = document.querySelector('.main-content');
-                if (mainContent) {
-                    applySafeAreaInsets(mainContent, {
-                        includeTop: true,
-                        includeLeft: true,
-                        includeRight: true,
-                        includeBottom: true,
-                        addToPadding: true
-                    });
-                }
-            }, 100);
-            
-            // Debug: Check if safe area CSS variables are available
-            const computedStyle = getComputedStyle(document.documentElement);
-            console.log('🔍 Safe Area Debug:', {
-                safeAreaTop: 'env(safe-area-inset-top)',
-                safeAreaLeft: 'env(safe-area-inset-left)',
-                safeAreaRight: 'env(safe-area-inset-right)',
-                safeAreaBottom: 'env(safe-area-inset-bottom)',
-                bodyClasses: document.body.className
-            });
+            console.log('✅ Added tauri-mobile class to body for proper mobile safe area handling');
         } else {
             console.log('ℹ️ Not a Tauri app - using web layout');
         }
@@ -132,7 +98,7 @@ const AppContent = () => {
 
     return (
         <>
-            <PlatformDebug />
+            {/* <PlatformDebug /> */}
             <Header />
             <div className="main-content">
                 <AppRoutes />

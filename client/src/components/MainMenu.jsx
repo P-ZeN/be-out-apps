@@ -95,9 +95,10 @@ const MainMenu = () => {
                     // Position AppBar below status bar on mobile
                     top: 'env(safe-area-inset-top, 0px)',
                     // Ensure content doesn't overflow safe areas on sides
-                    paddingLeft: 'env(safe-area-inset-left, 0px)',
-                    paddingRight: 'env(safe-area-inset-right, 0px)',
-                    zIndex: 1300, // Ensure it's above other content
+                    left: 'env(safe-area-inset-left, 0px)',
+                    right: 'env(safe-area-inset-right, 0px)',
+                    width: 'auto', // Let it adapt to safe areas
+                    zIndex: 1200, // Above background but below modals
                 }),
             }}>
             <Toolbar
