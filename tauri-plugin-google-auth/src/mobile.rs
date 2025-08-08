@@ -13,11 +13,37 @@ pub fn init<R: Runtime>(
   _app: &AppHandle<R>,
   api: PluginApi<R, ()>,
 ) -> crate::Result<GoogleAuth<R>> {
+  log::info!("Initializing Google Auth mobile plugin...");
+  
   #[cfg(target_os = "android")]
-  let handle = api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin")?;
+  {
+    log::info!("Registering Android Google Auth plugin...");
+    let handle = api.register_android_plugin("com.plugin.googleauth", "GoogleAuthPlugin")
+      .map_err(|e| {
+        log::error!("Failed to register Android Google Auth plugin: {}", e);
+        e
+      })?;
+    log::info!("Android Google Auth plugin registered successfully");
+    return Ok(GoogleAuth(handle));
+  }
+  
   #[cfg(target_os = "ios")]
-  let handle = api.register_ios_plugin(init_plugin_google_auth)?;
-  Ok(GoogleAuth(handle))
+  {
+    log::info!("Registering iOS Google Auth plugin...");
+    let handle = api.register_ios_plugin(init_plugin_google_auth)
+      .map_err(|e| {
+        log::error!("Failed to register iOS Google Auth plugin: {}", e);
+        e
+      })?;
+    log::info!("iOS Google Auth plugin registered successfully");
+    return Ok(GoogleAuth(handle));
+  }
+  
+  #[cfg(not(any(target_os = "android", target_os = "ios")))]
+  {
+    log::warn!("Google Auth plugin not supported on this platform");
+    Err(crate::Error::UnsupportedPlatform)
+  }
 }
 
 /// Access to the google-auth APIs.

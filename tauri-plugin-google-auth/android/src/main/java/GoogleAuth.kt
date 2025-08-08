@@ -1,8 +1,12 @@
 package com.plugin.googleauth
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -23,12 +27,12 @@ data class GoogleSignInResult(
 
 class GoogleAuth(private val activity: Activity) {
     companion object {
-        private const val SIGN_IN_REQUEST_CODE = 9001
         private const val TAG = "GoogleAuth"
     }
 
     private var googleSignInClient: GoogleSignInClient
     private var currentSignInCallback: ((GoogleSignInResult) -> Unit)? = null
+    private var signInLauncher: ActivityResultLauncher<Intent>? = null
 
     init {
         Log.d(TAG, "GoogleAuth plugin initializing with Google Sign-In SDK")
@@ -40,7 +44,28 @@ class GoogleAuth(private val activity: Activity) {
             .build()
 
         googleSignInClient = GoogleSignIn.getClient(activity, gso)
-        Log.d(TAG, "GoogleAuth plugin initialized successfully")
+        
+        // Initialize activity result launcher if activity supports it
+        if (activity is ComponentActivity) {
+            signInLauncher = activity.registerForActivityResult(
+                ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                Log.d(TAG, "Activity result received: ${result.resultCode}")
+                if (result.data != null) {
+                    val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                    handleSignInResult(task)
+                } else {
+                    Log.w(TAG, "No data in activity result")
+                    currentSignInCallback?.invoke(
+                        GoogleSignInResult(success = false, error = "No data received from sign-in")
+                    )
+                    currentSignInCallback = null
+                }
+            }
+            Log.d(TAG, "GoogleAuth plugin initialized successfully with ActivityResultLauncher")
+        } else {
+            Log.w(TAG, "Activity is not ComponentActivity, fallback mode will be used")
+        }
     }
 
     private fun getWebClientId(): String {
@@ -66,7 +91,17 @@ class GoogleAuth(private val activity: Activity) {
         currentSignInCallback = callback
         
         val signInIntent = googleSignInClient.signInIntent
-        activity.startActivityForResult(signInIntent, SIGN_IN_REQUEST_CODE)
+        
+        // Use modern ActivityResultLauncher if available, otherwise fallback to deprecated method
+        if (signInLauncher != null) {
+            Log.d(TAG, "Using ActivityResultLauncher for sign-in")
+            signInLauncher!!.launch(signInIntent)
+        } else {
+            Log.d(TAG, "Using fallback startActivityForResult for sign-in")
+            // Fallback for non-ComponentActivity contexts
+            @Suppress("DEPRECATION")
+            activity.startActivityForResult(signInIntent, 9001)
+        }
     }
 
     fun signOut(callback: (GoogleSignInResult) -> Unit) {
@@ -84,9 +119,15 @@ class GoogleAuth(private val activity: Activity) {
         return account != null
     }
 
+    fun pong(value: String): String {
+        Log.d(TAG, "Pong called with value: $value")
+        return "pong: $value"
+    }
+
     fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == SIGN_IN_REQUEST_CODE) {
-            Log.d(TAG, "Handling sign-in result")
+        // This is only used for fallback compatibility when ActivityResultLauncher is not available
+        if (requestCode == 9001) {
+            Log.d(TAG, "Handling sign-in result (fallback mode)")
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             handleSignInResult(task)
         }

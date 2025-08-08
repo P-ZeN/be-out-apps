@@ -7,27 +7,35 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Initialize platform-specific loggers
+    // Initialize platform-specific loggers with error handling
     #[cfg(target_os = "android")]
     {
-        android_logger::init_once(
+        match android_logger::init_once(
             android_logger::Config::default()
                 .with_max_level(log::LevelFilter::Info)
                 .with_tag("BeOutApp")
-        );
-        log::info!("Android logger initialized");
+        ) {
+            Ok(_) => log::info!("Android logger initialized successfully"),
+            Err(e) => eprintln!("Failed to initialize Android logger: {}", e),
+        }
     }
 
     #[cfg(target_os = "ios")]
     {
-        env_logger::init();
-        log::info!("iOS logger initialized");
+        match env_logger::try_init() {
+            Ok(_) => log::info!("iOS logger initialized successfully"),
+            Err(e) => eprintln!("Failed to initialize iOS logger: {}", e),
+        }
     }
+
+    log::info!("Starting Tauri application...");
 
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_google_auth::init());
+
+    log::info!("Plugins initialized, starting app...");
 
     builder
         .invoke_handler(tauri::generate_handler![greet])

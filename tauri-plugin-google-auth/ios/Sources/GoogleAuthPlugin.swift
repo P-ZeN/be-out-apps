@@ -16,6 +16,8 @@ public class GoogleAuthPlugin: NSObject {
   }
   
   private func configureGoogleSignIn() {
+    print("GoogleAuthPlugin: Starting Google Sign-In configuration")
+    
     // Configure Google Sign-In
     guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
           let plist = NSDictionary(contentsOfFile: path),
@@ -23,16 +25,20 @@ public class GoogleAuthPlugin: NSObject {
       print("GoogleAuthPlugin: No GoogleService-Info.plist found, using fallback client ID")
       // Use environment variable or hardcoded fallback
       if let clientId = ProcessInfo.processInfo.environment["GOOGLE_CLIENT_ID_IOS"] {
+        print("GoogleAuthPlugin: Found client ID in environment: \(clientId.prefix(10))...")
         GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
-        print("GoogleAuthPlugin: Configured with client ID from environment: \(clientId)")
+        print("GoogleAuthPlugin: Successfully configured with client ID from environment")
       } else {
-        print("GoogleAuthPlugin: No client ID found in environment variables either")
+        print("GoogleAuthPlugin: WARNING - No client ID found in environment variables either")
+        print("GoogleAuthPlugin: Available environment variables: \(ProcessInfo.processInfo.environment.keys.sorted().joined(separator: ", "))")
+        // Don't fail here, just log the issue
       }
       return
     }
     
+    print("GoogleAuthPlugin: Found GoogleService-Info.plist with client ID: \(clientId.prefix(10))...")
     GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
-    print("GoogleAuthPlugin: Configured with client ID from plist: \(clientId)")
+    print("GoogleAuthPlugin: Successfully configured with client ID from plist")
   }
 
   @objc public func google_sign_in(_ args: [String: Any]) -> [String: Any] {
@@ -99,6 +105,14 @@ public class GoogleAuthPlugin: NSObject {
 
 @_cdecl("init_plugin_google_auth")
 func initPlugin() -> UnsafeMutableRawPointer {
-  let plugin = GoogleAuthPlugin()
-  return Unmanaged.passRetained(plugin).toOpaque()
+  print("GoogleAuthPlugin: initPlugin() called")
+  do {
+    let plugin = GoogleAuthPlugin()
+    print("GoogleAuthPlugin: Plugin created successfully")
+    return Unmanaged.passRetained(plugin).toOpaque()
+  } catch {
+    print("GoogleAuthPlugin: ERROR - Failed to create plugin: \(error)")
+    // Return a null pointer to indicate failure
+    return UnsafeMutableRawPointer(bitPattern: 0) ?? UnsafeMutableRawPointer.allocate(byteCount: 1, alignment: 1)
+  }
 }
