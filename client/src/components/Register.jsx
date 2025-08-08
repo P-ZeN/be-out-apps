@@ -53,14 +53,14 @@ const Register = () => {
 
     const handleGoogleLogin = async () => {
         setError("");
-        
+
         // Check if we're in a Tauri (mobile) environment
         if (isTauriAvailable) {
             // Google Sign-In temporarily disabled for mobile apps
             setMessage("🚀 Google Sign-In coming soon for mobile! Stay tuned for this exciting feature.");
             return;
         }
-        
+
         // For web version, use the normal Google OAuth flow
         const googleAuthUrl = `${API_BASE_URL}/auth/google`;
         window.location.href = googleAuthUrl;

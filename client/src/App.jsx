@@ -8,6 +8,7 @@ import PlatformDebug from "./components/PlatformDebug";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WebViewProvider } from "./context/WebViewContext";
 import { theme } from "./theme";
+import { getIsTauriApp } from "./utils/platformDetection";
 import "./App.css";
 import { useEffect } from "react";
 
@@ -16,6 +17,18 @@ console.log("App build timestamp:", "2025-07-29-10:00");
 
 const AppContent = () => {
     const { loginWithToken } = useAuth();
+
+    // Add mobile class for Tauri apps to handle safe areas
+    useEffect(() => {
+        const isTauriApp = getIsTauriApp();
+        if (isTauriApp) {
+            document.body.classList.add('tauri-mobile');
+        }
+        
+        return () => {
+            document.body.classList.remove('tauri-mobile');
+        };
+    }, []);
 
     const handleDeepLink = (url) => {
         if (url && url.startsWith("beout://oauth/success")) {

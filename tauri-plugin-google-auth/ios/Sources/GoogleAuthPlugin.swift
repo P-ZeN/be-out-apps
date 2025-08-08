@@ -4,20 +4,20 @@ import WebKit
 import GoogleSignIn
 
 public class GoogleAuthPlugin: NSObject {
-  
+
   public override init() {
     super.init()
     print("GoogleAuthPlugin initialized")
     configureGoogleSignIn()
   }
-  
+
   deinit {
     print("GoogleAuthPlugin deinitialized")
   }
-  
+
   private func configureGoogleSignIn() {
     print("GoogleAuthPlugin: Starting Google Sign-In configuration")
-    
+
     // Configure Google Sign-In
     guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
           let plist = NSDictionary(contentsOfFile: path),
@@ -35,7 +35,7 @@ public class GoogleAuthPlugin: NSObject {
       }
       return
     }
-    
+
     print("GoogleAuthPlugin: Found GoogleService-Info.plist with client ID: \(clientId.prefix(10))...")
     GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
     print("GoogleAuthPlugin: Successfully configured with client ID from plist")
@@ -43,14 +43,14 @@ public class GoogleAuthPlugin: NSObject {
 
   @objc public func google_sign_in(_ args: [String: Any]) -> [String: Any] {
     print("GoogleAuthPlugin google_sign_in called")
-    
+
     guard let presentingViewController = getRootViewController() else {
       return ["error": "Unable to get presenting view controller"]
     }
-    
+
     var result: [String: Any] = [:]
     let semaphore = DispatchSemaphore(value: 0)
-    
+
     // Perform async Google Sign-In
     GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { signInResult, error in
       if let error = error {
@@ -58,7 +58,7 @@ public class GoogleAuthPlugin: NSObject {
       } else if let user = signInResult?.user,
                 let idToken = user.idToken?.tokenString {
         let accessToken = user.accessToken.tokenString
-        
+
         result = [
           "idToken": idToken,
           "accessToken": accessToken,
@@ -72,10 +72,10 @@ public class GoogleAuthPlugin: NSObject {
       } else {
         result = ["error": "Failed to get user or ID token"]
       }
-      
+
       semaphore.signal()
     }
-    
+
     // Wait for the async operation to complete
     semaphore.wait()
     return result
@@ -83,7 +83,7 @@ public class GoogleAuthPlugin: NSObject {
 
   @objc public func google_sign_out(_ args: [String: Any]) -> [String: Any] {
     print("GoogleAuthPlugin google_sign_out called")
-    
+
     GIDSignIn.sharedInstance.signOut()
     return ["success": true]
   }
@@ -93,7 +93,7 @@ public class GoogleAuthPlugin: NSObject {
     let isSignedIn = GIDSignIn.sharedInstance.currentUser != nil
     return ["isSignedIn": isSignedIn]
   }
-  
+
   private func getRootViewController() -> UIViewController? {
     guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
           let window = windowScene.windows.first else {

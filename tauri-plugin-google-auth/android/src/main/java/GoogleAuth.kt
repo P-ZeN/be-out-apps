@@ -36,7 +36,7 @@ class GoogleAuth(private val activity: Activity) {
 
     init {
         Log.d(TAG, "GoogleAuth plugin initializing with Google Sign-In SDK")
-        
+
         // Configure Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getWebClientId())
@@ -44,7 +44,7 @@ class GoogleAuth(private val activity: Activity) {
             .build()
 
         googleSignInClient = GoogleSignIn.getClient(activity, gso)
-        
+
         // Initialize activity result launcher if activity supports it
         if (activity is ComponentActivity) {
             signInLauncher = activity.registerForActivityResult(
@@ -76,7 +76,7 @@ class GoogleAuth(private val activity: Activity) {
             "string",
             packageName
         )
-        
+
         return if (resourceId != 0) {
             activity.getString(resourceId)
         } else {
@@ -89,9 +89,9 @@ class GoogleAuth(private val activity: Activity) {
     fun signIn(callback: (GoogleSignInResult) -> Unit) {
         Log.d(TAG, "Starting Google Sign-In flow")
         currentSignInCallback = callback
-        
+
         val signInIntent = googleSignInClient.signInIntent
-        
+
         // Use modern ActivityResultLauncher if available, otherwise fallback to deprecated method
         if (signInLauncher != null) {
             Log.d(TAG, "Using ActivityResultLauncher for sign-in")
@@ -106,7 +106,7 @@ class GoogleAuth(private val activity: Activity) {
 
     fun signOut(callback: (GoogleSignInResult) -> Unit) {
         Log.d(TAG, "Starting Google Sign-Out")
-        
+
         googleSignInClient.signOut()
             .addOnCompleteListener(activity) {
                 Log.d(TAG, "Sign-out completed")
@@ -137,7 +137,7 @@ class GoogleAuth(private val activity: Activity) {
         try {
             val account = completedTask.getResult(ApiException::class.java)
             Log.d(TAG, "Sign-in successful for: ${account.email}")
-            
+
             val result = GoogleSignInResult(
                 success = true,
                 idToken = account.idToken,
@@ -147,7 +147,7 @@ class GoogleAuth(private val activity: Activity) {
                 email = account.email,
                 profilePictureUri = account.photoUrl?.toString()
             )
-            
+
             currentSignInCallback?.invoke(result)
         } catch (e: ApiException) {
             Log.w(TAG, "Sign-in failed: ${e.statusCode}")

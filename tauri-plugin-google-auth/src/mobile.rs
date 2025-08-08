@@ -14,7 +14,7 @@ pub fn init<R: Runtime>(
   api: PluginApi<R, ()>,
 ) -> crate::Result<GoogleAuth<R>> {
   log::info!("Initializing Google Auth mobile plugin...");
-  
+
   #[cfg(target_os = "android")]
   {
     log::info!("Registering Android Google Auth plugin...");
@@ -26,7 +26,7 @@ pub fn init<R: Runtime>(
     log::info!("Android Google Auth plugin registered successfully");
     return Ok(GoogleAuth(handle));
   }
-  
+
   #[cfg(target_os = "ios")]
   {
     log::info!("Registering iOS Google Auth plugin...");
@@ -38,7 +38,7 @@ pub fn init<R: Runtime>(
     log::info!("iOS Google Auth plugin registered successfully");
     return Ok(GoogleAuth(handle));
   }
-  
+
   #[cfg(not(any(target_os = "android", target_os = "ios")))]
   {
     log::warn!("Google Auth plugin not supported on this platform");

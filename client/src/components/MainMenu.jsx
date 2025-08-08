@@ -78,6 +78,12 @@ const MainMenu = () => {
                 color: theme.palette.mainMenu.text,
                 borderBottom: `1px solid #FF9966`, // Same lightened orange as menu borders
                 boxShadow: "none",
+                // Handle mobile status bar for Tauri apps
+                ...(isTauriApp && {
+                    // Position AppBar below status bar on mobile
+                    top: 'env(safe-area-inset-top, 0px)',
+                    zIndex: 1300, // Ensure it's above other content
+                }),
             }}>
             <Toolbar
                 sx={{
