@@ -87,7 +87,21 @@ const Register = () => {
             }
         } catch (error) {
             console.error("Google OAuth error:", error);
-            setError("Google authentication failed: " + (error.message || "Unknown error"));
+            
+            // Check if this is due to plugin being disabled (temporary fix for iOS crashes)
+            if (error.message && (
+                error.message.includes('unknown command') || 
+                error.message.includes('not found') ||
+                error.message.includes('plugin not loaded')
+            )) {
+                console.log('Google Auth plugin temporarily disabled - falling back to web flow');
+                setMessage('Redirecting to web authentication...');
+                // Fallback to web flow
+                const googleAuthUrl = `${API_BASE_URL}/api/oauth/google/login`;
+                window.location.href = googleAuthUrl;
+            } else {
+                setError("Google authentication failed: " + (error.message || "Unknown error"));
+            }
         }
     };
 

@@ -24,8 +24,9 @@ serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "2.3.1", features = ["devtools"] }
 tauri-plugin-shell = "2.3.0"
 tauri-plugin-deep-link = "2.4.1"
-# Re-enabled with iOS crash protection
-tauri-plugin-google-auth = { path = "../../tauri-plugin-google-auth" }
+# Temporarily disable Google Auth plugin dependency due to iOS startup crashes
+# TODO: Re-enable after fixing iOS plugin registration issues
+# tauri-plugin-google-auth = { path = "../../tauri-plugin-google-auth" }
 
 
 [target.'cfg(target_os = "android")'.dependencies]

@@ -7,13 +7,14 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init());
 
-    // Re-enable Google Auth plugin with minimal stub implementation
-    // Removed all Google SDK imports from plugin class initialization
-    builder = builder.plugin(tauri_plugin_google_auth::init());
+    // Temporarily disable Google Auth plugin to fix iOS startup crash
+    // Plugin still causes iOS startup issues even with minimal stub implementation
+    // TODO: Re-enable after fixing iOS plugin registration issues
+    // builder = builder.plugin(tauri_plugin_google_auth::init());
 
     builder
         .invoke_handler(tauri::generate_handler![greet])

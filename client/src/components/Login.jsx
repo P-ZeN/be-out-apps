@@ -272,8 +272,21 @@ const Login = () => {
                     }
                 } catch (pluginError) {
                     console.log('Plugin invocation failed:', pluginError);
-                    setError('Google Sign-in plugin failed: ' + pluginError.message);
-                    return;
+                    
+                    // Check if this is due to plugin being disabled (temporary fix for iOS crashes)
+                    if (pluginError.message && (
+                        pluginError.message.includes('unknown command') || 
+                        pluginError.message.includes('not found') ||
+                        pluginError.message.includes('plugin not loaded')
+                    )) {
+                        console.log('Google Auth plugin temporarily disabled - using fallback OAuth flow');
+                        setError('Google Sign-in temporarily unavailable. Please use the web OAuth flow or try again later.');
+                        // TODO: Fall back to desktop OAuth flow or show alternative sign-in options
+                        return;
+                    } else {
+                        setError('Google Sign-in plugin failed: ' + pluginError.message);
+                        return;
+                    }
                 }
             } else {
                 // Web flow
