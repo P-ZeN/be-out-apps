@@ -36,7 +36,7 @@ body.tauri-mobile::before {
     right: 0;
     /* Height covers safe area + AppBar to ensure seamless orange background */
     height: calc(env(safe-area-inset-top, 0px) + 72px);
-    background-color: #FF6600; /* Orange background matching AppBar theme */
+    background-color: #FF5917; /* Orange background matching theme.js brand color */
     z-index: 999; /* Just below AppBar (which should be 1100+) */
     pointer-events: none;
 }
