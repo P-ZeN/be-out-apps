@@ -34,21 +34,21 @@ impl<R: Runtime> GoogleAuth<R> {
   pub fn google_sign_in(&self, payload: GoogleSignInRequest) -> crate::Result<GoogleSignInResponse> {
     self
       .0
-      .run_mobile_plugin("signIn", payload)
+      .run_mobile_plugin("google_sign_in", payload)
       .map_err(Into::into)
   }
 
   pub fn google_sign_out(&self) -> crate::Result<GoogleSignOutResponse> {
     self
       .0
-      .run_mobile_plugin("signOut", ())
+      .run_mobile_plugin("google_sign_out", ())
       .map_err(Into::into)
   }
 
   pub fn is_signed_in(&self) -> crate::Result<IsSignedInResponse> {
     self
       .0
-      .run_mobile_plugin("isSignedIn", ())
+      .run_mobile_plugin("is_signed_in", ())
       .map_err(Into::into)
   }
 }

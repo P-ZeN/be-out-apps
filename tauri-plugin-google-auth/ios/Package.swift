@@ -18,12 +18,14 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/Brendonovich/swift-rs", from: "1.0.6"),
+        .package(url: "https://github.com/google/GoogleSignIn-iOS", from: "7.1.0"),
     ],
     targets: [
         .target(
             name: "tauri-plugin-google-auth",
             dependencies: [
                 .product(name: "SwiftRs", package: "swift-rs"),
+                .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS"),
             ],
             path: "Sources",
             linkerSettings: [
