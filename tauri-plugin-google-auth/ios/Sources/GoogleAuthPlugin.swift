@@ -2,34 +2,29 @@ import UIKit
 import WebKit
 import SwiftRs
 
-class GoogleAuthPlugin: Plugin {
-  override func load(webview: WKWebView) {
-    print("GoogleAuthPlugin loaded")
+class GoogleAuthPlugin {
+  func ping(_ args: [String: Any]) -> [String: Any] {
+    let value = args["value"] as? String ?? "default"
+    return ["value": value]
   }
 
-  @objc public func ping(_ invoke: Invoke) throws {
-    let args = try invoke.parseArgs([String: String].self)
-    let value = args["value"]
-    invoke.resolve(["value": value ?? "pong"])
-  }
-
-  @objc public func google_sign_in(_ invoke: Invoke) throws {
+  func google_sign_in(_ args: [String: Any]) -> [String: Any] {
     print("GoogleAuthPlugin google_sign_in called - placeholder implementation")
-    invoke.reject("Google Sign-In not yet implemented for iOS")
+    return ["error": "Google Sign-In not yet implemented for iOS"]
   }
 
-  @objc public func google_sign_out(_ invoke: Invoke) throws {
+  func google_sign_out(_ args: [String: Any]) -> [String: Any] {
     print("GoogleAuthPlugin google_sign_out called - placeholder implementation")
-    invoke.resolve(["success": true])
+    return ["success": true]
   }
 
-  @objc public func is_signed_in(_ invoke: Invoke) throws {
+  func is_signed_in(_ args: [String: Any]) -> [String: Any] {
     print("GoogleAuthPlugin is_signed_in called - placeholder implementation")
-    invoke.resolve(["isSignedIn": false])
+    return ["isSignedIn": false]
   }
 }
 
 @_cdecl("init_plugin_google_auth")
-func init_plugin_google_auth() -> Plugin {
-    return GoogleAuthPlugin()
+func init_plugin_google_auth() -> UnsafeMutableRawPointer {
+    return Unmanaged.passRetained(GoogleAuthPlugin()).toOpaque()
 }
