@@ -1619,7 +1619,7 @@ jobs:
         echo "=== Current icon files ==="
         find src-tauri/icons -name "*.png" -o -name "*.ico" -o -name "*.icns" | head -15
 
-        # Check for custom iconsss
+        # Check for custom iconssss
         if [ -f "src-tauri/icons/be-out_icon_orange_512x512.png" ]; then
           echo "✅ Custom icon source file exists"
         else
