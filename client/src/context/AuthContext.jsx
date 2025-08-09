@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
             if (!profileData.onboarding_complete) {
                 navigate("/onboarding");
             } else {
-                // Redirect to dashboard instead of home page
+                // Redirect to dashboard after successful login
                 navigate("/dashboard");
             }
         });
@@ -136,7 +136,7 @@ export const AuthProvider = ({ children }) => {
                 navigate("/onboarding");
             } else {
                 console.log("[AUTH_CONTEXT] User already onboarded, redirecting to dashboard");
-                // Navigate to dashboard after successful login
+                // Redirect to dashboard after successful native login
                 navigate("/dashboard");
             }
 

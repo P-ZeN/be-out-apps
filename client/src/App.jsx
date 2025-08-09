@@ -74,7 +74,7 @@ const AppContent = () => {
                         const isMobile = window.innerWidth <= 600;
                         const appBarHeight = isMobile ? 64 : 72;
                         const totalTopPadding = statusBarHeight + appBarHeight;
-                        
+
                         mainContent.style.paddingTop = `${totalTopPadding}px`;
                         console.log(`✅ Android: Set content padding-top to ${totalTopPadding}px (${statusBarHeight}px status bar + ${appBarHeight}px AppBar)`);
                     }

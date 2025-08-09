@@ -141,6 +141,8 @@ const Login = () => {
                 </Alert>
             )}
 
+            {/* Temporarily commented out - Social login section */}
+            {/*
             <Divider sx={{ my: 2 }}>{t("auth:login.orLoginWith")}</Divider>
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -166,6 +168,7 @@ const Login = () => {
                     {t("auth:login.loginWithFacebook")}
                 </Button>
             </Box>
+            */}
 
             {/* WebView Overlay for mobile external links */}
             <WebViewOverlay

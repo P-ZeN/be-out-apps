@@ -146,6 +146,8 @@ const Register = () => {
                 </Box>
             </Box>
 
+            {/* Temporarily commented out - Social login section */}
+            {/*
             <Divider sx={{ my: 2 }}>{t("auth:login.orLoginWith")}</Divider>
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -159,6 +161,7 @@ const Register = () => {
                     {t("auth:login.loginWithFacebook")}
                 </Button>
             </Box>
+            */}
 
             {message && <Alert severity="success">{message}</Alert>}
             {error && <Alert severity="error">{error}</Alert>}

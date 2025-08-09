@@ -76,10 +76,10 @@ body.tauri-mobile .main-content {
      * 1. Status bar safe area + AppBar height (handled by orange background)
      * 2. Side safe areas for content
      * 3. Bottom safe area + footer height
-     * 
+     *
      * For Android: JavaScript calculates actual status bar height
      * For iOS: CSS env() works reliably
-     * 
+     *
      * We use a fallback approach: try CSS env() first, then JavaScript override
      */
     padding-top: calc(env(safe-area-inset-top, 48px) + 72px); /* Safe area + AppBar height */
