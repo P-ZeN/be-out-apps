@@ -7,6 +7,7 @@ The mobile Tauri apps had issues with the status bar (utilities bar) handling:
 ### Android
 - The AppBar was appearing under the phone's status bar (time, networks, etc.)
 - Content was not properly positioned relative to the status bar
+- **UPDATE**: Content was appearing under the AppBar (search input half-hidden in MapView, greeting hidden in UserDashboard)
 
 ### iOS
 - The AppBar correctly displayed below the status bar
@@ -86,7 +87,7 @@ sx={{
     ...(isTauriApp && {
         // For Android: Use JavaScript-calculated height since CSS env() might not work properly
         ...(isAndroid() ? {
-            top: `${androidStatusBarHeight}px`,
+            top: `${androidStatusBarHeight}px`, // Use full status bar height
         } : {
             // For iOS: CSS env() works well
             top: 'env(safe-area-inset-top, 0px)',
@@ -100,7 +101,70 @@ sx={{
 }}
 ```
 
-### 4. Platform Detection (`client/src/App.jsx`)
+### 4. Dynamic Content Padding (`client/src/App.jsx`)
+
+#### Android Dynamic Padding Solution
+```jsx
+// For Android: Apply dynamic content padding to ensure content appears below AppBar
+if (isAndroid()) {
+    console.log('📱 Android Tauri detected - setting up dynamic content padding');
+
+    // Calculate status bar height using the same method as MainMenu
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'fixed';
+    tempDiv.style.top = 'env(safe-area-inset-top, 0px)';
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.pointerEvents = 'none';
+    document.body.appendChild(tempDiv);
+
+    const computedStyle = getComputedStyle(tempDiv);
+    const topValue = computedStyle.top;
+    document.body.removeChild(tempDiv);
+
+    let statusBarHeight = 0;
+    if (topValue && topValue !== '0px' && !topValue.includes('env(')) {
+        statusBarHeight = parseInt(topValue, 10) || 0;
+    } else {
+        // Fallback for Android
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        statusBarHeight = Math.round(24 * devicePixelRatio);
+    }
+
+    // Apply dynamic padding to main content
+    const updateContentPadding = () => {
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            const isMobile = window.innerWidth <= 600;
+            const appBarHeight = isMobile ? 64 : 72;
+            const totalTopPadding = statusBarHeight + appBarHeight;
+            
+            mainContent.style.paddingTop = `${totalTopPadding}px`;
+            console.log(`✅ Android: Set content padding-top to ${totalTopPadding}px`);
+        }
+
+        // Also update the orange background height
+        const style = document.createElement('style');
+        style.textContent = `
+            body.tauri-mobile::before {
+                height: ${statusBarHeight + (window.innerWidth <= 600 ? 64 : 72)}px !important;
+            }
+        `;
+        // Remove existing style if any
+        const existingStyle = document.getElementById('android-dynamic-style');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+        style.id = 'android-dynamic-style';
+        document.head.appendChild(style);
+    };
+
+    // Apply immediately and on resize
+    updateContentPadding();
+    window.addEventListener('resize', updateContentPadding);
+}
+```
+
+### 5. Platform Detection (`client/src/App.jsx`)
 ```jsx
 useEffect(() => {
     const isTauriApp = getIsTauriApp();
@@ -120,9 +184,10 @@ useEffect(() => {
 1. **Status Bar**: Preserved at the top
 2. **JavaScript Detection**: Calculates actual status bar height using CSS env() testing + fallback
 3. **AppBar**: Positioned using JavaScript-calculated pixel value (`top: '48px'` etc.)
-4. **Background**: Orange CSS background covers safe area + AppBar seamlessly
-5. **Content**: Starts below AppBar with proper padding
+4. **Background**: Orange CSS background covers safe area + AppBar seamlessly (dynamically sized)
+5. **Content**: Starts below AppBar with JavaScript-calculated padding
 6. **Safe Areas**: Left/right and bottom safe areas handled via CSS env()
+7. **Dynamic Updates**: Content padding and background height update on screen rotation
 
 ### iOS Tauri Apps
 1. **Status Bar**: Preserved at the top
@@ -170,9 +235,9 @@ npm run dev
 ## Files Modified
 
 1. `client/index.html` - Added viewport-fit=cover
-2. `client/src/App.css` - Safe area CSS rules
-3. `client/src/App.jsx` - Platform detection and body class
-4. `client/src/components/MainMenu.jsx` - AppBar positioning
+2. `client/src/App.css` - Safe area CSS rules with Android fallbacks
+3. `client/src/App.jsx` - Platform detection, body class, and Android dynamic content padding
+4. `client/src/components/MainMenu.jsx` - AppBar positioning (removed temporary -15px offset)
 5. `docs/MOBILE_STATUS_BAR_FIX.md` - This documentation
 
 ## Compatibility
@@ -188,7 +253,10 @@ npm run dev
 - **iOS Compatibility**: CSS environment variables work natively and reliably
 - **Fallback Strategy**: If CSS env() detection fails on Android, uses calculated 24dp status bar height
 - **Device Pixel Ratio**: Android fallback accounts for different screen densities
+- **Dynamic Solution**: Android uses JavaScript to dynamically calculate and apply content padding
+- **Cross-Platform**: iOS continues to use CSS-only approach while Android gets enhanced JavaScript solution
 - The solution uses CSS environment variables which are supported by WebView on both platforms
 - Fallback values ensure compatibility with browsers that don't support safe areas
 - The approach separates concerns: body handles safe areas, components handle their own positioning
 - Platform detection ensures mobile-specific code only runs when needed
+- **Responsive Design**: Content padding adapts to screen rotation and different AppBar heights

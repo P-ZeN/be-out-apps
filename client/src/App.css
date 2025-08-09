@@ -35,7 +35,7 @@ body.tauri-mobile::before {
     left: 0;
     right: 0;
     /* Height covers safe area + AppBar to ensure seamless orange background */
-    height: calc(env(safe-area-inset-top, 0px) + 72px);
+    height: calc(env(safe-area-inset-top, 48px) + 72px); /* Use fallback for Android */
     background-color: #FF5917; /* Orange background matching theme.js brand color */
     z-index: 999; /* Just below AppBar (which should be 1100+) */
     pointer-events: none;
@@ -44,7 +44,7 @@ body.tauri-mobile::before {
 /* Mobile version with smaller AppBar */
 @media (max-width: 600px) {
     body.tauri-mobile::before {
-        height: calc(env(safe-area-inset-top, 0px) + 64px);
+        height: calc(env(safe-area-inset-top, 48px) + 64px); /* Use fallback for Android */
     }
 }
 
@@ -76,8 +76,13 @@ body.tauri-mobile .main-content {
      * 1. Status bar safe area + AppBar height (handled by orange background)
      * 2. Side safe areas for content
      * 3. Bottom safe area + footer height
+     * 
+     * For Android: JavaScript calculates actual status bar height
+     * For iOS: CSS env() works reliably
+     * 
+     * We use a fallback approach: try CSS env() first, then JavaScript override
      */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 72px); /* Safe area + AppBar height */
+    padding-top: calc(env(safe-area-inset-top, 48px) + 72px); /* Safe area + AppBar height */
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
@@ -86,7 +91,7 @@ body.tauri-mobile .main-content {
 @media (max-width: 600px) {
     body.tauri-mobile .main-content {
         /* Mobile Tauri: Smaller AppBar */
-        padding-top: calc(env(safe-area-inset-top, 0px) + 64px); /* Safe area + mobile AppBar height */
+        padding-top: calc(env(safe-area-inset-top, 48px) + 64px); /* Safe area + mobile AppBar height */
         padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
     }
 }

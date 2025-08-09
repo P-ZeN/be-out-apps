@@ -63,13 +63,13 @@ const MainMenu = () => {
             if (topValue && topValue !== '0px' && !topValue.includes('env(')) {
                 // CSS env() worked, parse the value
                 statusBarHeight = parseInt(topValue, 10) || 0;
-                console.log('✅ Got status bar height from CSS env():', statusBarHeight + 'px', '(will subtract 15px for positioning)');
+                console.log('✅ Got status bar height from CSS env():', statusBarHeight + 'px');
             } else {
                 // Fallback: Use common Android status bar heights
                 // Most Android devices have 24dp status bar, which is ~48px on 2x density
                 const devicePixelRatio = window.devicePixelRatio || 1;
                 statusBarHeight = Math.round(24 * devicePixelRatio); // 24dp converted to px
-                console.log('⚠️ CSS env() not working, using fallback height:', statusBarHeight + 'px', '(will subtract 15px for positioning)');
+                console.log('⚠️ CSS env() not working, using fallback height:', statusBarHeight + 'px');
             }
 
             setAndroidStatusBarHeight(statusBarHeight);
@@ -144,7 +144,7 @@ const MainMenu = () => {
                 ...(isTauriApp && {
                     // For Android: Use JavaScript-calculated height since CSS env() might not work properly
                     ...(isAndroid() ? {
-                        top: `${Math.max(0, androidStatusBarHeight - 15)}px`, // Temporary: reduce by 15px
+                        top: `${Math.max(0, androidStatusBarHeight)}px`, // Use full status bar height
                     } : {
                         // For iOS: CSS env() works well
                         top: 'env(safe-area-inset-top, 0px)',
