@@ -46,7 +46,7 @@ const MainMenu = () => {
         // Android-specific status bar height detection for Tauri apps
         if (detectedTauriApp && isAndroid()) {
             console.log('📱 Android Tauri detected - calculating status bar height');
-            
+
             // Method 1: Try to get actual safe area value via CSS
             const tempDiv = document.createElement('div');
             tempDiv.style.position = 'fixed';
@@ -54,11 +54,11 @@ const MainMenu = () => {
             tempDiv.style.visibility = 'hidden';
             tempDiv.style.pointerEvents = 'none';
             document.body.appendChild(tempDiv);
-            
+
             const computedStyle = getComputedStyle(tempDiv);
             const topValue = computedStyle.top;
             document.body.removeChild(tempDiv);
-            
+
             let statusBarHeight = 0;
             if (topValue && topValue !== '0px' && !topValue.includes('env(')) {
                 // CSS env() worked, parse the value
@@ -71,7 +71,7 @@ const MainMenu = () => {
                 statusBarHeight = Math.round(24 * devicePixelRatio); // 24dp converted to px
                 console.log('⚠️ CSS env() not working, using fallback height:', statusBarHeight + 'px', '(will subtract 15px for positioning)');
             }
-            
+
             setAndroidStatusBarHeight(statusBarHeight);
         }
 

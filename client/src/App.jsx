@@ -10,6 +10,7 @@ import { WebViewProvider } from "./context/WebViewContext";
 import { theme } from "./theme";
 import { getIsTauriApp } from "./utils/platformDetection";
 // import { getSafeAreaInsets, applySafeAreaInsets } from "./utils/safeAreaUtils"; // Disabled - using CSS approach
+import { useAutoHideSplashScreen } from "./hooks/useSplashScreen";
 import "./App.css";
 import { useEffect } from "react";
 
@@ -18,6 +19,9 @@ console.log("App build timestamp:", "2025-07-29-10:00");
 
 const AppContent = () => {
     const { loginWithToken } = useAuth();
+    
+    // Hide splash screen when app is ready
+    useAutoHideSplashScreen(1200); // Wait 1.2 seconds to ensure smooth loading
 
     // Add mobile class for Tauri apps to handle safe areas
     useEffect(() => {

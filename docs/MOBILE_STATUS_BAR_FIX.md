@@ -60,11 +60,11 @@ useEffect(() => {
         tempDiv.style.top = 'env(safe-area-inset-top, 0px)';
         tempDiv.style.visibility = 'hidden';
         document.body.appendChild(tempDiv);
-        
+
         const computedStyle = getComputedStyle(tempDiv);
         const topValue = computedStyle.top;
         document.body.removeChild(tempDiv);
-        
+
         let statusBarHeight = 0;
         if (topValue && topValue !== '0px' && !topValue.includes('env(')) {
             statusBarHeight = parseInt(topValue, 10) || 0;
@@ -73,7 +73,7 @@ useEffect(() => {
             const devicePixelRatio = window.devicePixelRatio || 1;
             statusBarHeight = Math.round(24 * devicePixelRatio); // 24dp
         }
-        
+
         setAndroidStatusBarHeight(statusBarHeight);
     }
 }, []);
@@ -120,7 +120,7 @@ useEffect(() => {
 1. **Status Bar**: Preserved at the top
 2. **JavaScript Detection**: Calculates actual status bar height using CSS env() testing + fallback
 3. **AppBar**: Positioned using JavaScript-calculated pixel value (`top: '48px'` etc.)
-4. **Background**: Orange CSS background covers safe area + AppBar seamlessly  
+4. **Background**: Orange CSS background covers safe area + AppBar seamlessly
 5. **Content**: Starts below AppBar with proper padding
 6. **Safe Areas**: Left/right and bottom safe areas handled via CSS env()
 
@@ -185,7 +185,7 @@ npm run dev
 ## Notes
 
 - **Android Specific**: CSS `env(safe-area-inset-top)` may not work reliably in Android WebView, so JavaScript detection with fallback is used
-- **iOS Compatibility**: CSS environment variables work natively and reliably  
+- **iOS Compatibility**: CSS environment variables work natively and reliably
 - **Fallback Strategy**: If CSS env() detection fails on Android, uses calculated 24dp status bar height
 - **Device Pixel Ratio**: Android fallback accounts for different screen densities
 - The solution uses CSS environment variables which are supported by WebView on both platforms
