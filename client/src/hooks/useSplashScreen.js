@@ -6,26 +6,42 @@ import { useEffect } from 'react';
  */
 export const useSplashScreen = () => {
     const hideSplashScreen = () => {
-        const splashScreen = document.getElementById('splash-screen');
-        if (splashScreen) {
-            // Remove splash active class from body to re-enable scrolling
-            document.body.classList.remove('splash-active');
-            
-            splashScreen.classList.add('hide');
-            // Remove splash screen from DOM after transition
-            setTimeout(() => {
-                if (splashScreen.parentNode) {
-                    splashScreen.remove();
+        try {
+            const splashScreen = document.getElementById('splash-screen');
+            if (splashScreen) {
+                // Remove splash active class from body to re-enable scrolling
+                if (document.body) {
+                    document.body.classList.remove('splash-active');
                 }
-            }, 500);
+                
+                splashScreen.classList.add('hide');
+                // Remove splash screen from DOM after transition
+                setTimeout(() => {
+                    try {
+                        if (splashScreen.parentNode) {
+                            splashScreen.remove();
+                        }
+                    } catch (error) {
+                        console.warn('Error removing splash screen:', error);
+                    }
+                }, 500);
+            }
+        } catch (error) {
+            console.warn('Error hiding splash screen:', error);
         }
     };
 
     const showSplashScreen = () => {
-        const splashScreen = document.getElementById('splash-screen');
-        if (splashScreen) {
-            document.body.classList.add('splash-active');
-            splashScreen.classList.remove('hide');
+        try {
+            const splashScreen = document.getElementById('splash-screen');
+            if (splashScreen) {
+                if (document.body) {
+                    document.body.classList.add('splash-active');
+                }
+                splashScreen.classList.remove('hide');
+            }
+        } catch (error) {
+            console.warn('Error showing splash screen:', error);
         }
     };
 
