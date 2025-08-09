@@ -320,7 +320,7 @@ const Onboarding = () => {
                 profileUpdateSuccess = true;
             } catch (profileError) {
                 console.error("Profile update failed:", profileError);
-                
+
                 // Check if this is a critical error that should stop onboarding
                 if (profileError.message && profileError.message.includes("401")) {
                     throw new Error("Authentication expired. Please log in again.");
@@ -344,17 +344,17 @@ const Onboarding = () => {
 
             console.log("Updating user state with:", updatedUser);
             updateUser(updatedUser);
-            
-            const successMessage = profileUpdateSuccess 
+
+            const successMessage = profileUpdateSuccess
                 ? t("success.completed", { ns: "onboarding" })
                 : "Onboarding completed with some non-critical issues. You can update your profile later.";
-            
+
             setSuccess(successMessage);
 
-            // Redirect to home after a brief delay
-            console.log("Onboarding completed successfully, redirecting to home...");
+            // Redirect to dashboard after a brief delay
+            console.log("Onboarding completed successfully, redirecting to dashboard...");
             setTimeout(() => {
-                navigate("/");
+                navigate("/dashboard");
             }, 2000);
         } catch (error) {
             console.error("Onboarding error:", error);

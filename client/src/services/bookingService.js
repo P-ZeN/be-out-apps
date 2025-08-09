@@ -3,13 +3,25 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 class BookingService {
+    // Get JWT token from localStorage
+    static getAuthToken() {
+        return localStorage.getItem("token");
+    }
+
+    // Get headers with auth token
+    static getAuthHeaders() {
+        const token = this.getAuthToken();
+        return {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+        };
+    }
+
     static async createBooking(bookingData) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/bookings`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify(bookingData),
             });
 
@@ -27,7 +39,9 @@ class BookingService {
 
     static async getBookingByReference(reference) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/bookings/reference/${reference}`);
+            const response = await fetch(`${API_BASE_URL}/api/bookings/reference/${reference}`, {
+                headers: this.getAuthHeaders(),
+            });
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -52,8 +66,10 @@ class BookingService {
                 }
             });
 
-            const url = `${API_BASE_URL}/bookings/user/${userId}?${searchParams.toString()}`;
-            const response = await fetch(url);
+            const url = `${API_BASE_URL}/api/bookings/user/${userId}?${searchParams.toString()}`;
+            const response = await fetch(url, {
+                headers: this.getAuthHeaders(),
+            });
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -71,9 +87,7 @@ class BookingService {
         try {
             const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/confirm`, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify(paymentData),
             });
 
@@ -93,9 +107,7 @@ class BookingService {
         try {
             const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/cancel`, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify({ cancellation_reason: reason }),
             });
 
@@ -113,7 +125,9 @@ class BookingService {
 
     static async getBookingStats() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/bookings/stats/overview`);
+            const response = await fetch(`${API_BASE_URL}/api/bookings/stats/overview`, {
+                headers: this.getAuthHeaders(),
+            });
 
             if (!response.ok) {
                 const errorData = await response.json();

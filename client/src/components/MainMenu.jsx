@@ -18,7 +18,7 @@ import {
     Tab,
     Divider,
 } from "@mui/material";
-import { Person as PersonIcon, Home as HomeIcon, Map as MapIcon, Event as EventIcon } from "@mui/icons-material";
+import { Person as PersonIcon, Home as HomeIcon, Map as MapIcon, Event as EventIcon, Dashboard as DashboardIcon } from "@mui/icons-material";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const MainMenu = () => {
@@ -96,11 +96,19 @@ const MainMenu = () => {
             return 0; // Default to events for mobile
         }
 
-        // For web apps, Home (0), Events (1), Map (2) tabs exist
-        if (location.pathname === "/" || location.pathname === "/home") return 0;
-        if (location.pathname === "/events") return 1;
-        if (location.pathname === "/map") return 2;
-        return 0;
+        // For web apps with authenticated users: Dashboard (0), Events (1), Map (2)
+        // For web apps without authentication: Home (0), Events (1), Map (2)
+        if (user) {
+            if (location.pathname === "/dashboard") return 0;
+            if (location.pathname === "/events") return 1;
+            if (location.pathname === "/map") return 2;
+            return 0; // Default to dashboard for logged-in users
+        } else {
+            if (location.pathname === "/" || location.pathname === "/home") return 0;
+            if (location.pathname === "/events") return 1;
+            if (location.pathname === "/map") return 2;
+            return 0;
+        }
     };
 
     const handleTabChange = (event, newValue) => {
@@ -109,10 +117,17 @@ const MainMenu = () => {
             if (newValue === 0) navigate("/events");
             if (newValue === 1) navigate("/map");
         } else {
-            // For web: 0=Home, 1=Events, 2=Map
-            if (newValue === 0) navigate("/");
-            if (newValue === 1) navigate("/events");
-            if (newValue === 2) navigate("/map");
+            if (user) {
+                // For authenticated web users: 0=Dashboard, 1=Events, 2=Map
+                if (newValue === 0) navigate("/dashboard");
+                if (newValue === 1) navigate("/events");
+                if (newValue === 2) navigate("/map");
+            } else {
+                // For non-authenticated web users: 0=Home, 1=Events, 2=Map
+                if (newValue === 0) navigate("/");
+                if (newValue === 1) navigate("/events");
+                if (newValue === 2) navigate("/map");
+            }
         }
     };
 
@@ -221,8 +236,11 @@ const MainMenu = () => {
                                 display: "none", // Remove the bottom indicator
                             },
                         }}>
-                        {!isTauriApp && (
+                        {!isTauriApp && !user && (
                             <Tab icon={<HomeIcon />} label={t("menu.home", "Accueil")} iconPosition="start" />
+                        )}
+                        {!isTauriApp && user && (
+                            <Tab icon={<DashboardIcon />} label="Tableau de bord" iconPosition="start" />
                         )}
                         <Tab icon={<EventIcon />} label={t("menu.events", "Événements")} iconPosition="start" />
                         <Tab icon={<MapIcon />} label={t("menu.map", "Carte")} iconPosition="start" />
@@ -231,7 +249,7 @@ const MainMenu = () => {
 
                 {/* Mobile Navigation */}
                 <Box sx={{ display: { xs: "flex", md: "none" }, gap: 1 }}>
-                    {!isTauriApp && (
+                    {!isTauriApp && !user && (
                         <IconButton
                             component={Link}
                             to="/"
@@ -246,6 +264,23 @@ const MainMenu = () => {
                             }}
                             title={t("menu.home", "Accueil")}>
                             <HomeIcon />
+                        </IconButton>
+                    )}
+                    {!isTauriApp && user && (
+                        <IconButton
+                            component={Link}
+                            to="/dashboard"
+                            sx={{
+                                color:
+                                    location.pathname === "/dashboard"
+                                        ? "#FFFFFF" // White for active
+                                        : theme.palette.brand.sombre, // Dark for normal
+                                "&:hover": {
+                                    color: "#FFFFFF", // White on hover
+                                },
+                            }}
+                            title="Tableau de bord">
+                            <DashboardIcon />
                         </IconButton>
                     )}
                     <IconButton
@@ -343,6 +378,9 @@ const MainMenu = () => {
                         transformOrigin={{ vertical: "top", horizontal: "right" }}>
                         {user
                             ? [
+                                  <MenuItem key="dashboard" component={Link} to="/dashboard" onClick={handleMenuClose}>
+                                      Mon tableau de bord
+                                  </MenuItem>,
                                   <MenuItem key="profile" component={Link} to="/profile" onClick={handleMenuClose}>
                                       {t("menu.profile")}
                                   </MenuItem>,

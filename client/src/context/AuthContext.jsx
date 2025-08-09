@@ -75,6 +75,9 @@ export const AuthProvider = ({ children }) => {
             // Check if onboarding is complete and redirect accordingly
             if (!profileData.onboarding_complete) {
                 navigate("/onboarding");
+            } else {
+                // Redirect to dashboard after successful login
+                navigate("/dashboard");
             }
         });
     };
@@ -86,7 +89,8 @@ export const AuthProvider = ({ children }) => {
             if (!profileData.onboarding_complete) {
                 navigate("/onboarding");
             } else {
-                navigate("/"); // Or to a default logged-in page
+                // Redirect to dashboard instead of home page
+                navigate("/dashboard");
             }
         });
     };
@@ -131,11 +135,9 @@ export const AuthProvider = ({ children }) => {
                 console.log("[AUTH_CONTEXT] Redirecting to onboarding");
                 navigate("/onboarding");
             } else {
-                console.log("[AUTH_CONTEXT] User already onboarded, staying on current page or going to home");
-                // Only navigate to home if we're on login page
-                if (window.location.pathname === '/login') {
-                    navigate("/");
-                }
+                console.log("[AUTH_CONTEXT] User already onboarded, redirecting to dashboard");
+                // Navigate to dashboard after successful login
+                navigate("/dashboard");
             }
 
             return result;

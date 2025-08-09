@@ -222,14 +222,16 @@ router.get("/user/:userId", async (req, res) => {
                 e.event_date,
                 e.image_url as event_image,
                 v.name as venue_name,
-                v.city as venue_city,
+                a.locality as venue_city,
                 COUNT(bt.id) as ticket_count
             FROM bookings b
             LEFT JOIN events e ON b.event_id = e.id
             LEFT JOIN venues v ON e.venue_id = v.id
+            LEFT JOIN address_relationships ar ON ar.entity_type = 'venue' AND ar.entity_id = v.id
+            LEFT JOIN addresses a ON ar.address_id = a.id
             LEFT JOIN booking_tickets bt ON b.id = bt.booking_id
             ${whereClause}
-            GROUP BY b.id, e.id, v.id
+            GROUP BY b.id, e.id, v.id, a.id
             ORDER BY b.booking_date DESC
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
         `;

@@ -5,6 +5,7 @@ import Profile from "./Profile";
 import Onboarding from "./Onboarding";
 import PrivateRoute from "./PrivateRoute";
 import HomeWrapper from "./HomeWrapper";
+import UserDashboard from "./UserDashboard";
 import GoogleSignInTest from "./GoogleSignInTest";
 import { EventsPage, EventDetail, MapView, Bookings, Favorites } from "../pages";
 
@@ -19,6 +20,14 @@ const AppRoutes = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/test-google-signin" element={<GoogleSignInTest />} />
+            <Route
+                path="/dashboard"
+                element={
+                    <PrivateRoute>
+                        <UserDashboard />
+                    </PrivateRoute>
+                }
+            />
             <Route
                 path="/onboarding"
                 element={

@@ -57,20 +57,22 @@ router.get("/user/:userId", authenticateToken, async (req, res) => {
                 e.favorites_count,
                 e.status,
                 v.name as venue_name,
-                v.city as venue_city,
-                v.address as venue_address,
+                a.locality as venue_city,
+                a.address_line_1 as venue_address,
                 ARRAY_AGG(DISTINCT cat.name) FILTER (WHERE cat.name IS NOT NULL) as categories,
                 COUNT(DISTINCT r.id) as review_count,
                 COALESCE(AVG(r.rating), 0) as average_rating
             FROM user_favorites uf
             JOIN events e ON uf.event_id = e.id
             LEFT JOIN venues v ON e.venue_id = v.id
+            LEFT JOIN address_relationships ar ON ar.entity_type = 'venue' AND ar.entity_id = v.id
+            LEFT JOIN addresses a ON ar.address_id = a.id
             LEFT JOIN event_categories ec ON e.id = ec.event_id
             LEFT JOIN categories cat ON ec.category_id = cat.id
             LEFT JOIN reviews r ON e.id = r.event_id
             WHERE uf.user_id = $1
             AND e.status = 'active'
-            GROUP BY uf.id, uf.created_at, e.id, v.id
+            GROUP BY uf.id, uf.created_at, e.id, v.id, a.id
             ORDER BY ${orderBy}
             LIMIT $2 OFFSET $3
         `;

@@ -16,6 +16,11 @@
 **Package Manager**: Uses npm workspaces, not individual node_modules
 **Port Management**: Check `netstat -tlnp | grep -E ":(3000|5173|5174|5175)"` before starting to avoid conflicts
 
+**Always Running Applications**: Assume `npm run dev` is already running all 4 apps during development:
+- Don't suggest starting/stopping individual apps unless specifically needed
+- Check existing terminal logs for debugging information instead of restarting
+- Use `get_terminal_output` or check running processes for status
+
 ```bash
 # Correct development startup
 cd /home/zen/dev/be-out-apps
@@ -62,6 +67,7 @@ npm run tauri:android:build
 - Avoid inline styles - use theme tokens and sx prop
 - Colors, typography, spacing should reference theme values
 - Copy theme patterns across admin-client and organizer-client for consistency
+- **ALWAYS** check `docs/MUI_GRID_SYNTAX_REMINDER.md` before using Grid components
 
 ## API Configuration
 
