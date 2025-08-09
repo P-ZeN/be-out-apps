@@ -98,7 +98,7 @@ import { useSplashScreen } from './hooks/useSplashScreen';
 
 const MyComponent = () => {
     const { hideSplashScreen, showSplashScreen } = useSplashScreen();
-    
+
     // Hide splash when some condition is met
     useEffect(() => {
         if (dataLoaded) {

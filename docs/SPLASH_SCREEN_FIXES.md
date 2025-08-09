@@ -5,7 +5,7 @@
 ### 1. JavaScript Error: `Cannot read properties of null (reading 'classList')`
 **Problem**: The splash screen script was trying to access `document.body.classList` before the `<body>` element existed in the DOM.
 
-**Solution**: 
+**Solution**:
 - Moved the script after the `<body>` tag
 - Added defensive checks to ensure `document.body` exists
 - Added fallback using `DOMContentLoaded` event if needed
@@ -21,7 +21,7 @@
 ### 3. Style Loading Reliability
 **Problem**: Risk of splash screen not displaying if external CSS fails to load.
 
-**Solution**: 
+**Solution**:
 - Added critical fallback styles in `<style>` block with `!important` declarations
 - Used CSS custom properties to avoid direct inline style violations
 - Added high specificity selectors (`html #splash-screen`) to ensure styles apply

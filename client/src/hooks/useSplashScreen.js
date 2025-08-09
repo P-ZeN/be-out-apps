@@ -13,7 +13,7 @@ export const useSplashScreen = () => {
                 if (document.body) {
                     document.body.classList.remove('splash-active');
                 }
-                
+
                 splashScreen.classList.add('hide');
                 // Remove splash screen from DOM after transition
                 setTimeout(() => {

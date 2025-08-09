@@ -8,53 +8,8 @@
         <!-- Clash Grotesk Font - Local files -->
         <link rel="stylesheet" href="/clash-grotesk.css" />
         
-        <!-- Splash Screen Styles - External CSS to avoid CSP issues -->
-        <link rel="stylesheet" href="/splash-screen.css" />
-        
-        <!-- Critical splash screen styles - using CSS custom properties to avoid inline style issues -->
-        <style>
-            :root {
-                --splash-bg: linear-gradient(135deg, #FF5917 0%, #FF7A47 100%);
-                --splash-z: 9999;
-            }
-            
-            /* Critical splash screen fallback - minimal styles with high specificity */
-            html #splash-screen {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                background: var(--splash-bg) !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                z-index: var(--splash-z) !important;
-                opacity: 1 !important;
-            }
-            
-            html #splash-screen .splash-icon-container {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                text-align: center !important;
-            }
-            
-            html #splash-screen .splash-icon {
-                width: 120px !important;
-                height: 120px !important;
-                border-radius: 24px !important;
-            }
-            
-            html #splash-screen .splash-title {
-                color: white !important;
-                font-size: 32px !important;
-                font-weight: 600 !important;
-                margin-top: 24px !important;
-            }
-        </style>
-
-        <!-- Fallback fonts -->
+        <!-- Splash Screen Styles - External CSS only -->
+        <link rel="stylesheet" href="/splash-screen.css" />        <!-- Fallback fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
@@ -91,9 +46,9 @@
         <!-- Splash Screen -->
         <div id="splash-screen" role="status" aria-label="Loading Be Out! application">
             <div class="splash-icon-container">
-                <img 
-                    src="/be-out_icon_512.svg" 
-                    alt="Be Out! application logo" 
+                <img
+                    src="/be-out_icon_512.svg"
+                    alt="Be Out! application logo"
                     class="splash-icon"
                     onerror="this.src='/be-out_logo_orange.png'"
                 />

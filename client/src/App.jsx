@@ -19,7 +19,7 @@ console.log("App build timestamp:", "2025-07-29-10:00");
 
 const AppContent = () => {
     const { loginWithToken } = useAuth();
-    
+
     // Hide splash screen when app is ready
     useAutoHideSplashScreen(1200); // Wait 1.2 seconds to ensure smooth loading
 

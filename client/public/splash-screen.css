@@ -107,12 +107,12 @@
         height: 100px;
         border-radius: 20px;
     }
-    
+
     .splash-title {
         font-size: 28px;
         margin-top: 20px;
     }
-    
+
     .splash-loading {
         margin-top: 28px;
     }
@@ -125,12 +125,12 @@
         height: 80px;
         border-radius: 16px;
     }
-    
+
     .splash-title {
         font-size: 24px;
         margin-top: 16px;
     }
-    
+
     .splash-loading {
         margin-top: 24px;
     }
@@ -142,12 +142,12 @@
         width: 80px;
         height: 80px;
     }
-    
+
     .splash-title {
         font-size: 24px;
         margin-top: 16px;
     }
-    
+
     .splash-loading {
         margin-top: 20px;
     }
