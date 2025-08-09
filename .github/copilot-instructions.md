@@ -107,6 +107,14 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 - `/app/uploads` for file storage
 - `/app/translations` for live translation editing
 
+## Development Philosophy
+
+**Avoid Overengineering**: Keep solutions simple and direct
+- **NO "fallback methods"** unless explicitly requested
+- Circumventing roadblocks with fallbacks creates exponentially more problems
+- Address root issues directly rather than working around them
+- Less is more - prefer simple, maintainable solutions
+
 ## Common Patterns
 
 **Error Handling**: Check `get_errors` tool output when debugging - project has comprehensive error tracking
@@ -130,3 +138,4 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 - OAuth requires HTTPS in production - use desktop client credentials, not web
 - Environment variables need different handling for development vs Docker builds
 - Port conflicts common - check running processes before starting apps
+- **NO fallback implementations** - solve root problems, don't work around them
