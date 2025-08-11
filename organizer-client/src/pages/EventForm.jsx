@@ -20,10 +20,6 @@ import {
     FormControlLabel,
     InputAdornment,
     CircularProgress,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
 } from "@mui/material";
 import {
     Event,
@@ -38,11 +34,14 @@ import {
     Add,
     Delete,
     Image,
+    Phone,
 } from "@mui/icons-material";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import organizerService from "../services/organizerService";
+import EventMobilePreview from "../components/EventMobilePreview";
+import VenueSelector from "../components/VenueSelector";
 
 const EventForm = () => {
     const { id: eventId } = useParams();
@@ -88,34 +87,6 @@ const EventForm = () => {
 
     // Validation state
     const [errors, setErrors] = useState({});
-
-    // New venue dialog state
-    const [openVenueDialog, setOpenVenueDialog] = useState(false);
-    const [venueDialogLoading, setVenueDialogLoading] = useState(false);
-    const [newVenueData, setNewVenueData] = useState({
-        name: "",
-        capacity: "",
-        address_line_1: "",
-        address_line_2: "",
-        locality: "",
-        administrative_area: "",
-        postal_code: "",
-        country_code: "FR",
-        latitude: "",
-        longitude: "",
-    });
-
-    // Countries list for venue creation
-    const countries = [
-        { code: "FR", name: "France" },
-        { code: "ES", name: "Espagne" },
-        { code: "IT", name: "Italie" },
-        { code: "DE", name: "Allemagne" },
-        { code: "GB", name: "Royaume-Uni" },
-        { code: "BE", name: "Belgique" },
-        { code: "CH", name: "Suisse" },
-        { code: "LU", name: "Luxembourg" },
-    ];
 
     // Load initial data
     useEffect(() => {
@@ -417,64 +388,13 @@ const EventForm = () => {
         }
     };
 
-    // Handle venue creation
-    const handleCreateVenue = () => {
-        setNewVenueData({
-            name: "",
-            capacity: "",
-            address_line_1: "",
-            address_line_2: "",
-            locality: "",
-            administrative_area: "",
-            postal_code: "",
-            country_code: "FR",
-            latitude: "",
-            longitude: "",
-        });
-        setOpenVenueDialog(true);
+    // Handle venue updates from VenueSelector
+    const handleVenuesUpdate = (newVenues) => {
+        setVenues(newVenues);
     };
 
-    const handleVenueDataChange = (field, value) => {
-        setNewVenueData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-    const handleSaveNewVenue = async () => {
-        // Basic validation
-        if (!newVenueData.name.trim() || !newVenueData.address_line_1.trim() || !newVenueData.locality.trim()) {
-            setError("Veuillez remplir les champs obligatoires du nouveau lieu");
-            return;
-        }
-
-        setVenueDialogLoading(true);
-        setError("");
-
-        try {
-            const venueData = {
-                ...newVenueData,
-                capacity: newVenueData.capacity ? Number(newVenueData.capacity) : null,
-                latitude: newVenueData.latitude ? Number(newVenueData.latitude) : null,
-                longitude: newVenueData.longitude ? Number(newVenueData.longitude) : null,
-            };
-
-            const newVenue = await organizerService.createVenue(venueData);
-
-            // Reload venues
-            const venuesData = await organizerService.getVenues();
-            setVenues(venuesData);
-
-            // Select the new venue
-            handleChange("venue_id", newVenue.id);
-
-            setOpenVenueDialog(false);
-            setSuccess("Nouveau lieu créé et sélectionné !");
-        } catch (error) {
-            setError(error.message || "Erreur lors de la création du lieu");
-        } finally {
-            setVenueDialogLoading(false);
-        }
+    const handleVenueChange = (venueId) => {
+        handleChange("venue_id", venueId);
     };
 
     if (initialLoading) {
@@ -487,13 +407,25 @@ const EventForm = () => {
 
     return (
         <Box>
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-                {isEdit ? "Modifier l'événement" : "Créer un événement"}
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+                <Typography variant="h4" fontWeight="bold">
+                    {isEdit ? "Modifier l'événement" : "Créer un événement"}
+                </Typography>
+                <Chip
+                    icon={<Phone />}
+                    label="Aperçu mobile"
+                    color="primary"
+                    variant="outlined"
+                    sx={{ ml: "auto" }}
+                />
+            </Box>
 
-            <form onSubmit={handleSubmit}>
-                <Card>
-                    <CardContent sx={{ p: 4 }}>
+            <Grid container spacing={3}>
+                {/* Form Column */}
+                <Grid size={{ xs: 12, lg: 8 }}>
+                    <form onSubmit={handleSubmit}>
+                        <Card>
+                            <CardContent sx={{ p: 4 }}>
                         {error && (
                             <Alert severity="error" sx={{ mb: 3 }}>
                                 {error}
@@ -890,41 +822,15 @@ const EventForm = () => {
                             </Grid>
 
                             {/* Location and Category */}
-                            <Grid size={{ xs: 12 }}>
-                                <Typography
-                                    variant="h6"
-                                    gutterBottom
-                                    sx={{ display: "flex", alignItems: "center", mt: 2 }}>
-                                    <LocationOn sx={{ mr: 1 }} />
-                                    Lieu et catégorie
-                                </Typography>
-                                <Divider sx={{ mb: 3 }} />
-                            </Grid>
-
-                            <Grid size={{ xs: 12, md: 6 }}>
-                                <FormControl fullWidth error={!!errors.venue_id} required>
-                                    <InputLabel>Lieu</InputLabel>
-                                    <Select
-                                        value={formData.venue_id}
-                                        onChange={(e) => handleChange("venue_id", e.target.value)}
-                                        label="Lieu">
-                                        {venues.map((venue) => (
-                                            <MenuItem key={venue.id} value={venue.id}>
-                                                {venue.name} - {venue.formatted_address || `${venue.locality || ""}`}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                    {errors.venue_id && <FormHelperText>{errors.venue_id}</FormHelperText>}
-                                </FormControl>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    startIcon={<Add />}
-                                    onClick={handleCreateVenue}
-                                    sx={{ mt: 1 }}>
-                                    Créer un nouveau lieu
-                                </Button>
-                            </Grid>
+                            <VenueSelector
+                                venues={venues}
+                                selectedVenueId={formData.venue_id}
+                                onVenueChange={handleVenueChange}
+                                error={errors.venue_id}
+                                onVenuesUpdate={handleVenuesUpdate}
+                                onError={setError}
+                                onSuccess={setSuccess}
+                            />
 
                             <Grid size={{ xs: 12, md: 6 }}>
                                 <FormControl fullWidth error={!!errors.category_id} required>
@@ -1086,92 +992,21 @@ const EventForm = () => {
                     </CardContent>
                 </Card>
             </form>
+        </Grid>
 
-            {/* New Venue Dialog */}
-            <Dialog open={openVenueDialog} onClose={() => setOpenVenueDialog(false)} maxWidth="md" fullWidth>
-                <DialogTitle>Créer un nouveau lieu</DialogTitle>
-                <DialogContent>
-                    <Grid container spacing={3} sx={{ mt: 1 }}>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Nom du lieu"
-                                value={newVenueData.name}
-                                onChange={(e) => handleVenueDataChange("name", e.target.value)}
-                                required
-                            />
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Capacité"
-                                type="number"
-                                value={newVenueData.capacity}
-                                onChange={(e) => handleVenueDataChange("capacity", e.target.value)}
-                            />
-                        </Grid>
-
-                        <Grid size={{ xs: 12 }}>
-                            <TextField
-                                fullWidth
-                                label="Adresse"
-                                value={newVenueData.address_line_1}
-                                onChange={(e) => handleVenueDataChange("address_line_1", e.target.value)}
-                                required
-                            />
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Ville"
-                                value={newVenueData.locality}
-                                onChange={(e) => handleVenueDataChange("locality", e.target.value)}
-                                required
-                            />
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Code postal"
-                                value={newVenueData.postal_code}
-                                onChange={(e) => handleVenueDataChange("postal_code", e.target.value)}
-                            />
-                        </Grid>
-
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <FormControl fullWidth required>
-                                <InputLabel>Pays</InputLabel>
-                                <Select
-                                    value={newVenueData.country_code}
-                                    onChange={(e) => handleVenueDataChange("country_code", e.target.value)}
-                                    label="Pays">
-                                    {countries.map((country) => (
-                                        <MenuItem key={country.code} value={country.code}>
-                                            {country.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenVenueDialog(false)} disabled={venueDialogLoading}>
-                        Annuler
-                    </Button>
-                    <Button
-                        onClick={handleSaveNewVenue}
-                        variant="contained"
-                        disabled={venueDialogLoading}
-                        startIcon={venueDialogLoading ? <CircularProgress size={20} /> : <Save />}>
-                        {venueDialogLoading ? "Création..." : "Créer le lieu"}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+        {/* Mobile Preview Column */}
+        <Grid size={{ xs: 12, lg: 4 }}>
+            <Box sx={{ position: "sticky", top: 20 }}>
+                <EventMobilePreview
+                    formData={formData}
+                    venues={venues}
+                    categories={categories}
+                    imagePreview={imagePreview}
+                />
+            </Box>
+        </Grid>
+    </Grid>
+</Box>
     );
 };
 
