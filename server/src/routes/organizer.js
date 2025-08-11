@@ -78,29 +78,16 @@ const fileService = new FileService();
 const verifyOrganizerToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Access token required" });
+        return res.status(401).json({ message: "Unauthorized" });
     }
 
     const token = authHeader.substring(7);
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // Verify user is an organizer
-        const client = await pool.connect();
-        try {
-            const result = await client.query("SELECT * FROM users WHERE id = $1 AND role = 'organizer'", [
-                decoded.userId,
-            ]);
-            if (result.rows.length === 0) {
-                return res.status(403).json({ message: "Organizer access required" });
-            }
-            req.user = result.rows[0];
-            next();
-        } finally {
-            client.release();
-        }
+        req.organizer = decoded;
+        next();
     } catch (error) {
-        return res.status(401).json({ message: "Invalid token" });
+        return res.status(401).json({ message: "Unauthorized" });
     }
 };
 
@@ -319,7 +306,7 @@ router.get("/events/:id", verifyOrganizerToken, async (req, res) => {
             );
 
             if (eventResult.rows.length === 0) {
-                return res.status(404).json({ message: "Event not found" });
+                return res.status(404).json({ message: "req.t(\"Event not found\")" });
             }
 
             const event = eventResult.rows[0];
@@ -380,8 +367,8 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     title, description, event_date, venue_id, organizer_id,
                     original_price, discounted_price, total_tickets, available_tickets,
                     is_featured, requirements, cancellation_policy, status, is_published,
-                    status_changed_by, status_changed_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                    moderation_status, status_changed_by, status_changed_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
                 RETURNING *`,
                 [
                     title,
@@ -398,6 +385,7 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     cancellation_policy || null, // cancellation_policy
                     "draft", // status - all new events start as draft
                     false, // is_published - not published by default
+                    "pending", // moderation_status - new events need review
                     req.user.id, // status_changed_by
                     new Date(), // status_changed_at
                 ]
@@ -421,7 +409,7 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
         }
     } catch (error) {
         console.error("Error creating event:", error);
-        res.status(500).json({ message: "Error creating event" });
+        res.status(500).json({ message: "Event creation failed") });
     }
 });
 
@@ -442,7 +430,7 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
 
         // Validation
         if (!title || !description || !event_date || !venue_id || !category_id) {
-            return res.status(400).json({ message: "Missing required fields" });
+            return res.status(400).json({ message: "Missing required fields") });
         }
 
         const client = await pool.connect();
@@ -456,7 +444,7 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
             ]);
 
             if (checkResult.rows.length === 0) {
-                return res.status(404).json({ message: "Event not found" });
+                return res.status(404).json({ message: "req.t(\"Event not found\")" });
             }
 
             // Update the event
@@ -504,7 +492,7 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
         }
     } catch (error) {
         console.error("Error updating event:", error);
-        res.status(500).json({ message: "Error updating event" });
+        res.status(500).json({ message: "Event update failed") });
     }
 });
 
@@ -532,16 +520,16 @@ router.delete("/events/:id", verifyOrganizerToken, async (req, res) => {
             ]);
 
             if (result.rows.length === 0) {
-                return res.status(404).json({ message: "Event not found" });
+                return res.status(404).json({ message: "req.t(\"Event not found\")" });
             }
 
-            res.json({ message: "Event deleted successfully" });
+            res.json({ message: "Event deleted successfully") });
         } finally {
             client.release();
         }
     } catch (error) {
         console.error("Error deleting event:", error);
-        res.status(500).json({ message: "Error deleting event" });
+        res.status(500).json({ message: "Event deletion failed") });
     }
 });
 
@@ -636,7 +624,7 @@ router.post("/venues", verifyOrganizerToken, async (req, res) => {
 
         // Validation
         if (!name || !address_line_1 || !locality || !country_code) {
-            return res.status(400).json({ message: "Missing required fields" });
+            return res.status(400).json({ message: "Missing required fields") });
         }
 
         const client = await pool.connect();
@@ -708,7 +696,7 @@ router.post("/venues", verifyOrganizerToken, async (req, res) => {
         }
     } catch (error) {
         console.error("Error creating venue:", error);
-        res.status(500).json({ message: "Error creating venue" });
+        res.status(500).json({ message: "Venue creation failed") });
     }
 });
 
@@ -730,7 +718,7 @@ router.put("/venues/:id", verifyOrganizerToken, async (req, res) => {
 
         // Validation
         if (!name || !address_line_1 || !locality || !country_code) {
-            return res.status(400).json({ message: "Missing required fields" });
+            return res.status(400).json({ message: "Missing required fields") });
         }
 
         const client = await pool.connect();
@@ -833,7 +821,7 @@ router.delete("/venues/:id", verifyOrganizerToken, async (req, res) => {
             }
 
             await client.query("COMMIT");
-            res.json({ message: "Venue deleted successfully" });
+            res.json({ message: "Venue deleted successfully") });
         } catch (error) {
             await client.query("ROLLBACK");
             throw error;
@@ -890,7 +878,7 @@ router.post("/events/:id/image", verifyOrganizerToken, upload.single("image"), a
             ]);
 
             res.json({
-                message: "Event image uploaded successfully",
+                message: "Event image uploaded successfully"),
                 file: result,
                 imageUrl: result.url,
             });
@@ -919,7 +907,7 @@ router.patch("/events/:id/submit", verifyOrganizerToken, async (req, res) => {
             ]);
 
             if (checkResult.rows.length === 0) {
-                return res.status(404).json({ message: "Event not found" });
+                return res.status(404).json({ message: "req.t(\"Event not found\")" });
             }
 
             const event = checkResult.rows[0];
@@ -945,7 +933,7 @@ router.patch("/events/:id/submit", verifyOrganizerToken, async (req, res) => {
 
             await client.query("COMMIT");
             res.json({
-                message: "Event submitted for review successfully",
+                message: "Event submitted for review"),
                 event: result.rows[0],
             });
         } catch (error) {
@@ -980,7 +968,7 @@ router.patch("/events/:id/publish", verifyOrganizerToken, async (req, res) => {
             ]);
 
             if (checkResult.rows.length === 0) {
-                return res.status(404).json({ message: "Event not found" });
+                return res.status(404).json({ message: "req.t(\"Event not found\")" });
             }
 
             const event = checkResult.rows[0];
@@ -1032,7 +1020,7 @@ router.get("/events/:id/status-history", verifyOrganizerToken, async (req, res) 
             ]);
 
             if (eventCheck.rows.length === 0) {
-                return res.status(404).json({ message: "Event not found" });
+                return res.status(404).json({ message: "req.t(\"Event not found\")" });
             }
 
             // Get status history
@@ -1069,7 +1057,7 @@ router.patch("/events/:id/revert", verifyOrganizerToken, async (req, res) => {
             ]);
 
             if (checkResult.rows.length === 0) {
-                return res.status(404).json({ message: "Event not found" });
+                return res.status(404).json({ message: "req.t(\"Event not found\")" });
             }
 
             const event = checkResult.rows[0];
@@ -1195,6 +1183,103 @@ router.patch("/notifications/read-all", verifyOrganizerToken, async (req, res) =
     } catch (error) {
         console.error("Error marking all notifications as read:", error);
         res.status(500).json({ message: "Error marking all notifications as read" });
+    }
+});
+
+// Ticket Templates Routes
+
+// GET /api/organizer/ticket-templates
+router.get("/ticket-templates", verifyOrganizerToken, async (req, res) => {
+    try {
+        const client = await pool.connect();
+        try {
+            const result = await client.query(
+                'SELECT * FROM ticket_templates WHERE organizer_id = $1 ORDER BY created_at DESC',
+                [req.user.id]
+            );
+            
+            res.json(result.rows);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error fetching ticket templates:', error);
+        res.status(500).json({ message: 'Error fetching ticket templates' });
+    }
+});
+
+// POST /api/organizer/ticket-templates
+router.post("/ticket-templates", verifyOrganizerToken, async (req, res) => {
+    try {
+        const { name, description, template_data } = req.body;
+        
+        const client = await pool.connect();
+        try {
+            const result = await client.query(
+                'INSERT INTO ticket_templates (name, description, template_data, organizer_id) VALUES ($1, $2, $3, $4) RETURNING *',
+                [name, description, JSON.stringify(template_data), req.user.id]
+            );
+            
+            res.json(result.rows[0]);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error creating ticket template:', error);
+        res.status(500).json({ message: 'Error creating ticket template' });
+    }
+});
+
+// PUT /api/organizer/ticket-templates/:id
+router.put("/ticket-templates/:id", verifyOrganizerToken, async (req, res) => {
+    try {
+        const { name, description, template_data } = req.body;
+        const templateId = req.params.id;
+        
+        const client = await pool.connect();
+        try {
+            const result = await client.query(
+                'UPDATE ticket_templates SET name = $1, description = $2, template_data = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 AND organizer_id = $5 RETURNING *',
+                [name, description, JSON.stringify(template_data), templateId, req.user.id]
+            );
+            
+            if (result.rows.length === 0) {
+                return res.status(404).json({ message: 'Ticket template not found or not authorized' });
+            }
+            
+            res.json(result.rows[0]);
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error updating ticket template:', error);
+        res.status(500).json({ message: 'Error updating ticket template' });
+    }
+});
+
+// DELETE /api/organizer/ticket-templates/:id
+router.delete("/ticket-templates/:id", verifyOrganizerToken, async (req, res) => {
+    try {
+        const templateId = req.params.id;
+        
+        const client = await pool.connect();
+        try {
+            const result = await client.query(
+                'DELETE FROM ticket_templates WHERE id = $1 AND organizer_id = $2 RETURNING *',
+                [templateId, req.user.id]
+            );
+            
+            if (result.rows.length === 0) {
+                return res.status(404).json({ message: 'Ticket template not found or not authorized' });
+            }
+            
+            res.json({ message: 'Template deleted successfully') });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error('Error deleting ticket template:', error);
+        res.status(500).json({ message: 'Error deleting ticket template' });
     }
 });
 

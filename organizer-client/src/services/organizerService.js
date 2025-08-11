@@ -431,6 +431,60 @@ class OrganizerService {
 
         return response.json();
     }
+
+    // Ticket Templates
+    async getTicketTemplates() {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/ticket-templates`, {
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch ticket templates");
+        }
+
+        return response.json();
+    }
+
+    async createTicketTemplate(templateData) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/ticket-templates`, {
+            method: "POST",
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify(templateData),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to create ticket template");
+        }
+
+        return response.json();
+    }
+
+    async updateTicketTemplate(templateId, templateData) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/ticket-templates/${templateId}`, {
+            method: "PUT",
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify(templateData),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to update ticket template");
+        }
+
+        return response.json();
+    }
+
+    async deleteTicketTemplate(templateId) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/ticket-templates/${templateId}`, {
+            method: "DELETE",
+            headers: this.getAuthHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to delete ticket template");
+        }
+
+        return response.json();
+    }
 }
 
 export default new OrganizerService();

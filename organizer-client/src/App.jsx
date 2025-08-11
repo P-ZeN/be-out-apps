@@ -11,7 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
-import EventForm from "./pages/EventForm";
+import EventFormWizard from "./components/EventFormWizard";
 import EventStatusHistory from "./pages/EventStatusHistory";
 import OrganizerNotifications from "./pages/OrganizerNotifications";
 import VenueManagement from "./pages/VenueManagement";
@@ -40,8 +40,8 @@ function App() {
                                                 <Route path="/" element={<Navigate to="/dashboard" />} />
                                                 <Route path="/dashboard" element={<Dashboard />} />
                                                 <Route path="/events" element={<Events />} />
-                                                <Route path="/events/new" element={<EventForm />} />
-                                                <Route path="/events/:id/edit" element={<EventForm />} />
+                                                <Route path="/events/new" element={<EventFormWizard />} />
+                                                <Route path="/events/:id/edit" element={<EventFormWizard />} />
                                                 <Route
                                                     path="/events/:id/status-history"
                                                     element={<EventStatusHistory />}

@@ -1022,6 +1022,9 @@ CREATE TABLE public.booking_tickets (
     holder_email character varying(255),
     used_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    pdf_generated_at timestamp with time zone,
+    pdf_file_url text,
+    custom_fields jsonb,
     CONSTRAINT booking_tickets_ticket_status_check CHECK (((ticket_status)::text = ANY ((ARRAY['valid'::character varying, 'used'::character varying, 'cancelled'::character varying])::text[])))
 );
 
@@ -1221,6 +1224,7 @@ CREATE TABLE public.events (
     is_published boolean DEFAULT false,
     status_changed_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     status_changed_by uuid,
+    ticket_template_id uuid,
     CONSTRAINT events_moderation_status_check CHECK (((moderation_status)::text = ANY (ARRAY[('pending'::character varying)::text, ('under_review'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('flagged'::character varying)::text, ('revision_requested'::character varying)::text]))),
     CONSTRAINT events_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('candidate'::character varying)::text, ('active'::character varying)::text, ('sold_out'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('suspended'::character varying)::text])))
 );
@@ -1624,6 +1628,25 @@ CREATE TABLE public.reviews (
     comment text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT reviews_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+);
+
+
+--
+-- Name: ticket_templates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.ticket_templates (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    organizer_id uuid NOT NULL,
+    name character varying(255) NOT NULL,
+    description text,
+    template_data jsonb NOT NULL,
+    background_image_url text,
+    is_default boolean DEFAULT false,
+    is_active boolean DEFAULT true,
+    usage_count integer DEFAULT 0,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -2033,6 +2056,14 @@ ALTER TABLE ONLY public.reviews
 
 ALTER TABLE ONLY public.reviews
     ADD CONSTRAINT reviews_user_id_event_id_key UNIQUE (user_id, event_id);
+
+
+--
+-- Name: ticket_templates ticket_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_templates
+    ADD CONSTRAINT ticket_templates_pkey PRIMARY KEY (id);
 
 
 --
@@ -2821,6 +2852,13 @@ CREATE TRIGGER update_email_templates_updated_at BEFORE UPDATE ON public.email_t
 
 
 --
+-- Name: ticket_templates update_ticket_templates_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_ticket_templates_updated_at BEFORE UPDATE ON public.ticket_templates FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
 -- Name: users update_users_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -2971,6 +3009,14 @@ ALTER TABLE ONLY public.events
 
 
 --
+-- Name: events events_ticket_template_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.events
+    ADD CONSTRAINT events_ticket_template_id_fkey FOREIGN KEY (ticket_template_id) REFERENCES public.ticket_templates(id);
+
+
+--
 -- Name: events events_venue_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3096,6 +3142,14 @@ ALTER TABLE ONLY public.reviews
 
 ALTER TABLE ONLY public.reviews
     ADD CONSTRAINT reviews_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: ticket_templates ticket_templates_organizer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.ticket_templates
+    ADD CONSTRAINT ticket_templates_organizer_id_fkey FOREIGN KEY (organizer_id) REFERENCES public.users(id);
 
 
 --

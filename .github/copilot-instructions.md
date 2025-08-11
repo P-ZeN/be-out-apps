@@ -85,6 +85,12 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 ## Translation System
 
+**Supported Languages**: French (fr), English (en), Spanish (es)
+- Default language: French (fr)
+- Fallback language: English (en)
+- All client applications support full i18n with language detection and localStorage persistence
+- Server-side i18n infrastructure available in `server/src/i18n/index.js`
+
 **Live Translation Editing**: Admin can edit translations that persist across deployments:
 - Dev: Files in `client/src/i18n/locales/`
 - Production: Volume-mounted translations with migration script in `server/scripts/`
@@ -94,7 +100,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 **Remote PostgreSQL**: Database hosted on same server as Dockploy deployment
 - **CRITICAL**: All schema changes require operator execution via remote console
-- Always check `docs/get_db_schema.sql` before planning structure changes
+- Always check `docs/schema.sql` before planning structure changes
 - Ask operator to verify current schema matches docs before modifications
 - Prepare SQL statements for operator to execute, then provide results back
 
