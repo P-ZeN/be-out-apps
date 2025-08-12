@@ -1417,4 +1417,83 @@ router.get("/users/:id", requireAdmin, async (req, res) => {
     }
 });
 
+// Get all bookings for admin management
+router.get("/bookings", requireAdmin, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        const { page = 1, limit = 20, status, event_id, user_id, search, sortBy = "booking_date" } = req.query;
+        const offset = (page - 1) * limit;
+
+        let whereConditions = [];
+        let queryParams = [];
+        let paramIndex = 1;
+
+        if (status) {
+            whereConditions.push(`b.booking_status = $${paramIndex}`);
+            queryParams.push(status);
+            paramIndex++;
+        }
+        if (event_id) {
+            whereConditions.push(`b.event_id = $${paramIndex}`);
+            queryParams.push(event_id);
+            paramIndex++;
+        }
+        if (user_id) {
+            whereConditions.push(`b.user_id = $${paramIndex}`);
+            queryParams.push(user_id);
+            paramIndex++;
+        }
+        if (search) {
+            whereConditions.push(`(
+                b.customer_name ILIKE $${paramIndex} OR
+                b.customer_email ILIKE $${paramIndex} OR
+                e.title ILIKE $${paramIndex}
+            )`);
+            queryParams.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+
+        const query = `
+            SELECT
+                b.*, e.title as event_title, e.event_date,
+                u.email as user_email, u.id as user_id
+            FROM bookings b
+            LEFT JOIN events e ON b.event_id = e.id
+            LEFT JOIN users u ON b.user_id = u.id
+            ${whereClause}
+            ORDER BY b.${sortBy === "booking_date" ? "booking_date" : "id"} DESC
+            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        `;
+        queryParams.push(parseInt(limit), offset);
+        const result = await client.query(query, queryParams);
+
+        // Get total count
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM bookings b
+            LEFT JOIN events e ON b.event_id = e.id
+            LEFT JOIN users u ON b.user_id = u.id
+            ${whereClause}
+        `;
+        const countResult = await client.query(countQuery, queryParams.slice(0, -2));
+
+        res.json({
+            bookings: result.rows,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: parseInt(countResult.rows[0].total),
+                pages: Math.ceil(countResult.rows[0].total / limit),
+            },
+        });
+    } catch (err) {
+        console.error("Error fetching admin bookings:", err);
+        res.status(500).json({ error: "Failed to fetch bookings" });
+    } finally {
+        client.release();
+    }
+});
+
 export default router;

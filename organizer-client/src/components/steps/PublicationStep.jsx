@@ -71,7 +71,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
     const canSubmitForReview = adminData?.status === 'draft' && adminData?.moderation_status !== 'under_review';
     const canRevertToDraft = adminData?.status === 'candidate' && adminData?.moderation_status === 'under_review';
     const canPublishUnpublish = adminData?.moderation_status === 'approved';
-    
+
     const needsReview = adminData?.moderation_status !== 'approved';
     const isUnderReview = adminData?.moderation_status === 'under_review';
     const isRejected = adminData?.moderation_status === 'rejected';
@@ -176,7 +176,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
             <Typography variant="h5" gutterBottom>
                 {t('Publication et modération')}
             </Typography>
-            
+
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 {t('Gérez la publication de votre événement et suivez son statut de modération.')}
             </Typography>
@@ -189,7 +189,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                             <Typography variant="h6" gutterBottom>
                                 {t('Récapitulatif de l\'événement')}
                             </Typography>
-                            
+
                             <List dense>
                                 <ListItem>
                                     <ListItemIcon>
@@ -200,7 +200,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         secondary={`✅ ${t('Titre, description et détails configurés')}`}
                                     />
                                 </ListItem>
-                                
+
                                 <ListItem>
                                     <ListItemIcon>
                                         <PlaceIcon color="primary" />
@@ -210,7 +210,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         secondary={`✅ ${t('Lieu sélectionné et configuré')}`}
                                     />
                                 </ListItem>
-                                
+
                                 <ListItem>
                                     <ListItemIcon>
                                         <TicketIcon color="primary" />
@@ -233,7 +233,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                 <Typography variant="h6" gutterBottom>
                                     {t('Statut actuel de l\'événement')}
                                 </Typography>
-                                
+
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
                                     {/* Approval Status */}
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -273,7 +273,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                     </Box>
 
                                     {/* Status explanation */}
-                                    <Alert 
+                                    <Alert
                                         severity={
                                             adminData.moderation_status === 'approved' && adminData.is_published
                                                 ? 'success'
@@ -390,7 +390,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                         {adminData?.is_published ? t('Dépublier l\'événement') : t('Publier l\'événement')}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        {adminData?.is_published 
+                                                        {adminData?.is_published
                                                             ? t('Masquez votre événement du public temporairement')
                                                             : t('Rendez votre événement visible au public')
                                                         }
@@ -544,7 +544,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                             <Typography variant="h6" gutterBottom>
                                 {t('Processus de modération')}
                             </Typography>
-                            
+
                             <Stack spacing={1.5}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip label="1" size="small" color="primary" />
@@ -585,12 +585,12 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                 <Grid size={{ xs: 12 }}>
                     <Alert severity="info">
                         <Typography variant="body2">
-                            {isEdit 
+                            {isEdit
                                 ? t('Les modifications seront sauvegardées lors de la finalisation.')
                                 : t('L\'événement sera créé lors de la finalisation.')
                             }
                         </Typography>
-                        
+
                         {data.request_review && (
                             <Typography variant="body2" sx={{ mt: 1 }}>
                                 {t('Une notification sera envoyée aux administrateurs pour la révision.')}
@@ -618,7 +618,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         : t('Créer l\'événement')
                             }
                         </Button>
-                        
+
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                             {t('Utilisez les boutons de navigation pour finaliser')}
                         </Typography>

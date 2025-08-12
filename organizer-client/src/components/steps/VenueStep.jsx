@@ -23,7 +23,7 @@ const VenueStep = ({ data, onChange, venues, onVenuesUpdate, onError, onSuccess 
             <Typography variant="h5" gutterBottom>
                 {t('Lieu de l\'événement')}
             </Typography>
-            
+
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 {t('Sélectionnez où se déroulera votre événement. Vous pouvez également créer un nouveau lieu.')}
             </Typography>
@@ -49,9 +49,9 @@ const VenueStep = ({ data, onChange, venues, onVenuesUpdate, onError, onSuccess 
                             if (!selectedVenue) return null;
 
                             return (
-                                <Box 
-                                    sx={{ 
-                                        p: 2, 
+                                <Box
+                                    sx={{
+                                        p: 2,
                                         bgcolor: 'background.paper',
                                         border: 1,
                                         borderColor: 'divider',
@@ -62,11 +62,11 @@ const VenueStep = ({ data, onChange, venues, onVenuesUpdate, onError, onSuccess 
                                     <Typography variant="h6" gutterBottom>
                                         {t('Lieu sélectionné')}
                                     </Typography>
-                                    
+
                                     <Typography variant="body1" sx={{ fontWeight: 'medium', mb: 1 }}>
                                         {selectedVenue.name}
                                     </Typography>
-                                    
+
                                     {selectedVenue.address && (
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                                             📍 {selectedVenue.address}
@@ -74,13 +74,13 @@ const VenueStep = ({ data, onChange, venues, onVenuesUpdate, onError, onSuccess 
                                             {selectedVenue.postal_code && ` ${selectedVenue.postal_code}`}
                                         </Typography>
                                     )}
-                                    
+
                                     {selectedVenue.description && (
                                         <Typography variant="body2" color="text.secondary">
                                             {selectedVenue.description}
                                         </Typography>
                                     )}
-                                    
+
                                     {selectedVenue.capacity && (
                                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                                             👥 {t('Capacité:')} {selectedVenue.capacity} {t('personnes')}

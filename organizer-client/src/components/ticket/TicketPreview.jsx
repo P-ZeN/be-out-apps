@@ -18,12 +18,12 @@ const TicketPreview = ({ formData, venues, categories, templates }) => {
     const eventDetails = formData?.eventDetails || {};
     const venueData = formData?.venue || {};
     const ticketConfig = formData?.ticketConfig || {};
-    
+
     // Find venue and category details
     const venue = venues.find(v => v.id === venueData.venue_id);
     const category = categories.find(c => c.id === eventDetails.category_id);
     const template = templates.find(t => t.id === ticketConfig.template_id);
-    
+
     // Get customizations
     const customizations = ticketConfig.customizations || {};
     const primaryColor = customizations.primary_color || '#1976d2';
@@ -52,10 +52,10 @@ const TicketPreview = ({ formData, venues, categories, templates }) => {
     }
 
     return (
-        <Paper 
-            elevation={3} 
-            sx={{ 
-                p: 0, 
+        <Paper
+            elevation={3}
+            sx={{
+                p: 0,
                 overflow: 'hidden',
                 maxWidth: 400,
                 mx: 'auto',
@@ -119,14 +119,14 @@ const TicketPreview = ({ formData, venues, categories, templates }) => {
                 {/* Category */}
                 {category && (
                     <Box sx={{ mb: 2 }}>
-                        <Chip 
-                            label={category.name} 
-                            size="small" 
-                            sx={{ 
-                                bgcolor: primaryColor, 
+                        <Chip
+                            label={category.name}
+                            size="small"
+                            sx={{
+                                bgcolor: primaryColor,
                                 color: 'white',
                                 fontSize: '0.7rem',
-                            }} 
+                            }}
                         />
                     </Box>
                 )}
@@ -157,7 +157,7 @@ const TicketPreview = ({ formData, venues, categories, templates }) => {
                             {sampleTicketData.ticketNumber}
                         </Typography>
                     </Box>
-                    
+
                     {/* QR Code */}
                     <Box sx={{ textAlign: 'center' }}>
                         <QRCodeSVG
@@ -188,10 +188,10 @@ const TicketPreview = ({ formData, venues, categories, templates }) => {
             </Box>
 
             {/* Footer */}
-            <Box 
-                sx={{ 
-                    bgcolor: 'grey.100', 
-                    p: 1, 
+            <Box
+                sx={{
+                    bgcolor: 'grey.100',
+                    p: 1,
                     textAlign: 'center',
                     borderTop: '1px solid',
                     borderColor: 'grey.300',

@@ -52,12 +52,12 @@ const EventFormWizard = () => {
             cancellation_policy: "",
             image: null,
         },
-        
+
         // Step 2: Venue
         venue: {
             venue_id: "",
         },
-        
+
         // Step 3: Ticket Design
         ticketConfig: {
             template_id: null,
@@ -69,13 +69,13 @@ const EventFormWizard = () => {
                 max_bookings_per_user: 1,
             }
         },
-        
+
         // Step 4: Publication
         publication: {
             is_published: false,
             request_review: false,
         },
-        
+
         // Administrative data
         adminData: {
             status: "",
@@ -107,7 +107,7 @@ const EventFormWizard = () => {
                 // Load event data if editing
                 if (isEdit) {
                     const eventData = await organizerService.getEvent(eventId);
-                    
+
                     setFormData({
                         eventDetails: {
                             title: eventData.title || "",
@@ -170,7 +170,7 @@ const EventFormWizard = () => {
                 ...stepData
             }
         }));
-        
+
         // Clear errors when user makes changes
         if (error) {
             setError("");
@@ -205,9 +205,9 @@ const EventFormWizard = () => {
             let result;
             if (isEdit) {
                 result = await organizerService.updateEvent(eventId, eventData);
-                
-                if (formData.publication.request_review && 
-                    formData.adminData.moderation_status !== "approved" && 
+
+                if (formData.publication.request_review &&
+                    formData.adminData.moderation_status !== "approved" &&
                     formData.adminData.moderation_status !== "under_review") {
                     await organizerService.submitEventForReview(eventId);
                     setSuccess("Événement mis à jour et soumis pour révision avec succès !");
@@ -216,7 +216,7 @@ const EventFormWizard = () => {
                 }
             } else {
                 result = await organizerService.createEvent(eventData);
-                
+
                 if (formData.publication.request_review && result?.id) {
                     await organizerService.submitEventForReview(result.id);
                     setSuccess("Événement créé et soumis pour révision avec succès !");
@@ -239,7 +239,7 @@ const EventFormWizard = () => {
             setTimeout(() => {
                 navigate("/events");
             }, 2000);
-            
+
         } catch (error) {
             setError(error.message || "Erreur lors de la sauvegarde");
         } finally {
@@ -279,7 +279,7 @@ const EventFormWizard = () => {
         ];
 
         const currentConfig = stepConfig[activeStep];
-        
+
         if (currentConfig.previewType === "mobile") {
             return (
                 <EventMobilePreview

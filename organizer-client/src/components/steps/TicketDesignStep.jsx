@@ -54,7 +54,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
             quantity: '',
             description: '',
         };
-        
+
         handleChange('pricing_tiers', [...(data.pricing_tiers || []), newTier]);
     };
 
@@ -64,7 +64,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
     };
 
     const updatePricingTier = (tierId, field, value) => {
-        const updatedTiers = (data.pricing_tiers || []).map(tier => 
+        const updatedTiers = (data.pricing_tiers || []).map(tier =>
             tier.id === tierId ? { ...tier, [field]: value } : tier
         );
         handleChange('pricing_tiers', updatedTiers);
@@ -77,7 +77,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
             <Typography variant="h5" gutterBottom>
                 {t('Design et billetterie')}
             </Typography>
-            
+
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 {t('Configurez l\'apparence de vos billets et les options de réservation.')}
             </Typography>
@@ -127,7 +127,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                     <Typography variant="h6" gutterBottom>
                         {t('Personnalisation')}
                     </Typography>
-                    
+
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
@@ -138,7 +138,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                 onChange={(e) => handleCustomizationChange('primary_color', e.target.value)}
                             />
                         </Grid>
-                        
+
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
@@ -148,7 +148,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                 onChange={(e) => handleCustomizationChange('secondary_color', e.target.value)}
                             />
                         </Grid>
-                        
+
                         <Grid size={{ xs: 12 }}>
                             <TextField
                                 fullWidth
@@ -204,7 +204,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                         <DeleteIcon />
                                     </IconButton>
                                 </Box>
-                                
+
                                 <Grid container spacing={2}>
                                     <Grid size={{ xs: 12, md: 6 }}>
                                         <TextField
@@ -215,7 +215,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             placeholder={t('Ex: Tarif réduit, VIP, Étudiant')}
                                         />
                                     </Grid>
-                                    
+
                                     <Grid size={{ xs: 12, md: 3 }}>
                                         <TextField
                                             fullWidth
@@ -225,7 +225,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             onChange={(e) => updatePricingTier(tier.id, 'price', e.target.value)}
                                         />
                                     </Grid>
-                                    
+
                                     <Grid size={{ xs: 12, md: 3 }}>
                                         <TextField
                                             fullWidth
@@ -235,7 +235,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             onChange={(e) => updatePricingTier(tier.id, 'quantity', e.target.value)}
                                         />
                                     </Grid>
-                                    
+
                                     <Grid size={{ xs: 12 }}>
                                         <TextField
                                             fullWidth
@@ -262,7 +262,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                     <Typography variant="h6" gutterBottom>
                         {t('Paramètres de réservation')}
                     </Typography>
-                    
+
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <DateTimePicker
@@ -278,7 +278,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                 }}
                             />
                         </Grid>
-                        
+
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
@@ -289,7 +289,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                 inputProps={{ min: 1, max: 10 }}
                             />
                         </Grid>
-                        
+
                         <Grid size={{ xs: 12 }}>
                             <FormControlLabel
                                 control={

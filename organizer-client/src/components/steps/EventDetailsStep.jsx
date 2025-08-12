@@ -44,7 +44,7 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
         const file = event.target.files[0];
         if (file) {
             handleChange('image', file);
-            
+
             // Create preview URL
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -65,7 +65,7 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
             <Typography variant="h5" gutterBottom>
                 Détails de l'événement
             </Typography>
-            
+
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Renseignez les informations principales de votre événement.
             </Typography>
