@@ -116,25 +116,34 @@ const EventFormStepper = ({
                                 onClick={() => handleStepClick(index)}
                             >
                                 <StepLabel
-                                    icon={
-                                        <Box
-                                            sx={{
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: "50%",
-                                                backgroundColor: index <= activeStep ? "primary.main" : "grey.300",
-                                                color: index <= activeStep ? "white" : "grey.600",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                transition: "all 0.3s ease",
-                                                border: index === activeStep ? "3px solid" : "none",
-                                                borderColor: index === activeStep ? "primary.light" : "transparent",
-                                            }}
-                                        >
-                                            {step.icon}
-                                        </Box>
-                                    }
+                                icon={
+                                    <Box
+                                        sx={{
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: "50%",
+                                            backgroundColor: index <= activeStep ? "primary.main" : "grey.300",
+                                            color: index <= activeStep ? "white" : "grey.600",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            transition: "all 0.3s ease",
+                                            border: index === activeStep ? "3px solid" : "none",
+                                            borderColor: index === activeStep ? "primary.light" : "transparent",
+                                            position: "relative",
+                                            top: "50%",
+                                            transform: "translateY(-20%)",
+                                        }}
+                                    >
+                                        {step.icon}
+                                    </Box>
+                                }
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    minHeight: 0,
+                                    padding: 0,
+                                }}
                                 >
                                     <Typography variant="body2" fontWeight="medium">
                                         {step.label}

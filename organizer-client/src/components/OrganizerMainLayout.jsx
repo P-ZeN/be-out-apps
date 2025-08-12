@@ -137,7 +137,7 @@ const OrganizerMainLayout = ({ children }) => {
                         }}
                     />
                     <Box>
-                        <Typography variant="h6" fontWeight="bold">
+                        <Typography variant="h6" fontWeight="bold" sx={{ color: 'common.white' }}>
                             Be-Out
                         </Typography>
                         <Typography variant="body2" sx={{ opacity: 0.8 }}>
@@ -220,7 +220,7 @@ const OrganizerMainLayout = ({ children }) => {
                 sx={{
                     width: { md: `calc(100% - ${drawerWidth}px)` },
                     ml: { md: `${drawerWidth}px` },
-                    boxShadow: 1,
+                    boxShadow: 0,
                 }}>
                 <Toolbar>
                     <IconButton

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Box,
@@ -18,12 +18,64 @@ import {
     Button,
     IconButton,
     Alert,
+    Avatar,
+    Paper,
+    RadioGroup,
+    Radio,
+    InputAdornment,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { 
+    Add as AddIcon, 
+    Delete as DeleteIcon, 
+    CloudUpload as CloudUploadIcon,
+    Image as ImageIcon,
+    QrCode as QrCodeIcon,
+    ExpandMore as ExpandMoreIcon,
+    Settings as SettingsIcon,
+} from "@mui/icons-material";
 
 const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
     const { t } = useTranslation();
+    const [backgroundImageFile, setBackgroundImageFile] = useState(null);
+
+    // Ticket size options
+    const ticketSizes = [
+        { id: 'a4', name: t('A4 (210×297mm)'), description: t('Format standard complet') },
+        { id: 'half-a4', name: t('1/2 A4 (210×148mm)'), description: t('Format paysage') },
+        { id: 'quarter-a4', name: t('1/4 A4 (105×148mm)'), description: t('Format ticket compact') },
+    ];
+
+    // QR Code content options
+    const qrCodeOptions = [
+        { 
+            id: 'verification_url', 
+            name: t('URL de vérification'), 
+            description: t('Lien vers une page de validation du billet (recommandé)'),
+            example: 'https://be-out.app/verify/ABC123'
+        },
+        { 
+            id: 'booking_reference', 
+            name: t('Référence de réservation'), 
+            description: t('Code de référence unique du billet'),
+            example: 'BE-OUT-001234'
+        },
+        { 
+            id: 'ticket_hash', 
+            name: t('Hash de sécurité'), 
+            description: t('Code cryptographique unique (plus sécurisé)'),
+            example: 'a1b2c3d4e5f6...'
+        },
+        { 
+            id: 'custom_data', 
+            name: t('Données personnalisées'), 
+            description: t('Format JSON avec informations de votre choix'),
+            example: '{"event":"Concert","date":"2025-08-12"}'
+        },
+    ];
 
     const handleChange = (field, value) => {
         onChange({
@@ -44,6 +96,23 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
             ...data.customizations,
             [field]: value,
         });
+    };
+
+    const handleBackgroundImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setBackgroundImageFile(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                handleCustomizationChange('background_image', e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeBackgroundImage = () => {
+        setBackgroundImageFile(null);
+        handleCustomizationChange('background_image', null);
     };
 
     const addPricingTier = () => {
@@ -129,6 +198,87 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                     </Typography>
 
                     <Grid container spacing={2}>
+                        {/* Ticket Size Selection */}
+                        <Grid size={{ xs: 12 }}>
+                            <FormControl fullWidth>
+                                <Typography variant="subtitle2" gutterBottom>
+                                    {t('Format du billet')}
+                                </Typography>
+                                <RadioGroup
+                                    value={data.customizations?.ticket_size || 'a4'}
+                                    onChange={(e) => handleCustomizationChange('ticket_size', e.target.value)}
+                                    row
+                                >
+                                    {ticketSizes.map((size) => (
+                                        <Box key={size.id} sx={{ mr: 3, mb: 1 }}>
+                                            <FormControlLabel
+                                                value={size.id}
+                                                control={<Radio />}
+                                                label={
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                            {size.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {size.description}
+                                                        </Typography>
+                                                    </Box>
+                                                }
+                                            />
+                                        </Box>
+                                    ))}
+                                </RadioGroup>
+                            </FormControl>
+                        </Grid>
+
+                        {/* Background Image Upload */}
+                        <Grid size={{ xs: 12 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                                {t('Image de fond')}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    component="label"
+                                    startIcon={<CloudUploadIcon />}
+                                    sx={{ minWidth: 150 }}
+                                >
+                                    {t('Choisir une image')}
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        onChange={handleBackgroundImageUpload}
+                                    />
+                                </Button>
+                                {data.customizations?.background_image && (
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<DeleteIcon />}
+                                        onClick={removeBackgroundImage}
+                                    >
+                                        {t('Supprimer')}
+                                    </Button>
+                                )}
+                            </Box>
+                            
+                            {data.customizations?.background_image && (
+                                <Paper elevation={1} sx={{ p: 2, display: 'inline-block' }}>
+                                    <img
+                                        src={data.customizations.background_image}
+                                        alt="Background preview"
+                                        style={{
+                                            maxWidth: 200,
+                                            maxHeight: 120,
+                                            objectFit: 'cover',
+                                            borderRadius: 4,
+                                        }}
+                                    />
+                                </Paper>
+                            )}
+                        </Grid>
+
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
@@ -149,6 +299,56 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                             />
                         </Grid>
 
+                        {/* App Logo Selection */}
+                        <Grid size={{ xs: 12 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                                {t('Logo Be-Out dans le pied de page')}
+                            </Typography>
+                            <FormControl fullWidth>
+                                <Select
+                                    value={data.customizations?.app_logo || 'be-out_logo.svg'}
+                                    onChange={(e) => handleCustomizationChange('app_logo', e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="be-out_logo.svg">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 24, height: 24 }}>
+                                                <img src="/be-out_logo.svg" alt="Logo SVG" style={{ width: '100%', height: '100%' }} />
+                                            </Avatar>
+                                            {t('Logo SVG (recommandé)')}
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="be-out_logo_orange.png">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 24, height: 24 }}>
+                                                <img src="/be-out_logo_orange.png" alt="Logo Orange" style={{ width: '100%', height: '100%' }} />
+                                            </Avatar>
+                                            {t('Logo Orange PNG')}
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="be-out_logo_noir.png">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 24, height: 24 }}>
+                                                <img src="/be-out_logo_noir.png" alt="Logo Noir" style={{ width: '100%', height: '100%' }} />
+                                            </Avatar>
+                                            {t('Logo Noir PNG')}
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="be-out_logo_blanc.png">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 24, height: 24 }}>
+                                                <img src="/be-out_logo_blanc.png" alt="Logo Blanc" style={{ width: '100%', height: '100%' }} />
+                                            </Avatar>
+                                            {t('Logo Blanc PNG')}
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="">
+                                        <em>{t('Aucun logo')}</em>
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
                         <Grid size={{ xs: 12 }}>
                             <TextField
                                 fullWidth
@@ -161,6 +361,87 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                             />
                         </Grid>
                     </Grid>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                    <Divider />
+                </Grid>
+
+                {/* QR Code Configuration */}
+                <Grid size={{ xs: 12 }}>
+                    <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <QrCodeIcon color="primary" />
+                                <Typography variant="h6">
+                                    {t('Configuration du QR Code')}
+                                </Typography>
+                            </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                {t('Le QR Code permet de vérifier l\'authenticité des billets et facilite le contrôle d\'accès à vos événements.')}
+                            </Typography>
+
+                            <FormControl fullWidth sx={{ mb: 3 }}>
+                                <Typography variant="subtitle2" gutterBottom>
+                                    {t('Contenu du QR Code')}
+                                </Typography>
+                                <RadioGroup
+                                    value={data.customizations?.qr_code_type || 'verification_url'}
+                                    onChange={(e) => handleCustomizationChange('qr_code_type', e.target.value)}
+                                >
+                                    {qrCodeOptions.map((option) => (
+                                        <Box key={option.id} sx={{ mb: 2 }}>
+                                            <FormControlLabel
+                                                value={option.id}
+                                                control={<Radio />}
+                                                label={
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                            {option.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {option.description}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', mt: 0.5, color: 'primary.main' }}>
+                                                            {t('Exemple')}: {option.example}
+                                                        </Typography>
+                                                    </Box>
+                                                }
+                                            />
+                                        </Box>
+                                    ))}
+                                </RadioGroup>
+                            </FormControl>
+
+                            {data.customizations?.qr_code_type === 'custom_data' && (
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    label={t('Données personnalisées (JSON)')}
+                                    value={data.customizations?.qr_custom_data || ''}
+                                    onChange={(e) => handleCustomizationChange('qr_custom_data', e.target.value)}
+                                    placeholder='{"event_id": "123", "organizer": "Mon Organisation", "valid_until": "2025-12-31"}'
+                                    helperText={t('Format JSON valide requis')}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SettingsIcon />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            )}
+
+                            <Alert severity="info" sx={{ mt: 2 }}>
+                                <Typography variant="body2">
+                                    <strong>{t('Recommandation')}:</strong> {t('L\'URL de vérification est l\'option la plus sécurisée car elle permet de valider en temps réel l\'authenticité du billet et son statut.')}
+                                </Typography>
+                            </Alert>
+                        </AccordionDetails>
+                    </Accordion>
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
