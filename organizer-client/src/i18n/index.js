@@ -202,6 +202,24 @@ const resources = {
             "En attente de révision": "En attente de révision",
             "Rejeté": "Rejeté",
             "Approuvé": "Approuvé",
+            
+            // Status labels for events
+            "Brouillon": "Brouillon",
+            "Brouillon:": "Brouillon :",
+            "Publié": "Publié", 
+            "Publié:": "Publié :",
+            "Note": "Note",
+            "Note:": "Note :",
+            "Approuvé": "Approuvé",
+            "Approuvé:": "Approuvé :",
+            "Capacité": "Capacité",
+            "Capacité:": "Capacité :",
+            "Approuvé (non publié)": "Approuvé (non publié)",
+            "En attente de validation": "En attente de validation",
+            "Annulé": "Annulé",
+            "Suspendu": "Suspendu",
+            "Terminé": "Terminé",
+            "Statut inconnu": "Statut inconnu",
         },
     },
     es: {
@@ -403,6 +421,19 @@ const resources = {
             "En attente de révision": "Pendiente de revisión",
             "Rejeté": "Rechazado",
             "Approuvé": "Aprobado",
+            
+            // Status labels for events - Spanish
+            "Brouillon": "Borrador",
+            "Brouillon:": "Borrador:",
+            "Publié": "Publicado",
+            "Publié:": "Publicado:",
+            "Note": "Nota", 
+            "Note:": "Nota:",
+            "Approuvé": "Aprobado",
+            "Approuvé:": "Aprobado:",
+            "Capacité": "Capacidad",
+            "Capacité:": "Capacidad:",
+            "Approuvé (non publié)": "Aprobado (no publicado)",
         },
     },
     en: {
@@ -511,6 +542,19 @@ const resources = {
             "En attente de révision": "Pending Review",
             "Rejeté": "Rejected",
             "Approuvé": "Approved",
+            
+            // Status labels for events - English
+            "Brouillon": "Draft",
+            "Brouillon:": "Draft:",
+            "Publié": "Published",
+            "Publié:": "Published:",
+            "Note": "Note",
+            "Note:": "Note:",
+            "Approuvé": "Approved",
+            "Approuvé:": "Approved:",
+            "Capacité": "Capacity", 
+            "Capacité:": "Capacity:",
+            "Approuvé (non publié)": "Approved (not published)",
 
             // Event Form Steps - English translations for completeness
             "Détails de l'événement": "Event Details",

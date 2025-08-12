@@ -19,8 +19,8 @@ import {
     Paper,
     Divider,
     Stack,
+    CircularProgress,
 } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
 import {
     CheckCircle as CheckCircleIcon,
     Warning as WarningIcon,
@@ -117,33 +117,33 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
     const getEventStatusLabel = (status, moderationStatus, isPublished) => {
         // Priority: moderation status overrides regular status for display
         if (moderationStatus === 'rejected') {
-            return 'Rejeté';
+            return t('Rejeté');
         }
         if (moderationStatus === 'revision_requested') {
-            return 'Révision demandée';
+            return t('Révision demandée');
         }
         if (moderationStatus === 'under_review') {
-            return 'En cours de révision';
+            return t('En cours de révision');
         }
         if (moderationStatus === 'flagged') {
-            return 'Signalé';
+            return t('Signalé');
         }
 
         switch (status) {
             case 'active':
-                return isPublished ? 'Publié' : 'Approuvé (non publié)';
+                return isPublished ? t('Publié') : t('Approuvé (non publié)');
             case 'draft':
-                return 'Brouillon';
+                return t('Brouillon');
             case 'candidate':
-                return 'En attente de validation';
+                return t('En attente de validation');
             case 'cancelled':
-                return 'Annulé';
+                return t('Annulé');
             case 'suspended':
-                return 'Suspendu';
+                return t('Suspendu');
             case 'completed':
-                return 'Terminé';
+                return t('Terminé');
             default:
-                return status;
+                return t('Statut inconnu');
         }
     };
 
@@ -197,13 +197,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                     </ListItemIcon>
                                     <ListItemText
                                         primary={t('Détails de l\'événement')}
-                                        secondary={
-                                            <Box>
-                                                <Typography variant="body2">
-                                                    ✅ {t('Titre, description et détails configurés')}
-                                                </Typography>
-                                            </Box>
-                                        }
+                                        secondary={`✅ ${t('Titre, description et détails configurés')}`}
                                     />
                                 </ListItem>
                                 
@@ -213,11 +207,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                     </ListItemIcon>
                                     <ListItemText
                                         primary={t('Lieu')}
-                                        secondary={
-                                            <Typography variant="body2">
-                                                ✅ {t('Lieu sélectionné et configuré')}
-                                            </Typography>
-                                        }
+                                        secondary={`✅ ${t('Lieu sélectionné et configuré')}`}
                                     />
                                 </ListItem>
                                 
@@ -227,11 +217,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                     </ListItemIcon>
                                     <ListItemText
                                         primary={t('Billetterie')}
-                                        secondary={
-                                            <Typography variant="body2">
-                                                ✅ {t('Configuration des billets terminée')}
-                                            </Typography>
-                                        }
+                                        secondary={`✅ ${t('Configuration des billets terminée')}`}
                                     />
                                 </ListItem>
                             </List>
@@ -616,11 +602,10 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                 {/* Complete Button Preview */}
                 <Grid size={{ xs: 12 }}>
                     <Box sx={{ textAlign: 'center', pt: 2 }}>
-                        <LoadingButton
+                        <Button
                             variant="contained"
                             size="large"
-                            loading={loading}
-                            startIcon={data.request_review ? <SendIcon /> : <CheckCircleIcon />}
+                            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : (data.request_review ? <SendIcon /> : <CheckCircleIcon />)}
                             disabled
                             sx={{ minWidth: 200 }}
                         >
@@ -632,7 +617,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         ? t('Sauvegarder les modifications')
                                         : t('Créer l\'événement')
                             }
-                        </LoadingButton>
+                        </Button>
                         
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                             {t('Utilisez les boutons de navigation pour finaliser')}
