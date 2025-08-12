@@ -70,24 +70,24 @@ const getResponsiveStyles = () => {
 const getTicketDimensions = (size) => {
   switch (size) {
     case 'half-a4':
-      return { 
-        maxWidth: 600, 
+      return {
+        maxWidth: 600,
         aspectRatio: 210/148,
         layout: 'twoColumn',
         fontScale: 0.9,
         qrSize: 80
       };
     case 'quarter-a4':
-      return { 
-        maxWidth: 300, 
+      return {
+        maxWidth: 300,
         aspectRatio: 105/148,
         layout: 'compact',
         fontScale: 0.7,
         qrSize: 70
       };
     default: // 'a4'
-      return { 
-        maxWidth: 400, 
+      return {
+        maxWidth: 400,
         aspectRatio: 210/297,
         layout: 'standard',
         fontScale: 1,

@@ -28,9 +28,9 @@ import {
     AccordionDetails,
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { 
-    Add as AddIcon, 
-    Delete as DeleteIcon, 
+import {
+    Add as AddIcon,
+    Delete as DeleteIcon,
     CloudUpload as CloudUploadIcon,
     Image as ImageIcon,
     QrCode as QrCodeIcon,
@@ -51,27 +51,27 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
 
     // QR Code content options
     const qrCodeOptions = [
-        { 
-            id: 'verification_url', 
-            name: t('URL de vérification'), 
+        {
+            id: 'verification_url',
+            name: t('URL de vérification'),
             description: t('Lien vers une page de validation du billet (recommandé)'),
             example: 'https://be-out.app/verify/ABC123'
         },
-        { 
-            id: 'booking_reference', 
-            name: t('Référence de réservation'), 
+        {
+            id: 'booking_reference',
+            name: t('Référence de réservation'),
             description: t('Code de référence unique du billet'),
             example: 'BE-OUT-001234'
         },
-        { 
-            id: 'ticket_hash', 
-            name: t('Hash de sécurité'), 
+        {
+            id: 'ticket_hash',
+            name: t('Hash de sécurité'),
             description: t('Code cryptographique unique (plus sécurisé)'),
             example: 'a1b2c3d4e5f6...'
         },
-        { 
-            id: 'custom_data', 
-            name: t('Données personnalisées'), 
+        {
+            id: 'custom_data',
+            name: t('Données personnalisées'),
             description: t('Format JSON avec informations de votre choix'),
             example: '{"event":"Concert","date":"2025-08-12"}'
         },
@@ -262,7 +262,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                     </Button>
                                 )}
                             </Box>
-                            
+
                             {data.customizations?.background_image && (
                                 <Paper elevation={1} sx={{ p: 2, display: 'inline-block' }}>
                                     <img

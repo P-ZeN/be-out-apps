@@ -44,14 +44,14 @@ const resources = {
             "Décrivez les conditions de remboursement et d'annulation": "Décrivez les conditions de remboursement et d'annulation",
             "Événement mis en avant": "Événement mis en avant",
             "Les événements mis en avant apparaissent en priorité dans les recherches": "Les événements mis en avant apparaissent en priorité dans les recherches",
-            
+
             // Venue Step
             "Lieu de l'événement": "Lieu de l'événement",
             "Sélectionnez où se déroulera votre événement. Vous pouvez également créer un nouveau lieu.": "Sélectionnez où se déroulera votre événement. Vous pouvez également créer un nouveau lieu.",
             "Lieu sélectionné": "Lieu sélectionné",
             "Capacité:": "Capacité :",
             "personnes": "personnes",
-            
+
             // Ticket Design Step
             "Design et billetterie": "Design et billetterie",
             "Configurez l'apparence de vos billets et les options de réservation.": "Configurez l'apparence de vos billets et les options de réservation.",
@@ -62,13 +62,13 @@ const resources = {
             "Couleur secondaire": "Couleur secondaire",
             "Message personnalisé": "Message personnalisé",
             "Merci pour votre participation!": "Merci pour votre participation!",
-            
+
             // Enhanced Ticket Design - New Keys
             "Format du billet": "Format du billet",
             "A4 (210×297mm)": "A4 (210×297mm)",
             "1/2 A4 (210×148mm)": "1/2 A4 (210×148mm)",
             "1/4 A4 (105×148mm)": "1/4 A4 (105×148mm)",
-            "Format standard complet": "Format standard complet", 
+            "Format standard complet": "Format standard complet",
             "Format paysage": "Format paysage",
             "Format ticket compact": "Format ticket compact",
             "Image de fond": "Image de fond",
@@ -76,7 +76,7 @@ const resources = {
             "Logo Be-Out dans le pied de page": "Logo Be-Out dans le pied de page",
             "Logo SVG (recommandé)": "Logo SVG (recommandé)",
             "Logo Orange PNG": "Logo Orange PNG",
-            "Logo Noir PNG": "Logo Noir PNG", 
+            "Logo Noir PNG": "Logo Noir PNG",
             "Logo Blanc PNG": "Logo Blanc PNG",
             "Aucun logo": "Aucun logo",
             "Configuration du QR Code": "Configuration du QR Code",
@@ -95,7 +95,7 @@ const resources = {
             "Format JSON valide requis": "Format JSON valide requis",
             "Recommandation": "Recommandation",
             "L'URL de vérification est l'option la plus sécurisée car elle permet de valider en temps réel l'authenticité du billet et son statut.": "L'URL de vérification est l'option la plus sécurisée car elle permet de valider en temps réel l'authenticité du billet et son statut.",
-            
+
             "Tarifs et catégories": "Tarifs et catégories",
             "Ajouter un tarif": "Ajouter un tarif",
             "Aucun tarif spécifique défini. Le prix principal de l'événement sera utilisé.": "Aucun tarif spécifique défini. Le prix principal de l'événement sera utilisé.",
@@ -110,7 +110,7 @@ const resources = {
             "Laissez vide pour permettre les réservations jusqu'au début de l'événement": "Laissez vide pour permettre les réservations jusqu'au début de l'événement",
             "Maximum de réservations par utilisateur": "Maximum de réservations par utilisateur",
             "Autoriser plusieurs réservations par utilisateur": "Autoriser plusieurs réservations par utilisateur",
-            
+
             // Publication Step
             "Publication": "Publication",
             "Finalisez votre événement et choisissez les options de publication.": "Finalisez votre événement et choisissez les options de publication.",
@@ -236,11 +236,11 @@ const resources = {
             "En attente de révision": "En attente de révision",
             "Rejeté": "Rejeté",
             "Approuvé": "Approuvé",
-            
+
             // Status labels for events
             "Brouillon": "Brouillon",
             "Brouillon:": "Brouillon :",
-            "Publié": "Publié", 
+            "Publié": "Publié",
             "Publié:": "Publié :",
             "Note": "Note",
             "Note:": "Note :",
@@ -297,14 +297,14 @@ const resources = {
             "Décrivez les conditions de remboursement et d'annulation": "Describa las condiciones de reembolso y cancelación",
             "Événement mis en avant": "Evento destacado",
             "Les événements mis en avant apparaissent en priorité dans les recherches": "Los eventos destacados aparecen con prioridad en las búsquedas",
-            
+
             // Venue Step
             "Lieu de l'événement": "Lugar del evento",
             "Sélectionnez où se déroulera votre événement. Vous pouvez également créer un nouveau lieu.": "Seleccione dónde se realizará su evento. También puede crear un nuevo lugar.",
             "Lieu sélectionné": "Lugar seleccionado",
             "Capacité:": "Capacidad:",
             "personnes": "personas",
-            
+
             // Ticket Design Step
             "Design et billetterie": "Diseño y boletería",
             "Configurez l'apparence de vos billets et les options de réservation.": "Configure la apariencia de sus boletos y las opciones de reserva.",
@@ -315,7 +315,7 @@ const resources = {
             "Couleur secondaire": "Color secundario",
             "Message personnalisé": "Mensaje personalizado",
             "Merci pour votre participation!": "¡Gracias por su participación!",
-            
+
             // Enhanced Ticket Design - Spanish Keys
             "Format du billet": "Formato del boleto",
             "A4 (210×297mm)": "A4 (210×297mm)",
@@ -348,7 +348,7 @@ const resources = {
             "Format JSON valide requis": "Formato JSON válido requerido",
             "Recommandation": "Recomendación",
             "L'URL de vérification est l'option la plus sécurisée car elle permet de valider en temps réel l'authenticité du billet et son statut.": "La URL de verificación es la opción más segura ya que permite validar en tiempo real la autenticidad del boleto y su estado.",
-            
+
             "Tarifs et catégories": "Tarifas y categorías",
             "Ajouter un tarif": "Agregar una tarifa",
             "Aucun tarif spécifique défini. Le prix principal de l'événement sera utilisé.": "No se ha definido una tarifa específica. Se utilizará el precio principal del evento.",
@@ -363,7 +363,7 @@ const resources = {
             "Laissez vide pour permettre les réservations jusqu'au début de l'événement": "Deje vacío para permitir reservas hasta el inicio del evento",
             "Maximum de réservations par utilisateur": "Máximo de reservas por usuario",
             "Autoriser plusieurs réservations par utilisateur": "Permitir múltiples reservas por usuario",
-            
+
             // Publication Step
             "Publication": "Publicación",
             "Finalisez votre événement et choisissez les options de publication.": "Finalice su evento y elija las opciones de publicación.",
@@ -489,13 +489,13 @@ const resources = {
             "En attente de révision": "Pendiente de revisión",
             "Rejeté": "Rechazado",
             "Approuvé": "Aprobado",
-            
+
             // Status labels for events - Spanish
             "Brouillon": "Borrador",
             "Brouillon:": "Borrador:",
             "Publié": "Publicado",
             "Publié:": "Publicado:",
-            "Note": "Nota", 
+            "Note": "Nota",
             "Note:": "Nota:",
             "Approuvé": "Aprobado",
             "Approuvé:": "Aprobado:",
@@ -610,7 +610,7 @@ const resources = {
             "En attente de révision": "Pending Review",
             "Rejeté": "Rejected",
             "Approuvé": "Approved",
-            
+
             // Status labels for events - English
             "Brouillon": "Draft",
             "Brouillon:": "Draft:",
@@ -620,7 +620,7 @@ const resources = {
             "Note:": "Note:",
             "Approuvé": "Approved",
             "Approuvé:": "Approved:",
-            "Capacité": "Capacity", 
+            "Capacité": "Capacity",
             "Capacité:": "Capacity:",
             "Approuvé (non publié)": "Approved (not published)",
 
@@ -649,14 +649,14 @@ const resources = {
             "Décrivez les conditions de remboursement et d'annulation": "Describe refund and cancellation conditions",
             "Événement mis en avant": "Featured Event",
             "Les événements mis en avant apparaissent en priorité dans les recherches": "Featured events appear as priority in searches",
-            
+
             // Venue Step - English
             "Lieu de l'événement": "Event Venue",
             "Sélectionnez où se déroulera votre événement. Vous pouvez également créer un nouveau lieu.": "Select where your event will take place. You can also create a new venue.",
             "Lieu sélectionné": "Selected Venue",
             "Capacité:": "Capacity:",
             "personnes": "people",
-            
+
             // Ticket Design Step - English
             "Design et billetterie": "Design and Ticketing",
             "Configurez l'apparence de vos billets et les options de réservation.": "Configure the appearance of your tickets and booking options.",
@@ -667,7 +667,7 @@ const resources = {
             "Couleur secondaire": "Secondary Color",
             "Message personnalisé": "Custom Message",
             "Merci pour votre participation!": "Thank you for your participation!",
-            
+
             // Enhanced Ticket Design - English Keys
             "Format du billet": "Ticket Format",
             "A4 (210×297mm)": "A4 (210×297mm)",
@@ -700,7 +700,7 @@ const resources = {
             "Format JSON valide requis": "Valid JSON format required",
             "Recommandation": "Recommendation",
             "L'URL de vérification est l'option la plus sécurisée car elle permet de valider en temps réel l'authenticité du billet et son statut.": "The verification URL is the most secure option as it allows real-time validation of ticket authenticity and status.",
-            
+
             "Tarifs et catégories": "Pricing and Categories",
             "Ajouter un tarif": "Add a Rate",
             "Aucun tarif spécifique défini. Le prix principal de l'événement sera utilisé.": "No specific rate defined. The main event price will be used.",
@@ -715,7 +715,7 @@ const resources = {
             "Laissez vide pour permettre les réservations jusqu'au début de l'événement": "Leave empty to allow bookings until the event starts",
             "Maximum de réservations par utilisateur": "Maximum bookings per user",
             "Autoriser plusieurs réservations par utilisateur": "Allow multiple bookings per user",
-            
+
             // Publication Step - English
             "Publication": "Publication",
             "Finalisez votre événement et choisissez les options de publication.": "Finalize your event and choose publication options.",

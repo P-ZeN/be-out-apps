@@ -16,7 +16,7 @@ The ticket design system has been significantly enhanced with new customization 
 - **Multiple logo options** available in footer:
   - `be-out_logo.svg` (recommended - SVG format)
   - `be-out_logo_orange.png` (orange variant)
-  - `be-out_logo_noir.png` (black variant)  
+  - `be-out_logo_noir.png` (black variant)
   - `be-out_logo_blanc.png` (white variant)
   - Option to display no logo
 - **Visual preview** of each logo option in dropdown
@@ -30,7 +30,7 @@ Support for three standard formats optimized for printing and PDF generation:
 - Best for events requiring detailed information
 - Suitable for framing or keeping as souvenir
 
-#### 1/2 A4 (210×148mm) - Landscape  
+#### 1/2 A4 (210×148mm) - Landscape
 - **Compact landscape format**
 - Perfect balance of information and space efficiency
 - Easy to store in wallet or phone case
@@ -48,7 +48,7 @@ The QR code system offers four different content types to meet various security 
 #### 🔗 URL de vérification (Recommended)
 - **Content**: `https://be-out.app/verify/{ticket_number}`
 - **Security**: Highest - real-time validation
-- **Benefits**: 
+- **Benefits**:
   - Prevents ticket fraud
   - Real-time status checking
   - Organizer can see scan history
@@ -82,7 +82,7 @@ The QR code system offers four different content types to meet various security 
 ```json
 {
   "event_id": "123",
-  "organizer": "Mon Organisation", 
+  "organizer": "Mon Organisation",
   "ticket_type": "VIP",
   "valid_until": "2025-12-31T23:59:59Z",
   "section": "A",
@@ -100,9 +100,9 @@ The ticket configuration is stored in the `customizations` object:
 {
   // Existing fields
   primary_color: "#1976d2",
-  secondary_color: "#f50057", 
+  secondary_color: "#f50057",
   custom_message: "Thank you for participating!",
-  
+
   // New fields
   ticket_size: "a4|half-a4|quarter-a4",
   background_image: "data:image/...", // Base64 encoded
@@ -149,7 +149,7 @@ const getQRCodeContent = (type, ticketData, customData) => {
 ### PDF Generation Ready
 The ticket design system is prepared for future PDF generation with:
 - Precise mm-based dimensions
-- Print-safe color profiles  
+- Print-safe color profiles
 - Vector graphics where possible
 - Scalable QR codes
 
@@ -216,7 +216,7 @@ GET  /api/events/{id}/scan-stats     # Scan analytics
 - [ ] Colors apply consistently
 - [ ] Custom messages display correctly
 
-### QR Code Generation  
+### QR Code Generation
 - [ ] Verification URLs format correctly
 - [ ] Booking references match expected pattern
 - [ ] Hash generation produces consistent results

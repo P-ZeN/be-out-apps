@@ -83,7 +83,7 @@ All hardcoded strings in the `TicketDesignStep.jsx` component have been replaced
 // Before
 name: 'A4 (210×297mm)'
 
-// After  
+// After
 name: t('A4 (210×297mm)')
 ```
 
@@ -99,7 +99,7 @@ name: t('A4 (210×297mm)')
 
 ### Supported Languages
 1. **French (fr)** - Default language
-2. **English (en)** - Fallback language  
+2. **English (en)** - Fallback language
 3. **Spanish (es)** - Additional language
 
 ### Language Detection
@@ -127,7 +127,7 @@ The organizer-client uses automatic language detection with:
 
 ### Language Switching
 - [ ] French → English transition works
-- [ ] French → Spanish transition works  
+- [ ] French → Spanish transition works
 - [ ] English → Spanish transition works
 - [ ] All permutations work correctly
 - [ ] No missing key warnings in console
@@ -143,7 +143,7 @@ The organizer-client uses automatic language detection with:
 
 ### Potential Additions
 1. **Regional Formats**: Date/time formats per locale
-2. **Currency Localization**: € vs $ vs other currencies  
+2. **Currency Localization**: € vs $ vs other currencies
 3. **Measurement Units**: mm vs inches for ticket sizes
 4. **Cultural Adaptations**: Color preferences, design patterns
 5. **Right-to-Left Support**: For Arabic, Hebrew when needed

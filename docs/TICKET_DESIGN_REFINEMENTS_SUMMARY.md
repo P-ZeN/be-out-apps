@@ -4,7 +4,7 @@
 
 ### 1. Background Image Support
 - **✅ Upload functionality** with file input and preview
-- **✅ Base64 encoding** for data storage  
+- **✅ Base64 encoding** for data storage
 - **✅ Automatic readability overlay** (85% white) when background present
 - **✅ Remove/delete option** for uploaded images
 - **✅ Responsive preview** that scales with ticket size
@@ -12,16 +12,16 @@
 ### 2. App Logo in Footer
 - **✅ Multiple logo options** from `organizer-client/public/`:
   - `be-out_logo.svg` (recommended)
-  - `be-out_logo_orange.png` 
+  - `be-out_logo_orange.png`
   - `be-out_logo_noir.png`
   - `be-out_logo_blanc.png`
 - **✅ Visual dropdown** with logo previews
 - **✅ Option to display no logo**
 - **✅ Integrated in footer** with error handling
 
-### 3. Ticket Size Selection  
+### 3. Ticket Size Selection
 - **✅ A4 (210×297mm)** - Full format for detailed events
-- **✅ 1/2 A4 (210×148mm)** - Landscape format, space efficient  
+- **✅ 1/2 A4 (210×148mm)** - Landscape format, space efficient
 - **✅ 1/4 A4 (105×148mm)** - Compact ticket size
 - **✅ Responsive dimensions** that maintain aspect ratios
 - **✅ Size indicator** chip on ticket preview
@@ -57,7 +57,7 @@ I've implemented 4 configurable QR code types:
 - **Security**: Highest - prevents fraud, enables tracking
 - **Organizer Benefit**: Can see scan history, validate in real-time
 
-### 2. 📝 Référence de réservation  
+### 2. 📝 Référence de réservation
 - **Content**: Just the ticket reference (e.g., "BE-OUT-001234")
 - **Use Case**: Simple manual verification
 - **Security**: Basic - human readable
@@ -79,7 +79,7 @@ I've implemented 4 configurable QR code types:
 ```json
 {
   "event_id": "123",
-  "ticket_type": "VIP", 
+  "ticket_type": "VIP",
   "section": "A",
   "seat": "15",
   "valid_until": "2025-12-31"
@@ -96,7 +96,7 @@ I've implemented 4 configurable QR code types:
 - Works with future mobile scanning app
 
 ### For Simple Events:
-**Use "Référence de réservation"**  
+**Use "Référence de réservation"**
 - Easy manual checking
 - No technology required
 - Staff can verify visually
@@ -126,7 +126,7 @@ ticketConfig: {
     // New fields
     qr_code_type: "verification_url|booking_reference|ticket_hash|custom_data",
     qr_custom_data: "{\"event_id\":\"123\"}", // JSON string
-    
+
     // Also added
     ticket_size: "a4|half-a4|quarter-a4",
     background_image: "data:image/...", // Base64
