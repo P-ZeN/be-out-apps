@@ -1035,7 +1035,7 @@ jobs:
 
   build-ios:
     name: Build iOS IPA
-    runs-on: macos-15  # Use macOS 15 which has Xcode 16+
+    runs-on: macos-14  # Use macOS 14 which has stable Xcode 15+
     needs: test-client
     if: true  # Enable for testing - Tauri 2.x has iOS support
     steps:
@@ -2022,6 +2022,16 @@ jobs:
         # Set environment variable to get full backtraces for build errors
         export CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG=true
         export RUST_BACKTRACE=full
+
+        # Force iOS 17.0 SDK to avoid iOS 18.0 compatibility issues
+        export IPHONEOS_DEPLOYMENT_TARGET=15.0
+        export IOS_SDK_VERSION=17.0
+        export XCODE_SUPPORT_DIR=/Applications/Xcode.app/Contents/Developer
+
+        # Check available iOS SDKs
+        echo "📋 Available iOS SDKs:"
+        xcrun --show-sdk-path --sdk iphoneos || echo "iPhone SDK not found"
+        xcodebuild -showsdks | grep iphoneos || echo "No iOS SDKs found"
 
         BUILD_SUCCESS=false
         if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
