@@ -1352,21 +1352,28 @@ jobs:
       run: |
         echo "Installing Tauri CLI..."
 
-        # Use a specific version that's compatible with Xcode 15
-        # Tauri CLI 2.0.0-rc.8 and earlier generate Xcode projects compatible with Xcode 15
-        TAURI_VERSION="2.0.0-rc.8"
-        echo "Installing Tauri CLI version: $TAURI_VERSION"
+        # Use an older version that generates Xcode 15-compatible projects
+        # Tauri CLI 2.0.0-beta.17 and earlier should work with Xcode 15
+        TAURI_VERSION="2.0.0-beta.17"
+        echo "Installing Tauri CLI version: $TAURI_VERSION (compatible with Xcode 15)"
         
         if npm install -g @tauri-apps/cli@$TAURI_VERSION; then
           echo "✅ Installed Tauri CLI: $TAURI_VERSION"
         else
-          echo "❌ Failed to install Tauri CLI $TAURI_VERSION, trying latest..."
-          if npm install -g @tauri-apps/cli@latest; then
-            INSTALLED_VERSION=$(npm list -g @tauri-apps/cli --depth=0 | grep @tauri-apps/cli)
-            echo "✅ Installed: $INSTALLED_VERSION"
+          echo "❌ Failed to install $TAURI_VERSION, trying beta.15..."
+          TAURI_VERSION="2.0.0-beta.15"
+          if npm install -g @tauri-apps/cli@$TAURI_VERSION; then
+            echo "✅ Installed Tauri CLI: $TAURI_VERSION"
           else
-            echo "❌ Failed to install latest Tauri CLI"
-            exit 1
+            echo "❌ Failed to install beta versions, trying alpha..."
+            TAURI_VERSION="2.0.0-alpha.20"
+            if npm install -g @tauri-apps/cli@$TAURI_VERSION; then
+              echo "✅ Installed Tauri CLI: $TAURI_VERSION"
+            else
+              echo "❌ All compatible versions failed, using latest (may cause project format issues)"
+              npm install -g @tauri-apps/cli@latest
+              TAURI_VERSION="latest"
+            fi
           fi
         fi
 
@@ -1568,6 +1575,44 @@ jobs:
           echo "❌ iOS/Apple project directory not found"
           echo "Searching for alternative iOS/Apple paths..."
           find src-tauri -type d -name "*ios*" -o -name "*apple*" 2>/dev/null || echo "No iOS/Apple directories found"
+        fi
+
+    - name: Downgrade Xcode Project Format for Compatibility
+      working-directory: ./client
+      run: |
+        echo "🔧 Downgrading Xcode project format for Xcode 15 compatibility..."
+
+        if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
+          echo "📋 Found Xcode project file, checking format version..."
+          
+          # Check current format version
+          CURRENT_FORMAT=$(grep -o 'objectVersion = [0-9]*' src-tauri/gen/apple/app.xcodeproj/project.pbxproj | grep -o '[0-9]*')
+          echo "Current Xcode project format: $CURRENT_FORMAT"
+          
+          if [ "$CURRENT_FORMAT" -gt "56" ]; then
+            echo "🔧 Downgrading from format $CURRENT_FORMAT to format 56 (Xcode 15 compatible)"
+            
+            # Backup the original
+            cp src-tauri/gen/apple/app.xcodeproj/project.pbxproj src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup
+            
+            # Replace objectVersion with Xcode 15 compatible version
+            sed -i '' 's/objectVersion = [0-9]*/objectVersion = 56/' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            
+            # Also ensure compatibility version is set correctly
+            sed -i '' 's/compatibilityVersion = "Xcode [0-9.]*"/compatibilityVersion = "Xcode 15.0"/' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            
+            # Verify changes
+            NEW_FORMAT=$(grep -o 'objectVersion = [0-9]*' src-tauri/gen/apple/app.xcodeproj/project.pbxproj | grep -o '[0-9]*')
+            echo "✅ Project format downgraded to: $NEW_FORMAT"
+            
+            # Show compatibility version
+            COMPAT_VERSION=$(grep -o 'compatibilityVersion = "Xcode [^"]*"' src-tauri/gen/apple/app.xcodeproj/project.pbxproj)
+            echo "✅ Compatibility version: $COMPAT_VERSION"
+          else
+            echo "✅ Project format $CURRENT_FORMAT is already compatible with Xcode 15"
+          fi
+        else
+          echo "❌ No Xcode project file found to downgrade"
         fi
 
     - name: Generate iOS App Icons
