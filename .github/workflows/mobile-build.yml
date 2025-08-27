@@ -1035,7 +1035,7 @@ jobs:
 
   build-ios:
     name: Build iOS IPA
-    runs-on: macos-14  # Use macOS 14 which has stable Xcode 15+
+    runs-on: macos-15  # Use macOS 15 with Xcode 16+ for latest Tauri project format support
     needs: test-client
     if: true  # Enable for testing - Tauri 2.x has iOS support
     steps:
@@ -1061,6 +1061,18 @@ jobs:
         # Check Xcode version compatibility
         XCODE_VERSION=$(xcodebuild -version | head -1 | sed 's/Xcode //')
         echo "Detected Xcode version: $XCODE_VERSION"
+
+        # Show available iOS SDKs
+        echo "=== Available iOS SDKs ==="
+        xcodebuild -showsdks | grep iphoneos || echo "No iOS SDKs found"
+        
+        # Check if we have iOS 17.x SDK (preferred for compatibility)
+        IOS17_SDK=$(xcodebuild -showsdks | grep "iphoneos17" | tail -1 | awk '{print $NF}')
+        if [ -n "$IOS17_SDK" ]; then
+          echo "✅ Found iOS 17.x SDK: $IOS17_SDK"
+        else
+          echo "⚠️ No iOS 17.x SDK found"
+        fi
 
         # Tauri 2.x typically requires Xcode 15.0+ for iOS builds
         if [[ $(echo "$XCODE_VERSION 15.0" | tr " " "\n" | sort -V | head -1) != "15.0" ]]; then
@@ -2025,22 +2037,42 @@ jobs:
 
         # Force iOS 17.0 SDK to avoid iOS 18.0 compatibility issues
         export IPHONEOS_DEPLOYMENT_TARGET=15.0
-        export IOS_SDK_VERSION=17.0
-        export XCODE_SUPPORT_DIR=/Applications/Xcode.app/Contents/Developer
-
-        # Check available iOS SDKs
+        
+        # Check available iOS SDKs and select the right one
         echo "📋 Available iOS SDKs:"
-        xcrun --show-sdk-path --sdk iphoneos || echo "iPhone SDK not found"
         xcodebuild -showsdks | grep iphoneos || echo "No iOS SDKs found"
+        
+        # Try to find iOS 17.x SDK
+        IOS_SDK=$(xcodebuild -showsdks | grep "iphoneos1[67]" | tail -1 | awk '{print $NF}')
+        if [ -n "$IOS_SDK" ]; then
+          echo "📱 Using iOS SDK: $IOS_SDK"
+          export TAURI_IOS_SDK="$IOS_SDK"
+        else
+          echo "⚠️ No iOS 16/17 SDK found, using default"
+        fi
 
         BUILD_SUCCESS=false
-        if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
-          echo "✅ Build succeeded with npm script"
-          BUILD_SUCCESS=true
-          BUILD_EXIT_CODE=0
-        else
-          BUILD_EXIT_CODE=$?
-          echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
+        # Build with explicit SDK if found
+        if [ -n "$TAURI_IOS_SDK" ]; then
+          if npm run tauri:ios:build -- --verbose --target aarch64 --sdk "$TAURI_IOS_SDK" 2>&1 | tee ios_build.log; then
+            echo "✅ Build succeeded with explicit SDK"
+            BUILD_SUCCESS=true
+            BUILD_EXIT_CODE=0
+          else
+            BUILD_EXIT_CODE=$?
+            echo "❌ Build with explicit SDK failed, trying without SDK specification..."
+          fi
+        fi
+        
+        # Fallback: try without explicit SDK
+        if [ "$BUILD_SUCCESS" = false ]; then
+          if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
+            echo "✅ Build succeeded with npm script"
+            BUILD_SUCCESS=true
+            BUILD_EXIT_CODE=0
+          else
+            BUILD_EXIT_CODE=$?
+            echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
 
           # Check for the specific signing error
           if grep -q "requires a development team" ios_build.log; then
