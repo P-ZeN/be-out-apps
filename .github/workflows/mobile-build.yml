@@ -2038,41 +2038,26 @@ jobs:
         # Force iOS 17.0 SDK to avoid iOS 18.0 compatibility issues
         export IPHONEOS_DEPLOYMENT_TARGET=15.0
         
-        # Check available iOS SDKs and select the right one
+        # Accept iOS 18.0 since it's the only available SDK on macOS-15
         echo "📋 Available iOS SDKs:"
         xcodebuild -showsdks | grep iphoneos || echo "No iOS SDKs found"
         
-        # Try to find iOS 17.x SDK
-        IOS_SDK=$(xcodebuild -showsdks | grep "iphoneos1[67]" | tail -1 | awk '{print $NF}')
+        # Accept whatever iOS SDK is available
+        IOS_SDK=$(xcodebuild -showsdks | grep "iphoneos" | tail -1 | awk '{print $NF}')
         if [ -n "$IOS_SDK" ]; then
           echo "📱 Using iOS SDK: $IOS_SDK"
-          export TAURI_IOS_SDK="$IOS_SDK"
         else
-          echo "⚠️ No iOS 16/17 SDK found, using default"
+          echo "⚠️ No iOS SDK found"
         fi
 
         BUILD_SUCCESS=false
-        # Build with explicit SDK if found
-        if [ -n "$TAURI_IOS_SDK" ]; then
-          if npm run tauri:ios:build -- --verbose --target aarch64 --sdk "$TAURI_IOS_SDK" 2>&1 | tee ios_build.log; then
-            echo "✅ Build succeeded with explicit SDK"
-            BUILD_SUCCESS=true
-            BUILD_EXIT_CODE=0
-          else
-            BUILD_EXIT_CODE=$?
-            echo "❌ Build with explicit SDK failed, trying without SDK specification..."
-          fi
-        fi
-        
-        # Fallback: try without explicit SDK
-        if [ "$BUILD_SUCCESS" = false ]; then
-          if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
-            echo "✅ Build succeeded with npm script"
-            BUILD_SUCCESS=true
-            BUILD_EXIT_CODE=0
-          else
-            BUILD_EXIT_CODE=$?
-            echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
+        if npm run tauri:ios:build -- --verbose --target aarch64 2>&1 | tee ios_build.log; then
+          echo "✅ Build succeeded with npm script"
+          BUILD_SUCCESS=true
+          BUILD_EXIT_CODE=0
+        else
+          BUILD_EXIT_CODE=$?
+          echo "❌ npm script failed with exit code: $BUILD_EXIT_CODE"
 
           # Check for the specific signing error
           if grep -q "requires a development team" ios_build.log; then
@@ -2103,43 +2088,16 @@ jobs:
             echo "❌ npm script also failed without args, exit code: $BUILD_EXIT_CODE2"
             echo "📋 Second build log content:"
             tail -30 ios_build2.log
-
-            # Method 2: Try npx tauri directly with explicit target
-            echo ""
-            echo "🚀 Trying npx tauri ios build with explicit target..."
-
-            if npx tauri ios build --verbose --target aarch64 2>&1 | tee ios_build3.log; then
-              echo "✅ Build succeeded with npx tauri"
-              BUILD_SUCCESS=true
-              BUILD_EXIT_CODE=0
-            else
-              BUILD_EXIT_CODE3=$?
-              echo "❌ npx tauri also failed with exit code: $BUILD_EXIT_CODE3"
-              echo "📋 Third build log content:"
-              tail -30 ios_build3.log
-
-              # Method 3: Try without target specification (let Tauri decide)
-              echo ""
-              echo "🚀 Trying npx tauri ios build without target..."
-
-              if npx tauri ios build --verbose 2>&1 | tee ios_build4.log; then
-                echo "✅ Build succeeded with npx tauri (no target)"
-                BUILD_SUCCESS=true
-                BUILD_EXIT_CODE=0
-              else
-                BUILD_EXIT_CODE4=$?
-                echo "❌ All build methods failed"
-                echo "📋 Fourth build log content:"
-                tail -30 ios_build4.log
-                BUILD_SUCCESS=false
-                BUILD_EXIT_CODE=$BUILD_EXIT_CODE4
-              fi
-            fi
           fi
         fi
 
-        # Stop the monitoring process
-        kill $MONITOR_PID 2>/dev/null || true
+        # Final status report
+        if [ "$BUILD_SUCCESS" = true ]; then
+          echo "✅ iOS build completed successfully"
+        else
+          echo "❌ iOS build failed - all methods exhausted"
+          echo "Final exit code: $BUILD_EXIT_CODE"
+        fi
 
         # Ensure BUILD_SUCCESS is properly set based on actual build artifacts
         if [ -z "$BUILD_SUCCESS" ]; then
