@@ -1035,7 +1035,7 @@ jobs:
 
   build-ios:
     name: Build iOS IPA
-    runs-on: macos-15  # Use macOS 15 with Xcode 16+ for latest Tauri project format support
+    runs-on: macos-14  # Use macOS-14 with stable iOS 17.x SDK and platform runtime
     needs: test-client
     if: true  # Enable for testing - Tauri 2.x has iOS support
     steps:
@@ -1069,9 +1069,17 @@ jobs:
         # Check if we have iOS 17.x SDK (preferred for compatibility)
         IOS17_SDK=$(xcodebuild -showsdks | grep "iphoneos17" | tail -1 | awk '{print $NF}')
         if [ -n "$IOS17_SDK" ]; then
-          echo "✅ Found iOS 17.x SDK: $IOS17_SDK"
+          echo "✅ Found iOS 17.x SDK: $IOS17_SDK (compatible with macOS-14)"
         else
-          echo "⚠️ No iOS 17.x SDK found"
+          echo "⚠️ No iOS 17.x SDK found - checking for iOS 16.x"
+          IOS16_SDK=$(xcodebuild -showsdks | grep "iphoneos16" | tail -1 | awk '{print $NF}')
+          if [ -n "$IOS16_SDK" ]; then
+            echo "✅ Found iOS 16.x SDK: $IOS16_SDK"
+          else
+            echo "⚠️ No iOS 16.x or 17.x SDK found - this may cause compatibility issues"
+            echo "Available SDKs:"
+            xcodebuild -showsdks | grep iphoneos
+          fi
         fi
 
         # Tauri 2.x typically requires Xcode 15.0+ for iOS builds
@@ -1344,20 +1352,29 @@ jobs:
       run: |
         echo "Installing Tauri CLI..."
 
-        # Try to install the latest version first
-        if npm install -g @tauri-apps/cli@latest; then
-          TAURI_VERSION=$(npm list -g @tauri-apps/cli --depth=0 | grep @tauri-apps/cli)
-          echo "✅ Installed: $TAURI_VERSION"
+        # Use a specific version that's compatible with Xcode 15
+        # Tauri CLI 2.0.0-rc.8 and earlier generate Xcode projects compatible with Xcode 15
+        TAURI_VERSION="2.0.0-rc.8"
+        echo "Installing Tauri CLI version: $TAURI_VERSION"
+        
+        if npm install -g @tauri-apps/cli@$TAURI_VERSION; then
+          echo "✅ Installed Tauri CLI: $TAURI_VERSION"
         else
-          echo "❌ Failed to install latest Tauri CLI"
-          exit 1
+          echo "❌ Failed to install Tauri CLI $TAURI_VERSION, trying latest..."
+          if npm install -g @tauri-apps/cli@latest; then
+            INSTALLED_VERSION=$(npm list -g @tauri-apps/cli --depth=0 | grep @tauri-apps/cli)
+            echo "✅ Installed: $INSTALLED_VERSION"
+          else
+            echo "❌ Failed to install latest Tauri CLI"
+            exit 1
+          fi
         fi
 
         echo "Verifying Tauri CLI installation..."
         tauri --version || echo "Failed to get Tauri version"
 
         echo "Installing Tauri CLI locally as well..."
-        npm install @tauri-apps/cli@latest
+        npm install @tauri-apps/cli@$TAURI_VERSION || npm install @tauri-apps/cli@latest
 
     - name: Install dependencies
       run: npm ci
@@ -1741,6 +1758,17 @@ jobs:
             # Force add CODE_SIGN_STYLE = Manual after every buildSettings line
             TEMP_FILE=$(mktemp)
             echo "				CODE_SIGN_STYLE = Manual;" > "$TEMP_FILE"
+            sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            rm -f "$TEMP_FILE"
+
+            # Force iOS 17.5 target to avoid iOS 18.0 platform issues
+            echo "🔧 Step 3.5: Forcing iOS 17.5 target to avoid iOS 18.0 platform compatibility issues..."
+            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 18.0;/IPHONEOS_DEPLOYMENT_TARGET = 17.5;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 18;/IPHONEOS_DEPLOYMENT_TARGET = 17.5;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
+            
+            # Also force minimum deployment target 
+            TEMP_FILE=$(mktemp)
+            echo "				IPHONEOS_DEPLOYMENT_TARGET = 17.5;" > "$TEMP_FILE"
             sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             rm -f "$TEMP_FILE"
 
