@@ -1065,7 +1065,7 @@ jobs:
         # Show available iOS SDKs
         echo "=== Available iOS SDKs ==="
         xcodebuild -showsdks | grep iphoneos || echo "No iOS SDKs found"
-        
+
         # Check if we have iOS 17.x SDK (preferred for compatibility)
         IOS17_SDK=$(xcodebuild -showsdks | grep "iphoneos17" | tail -1 | awk '{print $NF}')
         if [ -n "$IOS17_SDK" ]; then
@@ -1356,7 +1356,7 @@ jobs:
         # Tauri CLI 2.0.0-beta.17 and earlier should work with Xcode 15
         TAURI_VERSION="2.0.0-beta.17"
         echo "Installing Tauri CLI version: $TAURI_VERSION (compatible with Xcode 15)"
-        
+
         if npm install -g @tauri-apps/cli@$TAURI_VERSION; then
           echo "✅ Installed Tauri CLI: $TAURI_VERSION"
         else
@@ -1584,27 +1584,27 @@ jobs:
 
         if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
           echo "📋 Found Xcode project file, checking format version..."
-          
+
           # Check current format version
           CURRENT_FORMAT=$(grep -o 'objectVersion = [0-9]*' src-tauri/gen/apple/app.xcodeproj/project.pbxproj | grep -o '[0-9]*')
           echo "Current Xcode project format: $CURRENT_FORMAT"
-          
+
           if [ "$CURRENT_FORMAT" -gt "56" ]; then
             echo "🔧 Downgrading from format $CURRENT_FORMAT to format 56 (Xcode 15 compatible)"
-            
+
             # Backup the original
             cp src-tauri/gen/apple/app.xcodeproj/project.pbxproj src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup
-            
+
             # Replace objectVersion with Xcode 15 compatible version
             sed -i '' 's/objectVersion = [0-9]*/objectVersion = 56/' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            
+
             # Also ensure compatibility version is set correctly
             sed -i '' 's/compatibilityVersion = "Xcode [0-9.]*"/compatibilityVersion = "Xcode 15.0"/' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            
+
             # Verify changes
             NEW_FORMAT=$(grep -o 'objectVersion = [0-9]*' src-tauri/gen/apple/app.xcodeproj/project.pbxproj | grep -o '[0-9]*')
             echo "✅ Project format downgraded to: $NEW_FORMAT"
-            
+
             # Show compatibility version
             COMPAT_VERSION=$(grep -o 'compatibilityVersion = "Xcode [^"]*"' src-tauri/gen/apple/app.xcodeproj/project.pbxproj)
             echo "✅ Compatibility version: $COMPAT_VERSION"
@@ -1782,7 +1782,7 @@ jobs:
             echo "� Using Apple Development Team: $TEAM_ID"
 
             # Method 1: Replace any existing DEVELOPMENT_TEAM values first
-            echo "🔧 Step 1: Updating existing DEVELOPMENT_TEAM values..."
+            echo "🔧 Step 1: Updating existing DEVELOPMENT_TEAM valuess..."
             sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             sed -i '' "s/DEVELOPMENT_TEAM = \"[^\"]*\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
 
@@ -1810,8 +1810,8 @@ jobs:
             echo "🔧 Step 3.5: Forcing iOS 17.5 target to avoid iOS 18.0 platform compatibility issues..."
             sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 18.0;/IPHONEOS_DEPLOYMENT_TARGET = 17.5;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 18;/IPHONEOS_DEPLOYMENT_TARGET = 17.5;/g' src-tauri/gen/apple/app.xcodeproj/project.pbxproj
-            
-            # Also force minimum deployment target 
+
+            # Also force minimum deployment target
             TEMP_FILE=$(mktemp)
             echo "				IPHONEOS_DEPLOYMENT_TARGET = 17.5;" > "$TEMP_FILE"
             sed -i '' "/buildSettings = {/r $TEMP_FILE" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
@@ -2110,11 +2110,11 @@ jobs:
 
         # Force iOS 17.0 SDK to avoid iOS 18.0 compatibility issues
         export IPHONEOS_DEPLOYMENT_TARGET=15.0
-        
+
         # Accept iOS 18.0 since it's the only available SDK on macOS-15
         echo "📋 Available iOS SDKs:"
         xcodebuild -showsdks | grep iphoneos || echo "No iOS SDKs found"
-        
+
         # Accept whatever iOS SDK is available
         IOS_SDK=$(xcodebuild -showsdks | grep "iphoneos" | tail -1 | awk '{print $NF}')
         if [ -n "$IOS_SDK" ]; then
