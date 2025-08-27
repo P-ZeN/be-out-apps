@@ -1613,7 +1613,7 @@ jobs:
     - name: Verify Icons Before iOS Build
       working-directory: ./client
       run: |
-        echo "🔍 Final verification of iconsssssssssssssssssssssss before iOS build..."
+        echo "🔍 Final verification of iconsssssssssssssssssssssssss before iOS build..."
 
         # Check if icons are in place
         echo "=== Current icon files ==="
