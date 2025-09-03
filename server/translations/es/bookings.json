@@ -1,7 +1,55 @@
 {
-  "bookings": {
-    "title": "Reservas",
-    "confirm": "Confirmar reserva",
-    "cancel": "Cancelar reserva"
-  }
+    "bookings": {
+        "title": "Reservas",
+        "confirm": "Confirmar reserva",
+        "cancel": "Cancelar reserva",
+        "modal": {
+            "title": "Reservar {{eventTitle}}",
+            "steps": {
+                "details": "Detalles",
+                "information": "Información",
+                "payment": "Pago",
+                "confirmation": "Confirmación"
+            },
+            "eventInfo": {
+                "date": "Fecha y hora",
+                "location": "Ubicación",
+                "locationDefault": "Ubicación por confirmar",
+                "price": "Precio por entrada"
+            },
+            "fields": {
+                "quantity": "Número de entradas",
+                "customerName": "Nombre completo *",
+                "customerEmail": "Email *",
+                "customerPhone": "Teléfono",
+                "specialRequests": "Solicitudes especiales",
+                "acceptTerms": "Acepto los términos y condiciones de venta y la política de reembolso"
+            },
+            "placeholders": {
+                "customerName": "Nombre Apellido",
+                "customerEmail": "tu@email.com",
+                "customerPhone": "+34 123 456 789",
+                "specialRequests": "Alergias, necesidades especiales, comentarios..."
+            },
+            "buttons": {
+                "next": "Siguiente",
+                "previous": "Anterior",
+                "finish": "Finalizar",
+                "cancel": "Cancelar",
+                "proceedToPayment": "Proceder al pago"
+            },
+            "summary": {
+                "total": "Total",
+                "processing": "Procesando...",
+                "success": "¡Reserva confirmada!",
+                "thankYou": "Gracias por su reserva"
+            },
+            "errors": {
+                "fillRequired": "Por favor, complete todos los campos obligatorios",
+                "acceptTerms": "Debe aceptar los términos y condiciones",
+                "invalidQuantity": "Por favor, seleccione un número válido de entradas",
+                "bookingFailed": "Error en la reserva. Por favor, inténtelo de nuevo."
+            }
+        }
+    }
 }

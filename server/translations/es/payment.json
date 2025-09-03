@@ -1,0 +1,16 @@
+{
+    "form": {
+        "processing": "Procesando...",
+        "payAmount": "Pagar {{amount}}",
+        "cancel": "Cancelar",
+        "securityMessage": "🔒 Tu información de pago está segura y encriptada"
+    },
+    "loading": {
+        "creating": "Preparando pago...",
+        "processing": "Procesando pago..."
+    },
+    "errors": {
+        "paymentFailed": "Error en el pago",
+        "unexpectedError": "Ocurrió un error inesperado"
+    }
+}

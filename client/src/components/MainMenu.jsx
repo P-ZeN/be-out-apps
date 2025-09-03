@@ -240,7 +240,7 @@ const MainMenu = () => {
                             <Tab icon={<HomeIcon />} label={t("menu.home", "Accueil")} iconPosition="start" />
                         )}
                         {!isTauriApp && user && (
-                            <Tab icon={<DashboardIcon />} label="Tableau de bord" iconPosition="start" />
+                            <Tab icon={<DashboardIcon />} label={t("menu.dashboard")} iconPosition="start" />
                         )}
                         <Tab icon={<EventIcon />} label={t("menu.events", "Événements")} iconPosition="start" />
                         <Tab icon={<MapIcon />} label={t("menu.map", "Carte")} iconPosition="start" />
@@ -279,7 +279,7 @@ const MainMenu = () => {
                                     color: "#FFFFFF", // White on hover
                                 },
                             }}
-                            title="Tableau de bord">
+                            title={t("menu.dashboard")}>
                             <DashboardIcon />
                         </IconButton>
                     )}

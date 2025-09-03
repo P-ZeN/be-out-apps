@@ -1,19 +1,11 @@
 {
-  "title": "🗺️ Carte des Événements",
-  "subtitle": "Découvrez les événements près de chez vous",
-  "searchPlaceholder": "Rechercher par lieu ou adresse...",
-  "nearbyEvents": "Événements à proximité ({{count}})",
-  "viewAllEvents": "Voir tous les événements",
-  "eventsLoaded": "{{count}} événements chargés avec localisation",
-  "noEventsWithLocation": "Aucun événement avec localisation disponible",
-  "noEventsFromAPI": "Aucun événement disponible pour le moment",
-  "errorLoadingEvents": "Erreur lors du chargement des événements",
-  "locationUpdated": "Position mise à jour: {{address}}",
-  "locationError": "Impossible d'obtenir votre position",
-  "mapUnavailable": "Carte temporairement indisponible",
-  "checkMapboxToken": "Veuillez vérifier votre token Mapbox ou votre connexion internet",
-  "eventsAvailable": "{{count}} événement(s) disponible(s)",
-  "viewEventDetails": "+ d'infos / RéserverRr",
-  "atDistance": "À {{distance}} de votre position",
-  "yourLocation": "Votre position"
+    "searchPlaceholder": "Rechercher par lieu ou adresse...",
+    "nearbyEvents": "Événements à proximité ({{count}})",
+    "viewAllEvents": "Voir tous les événements",
+    "eventsLoaded": "{{count}} événements chargés avec localisation",
+    "noEventsWithLocation": "Aucun événement avec localisation disponible",
+    "noEventsFromAPI": "Aucun événement disponible pour le moment",
+    "errorLoadingEvents": "Erreur lors du chargement des événements",
+    "locationUpdated": "Position mise à jour: {{address}}",
+    "locationError": "Impossible d'obtenir votre position"
 }

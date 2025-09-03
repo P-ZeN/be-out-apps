@@ -149,10 +149,7 @@ const EventsPage = () => {
                                     flex: 1,
                                     maxWidth: { md: 450 }, // Adjusted for better line breaking
                                 }}>
-                                {t(
-                                    "home:lastMinuteDeals",
-                                    "Découvrez des offres de dernière minute sur les événements près de chez vous"
-                                )}
+                                {t("home:subtitle")}
                             </Typography>
                         </Box>
 

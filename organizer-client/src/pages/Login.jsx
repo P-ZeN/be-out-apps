@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { Box, Card, CardContent, TextField, Button, Typography, Alert, Link, Divider, Container } from "@mui/material";
 import { Business, Email, Lock } from "@mui/icons-material";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "../context/AuthContext";
 import organizerService from "../services/organizerService";
 
 const Login = () => {
+    const { t } = useTranslation('organizer');
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -32,7 +34,7 @@ const Login = () => {
             await login(response);
             navigate("/dashboard");
         } catch (error) {
-            setError(error.message || "Erreur de connexion");
+            setError(error.message || t('auth.loginPage.connectionError'));
         } finally {
             setLoading(false);
         }
@@ -69,10 +71,10 @@ const Login = () => {
                                 }}
                             />
                             <Typography variant="h6" color="text.secondary" gutterBottom>
-                                Be Out - Espace Organisateur
+                                {t('auth.loginPage.title')}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Connectez-vous pour gérer vos événements
+                                {t('auth.loginPage.subtitle')}
                             </Typography>
                         </Box>
 
@@ -80,7 +82,7 @@ const Login = () => {
                             <Box sx={{ mb: 3 }}>
                                 <TextField
                                     fullWidth
-                                    label="Email"
+                                    label={t('auth.email')}
                                     name="email"
                                     type="email"
                                     value={formData.email}
@@ -96,7 +98,7 @@ const Login = () => {
                             <Box sx={{ mb: 3 }}>
                                 <TextField
                                     fullWidth
-                                    label="Mot de passe"
+                                    label={t('auth.password')}
                                     name="password"
                                     type="password"
                                     value={formData.password}
@@ -128,20 +130,20 @@ const Login = () => {
                                     fontWeight: "bold",
                                     mb: 3,
                                 }}>
-                                {loading ? "Connexion..." : "Se connecter"}
+                                {loading ? t('auth.loginPage.loggingIn') : t('auth.loginPage.loginButton')}
                             </Button>
 
                             <Divider sx={{ my: 3 }}>
                                 <Typography variant="body2" color="text.secondary">
-                                    ou
+                                    {t('auth.loginPage.or')}
                                 </Typography>
                             </Divider>
 
                             <Box sx={{ textAlign: "center" }}>
                                 <Typography variant="body2" color="text.secondary">
-                                    Pas encore inscrit ?{" "}
+                                    {t('auth.loginPage.notRegistered')}{" "}
                                     <Link component={RouterLink} to="/register" color="primary" fontWeight="bold">
-                                        Créer un compte organisateur
+                                        {t('auth.loginPage.createAccount')}
                                     </Link>
                                 </Typography>
                             </Box>
@@ -151,9 +153,9 @@ const Login = () => {
 
                 <Box sx={{ textAlign: "center", mt: 3 }}>
                     <Typography variant="body2" color="white" sx={{ opacity: 0.8 }}>
-                        Vous êtes administrateur ?{" "}
+                        {t('auth.loginPage.adminAccess')}{" "}
                         <Link href="/admin" color="inherit" sx={{ fontWeight: "bold" }}>
-                            Accès administration
+                            {t('auth.loginPage.adminLink')}
                         </Link>
                     </Typography>
                 </Box>

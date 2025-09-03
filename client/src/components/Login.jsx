@@ -48,7 +48,7 @@ const Login = () => {
         // Check if we're in a Tauri (mobile) environment
         if (isTauriApp) {
             // Google Sign-In temporarily disabled for mobile apps
-            setMessage("🚀 Google Sign-In coming soon for mobile! Stay tuned for this exciting feature.");
+            setMessage(t("auth:login.googleComingSoon"));
             return;
         }
 
@@ -73,7 +73,7 @@ const Login = () => {
         try {
             if (isTauriApp) {
                 console.log("Apple Sign-In not yet implemented for native auth");
-                setError("Apple Sign-In will be available in a future update");
+                setError(t("auth:login.appleNotImplemented"));
                 // TODO: Implement Apple Sign-In in native auth service
             } else {
                 console.log("Using web browser redirect for Apple");
@@ -82,7 +82,7 @@ const Login = () => {
             }
         } catch (error) {
             console.error("Apple Sign In error:", error);
-            setError(error.message || "Apple Sign In failed");
+            setError(error.message || t("auth:login.appleSignInFailed"));
         } finally {
             setIsLoading(false);
         }

@@ -18,10 +18,12 @@ import {
 } from "@mui/material";
 import { Event, TrendingUp, People, Euro, Add, CalendarToday, Warning, CheckCircle } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "../context/AuthContext";
 import organizerService from "../services/organizerService";
 
 const Dashboard = () => {
+    const { t } = useTranslation('organizer');
     const [stats, setStats] = useState(null);
     const [recentBookings, setRecentBookings] = useState([]);
     const [upcomingEvents, setUpcomingEvents] = useState([]);
@@ -47,7 +49,7 @@ const Dashboard = () => {
             if (bookingsData.status === "fulfilled") setRecentBookings(bookingsData.value);
             if (eventsData.status === "fulfilled") setUpcomingEvents(eventsData.value);
         } catch (err) {
-            setError("Erreur lors du chargement des données");
+            setError(t('dashboard.errors.loadingData'));
             console.error(err);
         } finally {
             setLoading(false);
@@ -82,11 +84,10 @@ const Dashboard = () => {
                         </Button>
                     }>
                     <Typography variant="subtitle2" gutterBottom>
-                        Compte en attente d'approbation
+                        {t('dashboard.buttons.awaitingApproval')}
                     </Typography>
                     <Typography variant="body2">
-                        Votre compte organisateur est en cours de validation par notre équipe. Vous serez notifié par
-                        email une fois l'approbation effectuée.
+                        {t('dashboard.status.approvalPending')}
                     </Typography>
                 </Alert>
 
@@ -94,13 +95,13 @@ const Dashboard = () => {
                     <CardContent sx={{ textAlign: "center", py: 6 }}>
                         <Warning sx={{ fontSize: 64, color: "warning.main", mb: 2 }} />
                         <Typography variant="h5" gutterBottom>
-                            Validation en cours
+                            {t('dashboard.status.validationInProgress')}
                         </Typography>
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                            Votre profil est en cours d'examen. Cette étape prend généralement 24-48h.
+                            {t('dashboard.status.profileUnderReview')}
                         </Typography>
                         <Button variant="outlined" onClick={() => navigate("/profile")} startIcon={<Event />}>
-                            Compléter mon profil
+                            {t('dashboard.buttons.completeProfile')}
                         </Button>
                     </CardContent>
                 </Card>
@@ -112,7 +113,7 @@ const Dashboard = () => {
         return (
             <Box>
                 <Typography variant="h4" gutterBottom>
-                    Tableau de bord
+                    {t('navigation.dashboard')}
                 </Typography>
                 <LinearProgress sx={{ mb: 3 }} />
                 <Grid container spacing={3}>
@@ -135,14 +136,14 @@ const Dashboard = () => {
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
                 <Box>
                     <Typography variant="h4" gutterBottom>
-                        Bonjour, {profile?.company_name || "Organisateur"} 👋
+                        {t('dashboard.welcome.greeting', { name: profile?.company_name || t('dashboard.welcome.defaultName') })}
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Voici un aperçu de vos performances ce mois-ci
+                        {t('dashboard.welcome.subtitle')}
                     </Typography>
                 </Box>
                 <Button variant="contained" startIcon={<Add />} onClick={() => navigate("/events/new")} size="large">
-                    Nouvel événement
+                    {t('dashboard.buttons.newEvent')}
                 </Button>
             </Box>
 
@@ -160,7 +161,7 @@ const Dashboard = () => {
                             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                 <Box>
                                     <Typography color="text.secondary" gutterBottom>
-                                        Événements actifs
+                                        {t('dashboard.stats.activeEvents')}
                                     </Typography>
                                     <Typography variant="h4">{stats?.total_events || 0}</Typography>
                                 </Box>
@@ -178,7 +179,7 @@ const Dashboard = () => {
                             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                 <Box>
                                     <Typography color="text.secondary" gutterBottom>
-                                        Réservations
+                                        {t('dashboard.stats.bookings')}
                                     </Typography>
                                     <Typography variant="h4">{stats?.total_bookings || 0}</Typography>
                                 </Box>
@@ -196,7 +197,7 @@ const Dashboard = () => {
                             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                 <Box>
                                     <Typography color="text.secondary" gutterBottom>
-                                        Revenus
+                                        {t('dashboard.stats.revenue')}
                                     </Typography>
                                     <Typography variant="h4">{formatCurrency(stats?.total_revenue)}</Typography>
                                 </Box>
@@ -214,7 +215,7 @@ const Dashboard = () => {
                             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                 <Box>
                                     <Typography color="text.secondary" gutterBottom>
-                                        Tickets vendus
+                                        {t('dashboard.stats.ticketsSold')}
                                     </Typography>
                                     <Typography variant="h4">{stats?.total_tickets_sold || 0}</Typography>
                                 </Box>
@@ -233,15 +234,15 @@ const Dashboard = () => {
                     <Card>
                         <CardContent>
                             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                                <Typography variant="h6">Réservations récentes</Typography>
+                                <Typography variant="h6">{t('dashboard.sections.recentBookings.title')}</Typography>
                                 <Button size="small" onClick={() => navigate("/bookings")}>
-                                    Voir tout
+                                    {t('dashboard.sections.recentBookings.viewAll')}
                                 </Button>
                             </Box>
 
                             {recentBookings.length === 0 ? (
                                 <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", py: 3 }}>
-                                    Aucune réservation récente
+                                    {t('dashboard.sections.recentBookings.empty')}
                                 </Typography>
                             ) : (
                                 <List>
@@ -258,7 +259,7 @@ const Dashboard = () => {
                                                     secondary={
                                                         <Box>
                                                             <Typography variant="body2">
-                                                                {booking.customer_name} • {booking.quantity} billet(s)
+                                                                {booking.customer_name} • {booking.quantity} {t('dashboard.sections.recentBookings.tickets')}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.secondary">
                                                                 {formatDate(booking.booking_date)}
@@ -286,23 +287,23 @@ const Dashboard = () => {
                     <Card>
                         <CardContent>
                             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                                <Typography variant="h6">Événements à venir</Typography>
+                                <Typography variant="h6">{t('dashboard.sections.upcomingEvents.title')}</Typography>
                                 <Button size="small" onClick={() => navigate("/events")}>
-                                    Voir tout
+                                    {t('dashboard.sections.upcomingEvents.viewAll')}
                                 </Button>
                             </Box>
 
                             {upcomingEvents.length === 0 ? (
                                 <Box sx={{ textAlign: "center", py: 3 }}>
                                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                                        Aucun événement programmé
+                                        {t('dashboard.sections.upcomingEvents.empty')}
                                     </Typography>
                                     <Button
                                         variant="outlined"
                                         startIcon={<Add />}
                                         onClick={() => navigate("/events/new")}
                                         size="small">
-                                        Créer un événement
+                                        {t('dashboard.sections.upcomingEvents.createEvent')}
                                     </Button>
                                 </Box>
                             ) : (
@@ -328,7 +329,7 @@ const Dashboard = () => {
                                                 />
                                                 <Box sx={{ textAlign: "right" }}>
                                                     <Chip
-                                                        label={`${event.total_bookings} réservations`}
+                                                        label={`${event.total_bookings} ${t('dashboard.sections.upcomingEvents.bookings')}`}
                                                         size="small"
                                                         color="primary"
                                                     />

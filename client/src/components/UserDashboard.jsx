@@ -44,7 +44,7 @@ const UserDashboard = () => {
     const theme = useTheme();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { t } = useTranslation();
+    const { t } = useTranslation(['dashboard', 'common']);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -179,10 +179,10 @@ const UserDashboard = () => {
                     </Avatar>
                     <Box>
                         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-                            Bonjour, {user?.first_name || user?.email?.split('@')[0] || 'Utilisateur'} ! 👋
+                            {t('dashboard:welcome.greeting', { name: user?.first_name || user?.email?.split('@')[0] || t('dashboard:welcome.defaultUser') })}
                         </Typography>
                         <Typography variant="body1" color="text.secondary">
-                            Bienvenue sur votre tableau de bord Be-Out
+                            {t('dashboard:welcome.subtitle')}
                         </Typography>
                     </Box>
                 </Box>
@@ -197,7 +197,7 @@ const UserDashboard = () => {
                                     {dashboardData.stats.totalBookings}
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                    Réservations
+                                    {t('dashboard:stats.bookings')}
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -210,7 +210,7 @@ const UserDashboard = () => {
                                     {dashboardData.stats.totalFavorites}
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                    Favoris
+                                    {t('dashboard:stats.favorites')}
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -223,7 +223,7 @@ const UserDashboard = () => {
                                     {dashboardData.stats.upcomingEvents}
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                    À venir
+                                    {t('dashboard:stats.upcoming')}
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -236,7 +236,7 @@ const UserDashboard = () => {
                                     {formatCurrency(dashboardData.stats.totalSpent)}
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                    Dépensé
+                                    {t('dashboard:stats.spent')}
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -259,14 +259,14 @@ const UserDashboard = () => {
                         <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                    Mes dernières réservations
+                                    {t('dashboard:sections.recentBookings.title')}
                                 </Typography>
                                 <Button
                                     size="small"
                                     endIcon={<ArrowForward />}
                                     onClick={() => navigate('/bookings')}
                                 >
-                                    Voir tout
+                                    {t('dashboard:sections.recentBookings.viewAll')}
                                 </Button>
                             </Box>
 
@@ -274,14 +274,14 @@ const UserDashboard = () => {
                                 <Box sx={{ textAlign: 'center', py: 4 }}>
                                     <LocalActivity sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                        Aucune réservation pour le moment
+                                        {t('dashboard:sections.recentBookings.empty.title')}
                                     </Typography>
                                     <Button
                                         variant="contained"
                                         startIcon={<Add />}
                                         onClick={() => navigate('/events')}
                                     >
-                                        Découvrir les événements
+                                        {t('dashboard:sections.recentBookings.empty.action')}
                                     </Button>
                                 </Box>
                             ) : (
@@ -331,14 +331,14 @@ const UserDashboard = () => {
                         <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                    Mes derniers favoris
+                                    {t('dashboard:sections.recentFavorites.title')}
                                 </Typography>
                                 <Button
                                     size="small"
                                     endIcon={<ArrowForward />}
                                     onClick={() => navigate('/favorites')}
                                 >
-                                    Voir tout
+                                    {t('dashboard:sections.recentFavorites.viewAll')}
                                 </Button>
                             </Box>
 
@@ -346,14 +346,14 @@ const UserDashboard = () => {
                                 <Box sx={{ textAlign: 'center', py: 4 }}>
                                     <Star sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                        Aucun favori pour le moment
+                                        {t('dashboard:sections.recentFavorites.empty.title')}
                                     </Typography>
                                     <Button
                                         variant="outlined"
                                         startIcon={<Favorite />}
                                         onClick={() => navigate('/events')}
                                     >
-                                        Découvrir les événements
+                                        {t('dashboard:sections.recentFavorites.empty.action')}
                                     </Button>
                                 </Box>
                             ) : (

@@ -24,6 +24,21 @@ import debugRoutes from "./routes/debug.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 
+// Add error handlers for debugging server crashes
+process.on('uncaughtException', (error) => {
+    console.error('=== UNCAUGHT EXCEPTION ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('========================');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('=== UNHANDLED REJECTION ===');
+    console.error('Promise:', promise);
+    console.error('Reason:', reason);
+    console.error('=========================');
+});
+
 const app = express();
 
 // CORS configuration
@@ -182,10 +197,11 @@ app.get("/api/translations/:language/:namespace", async (req, res) => {
             "onboarding",
             "map",
             "profile",
-            "events",
             "bookings",
-            "payments",
-            "landing",
+            "payment", // Note: "payment" not "payments"
+            "dashboard",
+            "footer", // Client footer translations
+            "organizer", // New: Organizer-specific translations
         ];
         if (!allowedNamespaces.includes(namespace)) {
             return res.status(400).json({ error: "Invalid namespace" });

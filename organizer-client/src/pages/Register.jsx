@@ -18,7 +18,7 @@ const Register = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t } = useTranslation('organizer');
 
     const handleChange = (e) => {
         setFormData({

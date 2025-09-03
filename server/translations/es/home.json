@@ -1,52 +1,70 @@
 {
-  "title": "Be Out",
-  "subtitle": "Descubre ofertas de última hora en eventos cerca de ti",
-  "searchPlaceholder": "Buscar eventos, conciertos, espectáculos...",
-  "categories": {
-    "all": "Todos los Eventos",
-    "music": "Música",
-    "sport": "Deportes",
-    "theater": "Teatro",
-    "food": "Gastronomía"
-  },
-  "sections": {
-    "lastMinute": "⚡ Ofertas de Última Hora",
-    "allEvents": "Todos los Eventos",
-    "categoryEvents": "Eventos de {{category}}",
-    "recommended": "Recomendados para Ti",
-    "nearYou": "Cerca de Ti"
-  },
-  "badges": {
-    "lastMinute": "Última Hora",
-    "hotDeal": "Oferta Especial",
-    "newEvent": "Nuevo"
-  },
-  "ticketsAvailable": "entradas disponibles",
-  "eventsFound": "eventos encontrados",
-  "noEventsFound": "No se encontraron eventos que coincidan con tus criterios",
-  "clearFilters": "Limpiar Filtros",
-  "features": {
-    "discover": {
-      "title": "Descubrir",
-      "description": "Encuentra eventos increíbles y experiencias a precios reducidos."
+    "title": "Be Out",
+    "subtitle": "Descubre ofertas de última hora en eventos cerca de ti",
+    "searchPlaceholder": "Buscar eventos, conciertos, espectáculos...",
+    "categories": {
+        "all": "Todos los Eventos",
+        "music": "Música",
+        "sport": "Deportes",
+        "theater": "Teatro",
+        "food": "Gastronomía"
     },
-    "save": {
-      "title": "Ahorrar",
-      "description": "Obtén hasta un 70% de descuento en entradas de última hora."
+    "sections": {
+        "lastMinute": "⚡ Ofertas de Última Hora",
+        "allEvents": "Todos los Eventos",
+        "categoryEvents": "Eventos de {{category}}",
+        "recommended": "Recomendados para Ti",
+        "nearYou": "Cerca de Ti"
     },
-    "enjoy": {
-      "title": "Disfrutar",
-      "description": "Vive momentos únicos y crea recuerdos inolvidables."
+    "badges": {
+        "lastMinute": "Última Hora",
+        "hotDeal": "Oferta Especial",
+        "newEvent": "Nuevo"
+    },
+    "ticketsAvailable": "entradas disponibles",
+    "eventsFound": "eventos encontrados",
+    "noEventsFound": "No se encontraron eventos que coincidan con tus criterios",
+    "clearFilters": "Limpiar Filtros",
+    "features": {
+        "discover": {
+            "title": "Descubrir",
+            "description": "Encuentra eventos increíbles y experiencias a precios reducidos."
+        },
+        "save": {
+            "title": "Ahorrar",
+            "description": "Obtén hasta un 70% de descuento en entradas de última hora."
+        },
+        "enjoy": {
+            "title": "Disfrutar",
+            "description": "Vive momentos únicos y crea recuerdos inolvidables."
+        }
+    },
+    "cta": {
+        "title": "¿Listo para descubrir eventos increíbles?",
+        "description": "Únete a miles de usuarios que ahorran en sus actividades favoritas"
+    },
+    "filters": {
+        "title": "Filtros",
+        "sortBy": "Ordenar por",
+        "priceRange": "Rango de precios",
+        "categories": "Categorías",
+        "maxDistance": "Distancia máxima",
+        "options": "Opciones",
+        "price": "Rango de Precios",
+        "date": "Fecha",
+        "distance": "Distancia",
+        "category": "Categoría",
+        "sortOptions": {
+            "date": "Fecha",
+            "price": "Precio",
+            "distance": "Distancia",
+            "popularity": "Popularidad"
+        },
+        "priceDisplay": "{{min}}€ - {{max}}€",
+        "distanceDisplay": "En un radio de {{distance}} km",
+        "lastMinuteOnly": "Solo ofertas de último momento",
+        "availableOnly": "Ocultar eventos agotados",
+        "applyFilters": "Aplicar filtros",
+        "resetFilters": "Reiniciar"
     }
-  },
-  "cta": {
-    "title": "¿Listo para descubrir eventos increíbles?",
-    "description": "Únete a miles de usuarios que ahorran en sus actividades favoritas"
-  },
-  "filters": {
-    "price": "Rango de Precio",
-    "date": "Fecha",
-    "distance": "Distancia",
-    "category": "Categoría"
-  }
 }

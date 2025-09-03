@@ -37,11 +37,13 @@ import {
     LocationOn,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "../context/AuthContext";
 
 const drawerWidth = 280;
 
 const OrganizerMainLayout = ({ children }) => {
+    const { t } = useTranslation('organizer');
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -70,37 +72,37 @@ const OrganizerMainLayout = ({ children }) => {
 
     const menuItems = [
         {
-            text: "Tableau de bord",
+            text: t('navigation.dashboard'),
             icon: <Dashboard />,
             path: "/dashboard",
         },
         {
-            text: "Mes événements",
+            text: t('navigation.events'),
             icon: <Event />,
             path: "/events",
         },
         {
-            text: "Notifications",
+            text: t('navigation.notifications'),
             icon: <Notifications />,
             path: "/notifications",
         },
         {
-            text: "Mes lieux",
+            text: t('navigation.venues'),
             icon: <LocationOn />,
             path: "/venues",
         },
         {
-            text: "Réservations",
+            text: t('navigation.bookings'),
             icon: <BookOnline />,
             path: "/bookings",
         },
         {
-            text: "Revenus",
+            text: t('navigation.revenue'),
             icon: <TrendingUp />,
             path: "/revenue",
         },
         {
-            text: "Mon profil",
+            text: t('navigation.profile'),
             icon: <Business />,
             path: "/profile",
         },
@@ -111,10 +113,10 @@ const OrganizerMainLayout = ({ children }) => {
 
         const status = profile.status || "pending";
         const statusConfig = {
-            approved: { label: "Approuvé", color: "success" },
-            pending: { label: "En attente", color: "warning" },
-            suspended: { label: "Suspendu", color: "error" },
-            rejected: { label: "Rejeté", color: "error" },
+            approved: { label: t('status.approved'), color: "success" },
+            pending: { label: t('status.pending'), color: "warning" },
+            suspended: { label: t('status.suspended'), color: "error" },
+            rejected: { label: t('status.rejected'), color: "error" },
         };
 
         const config = statusConfig[status] || statusConfig.pending;
@@ -141,7 +143,7 @@ const OrganizerMainLayout = ({ children }) => {
                             Be-Out
                         </Typography>
                         <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                            Be Out - Espace Organisateur
+                            {t('navigation.organizerSpace')}
                         </Typography>
                     </Box>
                 </Box>
@@ -207,7 +209,7 @@ const OrganizerMainLayout = ({ children }) => {
                     startIcon={<Add />}
                     onClick={() => navigate("/events/new")}
                     sx={{ mb: 1 }}>
-                    Nouvel événement
+                    {t('navigation.newEvent')}
                 </Button>
             </Box>
         </Box>
@@ -274,13 +276,13 @@ const OrganizerMainLayout = ({ children }) => {
                             <ListItemIcon>
                                 <Settings fontSize="small" />
                             </ListItemIcon>
-                            <ListItemText>Paramètres</ListItemText>
+                            <ListItemText>{t('navigation.settings')}</ListItemText>
                         </MenuItem>
                         <MenuItem onClick={handleLogout}>
                             <ListItemIcon>
                                 <ExitToApp fontSize="small" />
                             </ListItemIcon>
-                            <ListItemText>Déconnexion</ListItemText>
+                            <ListItemText>{t('navigation.logout')}</ListItemText>
                         </MenuItem>
                     </Menu>
                 </Toolbar>

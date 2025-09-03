@@ -31,7 +31,7 @@ const MenuProps = {
 };
 
 const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
-    const { t } = useTranslation();
+    const { t } = useTranslation('organizer');
 
     const handleChange = (field, value) => {
         onChange({
@@ -63,11 +63,11 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
     return (
         <Box sx={{ p: 3 }}>
             <Typography variant="h5" gutterBottom>
-                Détails de l'événement
+                {t('events.details.title')}
             </Typography>
 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Renseignez les informations principales de votre événement.
+                {t('events.details.description')}
             </Typography>
 
             <Grid container spacing={3}>
@@ -75,11 +75,11 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                 <Grid size={{ xs: 12 }}>
                     <TextField
                         fullWidth
-                        label="Titre de l'événement"
+                        label={t('events.details.fields.title')}
                         value={data.title || ''}
                         onChange={(e) => handleChange('title', e.target.value)}
                         required
-                        placeholder="Ex: Concert de jazz au parc"
+                        placeholder={t('events.details.fields.titlePlaceholder')}
                     />
                 </Grid>
 
@@ -89,18 +89,18 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                         fullWidth
                         multiline
                         rows={4}
-                        label={t('Description')}
+                        label={t('events.details.fields.description')}
                         value={data.description || ''}
                         onChange={(e) => handleChange('description', e.target.value)}
                         required
-                        placeholder={t('Décrivez votre événement de manière attractive...')}
+                        placeholder={t('events.details.fields.descriptionPlaceholder')}
                     />
                 </Grid>
 
                 {/* Event Date */}
                 <Grid size={{ xs: 12, md: 6 }}>
                     <DateTimePicker
-                        label={t('Date et heure')}
+                        label={t('events.details.fields.dateTime')}
                         value={data.event_date}
                         onChange={(newValue) => handleChange('event_date', newValue)}
                         format="dd/MM/yyyy HH:mm"
@@ -116,11 +116,11 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                 {/* Category */}
                 <Grid size={{ xs: 12, md: 6 }}>
                     <FormControl fullWidth required>
-                        <InputLabel>{t('Catégorie')}</InputLabel>
+                        <InputLabel>{t('events.details.fields.category')}</InputLabel>
                         <Select
                             value={data.category_id || ''}
                             onChange={(e) => handleChange('category_id', e.target.value)}
-                            label={t('Catégorie')}
+                            label={t('events.details.fields.category')}
                         >
                             {categories.map((category) => (
                                 <MenuItem key={category.id} value={category.id}>
@@ -136,13 +136,13 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                     <TextField
                         fullWidth
                         type="number"
-                        label={t('Prix')}
+                        label={t('events.price')}
                         value={data.price || ''}
                         onChange={(e) => handleChange('price', e.target.value)}
                         InputProps={{
                             endAdornment: <InputAdornment position="end">€</InputAdornment>,
                         }}
-                        helperText={t('Laissez vide pour un événement gratuit')}
+                        helperText={t('events.freeEventHint')}
                     />
                 </Grid>
 
@@ -151,22 +151,22 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                     <TextField
                         fullWidth
                         type="number"
-                        label={t('Nombre maximum de participants')}
+                        label={t('events.maxParticipants')}
                         value={data.max_participants || ''}
                         onChange={(e) => handleChange('max_participants', e.target.value)}
-                        helperText={t('Laissez vide pour illimité')}
+                        helperText={t('events.unlimitedHint')}
                     />
                 </Grid>
 
                 {/* Tags */}
                 <Grid size={{ xs: 12 }}>
                     <FormControl fullWidth>
-                        <InputLabel>{t('Tags')}</InputLabel>
+                        <InputLabel>{t('events.tags')}</InputLabel>
                         <Select
                             multiple
                             value={data.tags || []}
                             onChange={handleTagsChange}
-                            input={<OutlinedInput label={t('Tags')} />}
+                            input={<OutlinedInput label={t('events.tags')} />}
                             renderValue={(selected) => (
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                     {selected.map((value) => (
@@ -189,7 +189,7 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                 <Grid size={{ xs: 12 }}>
                     <Box>
                         <Typography variant="body2" gutterBottom>
-                            {t('Image de l\'événement')}
+                            {t('events.eventImage')}
                         </Typography>
                         <Button
                             variant="outlined"
@@ -197,7 +197,7 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                             startIcon={<PhotoCamera />}
                             sx={{ mb: 1 }}
                         >
-                            {t('Choisir une image')}
+                            {t('events.chooseImage')}
                             <input
                                 type="file"
                                 hidden
@@ -207,7 +207,7 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                         </Button>
                         {data.image && (
                             <Typography variant="body2" color="text.secondary">
-                                {t('Fichier sélectionné:')} {data.image.name}
+                                {t('events.selectedFile')} {data.image.name}
                             </Typography>
                         )}
                     </Box>
@@ -219,11 +219,11 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                         fullWidth
                         multiline
                         rows={3}
-                        label={t('Prérequis ou conditions')}
+                        label={t('events.requirements')}
                         value={data.requirements || ''}
                         onChange={(e) => handleChange('requirements', e.target.value)}
-                        placeholder={t('Ex: Âge minimum 18 ans, tenue correcte exigée...')}
-                        helperText={t('Indiquez les conditions particulières de participation')}
+                        placeholder={t('events.requirementsPlaceholder')}
+                        helperText={t('events.requirementsHelp')}
                     />
                 </Grid>
 
@@ -233,11 +233,11 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                         fullWidth
                         multiline
                         rows={3}
-                        label={t('Politique d\'annulation')}
+                        label={t('events.cancellationPolicy')}
                         value={data.cancellation_policy || ''}
                         onChange={(e) => handleChange('cancellation_policy', e.target.value)}
-                        placeholder={t('Ex: Remboursement intégral jusqu\'à 48h avant l\'événement...')}
-                        helperText={t('Décrivez les conditions de remboursement et d\'annulation')}
+                        placeholder={t('events.cancellationPolicyPlaceholder')}
+                        helperText={t('events.cancellationPolicyHelp')}
                     />
                 </Grid>
 
@@ -250,10 +250,10 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                                 onChange={(e) => handleChange('is_featured', e.target.checked)}
                             />
                         }
-                        label={t('Événement mis en avant')}
+                        label={t('events.featuredEvent')}
                     />
                     <Typography variant="body2" color="text.secondary">
-                        {t('Les événements mis en avant apparaissent en priorité dans les recherches')}
+                        {t('events.featuredEventHelp')}
                     </Typography>
                 </Grid>
             </Grid>

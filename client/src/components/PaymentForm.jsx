@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { useTranslation } from "react-i18next";
 import paymentService from "../services/paymentService";
 import "./PaymentForm.css";
 
 const PaymentForm = ({ eventId, amount, currency = "eur", onPaymentSuccess, onPaymentError, onCancel }) => {
     const stripe = useStripe();
     const elements = useElements();
+    const { t } = useTranslation(['payment', 'common']);
     const [isLoading, setIsLoading] = useState(false);
     const [clientSecret, setClientSecret] = useState("");
     const [paymentIntent, setPaymentIntent] = useState(null);
@@ -136,23 +138,23 @@ const PaymentForm = ({ eventId, amount, currency = "eur", onPaymentSuccess, onPa
 
                 <div className="payment-actions">
                     <button type="button" onClick={onCancel} className="btn btn-secondary" disabled={isLoading}>
-                        Cancel
+                        {t('payment:form.cancel')}
                     </button>
                     <button type="submit" disabled={!stripe || !clientSecret || isLoading} className="btn btn-primary">
                         {isLoading ? (
                             <>
                                 <div className="btn-spinner"></div>
-                                Processing...
+                                {t('payment:form.processing')}
                             </>
                         ) : (
-                            `Pay ${formatAmount(amount, currency)}`
+                            t('payment:form.payAmount', { amount: formatAmount(amount, currency) })
                         )}
                     </button>
                 </div>
             </form>
 
             <div className="payment-security">
-                <p className="security-text">🔒 Your payment information is secure and encrypted</p>
+                <p className="security-text">{t('payment:form.securityMessage')}</p>
             </div>
         </div>
     );

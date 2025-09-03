@@ -91,10 +91,11 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 - All client applications support full i18n with language detection and localStorage persistence
 - Server-side i18n infrastructure available in `server/src/i18n/index.js`
 
-**Live Translation Editing**: Admin can edit translations that persist across deployments:
-- Dev: Files in `client/src/i18n/locales/`
-- Production: Volume-mounted translations with migration script in `server/scripts/`
-- Server loads translations from `TRANSLATIONS_PATH` or falls back to bundled files
+**Centralized Translation System**: All translations stored in `server/translations/` for persistence:
+- Client & Organizer-client use HTTP backend to load from server API
+- Admin interface edits translations directly in server files
+- Changes persist across deployments via volume mounts
+- **CRITICAL**: Organizer-client currently broken (uses hardcoded strings instead of server API)
 
 ## Database & Services
 

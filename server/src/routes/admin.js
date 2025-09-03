@@ -8,43 +8,51 @@ const router = Router();
 // Middleware to check admin permissions
 const requireAdmin = async (req, res, next) => {
     try {
-        // First authenticate the JWT token
-        authenticateToken(req, res, () => {
-            // Then check if user has admin role
-            if (!req.user || !req.user.userId) {
-                console.log("Admin middleware: No user or userId found");
-                return res.status(401).json({ error: "Admin authentication required" });
-            }
+        console.log(`[Auth] Admin middleware called for: ${req.method} ${req.path}`);
 
-            console.log("Admin middleware: Checking role for user:", req.user.userId);
-
-            // Get user role from database
-            const checkAdminRole = async () => {
-                const client = await pool.connect();
+        // Use a promise-based approach instead of callback nesting
+        return new Promise((resolve, reject) => {
+            authenticateToken(req, res, async () => {
                 try {
-                    const result = await client.query(
-                        "SELECT id, email, role FROM users WHERE id = $1 AND role IN ('admin', 'moderator')",
-                        [req.user.userId]
-                    );
-
-                    console.log("Admin middleware: User role check result:", result.rows);
-
-                    if (result.rows.length === 0) {
-                        console.log("Admin middleware: User not found or not admin/moderator");
-                        return res.status(403).json({ error: "Admin access denied" });
+                    // Then check if user has admin role
+                    if (!req.user || !req.user.userId) {
+                        console.log("Admin middleware: No user or userId found");
+                        return res.status(401).json({ error: "Admin authentication required" });
                     }
 
-                    req.adminUser = result.rows[0];
-                    console.log("Admin middleware: Access granted for user:", req.adminUser.email);
-                    next();
-                } finally {
-                    client.release();
-                }
-            };
+                    console.log("Admin middleware: Checking role for user:", req.user.userId);
 
-            checkAdminRole().catch((err) => {
-                console.error("Admin role check error:", err);
-                res.status(500).json({ error: "Admin authentication failed" });
+                    // Get user role from database
+                    const client = await pool.connect();
+                    try {
+                        const result = await client.query(
+                            "SELECT id, email, role FROM users WHERE id = $1 AND role IN ('admin', 'moderator')",
+                            [req.user.userId]
+                        );
+
+                        console.log("Admin middleware: User role check result:", result.rows);
+
+                        if (result.rows.length === 0) {
+                            console.log("Admin middleware: User not found or not admin/moderator");
+                            return res.status(403).json({ error: "Admin access denied" });
+                        }
+
+                        req.adminUser = result.rows[0];
+                        console.log("Admin middleware: Access granted for user:", req.adminUser.email);
+                        next();
+                        resolve();
+                    } catch (dbError) {
+                        console.error("Admin middleware database error:", dbError);
+                        res.status(500).json({ error: "Admin authentication failed" });
+                        reject(dbError);
+                    } finally {
+                        client.release();
+                    }
+                } catch (innerError) {
+                    console.error("Admin middleware inner error:", innerError);
+                    res.status(500).json({ error: "Admin authentication failed" });
+                    reject(innerError);
+                }
             });
         });
     } catch (error) {
@@ -1021,7 +1029,7 @@ const upload = multer({
 
 // Helper function to get translation file path
 const getTranslationFilePath = (language, namespace) => {
-    const translationsPath = process.env.TRANSLATIONS_PATH || "/app/translations";
+    const translationsPath = process.env.TRANSLATIONS_PATH || path.join(process.cwd(), "translations");
     return path.join(translationsPath, `${language}/${namespace}.json`);
 };
 
@@ -1039,18 +1047,30 @@ const ensureDirectoryExists = async (filePath) => {
 router.get("/translations/:language/:namespace", requireAdmin, async (req, res) => {
     try {
         const { language, namespace } = req.params;
+        console.log(`[Admin] GET translations request: ${language}/${namespace}`);
+
+        // Add a simple delay to help with timing issues
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const filePath = getTranslationFilePath(language, namespace);
+        console.log(`[Admin] Reading from: ${filePath}`);
 
         try {
             const fileContent = await fs.readFile(filePath, "utf-8");
+            console.log(`[Admin] File read successfully, length: ${fileContent.length}`);
             const translations = JSON.parse(fileContent);
-            res.json(translations);
+            console.log(`[Admin] JSON parsed successfully, keys: ${Object.keys(translations).length}`);
+
+            // Ensure response is sent
+            res.status(200).json(translations);
         } catch (error) {
+            console.log(`[Admin] File read error:`, error.code, error.message);
             if (error.code === "ENOENT") {
                 // File doesn't exist, return empty object
-                res.json({});
+                res.status(200).json({});
             } else {
-                throw error;
+                console.error("JSON parse or other error:", error);
+                res.status(500).json({ error: "Failed to parse translation file" });
             }
         }
     } catch (error) {

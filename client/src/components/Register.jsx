@@ -43,11 +43,11 @@ const Register = () => {
         try {
             const response = await authService.register({ email, password });
             login(response);
-            setMessage("Registration successful");
+            setMessage(t("auth:register.success"));
             // Redirect to onboarding instead of home
             navigate("/onboarding");
         } catch (error) {
-            setError("Registration failed");
+            setError(t("auth:register.failed"));
         }
     };
 
@@ -113,7 +113,7 @@ const Register = () => {
                     alignItems: "center",
                 }}>
                 <Typography component="h1" variant="h5">
-                    Register
+                    {t("auth:register.title")}
                 </Typography>
                 <Box component="form" onSubmit={handleRegister} sx={{ mt: 1 }}>
                     <TextField
@@ -121,7 +121,7 @@ const Register = () => {
                         required
                         fullWidth
                         id="email"
-                        label="Email Address"
+                        label={t("auth:register.fields.email")}
                         name="email"
                         autoComplete="email"
                         autoFocus
@@ -133,7 +133,7 @@ const Register = () => {
                         required
                         fullWidth
                         name="password"
-                        label="Password"
+                        label={t("auth:register.fields.password")}
                         type="password"
                         id="password"
                         autoComplete="current-password"
@@ -141,7 +141,7 @@ const Register = () => {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                     <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-                        Register
+                        {t("auth:register.submitButton")}
                     </Button>
                 </Box>
             </Box>
@@ -152,10 +152,10 @@ const Register = () => {
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <Button variant="outlined" startIcon={<Google />} onClick={handleGoogleLogin}>
-                    {isTauriAvailable ? "🚀 Google Sign-In (Coming Soon)" : "Sign in with Google"}
+                    {isTauriAvailable ? t("auth:register.social.googleComingSoon") : t("auth:register.social.signInWithGoogle")}
                 </Button>
                 <Button variant="outlined" startIcon={<Apple />} onClick={handleAppleLogin}>
-                    Sign in with Apple
+                    {t("auth:register.social.signInWithApple")}
                 </Button>
                 <Button variant="outlined" startIcon={<Facebook />} onClick={handleFacebookLogin}>
                     {t("auth:login.loginWithFacebook")}

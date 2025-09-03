@@ -9,7 +9,7 @@ import {
 import VenueSelector from "../VenueSelector";
 
 const VenueStep = ({ data, onChange, venues, onVenuesUpdate, onError, onSuccess }) => {
-    const { t } = useTranslation();
+    const { t } = useTranslation('organizer');
 
     const handleVenueChange = (venueId) => {
         onChange({
@@ -21,11 +21,11 @@ const VenueStep = ({ data, onChange, venues, onVenuesUpdate, onError, onSuccess 
     return (
         <Box sx={{ p: 3 }}>
             <Typography variant="h5" gutterBottom>
-                {t('Lieu de l\'événement')}
+                {t('venues.title')}
             </Typography>
 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                {t('Sélectionnez où se déroulera votre événement. Vous pouvez également créer un nouveau lieu.')}
+                {t('venues.description')}
             </Typography>
 
             <Grid container spacing={3}>
@@ -60,7 +60,7 @@ const VenueStep = ({ data, onChange, venues, onVenuesUpdate, onError, onSuccess 
                                     }}
                                 >
                                     <Typography variant="h6" gutterBottom>
-                                        {t('Lieu sélectionné')}
+                                        {t('venues.selected')}
                                     </Typography>
 
                                     <Typography variant="body1" sx={{ fontWeight: 'medium', mb: 1 }}>
@@ -83,7 +83,7 @@ const VenueStep = ({ data, onChange, venues, onVenuesUpdate, onError, onSuccess 
 
                                     {selectedVenue.capacity && (
                                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                            👥 {t('Capacité:')} {selectedVenue.capacity} {t('personnes')}
+                                            👥 {t('venues.capacity')} {selectedVenue.capacity} {t('venues.people')}
                                         </Typography>
                                     )}
                                 </Box>

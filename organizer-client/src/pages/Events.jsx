@@ -43,9 +43,11 @@ import {
     Block,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import organizerService from "../services/organizerService";
 
 const Events = () => {
+    const { t } = useTranslation('organizer');
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [anchorEl, setAnchorEl] = useState(null);

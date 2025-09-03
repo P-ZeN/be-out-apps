@@ -1,19 +1,11 @@
 {
-  "title": "🗺️ Mapa de Eventos",
-  "subtitle": "Descubre eventos cerca de ti",
-  "searchPlaceholder": "Buscar por ubicación o dirección...",
-  "nearbyEvents": "Eventos cercanos ({{count}})",
-  "viewAllEvents": "Ver todos los eventos",
-  "eventsLoaded": "{{count}} eventos cargados con ubicación",
-  "noEventsWithLocation": "No hay eventos con ubicación disponibles",
-  "noEventsFromAPI": "No hay eventos disponibles en este momento",
-  "errorLoadingEvents": "Error al cargar eventos",
-  "locationUpdated": "Ubicación actualizada: {{address}}",
-  "locationError": "No se pudo obtener tu ubicación",
-  "mapUnavailable": "Mapa temporalmente no disponible",
-  "checkMapboxToken": "Por favor verifica tu token de Mapbox o conexión a internet",
-  "eventsAvailable": "{{count}} evento(s) disponible(s)",
-  "viewEventDetails": "Ver detalles del evento",
-  "atDistance": "A {{distance}} de tu ubicación",
-  "yourLocation": "Tu ubicación"
+    "searchPlaceholder": "Buscar por ubicación o dirección...",
+    "nearbyEvents": "Eventos Cercanos ({{count}})",
+    "viewAllEvents": "Ver Todos los Eventos",
+    "eventsLoaded": "{{count}} eventos cargados con ubicación",
+    "noEventsWithLocation": "No hay eventos con ubicación disponibles",
+    "noEventsFromAPI": "No hay eventos disponibles en este momento",
+    "errorLoadingEvents": "Error al cargar los eventos",
+    "locationUpdated": "Ubicación actualizada: {{address}}",
+    "locationError": "No se pudo obtener su ubicación"
 }

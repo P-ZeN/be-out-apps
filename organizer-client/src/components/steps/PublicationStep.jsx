@@ -43,7 +43,7 @@ import {
 } from "@mui/icons-material";
 
 const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitForReview, onPublish, onUnpublish, onRevert }) => {
-    const { t } = useTranslation();
+    const { t } = useTranslation('organizer');
     const navigate = useNavigate();
 
     const handleChange = (field, value) => {

@@ -16,6 +16,11 @@ const i18nConfig = {
         crossDomain: true,
     },
 
+    // Force disable all caching for development
+    cache: {
+        enabled: false
+    },
+
     interpolation: {
         escapeValue: false,
     },
@@ -26,7 +31,7 @@ const i18nConfig = {
     },
 
     defaultNS: "common",
-    ns: ["common", "auth", "home", "navigation", "onboarding", "map", "profile", "events", "bookings", "payments"],
+    ns: ["common", "auth", "home", "navigation", "onboarding", "map", "profile", "bookings"],
 };
 
 i18n.use(Backend) // Use HTTP backend to load translations

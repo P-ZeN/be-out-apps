@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Dialog,
     DialogTitle,
@@ -28,6 +29,7 @@ import PaymentModal from "./PaymentModal";
 
 const EnhancedBookingModal = ({ open, onClose, event }) => {
     const theme = useTheme();
+    const { t } = useTranslation(["bookings", "common"]);
     const [activeStep, setActiveStep] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -44,7 +46,12 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
         acceptTerms: false,
     });
 
-    const steps = ["Détails", "Informations", "Paiement", "Confirmation"];
+    const steps = [
+        t("bookings:modal.steps.details"),
+        t("bookings:modal.steps.information"),
+        t("bookings:modal.steps.payment"),
+        t("bookings:modal.steps.confirmation")
+    ];
 
     const handleInputChange = (field) => (event) => {
         const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
@@ -151,7 +158,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                 return (
                     <Box>
                         <Typography variant="h6" gutterBottom>
-                            Détails de la réservation
+                            {t("bookings:modal.eventInfo.details", "Détails de la réservation")}
                         </Typography>
 
                         {event && (
@@ -175,7 +182,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                                         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                                             <LocationOn sx={{ mr: 1, fontSize: 16 }} />
                                             <Typography variant="body2">
-                                                {event.location || "Lieu à confirmer"}
+                                                {event.location || t("bookings:modal.eventInfo.locationDefault")}
                                             </Typography>
                                         </Box>
                                     </Grid>
@@ -205,7 +212,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
 
                         <TextField
                             fullWidth
-                            label="Nombre de billets"
+                            label={t("bookings:modal.fields.quantity")}
                             type="number"
                             value={formData.quantity}
                             onChange={handleInputChange("quantity")}
@@ -265,16 +272,17 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                 return (
                     <Box>
                         <Typography variant="h6" gutterBottom>
-                            Informations personnelles
+                            {t("bookings:modal.steps.information")}
                         </Typography>
 
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <TextField
                                     fullWidth
-                                    label="Nom complet *"
+                                    label={t("bookings:modal.fields.customerName")}
                                     value={formData.customer_name}
                                     onChange={handleInputChange("customer_name")}
+                                    placeholder={t("bookings:modal.placeholders.customerName")}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -289,10 +297,11 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                             <Grid item xs={12} sm={6}>
                                 <TextField
                                     fullWidth
-                                    label="Email *"
+                                    label={t("bookings:modal.fields.customerEmail")}
                                     type="email"
                                     value={formData.customer_email}
                                     onChange={handleInputChange("customer_email")}
+                                    placeholder={t("bookings:modal.placeholders.customerEmail")}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -307,9 +316,10 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                             <Grid item xs={12} sm={6}>
                                 <TextField
                                     fullWidth
-                                    label="Téléphone"
+                                    label={t("bookings:modal.fields.customerPhone")}
                                     value={formData.customer_phone}
                                     onChange={handleInputChange("customer_phone")}
+                                    placeholder={t("bookings:modal.placeholders.customerPhone")}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -323,12 +333,12 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                             <Grid item xs={12}>
                                 <TextField
                                     fullWidth
-                                    label="Demandes spéciales"
+                                    label={t("bookings:modal.fields.specialRequests")}
                                     multiline
                                     rows={3}
                                     value={formData.special_requests}
                                     onChange={handleInputChange("special_requests")}
-                                    placeholder="Allergies, besoins spéciaux, commentaires..."
+                                    placeholder={t("bookings:modal.placeholders.specialRequests")}
                                 />
                             </Grid>
                         </Grid>
@@ -400,7 +410,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                                     color="primary"
                                 />
                             }
-                            label="J'accepte les conditions générales de vente et la politique de remboursement"
+                            label={t("bookings:modal.fields.acceptTerms")}
                         />
                     </Box>
                 );
@@ -456,9 +466,9 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
     };
 
     const getStepButtonText = () => {
-        if (activeStep === steps.length - 1) return "Terminer";
-        if (activeStep === 2) return "Procéder au paiement";
-        return "Suivant";
+        if (activeStep === steps.length - 1) return t("bookings:modal.buttons.finish");
+        if (activeStep === 2) return t("bookings:modal.buttons.proceedToPayment");
+        return t("bookings:modal.buttons.next");
     };
 
     return (
@@ -466,7 +476,9 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
             <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
                 <DialogTitle>
                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Typography variant="h6">Réservation - {event?.title}</Typography>
+                        <Typography variant="h6">
+                            {t("bookings:modal.title", { eventTitle: event?.title })}
+                        </Typography>
                         <IconButton onClick={handleClose}>
                             <Close />
                         </IconButton>
@@ -495,7 +507,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
 
                 <DialogActions sx={{ p: 3 }}>
                     <Button onClick={handleBack} disabled={activeStep === 0 || success}>
-                        Retour
+                        {t("bookings:modal.buttons.previous")}
                     </Button>
                     <Box sx={{ flex: "1 1 auto" }} />
                     {activeStep < steps.length - 1 && (
@@ -508,7 +520,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                     )}
                     {activeStep === steps.length - 1 && (
                         <Button variant="contained" onClick={handleClose} disabled={loading}>
-                            Fermer
+                            {t("common:buttons.close", "Fermer")}
                         </Button>
                     )}
                 </DialogActions>

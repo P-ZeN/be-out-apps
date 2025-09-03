@@ -276,13 +276,6 @@ const LanguageSettings = () => {
                                             <Refresh />
                                         </IconButton>
                                     </Tooltip>
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<Save />}
-                                        onClick={handleSaveTranslations}
-                                        disabled={saving}>
-                                        {saving ? "Sauvegarde..." : "Sauvegarder les Modifications"}
-                                    </Button>
                                 </Stack>
                             </Grid>
                         </Grid>
@@ -301,16 +294,6 @@ const LanguageSettings = () => {
                             namespace={selectedNamespace}
                         />
                     )}
-
-                    <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
-                        <Button
-                            variant="contained"
-                            startIcon={<Save />}
-                            onClick={handleSaveTranslations}
-                            disabled={saving}>
-                            {saving ? <CircularProgress size={20} /> : "Sauvegarder les Modifications"}
-                        </Button>
-                    </Box>
                 </Box>
             )}
 

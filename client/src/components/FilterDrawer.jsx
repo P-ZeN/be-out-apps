@@ -36,10 +36,10 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
     const categoryOptions = categories.length > 0 ? categories : defaultCategories;
 
     const sortOptions = [
-        { key: "date", label: "Date" },
-        { key: "price", label: "Prix" },
-        { key: "distance", label: "Distance" },
-        { key: "popularity", label: "Popularité" },
+        { key: "date", label: t("home:filters.sortOptions.date") },
+        { key: "price", label: t("home:filters.sortOptions.price") },
+        { key: "distance", label: t("home:filters.sortOptions.distance") },
+        { key: "popularity", label: t("home:filters.sortOptions.popularity") },
     ];
 
     const handlePriceChange = (event, newValue) => {
@@ -106,7 +106,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                     <FilterList sx={{ mr: 1, verticalAlign: "middle" }} />
-                    Filtres
+                    {t("home:filters.title")}
                 </Typography>
                 <IconButton onClick={onClose}>
                     <Close />
@@ -116,8 +116,8 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
             {/* Sort By */}
             <Box sx={{ mb: 3 }}>
                 <FormControl fullWidth>
-                    <InputLabel>Trier par</InputLabel>
-                    <Select value={localFilters.sortBy} label="Trier par" onChange={handleSortChange}>
+                    <InputLabel>{t("home:filters.sortBy")}</InputLabel>
+                    <Select value={localFilters.sortBy} label={t("home:filters.sortBy")} onChange={handleSortChange}>
                         {sortOptions.map((option) => (
                             <MenuItem key={option.key} value={option.key}>
                                 {option.label}
@@ -132,7 +132,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
             {/* Price Range */}
             <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
-                    Gamme de prix
+                    {t("home:filters.priceRange")}
                 </Typography>
                 <Box sx={{ px: 2 }}>
                     <Slider
@@ -151,7 +151,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
                     />
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", mt: 1 }}>
-                    {localFilters.priceRange[0]}€ - {localFilters.priceRange[1]}€
+                    {t("home:filters.priceDisplay", { min: localFilters.priceRange[0], max: localFilters.priceRange[1] })}
                 </Typography>
             </Box>
 
@@ -160,7 +160,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
             {/* Categories */}
             <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
-                    Catégories
+                    {t("home:filters.categories")}
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     {categoryOptions.map((category) => (
@@ -181,7 +181,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
             {/* Distance */}
             <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
-                    Distance maximale
+                    {t("home:filters.maxDistance")}
                 </Typography>
                 <Box sx={{ px: 2 }}>
                     <Slider
@@ -200,7 +200,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
                     />
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", mt: 1 }}>
-                    Dans un rayon de {localFilters.maxDistance} km
+                    {t("home:filters.distanceDisplay", { distance: localFilters.maxDistance })}
                 </Typography>
             </Box>
 
@@ -209,7 +209,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
             {/* Additional Options */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
-                    Options
+                    {t("home:filters.options")}
                 </Typography>
                 <FormControlLabel
                     control={
@@ -223,7 +223,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
                             }
                         />
                     }
-                    label="Offres de dernière minute uniquement"
+                    label={t("home:filters.lastMinuteOnly")}
                 />
                 <FormControlLabel
                     control={
@@ -237,7 +237,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
                             }
                         />
                     }
-                    label="Masquer les événements complets"
+                    label={t("home:filters.availableOnly")}
                 />
             </Box>
 
@@ -245,10 +245,10 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
             <Box sx={{ mt: "auto" }}>
                 <Stack spacing={2}>
                     <Button variant="contained" fullWidth onClick={handleApplyFilters} size="large">
-                        Appliquer les filtres
+                        {t("home:filters.applyFilters")}
                     </Button>
                     <Button variant="outlined" fullWidth onClick={handleResetFilters}>
-                        Réinitialiser
+                        {t("home:filters.resetFilters")}
                     </Button>
                 </Stack>
             </Box>

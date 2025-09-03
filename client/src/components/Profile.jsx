@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import userService from "../services/userService";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 import { Button, TextField, Container, Typography, Box, Alert, Grid, Paper, Divider, IconButton } from "@mui/material";
 import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
 import { formatDateForInput, formatDateForServer } from "../utils/dateUtils";
 
 const Profile = () => {
     const { user, updateUser } = useAuth();
+    const { t } = useTranslation(["profile", "common"]);
     const [profile, setProfile] = useState({
         first_name: "",
         last_name: "",
@@ -43,7 +45,7 @@ const Profile = () => {
                 setProfile(sanitizedProfile);
                 setOriginalProfile(sanitizedProfile);
             } catch (error) {
-                setError("Failed to fetch profile");
+                setError(t("profile:fetchError"));
             }
         };
 
@@ -94,7 +96,7 @@ const Profile = () => {
             setProfile(formattedProfile);
             setOriginalProfile(formattedProfile);
             setIsEditing(false);
-            setMessage("Profile updated successfully!");
+            setMessage(t("profile:updateSuccess"));
 
             // Update the user in AuthContext to reflect the changes
             const updatedUser = {
@@ -111,7 +113,7 @@ const Profile = () => {
             };
             updateUser(updatedUser);
         } catch (error) {
-            setError("Failed to update profile. Please try again.");
+            setError(t("profile:updateError"));
         } finally {
             setLoading(false);
         }
@@ -122,11 +124,11 @@ const Profile = () => {
             <Box sx={{ mt: 4, mb: 4 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                     <Typography variant="h4" gutterBottom>
-                        My Profile
+                        {t("profile:title")}
                     </Typography>
                     {!isEditing ? (
                         <Button variant="contained" startIcon={<EditIcon />} onClick={handleEdit}>
-                            Edit Profile
+                            {t("profile:edit")}
                         </Button>
                     ) : (
                         <Box sx={{ display: "flex", gap: 1 }}>
@@ -135,14 +137,14 @@ const Profile = () => {
                                 startIcon={<SaveIcon />}
                                 onClick={handleSave}
                                 disabled={loading}>
-                                {loading ? "Saving..." : "Save"}
+                                {loading ? t("profile:saving") : t("profile:save")}
                             </Button>
                             <Button
                                 variant="outlined"
                                 startIcon={<CancelIcon />}
                                 onClick={handleCancel}
                                 disabled={loading}>
-                                Cancel
+                                {t("profile:cancel")}
                             </Button>
                         </Box>
                     )}
@@ -152,7 +154,7 @@ const Profile = () => {
                     <Grid container spacing={3}>
                         <Grid size={{ xs: 12 }}>
                             <Typography variant="h6" gutterBottom>
-                                Personal Information
+                                {t("profile:sections.personalInfo")}
                             </Typography>
                             <Divider sx={{ mb: 2 }} />
                         </Grid>
@@ -160,7 +162,7 @@ const Profile = () => {
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 fullWidth
-                                label="First Name"
+                                label={t("profile:fields.firstName")}
                                 value={profile.first_name}
                                 onChange={handleInputChange("first_name")}
                                 InputProps={{ readOnly: !isEditing }}
@@ -172,7 +174,7 @@ const Profile = () => {
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 fullWidth
-                                label="Last Name"
+                                label={t("profile:fields.lastName")}
                                 value={profile.last_name}
                                 onChange={handleInputChange("last_name")}
                                 InputProps={{ readOnly: !isEditing }}
@@ -184,24 +186,24 @@ const Profile = () => {
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 fullWidth
-                                label="Email"
+                                label={t("profile:fields.email")}
                                 value={user?.email || ""}
                                 InputProps={{ readOnly: true }}
                                 variant="filled"
-                                helperText="Email cannot be changed"
+                                helperText={t("profile:fields.emailHelper")}
                             />
                         </Grid>
 
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 fullWidth
-                                label="Phone"
+                                label={t("profile:fields.phone")}
                                 value={profile.phone}
                                 onChange={handleInputChange("phone")}
                                 InputProps={{ readOnly: !isEditing }}
                                 variant={isEditing ? "outlined" : "filled"}
                                 type="tel"
-                                placeholder="+33 1 23 45 67 89"
+                                placeholder={t("profile:placeholders.phone")}
                                 required
                             />
                         </Grid>
@@ -209,7 +211,7 @@ const Profile = () => {
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 fullWidth
-                                label="Date of Birth"
+                                label={t("profile:fields.dateOfBirth")}
                                 value={formatDateForInput(profile.date_of_birth)}
                                 onChange={handleInputChange("date_of_birth")}
                                 InputProps={{ readOnly: !isEditing }}
@@ -222,7 +224,7 @@ const Profile = () => {
 
                         <Grid size={{ xs: 12 }}>
                             <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                                Address
+                                {t("profile:sections.address")}
                             </Typography>
                             <Divider sx={{ mb: 2 }} />
                         </Grid>
@@ -230,12 +232,12 @@ const Profile = () => {
                         <Grid size={{ xs: 12, sm: 3 }}>
                             <TextField
                                 fullWidth
-                                label="Street Number"
+                                label={t("profile:fields.streetNumber")}
                                 value={profile.street_number}
                                 onChange={handleInputChange("street_number")}
                                 InputProps={{ readOnly: !isEditing }}
                                 variant={isEditing ? "outlined" : "filled"}
-                                placeholder="123"
+                                placeholder={t("profile:placeholders.streetNumber")}
                                 required
                             />
                         </Grid>
@@ -243,12 +245,12 @@ const Profile = () => {
                         <Grid size={{ xs: 12, sm: 9 }}>
                             <TextField
                                 fullWidth
-                                label="Street Name"
+                                label={t("profile:fields.streetName")}
                                 value={profile.street_name}
                                 onChange={handleInputChange("street_name")}
                                 InputProps={{ readOnly: !isEditing }}
                                 variant={isEditing ? "outlined" : "filled"}
-                                placeholder="Rue de la Paix"
+                                placeholder={t("profile:placeholders.streetName")}
                                 required
                             />
                         </Grid>
@@ -256,12 +258,12 @@ const Profile = () => {
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 fullWidth
-                                label="Postal Code"
+                                label={t("profile:fields.postalCode")}
                                 value={profile.postal_code}
                                 onChange={handleInputChange("postal_code")}
                                 InputProps={{ readOnly: !isEditing }}
                                 variant={isEditing ? "outlined" : "filled"}
-                                placeholder="75001"
+                                placeholder={t("profile:placeholders.postalCode")}
                                 required
                             />
                         </Grid>
@@ -269,12 +271,12 @@ const Profile = () => {
                         <Grid size={{ xs: 12, sm: 6 }}>
                             <TextField
                                 fullWidth
-                                label="City"
+                                label={t("profile:fields.city")}
                                 value={profile.city}
                                 onChange={handleInputChange("city")}
                                 InputProps={{ readOnly: !isEditing }}
                                 variant={isEditing ? "outlined" : "filled"}
-                                placeholder="Paris"
+                                placeholder={t("profile:placeholders.city")}
                                 required
                             />
                         </Grid>
@@ -282,7 +284,7 @@ const Profile = () => {
                         <Grid size={{ xs: 12 }}>
                             <TextField
                                 fullWidth
-                                label="Country"
+                                label={t("profile:fields.country")}
                                 value={profile.country}
                                 onChange={handleInputChange("country")}
                                 InputProps={{ readOnly: !isEditing }}

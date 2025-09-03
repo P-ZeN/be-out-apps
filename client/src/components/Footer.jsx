@@ -6,7 +6,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 
 const Footer = () => {
-    const { t } = useTranslation("common");
+    const { t } = useTranslation("footer");
     const theme = useTheme();
     const currentYear = new Date().getFullYear();
 
@@ -32,11 +32,10 @@ const Footer = () => {
                                 fontWeight: "bold",
                                 color: theme.palette.footer.titleColor,
                             }}>
-                            Be Out
+                            {t("brand.name")}
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 2, color: theme.palette.footer.textSecondary }}>
-                            Découvrez des événements incroyables à prix réduits. Des offres de dernière minute aux
-                            expériences exclusives, trouvez votre prochaine sortie parfaite.
+                            {t("brand.description")}
                         </Typography>
                         <Stack direction="row" spacing={1}>
                             <IconButton size="small" sx={{ color: theme.palette.footer.text }}>
@@ -62,7 +61,7 @@ const Footer = () => {
                             sx={{
                                 color: theme.palette.footer.titleColor,
                             }}>
-                            Navigation
+                            {t("navigation.title")}
                         </Typography>
                         <Stack spacing={1}>
                             <Link
@@ -74,7 +73,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Accueil
+                                {t("navigation.home")}
                             </Link>
                             <Link
                                 component={RouterLink}
@@ -85,7 +84,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Carte
+                                {t("navigation.map")}
                             </Link>
                             <Link
                                 href="#"
@@ -95,7 +94,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Catégories
+                                {t("navigation.categories")}
                             </Link>
                             <Link
                                 href="#"
@@ -105,7 +104,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Offres du jour
+                                {t("navigation.todayOffers")}
                             </Link>
                         </Stack>
                     </Grid>
@@ -118,7 +117,7 @@ const Footer = () => {
                             sx={{
                                 color: theme.palette.footer.titleColor,
                             }}>
-                            Catégories
+                            {t("categories.title")}
                         </Typography>
                         <Stack spacing={1}>
                             <Link
@@ -129,7 +128,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Musique
+                                {t("categories.music")}
                             </Link>
                             <Link
                                 href="#"
@@ -139,7 +138,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Sports
+                                {t("categories.sports")}
                             </Link>
                             <Link
                                 href="#"
@@ -149,7 +148,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Théâtre
+                                {t("categories.theater")}
                             </Link>
                             <Link
                                 href="#"
@@ -159,7 +158,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Gastronomie
+                                {t("categories.gastronomy")}
                             </Link>
                         </Stack>
                     </Grid>
@@ -172,7 +171,7 @@ const Footer = () => {
                             sx={{
                                 color: theme.palette.footer.titleColor,
                             }}>
-                            Support
+                            {t("support.title")}
                         </Typography>
                         <Stack spacing={1}>
                             <Link
@@ -183,7 +182,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Centre d'aide
+                                {t("support.helpCenter")}
                             </Link>
                             <Link
                                 href="#"
@@ -193,7 +192,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Contact
+                                {t("support.contact")}
                             </Link>
                             <Link
                                 href="#"
@@ -203,7 +202,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Conditions d'utilisation
+                                {t("support.terms")}
                             </Link>
                             <Link
                                 href="#"
@@ -213,7 +212,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Confidentialité
+                                {t("support.privacy")}
                             </Link>
                         </Stack>
                     </Grid>
@@ -226,7 +225,7 @@ const Footer = () => {
                             sx={{
                                 color: theme.palette.footer.titleColor,
                             }}>
-                            Partenaires
+                            {t("partners.title")}
                         </Typography>
                         <Stack spacing={1}>
                             <Link
@@ -237,7 +236,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Devenir partenaire
+                                {t("partners.becomePartner")}
                             </Link>
                             <Link
                                 href="#"
@@ -247,7 +246,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                Espace partenaire
+                                {t("partners.partnerSpace")}
                             </Link>
                             <Link
                                 href="#"
@@ -257,7 +256,7 @@ const Footer = () => {
                                     color: theme.palette.footer.textSecondary,
                                     "&:hover": { color: theme.palette.footer.text },
                                 }}>
-                                API Documentation
+                                {t("partners.apiDocs")}
                             </Link>
                         </Stack>
                     </Grid>
@@ -269,7 +268,7 @@ const Footer = () => {
                 <Grid container justifyContent="space-between" alignItems="center">
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography variant="body2" sx={{ color: theme.palette.footer.textSecondary }}>
-                            © {currentYear} Be Out. Tous droits réservés.
+                            {t("legal.copyright", { year: currentYear })}
                         </Typography>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
@@ -280,7 +279,7 @@ const Footer = () => {
                                 mt: { xs: 1, md: 0 },
                             }}>
                             <Typography variant="body2" sx={{ color: theme.palette.footer.textSecondary }}>
-                                @ZeN
+                                {t("legal.developer")}
                             </Typography>
                         </Box>
                     </Grid>

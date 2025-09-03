@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { IconButton, Tooltip, CircularProgress } from "@mui/material";
 import { Favorite, FavoriteBorder } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import FavoritesService from "../services/favoritesService";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ const FavoriteButton = ({
 }) => {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation(['common']);
     const [isFavorited, setIsFavorited] = useState(initialIsFavorited);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -64,8 +66,8 @@ const FavoriteButton = ({
     };
 
     const getTooltipText = () => {
-        if (!isAuthenticated) return "Se connecter pour ajouter aux favoris";
-        return isFavorited ? "Retirer des favoris" : "Ajouter aux favoris";
+        if (!isAuthenticated) return t('common:favorites.loginToAdd');
+        return isFavorited ? t('common:favorites.removeFromFavorites') : t('common:favorites.addToFavorites');
     };
 
     const button = (

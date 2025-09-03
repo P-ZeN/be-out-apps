@@ -1,42 +1,47 @@
 {
-  "buttons": {
-    "getStarted": "Get Started",
-    "goToProfile": "Go to Profile",
-    "signUp": "Sign Up",
-    "signIn": "Sign In",
-    "login": "Login",
-    "register": "Register",
-    "logout": "Logout",
-    "profile": "Profile",
-    "buyNow": "Buy Now",
-    "viewDetails": "View Details",
-    "favorite": "Add to Favorites",
-    "share": "Share",
-    "filter": "Filter",
-    "search": "Search"
-  },
-  "messages": {
-    "welcome": "Welcome",
+    "buttons": {
+        "getStarted": "Get Started",
+        "goToProfile": "Go to Profile",
+        "signUp": "Sign Up",
+        "signIn": "Sign In",
+        "login": "Login",
+        "register": "Register",
+        "logout": "Logout",
+        "profile": "Profile",
+        "buyNow": "Buy Now",
+        "viewDetails": "View Details",
+        "favorite": "Add to Favorites",
+        "share": "Share",
+        "filter": "Filter",
+        "search": "Search"
+    },
+    "messages": {
+        "welcome": "Welcome",
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "success": "Success"
+    },
+    "favorites": {
+        "loginToAdd": "Login to add to favorites",
+        "addToFavorites": "Add to favorites",
+        "removeFromFavorites": "Remove from favorites"
+    },
+    "form": {
+        "email": "Email address",
+        "password": "Password",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "bio": "Biography",
+        "required": "This field is required"
+    },
+    "footer": {
+        "copyright": "© 2025 Be-Out App. All rights reserved.",
+        "language": "Language:"
+    },
     "loading": "Loading...",
-    "error": "An error occurred",
-    "success": "Success"
-  },
-  "form": {
-    "email": "Email address",
-    "password": "Password",
-    "firstName": "First name",
-    "lastName": "Last name",
-    "bio": "Biography",
-    "required": "This field is required"
-  },
-  "footer": {
-    "copyright": "© 2025 Be-Out App. All rights reserved.",
-    "language": "Language:"
-  },
-  "loading": "Loading...",
-  "back": "Back",
-  "next": "Next",
-  "logout": "Logout",
-  "view": "View",
-  "lastMinute": "Last Minute"
+    "back": "Back",
+    "next": "Next",
+    "logout": "Logout",
+    "view": "View",
+    "lastMinute": "Last Minute"
 }

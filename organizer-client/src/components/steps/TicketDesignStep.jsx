@@ -39,7 +39,7 @@ import {
 } from "@mui/icons-material";
 
 const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
-    const { t } = useTranslation();
+    const { t } = useTranslation('organizer');
     const [backgroundImageFile, setBackgroundImageFile] = useState(null);
 
     // Ticket size options
