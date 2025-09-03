@@ -26,9 +26,22 @@
     "noEventsFound": "Aucun événement trouvé correspondant à vos critères",
     "clearFilters": "Effacer les Filtres",
     "features": {
+        "title": "Pourquoi Choisir BeOut ?",
         "discover": {
-            "title": "Découvrir",
-            "description": "Trouvez des événements incroyables et des expériences à prix réduits."
+            "title": "Découvrir des Événements",
+            "description": "Trouvez des événements incroyables près de chez vous"
+        },
+        "location": {
+            "title": "Basé sur la Localisation",
+            "description": "Voyez les événements près de votre localisation sur une carte interactive"
+        },
+        "connect": {
+            "title": "Se Connecter",
+            "description": "Rencontrez des personnes partageant vos idées et construisez votre communauté"
+        },
+        "favorites": {
+            "title": "Favoris",
+            "description": "Sauvegardez et suivez vos événements et lieux préférés"
         },
         "save": {
             "title": "Économiser",
@@ -43,6 +56,16 @@
         "title": "Prêt à découvrir des événements incroyables ?",
         "description": "Rejoignez des milliers d'utilisateurs qui économisent sur leurs activités préférées"
     },
+    "hero": {
+        "title": "Découvrez des événements incroyables près de chez vous"
+    },
+    "browseEvents": "Parcourir les Événements Maintenant",
+    "browseEventsNow": "Parcourir les Événements Maintenant",
+    "noDownloadRequired": "Aucun téléchargement requis",
+    "downloadIOS": "Télécharger sur l'App Store",
+    "downloadAndroid": "Télécharger sur Google Play",
+    "status": "🚀 Bientôt Disponible sur les App Stores",
+    "viewMap": "Voir la Carte",
     "filters": {
         "title": "Filtres",
         "sortBy": "Trier par",

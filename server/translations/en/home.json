@@ -26,9 +26,22 @@
     "noEventsFound": "No events found matching your criteria",
     "clearFilters": "Clear Filters",
     "features": {
+        "title": "Why Choose BeOut?",
         "discover": {
-            "title": "Discover",
-            "description": "Find amazing events and experiences at discounted prices."
+            "title": "Discover Events",
+            "description": "Find amazing events happening around you"
+        },
+        "location": {
+            "title": "Location Based",
+            "description": "See events near your location on an interactive map"
+        },
+        "connect": {
+            "title": "Connect",
+            "description": "Meet like-minded people and build your community"
+        },
+        "favorites": {
+            "title": "Favorites",
+            "description": "Save and track your favorite events and venues"
         },
         "save": {
             "title": "Save Money",
@@ -43,6 +56,16 @@
         "title": "Ready to discover amazing events?",
         "description": "Join thousands of users who save money on their favorite activities"
     },
+    "hero": {
+        "title": "Discover amazing events happening around you"
+    },
+    "browseEvents": "Browse Events Now",
+    "browseEventsNow": "Browse Events Now",
+    "noDownloadRequired": "No download required",
+    "downloadIOS": "Download on the App Store",
+    "downloadAndroid": "Get it on Google Play",
+    "status": "🚀 Coming Soon to App Stores",
+    "viewMap": "View Map",
     "filters": {
         "title": "Filters",
         "sortBy": "Sort by",

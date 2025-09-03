@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
     const theme = useTheme();
-    const { t } = useTranslation("landing", {
+    const { t } = useTranslation("home", {
         useSuspense: false,
         // Provide fallback translations that work even if server is down
         fallbackLng: false,
