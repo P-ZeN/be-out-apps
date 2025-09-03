@@ -19,8 +19,8 @@ RUN npm install
 COPY src ./src
 COPY . .
 
-# Copy updated translation files
-COPY translations ./translations
+# Copy updated translation files from project root
+COPY ../translations ./translations
 
 # Create uploads directory
 RUN mkdir -p uploads/public/avatars uploads/public/events uploads/public/thumbnails uploads/private/documents uploads/private/temp
