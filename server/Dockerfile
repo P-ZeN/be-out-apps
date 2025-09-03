@@ -19,8 +19,27 @@ RUN npm install
 COPY src ./src
 COPY . .
 
-# Copy updated translation files from project root
-COPY ../translations ./translations
+# Copy updated translation files from project root to a staging area
+COPY ../translations ./translations-staging
+
+# Create initialization script for translations
+# COMMENT OUT the next block when no translation updates are needed
+RUN cat > init-translations.sh << 'EOF'
+#!/bin/sh
+echo "Checking translation files initialization..."
+
+# Check if translations directory is empty or missing key files
+if [ ! -d "translations" ] || [ ! -f "translations/fr/footer.json" ] || [ ! -f "translations/fr/dashboard.json" ]; then
+    echo "Initializing translations from staging area..."
+    mkdir -p translations
+    cp -r translations-staging/* translations/
+    echo "Translation files initialized successfully"
+else
+    echo "Translation files already exist, skipping initialization"
+fi
+EOF
+
+RUN chmod +x init-translations.sh
 
 # Create uploads directory
 RUN mkdir -p uploads/public/avatars uploads/public/events uploads/public/thumbnails uploads/private/documents uploads/private/temp
@@ -46,5 +65,6 @@ EXPOSE 3000
 # HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 #    CMD node -e "const http = require('http'); http.get('http://localhost:3000/', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }).on('error', () => { process.exit(1); });"
 
-# Start the server
-CMD ["node", "src/index.js"]
+# Start the server with translation initialization
+# TO DISABLE: Replace with CMD ["node", "src/index.js"]
+CMD ["sh", "-c", "./init-translations.sh && node src/index.js"]
