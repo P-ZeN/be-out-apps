@@ -366,6 +366,21 @@ class OrganizerService {
         return response.json();
     }
 
+    async toggleEventPublication(eventId, wantsPublished) {
+        const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}/toggle-publication`, {
+            method: "PATCH",
+            headers: this.getAuthHeaders(),
+            body: JSON.stringify({ organizer_wants_published: wantsPublished }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Failed to update publication intent");
+        }
+
+        return response.json();
+    }
+
     async revertEventToDraft(eventId) {
         const response = await fetch(`${API_BASE_URL}/api/organizer/events/${eventId}/revert`, {
             method: "PATCH",

@@ -14,6 +14,31 @@ export const theme = createTheme({
             light: "#f44336",
             contrastText: "#ffffff",
         },
+        // Semantic status colors for consistent UI
+        success: {
+            main: "#4caf50", // Green for positive states
+            dark: "#388e3c",
+            light: "#81c784",
+            contrastText: "#ffffff",
+        },
+        error: {
+            main: "#f44336", // Red for negative states
+            dark: "#d32f2f",
+            light: "#e57373",
+            contrastText: "#ffffff",
+        },
+        warning: {
+            main: "#ff9800", // Orange for attention states
+            dark: "#f57c00",
+            light: "#ffb74d",
+            contrastText: "#000000",
+        },
+        info: {
+            main: "#2196f3", // Blue for informational states
+            dark: "#1976d2",
+            light: "#64b5f6",
+            contrastText: "#ffffff",
+        },
         background: {
             default: "#FFECE1", // Crême - fond principal/pages (unified brand)
             paper: "#ffffff", // Keep white for cards/elevated surfaces
@@ -176,10 +201,7 @@ export const theme = createTheme({
                     fontFamily: '"ClashGrotesk-Variable", sans-serif',
                     fontWeight: 500,
                 },
-                filled: {
-                    backgroundColor: "#FF5917",
-                    color: "#FFFFFF",
-                },
+                // Remove color overrides to allow semantic colors to work properly
             },
         },
         // Admin-specific component overrides

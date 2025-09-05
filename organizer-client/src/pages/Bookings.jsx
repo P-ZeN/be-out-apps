@@ -180,10 +180,10 @@ const Bookings = () => {
                 event_id: eventFilter,
                 date: dateFilter
             };
-            
+
             // For now, just log the action
             console.log("Exporting bookings with filters:", filters);
-            
+
             // TODO: Implement actual CSV/Excel export
             alert(t('bookings.export.notImplemented'));
         } catch (err) {
@@ -433,7 +433,7 @@ const Bookings = () => {
                                 <Typography variant="h6" gutterBottom>
                                     {t('bookings.details.bookingInfo')}
                                 </Typography>
-                                
+
                                 <Box sx={{ mb: 2 }}>
                                     <Typography variant="body2" color="text.secondary">
                                         {t('bookings.details.reference')}

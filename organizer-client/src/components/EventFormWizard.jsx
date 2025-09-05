@@ -182,6 +182,66 @@ const EventFormWizard = () => {
         setActiveStep(newStep);
     };
 
+    // Handle immediate publication actions
+    const handleSubmitForReview = async () => {
+        if (!isEdit || !eventId) return;
+        
+        setLoading(true);
+        setError("");
+        try {
+            await organizerService.submitEventForReview(eventId);
+            setSuccess("Événement soumis pour révision avec succès !");
+            // Reload event data to reflect new status
+            const eventData = await organizerService.getEvent(eventId);
+            setFormData(prev => ({ ...prev, adminData: eventData }));
+        } catch (err) {
+            setError(err.message || "Erreur lors de la soumission pour révision");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleTogglePublication = async () => {
+        if (!isEdit || !eventId) return;
+        
+        const currentWantsPublished = formData.adminData?.organizer_wants_published || false;
+        const newWantsPublished = !currentWantsPublished;
+        
+        setLoading(true);
+        setError("");
+        try {
+            await organizerService.toggleEventPublication(eventId, newWantsPublished);
+            setSuccess(newWantsPublished ? 
+                "Événement marqué pour publication !" : 
+                "Événement retiré de la publication !");
+            // Reload event data to reflect new status
+            const eventData = await organizerService.getEvent(eventId);
+            setFormData(prev => ({ ...prev, adminData: eventData }));
+        } catch (err) {
+            setError(err.message || "Erreur lors du changement de statut de publication");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRevert = async () => {
+        if (!isEdit || !eventId) return;
+        
+        setLoading(true);
+        setError("");
+        try {
+            await organizerService.revertEventToDraft(eventId);
+            setSuccess("Événement remis en brouillon avec succès !");
+            // Reload event data to reflect new status
+            const eventData = await organizerService.getEvent(eventId);
+            setFormData(prev => ({ ...prev, adminData: eventData }));
+        } catch (err) {
+            setError(err.message || "Erreur lors de la remise en brouillon");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Handle wizard completion
     const handleComplete = async () => {
         setLoading(true);
@@ -205,24 +265,10 @@ const EventFormWizard = () => {
             let result;
             if (isEdit) {
                 result = await organizerService.updateEvent(eventId, eventData);
-
-                if (formData.publication.request_review &&
-                    formData.adminData.moderation_status !== "approved" &&
-                    formData.adminData.moderation_status !== "under_review") {
-                    await organizerService.submitEventForReview(eventId);
-                    setSuccess("Événement mis à jour et soumis pour révision avec succès !");
-                } else {
-                    setSuccess("Événement mis à jour avec succès !");
-                }
+                setSuccess("Événement mis à jour avec succès !");
             } else {
                 result = await organizerService.createEvent(eventData);
-
-                if (formData.publication.request_review && result?.id) {
-                    await organizerService.submitEventForReview(result.id);
-                    setSuccess("Événement créé et soumis pour révision avec succès !");
-                } else {
-                    setSuccess("Événement créé avec succès !");
-                }
+                setSuccess("Événement créé avec succès ! Vous pouvez maintenant le soumettre pour révision.");
             }
 
             // Handle image upload if present
@@ -367,6 +413,9 @@ const EventFormWizard = () => {
                         adminData={formData.adminData}
                         isEdit={isEdit}
                         loading={loading}
+                        onSubmitForReview={handleSubmitForReview}
+                        onTogglePublication={handleTogglePublication}
+                        onRevert={handleRevert}
                     />
                 )}
             </Grid>

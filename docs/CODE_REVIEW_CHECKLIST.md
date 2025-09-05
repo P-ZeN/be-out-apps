@@ -34,6 +34,21 @@
    - [ ] Use breakpoint-based styling when needed
    - [ ] Ensure text is readable on all backgrounds
 
+6. **Status Color Consistency**
+   - [ ] Use semantic colors for status pills/chips: `"success"`, `"error"`, `"warning"`, `"info"`, `"default"`
+   - [ ] Green (success) for: published, approved, confirmed, active states
+   - [ ] Red (error) for: rejected, cancelled, failed, suspended states
+   - [ ] Orange (warning) for: revision requested, flagged, needs attention
+   - [ ] Blue (info) for: under review, candidate, processing states
+   - [ ] Grey (default) for: draft, neutral, inactive states
+   - [ ] Avoid custom colors for status indicators - use MUI semantic variants
+
+7. **Publication Logic Consistency**
+   - [ ] Separate organizer intent (`organizer_wants_published`) from admin approval (`moderation_status`)
+   - [ ] Event visible on frontend only when BOTH organizer wants published AND admin approved
+   - [ ] Use clear two-control system: organizer toggle + admin moderation
+   - [ ] Avoid confusing mixed states where publication depends on single complex logic
+
 ## How to Fix Hardcoded Colors
 
 ### ❌ Wrong:
@@ -54,18 +69,30 @@ const theme = useTheme();
 
 ## Available Theme Colors
 
-### Standard Palette:
-- `theme.palette.primary.main` (Blue: #0288d1)
-- `theme.palette.secondary.main` (Yellow: #FFCC00)
-- `theme.palette.background.default` (#fafafa)
-- `theme.palette.background.paper` (white: #ffffff)
-- `theme.palette.text.primary` (#212121)
-- `theme.palette.text.secondary` (#757575)
+### Brand Palette:
+- `theme.palette.primary.main` (Orange: #FF5917)
+- `theme.palette.primary.dark` (Dark Orange: #E64100)
+- `theme.palette.primary.light` (Light Orange: #FF8A50)
+- `theme.palette.secondary.main` (Sombre: #140F0B)
+- `theme.palette.background.default` (Crème: #FFECE1)
+- `theme.palette.background.paper` (White: #FFFFFF)
+- `theme.palette.text.primary` (Sombre: #140F0B)
+- `theme.palette.text.secondary` (#5D4037)
 
-### Custom Footer Palette:
-- `theme.palette.footer.background` (Blue: #0288d1)
-- `theme.palette.footer.text` (White: #ffffff)
-- `theme.palette.footer.textSecondary` (White with opacity: rgba(255, 255, 255, 0.8))
+### Custom Palette:
+- `theme.palette.footer.background` (Sombre: #140F0B)
+- `theme.palette.footer.text` (Crème: #FFECE1)
+- `theme.palette.footer.textSecondary` (Crème with opacity: rgba(255, 236, 225, 0.8))
+- `theme.palette.brand.creme` (#FFECE1)
+- `theme.palette.brand.orange` (#FF5917)
+- `theme.palette.brand.sombre` (#140F0B)
+
+### Semantic Status Colors:
+- `"success"` (Green) - Published, approved, confirmed states
+- `"error"` (Red) - Rejected, cancelled, failed states  
+- `"warning"` (Orange) - Revision requested, pending review
+- `"info"` (Blue) - Under review, candidate, processing states
+- `"default"` (Grey) - Draft, neutral states
 
 ## Automated Checks
 

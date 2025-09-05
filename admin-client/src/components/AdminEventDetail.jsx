@@ -104,15 +104,19 @@ const AdminEventDetail = ({ eventId, onClose, user }) => {
     const getStatusColor = (status) => {
         switch (status) {
             case "approved":
-                return "success";
+                return "success"; // Green for approved
             case "rejected":
-                return "error";
+                return "error"; // Red for rejected
             case "under_review":
-                return "warning";
+                return "info"; // Blue for under review
+            case "revision_requested":
+                return "warning"; // Orange for revision requested
+            case "flagged":
+                return "error"; // Red for flagged
             case "suspended":
-                return "error";
+                return "error"; // Red for suspended
             default:
-                return "default";
+                return "default"; // Gray as fallback
         }
     };
 

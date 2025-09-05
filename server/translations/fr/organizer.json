@@ -330,7 +330,7 @@
         "table": {
             "reference": "Référence",
             "customer": "Client",
-            "event": "Événement", 
+            "event": "Événement",
             "date": "Date",
             "quantity": "Quantité",
             "amount": "Montant",

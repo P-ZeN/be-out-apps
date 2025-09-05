@@ -124,31 +124,47 @@ const Events = () => {
         }
     };
 
-    const getStatusColor = (status, moderationStatus) => {
+        const getStatusColor = (status, moderationStatus, isPublished, organizerWantsPublished) => {
+        // Priority: moderation status issues first
         if (moderationStatus === "rejected" || moderationStatus === "flagged") {
-            return "error";
+            return "error"; // Red for rejected/flagged
         }
         if (moderationStatus === "revision_requested") {
-            return "warning";
+            return "warning"; // Orange for revision requested
+        }
+        if (moderationStatus === "under_review") {
+            return "info"; // Blue for under review
+        }
+        
+        // If approved, show the publication state
+        if (moderationStatus === "approved") {
+            // Use new logic if organizer_wants_published is available, fallback to is_published
+            const wantsPublished = organizerWantsPublished !== undefined ? organizerWantsPublished : isPublished;
+            if (wantsPublished) {
+                return "success"; // Green for approved AND published
+            } else {
+                return "info"; // Blue for approved but not published
+            }
         }
 
+        // Draft and other states
         switch (status) {
-            case "active":
-                return "success";
             case "draft":
-                return "default";
+                return "default"; // Gray for draft
             case "candidate":
-                return "info";
+                return "info"; // Blue for candidate (awaiting review)
             case "cancelled":
             case "suspended":
-                return "error";
+                return "error"; // Red for cancelled/suspended
+            case "completed":
+                return "default"; // Gray for completed
             default:
                 return "default";
         }
     };
 
-    const getStatusLabel = (status, moderationStatus, isPublished) => {
-        // Priority: moderation status overrides regular status for display
+    const getStatusLabel = (status, moderationStatus, isPublished, organizerWantsPublished) => {
+        // Priority: moderation status issues first
         if (moderationStatus === "rejected") {
             return "Rejeté";
         }
@@ -162,9 +178,18 @@ const Events = () => {
             return "Signalé";
         }
 
+        // If approved, show the publication state clearly
+        if (moderationStatus === "approved") {
+            // Use new logic if organizer_wants_published is available, fallback to is_published
+            const wantsPublished = organizerWantsPublished !== undefined ? organizerWantsPublished : isPublished;
+            if (wantsPublished) {
+                return "🌐 Publié"; // Green - visible to public
+            } else {
+                return "✅ Approuvé (privé)"; // Blue - approved but organizer keeps private
+            }
+        }
+
         switch (status) {
-            case "active":
-                return isPublished ? "Publié" : "Approuvé (non publié)";
             case "draft":
                 return "Brouillon";
             case "candidate":
@@ -180,7 +205,7 @@ const Events = () => {
         }
     };
 
-    const getStatusTooltip = (status, moderationStatus, isPublished) => {
+    const getStatusTooltip = (status, moderationStatus, isPublished, organizerWantsPublished) => {
         if (moderationStatus === "rejected") {
             return "Votre événement a été rejeté. Consultez les commentaires et modifiez-le.";
         }
@@ -190,10 +215,17 @@ const Events = () => {
         if (moderationStatus === "under_review") {
             return "Votre événement est en cours de révision par notre équipe.";
         }
-        if (moderationStatus === "approved" && status === "active") {
-            return isPublished
-                ? "Votre événement est publié et visible par le public."
-                : "Votre événement est approuvé mais pas encore publié.";
+        if (moderationStatus === "flagged") {
+            return "Votre événement a été signalé. Vous pouvez le modifier et le soumettre à nouveau.";
+        }
+        if (moderationStatus === "approved") {
+            // Use new logic if organizer_wants_published is available, fallback to is_published
+            const wantsPublished = organizerWantsPublished !== undefined ? organizerWantsPublished : isPublished;
+            if (wantsPublished) {
+                return "Votre événement est publié et visible par le public.";
+            } else {
+                return "Votre événement est approuvé par l'admin mais vous l'avez gardé privé.";
+            }
         }
         if (status === "draft") {
             return "Votre événement est en brouillon. Soumettez-le pour révision quand il est prêt.";
@@ -205,7 +237,10 @@ const Events = () => {
     };
 
     const canSubmitForReview = (event) => {
-        return event.status === "draft";
+        return event.status === "draft" || 
+               event.moderation_status === "rejected" || 
+               event.moderation_status === "revision_requested" || 
+               event.moderation_status === "flagged";
     };
 
     const canRevertToDraft = (event) => {
@@ -220,9 +255,10 @@ const Events = () => {
         // Allow editing for draft events
         if (event.status === "draft") return true;
 
-        // Allow editing if admin requested revision or rejected
+        // Allow editing if admin requested revision, rejected, or flagged
         if (event.moderation_status === "revision_requested") return true;
         if (event.moderation_status === "rejected") return true;
+        if (event.moderation_status === "flagged") return true;
 
         // Do NOT allow editing approved events that are published or under review
         // Once approved, major changes should require re-submission
@@ -277,15 +313,17 @@ const Events = () => {
                                             title={getStatusTooltip(
                                                 event.status,
                                                 event.moderation_status,
-                                                event.is_published
+                                                event.is_published,
+                                                event.organizer_wants_published
                                             )}>
                                             <Chip
                                                 label={getStatusLabel(
                                                     event.status,
                                                     event.moderation_status,
-                                                    event.is_published
+                                                    event.is_published,
+                                                    event.organizer_wants_published
                                                 )}
-                                                color={getStatusColor(event.status, event.moderation_status)}
+                                                color={getStatusColor(event.status, event.moderation_status, event.is_published, event.organizer_wants_published)}
                                                 size="small"
                                                 icon={
                                                     event.moderation_status === "approved" && event.is_published ? (

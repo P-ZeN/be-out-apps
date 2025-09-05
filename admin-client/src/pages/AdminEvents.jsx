@@ -154,19 +154,62 @@ const AdminEvents = ({ user }) => {
         }
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "approved":
-                return "success";
-            case "rejected":
-                return "error";
-            case "under_review":
-                return "warning";
-            case "suspended":
-                return "error";
-            default:
-                return "default";
+    const getStatusColor = (moderationStatus, isPublished, organizerWantsPublished) => {
+        // Priority: moderation status issues first
+        if (moderationStatus === "rejected") {
+            return "error"; // Red for rejected
         }
+        if (moderationStatus === "revision_requested") {
+            return "warning"; // Orange for revision requested
+        }
+        if (moderationStatus === "under_review") {
+            return "info"; // Blue for under review
+        }
+        if (moderationStatus === "flagged") {
+            return "error"; // Red for flagged
+        }
+
+        // If approved, show the publication state
+        if (moderationStatus === "approved") {
+            // Use new logic if organizer_wants_published is available, fallback to is_published
+            const wantsPublished = organizerWantsPublished !== undefined ? organizerWantsPublished : isPublished;
+            if (wantsPublished) {
+                return "success"; // Green - approved AND published
+            } else {
+                return "info"; // Blue - approved but organizer keeps private
+            }
+        }
+
+        return "default"; // Gray as fallback
+    };
+
+    const getStatusLabel = (moderationStatus, isPublished, organizerWantsPublished) => {
+        // Priority: moderation status issues first
+        if (moderationStatus === "rejected") {
+            return "Rejeté";
+        }
+        if (moderationStatus === "revision_requested") {
+            return "Révision demandée";
+        }
+        if (moderationStatus === "under_review") {
+            return "En cours de révision";
+        }
+        if (moderationStatus === "flagged") {
+            return "Signalé";
+        }
+
+        // If approved, show the publication state clearly
+        if (moderationStatus === "approved") {
+            // Use new logic if organizer_wants_published is available, fallback to is_published
+            const wantsPublished = organizerWantsPublished !== undefined ? organizerWantsPublished : isPublished;
+            if (wantsPublished) {
+                return "🌐 Publié"; // Green - visible to public
+            } else {
+                return "✅ Approuvé (privé)"; // Blue - approved but organizer keeps private
+            }
+        }
+
+        return moderationStatus || "Inconnu";
     };
 
     const getStatusIcon = (status) => {
@@ -352,11 +395,12 @@ const AdminEvents = ({ user }) => {
                                             <TableCell>
                                                 <Chip
                                                     icon={getStatusIcon(event.moderation_status)}
-                                                    label={AdminService.getStatusLabel(
+                                                    label={getStatusLabel(
                                                         event.moderation_status,
-                                                        "moderation"
+                                                        event.is_published,
+                                                        event.organizer_wants_published
                                                     )}
-                                                    color={getStatusColor(event.moderation_status)}
+                                                    color={getStatusColor(event.moderation_status, event.is_published, event.organizer_wants_published)}
                                                     size="small"
                                                 />
                                             </TableCell>

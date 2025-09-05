@@ -82,20 +82,27 @@ const EventStatusHistory = () => {
     };
 
     const getStatusColor = (status, moderationStatus) => {
-        if (moderationStatus === "approved") return "success";
-        if (moderationStatus === "under_review") return "info";
-        if (moderationStatus === "revision_requested") return "warning";
-        if (moderationStatus === "rejected") return "error";
+        // Priority: moderation status overrides regular status for display
+        if (moderationStatus === "approved") return "success"; // Green for approved
+        if (moderationStatus === "under_review") return "info"; // Blue for under review
+        if (moderationStatus === "revision_requested") return "warning"; // Orange for revision requested
+        if (moderationStatus === "rejected") return "error"; // Red for rejected
+        if (moderationStatus === "flagged") return "error"; // Red for flagged
 
         switch (status) {
             case "candidate":
-                return "info";
+                return "info"; // Blue for candidate (awaiting review)
             case "draft":
-                return "default";
+                return "default"; // Gray for draft
             case "active":
-                return "success";
+                return "success"; // Green for active/published
+            case "cancelled":
+            case "suspended":
+                return "error"; // Red for cancelled/suspended
+            case "completed":
+                return "success"; // Green for completed events
             default:
-                return "default";
+                return "default"; // Gray as fallback
         }
     };
 

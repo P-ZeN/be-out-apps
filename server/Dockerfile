@@ -49,17 +49,17 @@ fi
 if [ ! -d "translations" ] || [ ! -f "translations/fr/footer.json" ] || [ ! -f "translations/fr/dashboard.json" ] || [ ! -f "translations/fr/venues.json" ]; then
     echo "Initializing translations from staging area..."
     mkdir -p translations
-    
+
     # Ensure we have proper permissions
     chmod 755 translations
-    
+
     # Copy with verbose output
     cp -rv translations-staging/* translations/
-    
+
     # Set proper permissions
     chmod -R 644 translations/*.json 2>/dev/null || true
     chmod -R 755 translations/*/ 2>/dev/null || true
-    
+
     echo "Translation files initialized successfully"
     echo "Final translations directory:"
     ls -la translations/

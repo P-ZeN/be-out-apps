@@ -925,10 +925,13 @@ router.patch("/events/:id/submit", verifyOrganizerToken, async (req, res) => {
 
             const event = checkResult.rows[0];
 
-            // Only allow submission from draft status
-            if (event.status !== "draft") {
+            // Allow submission from draft status or events that need resubmission (rejected, revision_requested, flagged)
+            if (event.status !== "draft" && 
+                event.moderation_status !== "rejected" && 
+                event.moderation_status !== "revision_requested" && 
+                event.moderation_status !== "flagged") {
                 return res.status(400).json({
-                    message: "Only draft events can be submitted for review",
+                    message: "Only draft events or events requiring resubmission can be submitted for review",
                 });
             }
 
@@ -1018,6 +1021,72 @@ router.patch("/events/:id/publish", verifyOrganizerToken, async (req, res) => {
     } catch (error) {
         console.error("Error updating event publication status:", error);
         res.status(500).json({ message: "Error updating event publication status" });
+    }
+});
+
+// Toggle organizer publication intent
+router.patch("/events/:id/toggle-publication", verifyOrganizerToken, async (req, res) => {
+    try {
+        const { organizer_wants_published } = req.body;
+        
+        if (typeof organizer_wants_published !== 'boolean') {
+            return res.status(400).json({ message: "organizer_wants_published must be a boolean" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Verify event belongs to organizer
+            const checkResult = await client.query("SELECT id FROM events WHERE id = $1 AND organizer_id = $2", [
+                req.params.id,
+                req.user.id,
+            ]);
+
+            if (checkResult.rows.length === 0) {
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            // Update organizer publication intent (fallback to is_published if column doesn't exist)
+            let result;
+            try {
+                result = await client.query(
+                    `UPDATE events
+                     SET organizer_wants_published = $1,
+                         status_changed_by = $2,
+                         status_changed_at = NOW()
+                     WHERE id = $3 AND organizer_id = $4
+                     RETURNING *`,
+                    [organizer_wants_published, req.user.id, req.params.id, req.user.id]
+                );
+            } catch (columnError) {
+                // Fallback: if organizer_wants_published column doesn't exist, use is_published
+                console.log("organizer_wants_published column not found, using is_published as fallback");
+                result = await client.query(
+                    `UPDATE events
+                     SET is_published = $1,
+                         status_changed_by = $2,
+                         status_changed_at = NOW()
+                     WHERE id = $3 AND organizer_id = $4
+                     RETURNING *`,
+                    [organizer_wants_published, req.user.id, req.params.id, req.user.id]
+                );
+            }
+
+            await client.query("COMMIT");
+            res.json({
+                message: `Publication intent ${organizer_wants_published ? "enabled" : "disabled"} successfully`,
+                event: result.rows[0],
+            });
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error updating publication intent:", error);
+        res.status(500).json({ message: "Error updating publication intent" });
     }
 });
 

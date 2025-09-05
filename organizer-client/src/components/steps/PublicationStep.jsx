@@ -5,8 +5,6 @@ import {
     Box,
     Typography,
     Grid,
-    FormControlLabel,
-    Switch,
     Alert,
     Card,
     CardContent,
@@ -19,7 +17,6 @@ import {
     Paper,
     Divider,
     Stack,
-    CircularProgress,
 } from "@mui/material";
 import {
     CheckCircle as CheckCircleIcon,
@@ -32,9 +29,6 @@ import {
     Info as InfoIcon,
     Schedule as ScheduleIcon,
     Cancel as CancelIcon,
-    HourglassEmpty as HourglassEmptyIcon,
-    ThumbUp as ThumbUpIcon,
-    ThumbDown as ThumbDownIcon,
     Publish as PublishIcon,
     Undo as UndoIcon,
     History as HistoryIcon,
@@ -42,7 +36,7 @@ import {
     Error as ErrorIcon,
 } from "@mui/icons-material";
 
-const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitForReview, onPublish, onUnpublish, onRevert }) => {
+const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitForReview, onTogglePublication, onRevert }) => {
     const { t } = useTranslation('organizer');
     const navigate = useNavigate();
 
@@ -66,17 +60,26 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
         }
     };
 
-    // Status checking functions
-    const canPublish = adminData?.moderation_status === 'approved';
-    const canSubmitForReview = adminData?.status === 'draft' && adminData?.moderation_status !== 'under_review';
+    // Clearer separation of concerns (backward compatible)
+    const organizerWantsPublished = adminData?.organizer_wants_published !== undefined 
+        ? adminData.organizer_wants_published 
+        : adminData?.is_published || false; // Fallback for existing data
+    const adminApproved = adminData?.moderation_status === 'approved';
+    const eventVisibleToPublic = organizerWantsPublished && adminApproved;
+    
+    // Simplified status checks
+    const canSubmitForReview = adminData?.status === 'draft' || 
+                              adminData?.moderation_status === 'rejected' || 
+                              adminData?.moderation_status === 'revision_requested' || 
+                              adminData?.moderation_status === 'flagged';
     const canRevertToDraft = adminData?.status === 'candidate' && adminData?.moderation_status === 'under_review';
-    const canPublishUnpublish = adminData?.moderation_status === 'approved';
+    const canTogglePublication = adminApproved; // Only toggle if admin approved
 
-    const needsReview = adminData?.moderation_status !== 'approved';
+    const needsReview = !adminApproved;
     const isUnderReview = adminData?.moderation_status === 'under_review';
     const isRejected = adminData?.moderation_status === 'rejected';
-    const isCandidate = adminData?.status === 'candidate';
-    const isDraft = adminData?.status === 'draft';
+    const isRevisionRequested = adminData?.moderation_status === 'revision_requested';
+    const isFlagged = adminData?.moderation_status === 'flagged';
 
     const getStatusIcon = (status) => {
         switch (status) {
@@ -92,13 +95,20 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'approved': return 'success';
-            case 'rejected': return 'error';
-            case 'under_review': return 'info';
-            case 'revision_requested': return 'warning';
-            case 'flagged': return 'error';
-            case 'pending': return 'default';
-            default: return 'default';
+            case 'approved': 
+                return 'success'; // Green for approved
+            case 'rejected': 
+                return 'error'; // Red for rejected
+            case 'under_review': 
+                return 'info'; // Blue for under review
+            case 'revision_requested': 
+                return 'warning'; // Orange for revision requested
+            case 'flagged': 
+                return 'error'; // Red for flagged
+            case 'pending': 
+                return 'default'; // Gray for pending
+            default: 
+                return 'default'; // Gray as fallback
         }
     };
 
@@ -231,62 +241,70 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>
-                                    {t('organizer:publication.status.current')}
+                                    Status de publication
                                 </Typography>
 
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-                                    {/* Approval Status */}
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{ fontWeight: 'medium', minWidth: '140px' }}>
-                                            {t('organizer:publication.status.approval')}
+                                <Stack spacing={3}>
+                                    {/* Admin Approval Status */}
+                                    <Box>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 1 }}>
+                                            🛡️ Statut d'approbation admin
                                         </Typography>
-                                        <Chip
-                                            icon={getStatusIcon(adminData.moderation_status)}
-                                            label={getStatusText(adminData.moderation_status)}
-                                            color={getStatusColor(adminData.moderation_status)}
-                                            size="medium"
-                                        />
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Chip
+                                                icon={getStatusIcon(adminData.moderation_status)}
+                                                label={getStatusText(adminData.moderation_status)}
+                                                color={getStatusColor(adminData.moderation_status)}
+                                                size="medium"
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {adminApproved 
+                                                    ? "Votre événement est approuvé par l'équipe" 
+                                                    : "En attente d'approbation par l'équipe"}
+                                            </Typography>
+                                        </Box>
                                     </Box>
 
-                                    {/* General Status */}
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{ fontWeight: 'medium', minWidth: '140px' }}>
-                                            {t('organizer:publication.status.general')}
+                                    {/* Organizer Publication Intent */}
+                                    <Box>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 1 }}>
+                                            📢 Votre intention de publication
                                         </Typography>
-                                        <Chip
-                                            label={getEventStatusLabel(adminData.status, adminData.moderation_status, adminData.is_published)}
-                                            color={
-                                                adminData.moderation_status === 'approved' && adminData.is_published
-                                                    ? 'success'
-                                                    : adminData.moderation_status === 'rejected' || adminData.moderation_status === 'flagged'
-                                                    ? 'error'
-                                                    : adminData.moderation_status === 'revision_requested'
-                                                    ? 'warning'
-                                                    : 'info'
-                                            }
-                                            size="medium"
-                                        />
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Chip
+                                                icon={organizerWantsPublished ? <CheckCircleIcon /> : <CancelIcon />}
+                                                label={organizerWantsPublished ? "Publier l'événement" : "Garder privé"}
+                                                color={organizerWantsPublished ? "info" : "default"}
+                                                size="medium"
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {organizerWantsPublished 
+                                                    ? "Vous souhaitez que cet événement soit visible" 
+                                                    : "Vous gardez cet événement privé"}
+                                            </Typography>
+                                        </Box>
                                     </Box>
 
-                                    {/* Status explanation */}
-                                    <Alert
-                                        severity={
-                                            adminData.moderation_status === 'approved' && adminData.is_published
-                                                ? 'success'
-                                                : adminData.moderation_status === 'rejected' || adminData.moderation_status === 'flagged'
-                                                ? 'error'
-                                                : adminData.moderation_status === 'revision_requested'
-                                                ? 'warning'
-                                                : 'info'
-                                        }
-                                    >
-                                        {getStatusTooltip(adminData.status, adminData.moderation_status, adminData.is_published)}
-                                    </Alert>
-                                </Box>
+                                    {/* Final Result */}
+                                    <Box sx={{ p: 2, bgcolor: eventVisibleToPublic ? 'success.light' : 'grey.100', borderRadius: 1 }}>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 'medium', mb: 1 }}>
+                                            🌐 Résultat final
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Chip
+                                                icon={eventVisibleToPublic ? <VisibilityIcon /> : <VisibilityIcon sx={{ opacity: 0.5 }} />}
+                                                label={eventVisibleToPublic ? "Visible sur le site" : "Non visible sur le site"}
+                                                color={eventVisibleToPublic ? "success" : "default"}
+                                                size="medium"
+                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {eventVisibleToPublic 
+                                                    ? "✅ Les visiteurs peuvent voir et réserver cet événement"
+                                                    : "❌ Cet événement n'apparaît pas sur le site public"}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Stack>
 
                                 {/* Admin Comments */}
                                 <Box sx={{ mt: 2 }}>
@@ -381,35 +399,35 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         </Paper>
                                     )}
 
-                                    {/* Publish/Unpublish */}
-                                    {canPublishUnpublish && (
+                                    {/* Toggle Publication Intent */}
+                                    {canTogglePublication && (
                                         <Paper variant="outlined" sx={{ p: 2 }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
                                                     <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                                        {adminData?.is_published ? t('organizer:publication.actions.unpublish') : t('organizer:publication.actions.publish')}
+                                                        {organizerWantsPublished ? "Retirer de la publication" : "Publier l'événement"}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        {adminData?.is_published
-                                                            ? t('organizer:publication.actions.unpublishDescription')
-                                                            : t('organizer:publication.actions.publishDescription')
+                                                        {organizerWantsPublished
+                                                            ? "Garder l'événement privé même s'il est approuvé"
+                                                            : "Rendre l'événement visible une fois approuvé"
                                                         }
                                                     </Typography>
                                                 </Box>
                                                 <Button
-                                                    variant={adminData?.is_published ? "outlined" : "contained"}
+                                                    variant={organizerWantsPublished ? "outlined" : "contained"}
                                                     startIcon={<PublishIcon />}
-                                                    onClick={adminData?.is_published ? onUnpublish : onPublish}
-                                                    color={adminData?.is_published ? "default" : "success"}
+                                                    onClick={onTogglePublication}
+                                                    color={organizerWantsPublished ? "default" : "success"}
                                                 >
-                                                    {adminData?.is_published ? t('organizer:publication.actions.unpublishBtn') : t('organizer:publication.actions.publishBtn')}
+                                                    {organizerWantsPublished ? "Retirer" : "Publier"}
                                                 </Button>
                                             </Box>
                                         </Paper>
                                     )}
 
                                     {/* View Public Page */}
-                                    {adminData?.is_published && adminData?.moderation_status === 'approved' && (
+                                    {eventVisibleToPublic && (
                                         <Paper variant="outlined" sx={{ p: 2 }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
@@ -459,171 +477,67 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                     </Grid>
                 )}
 
-                {/* Publication Options */}
-                <Grid size={{ xs: 12 }}>
-                    <Typography variant="h6" gutterBottom>
-                        {t('organizer:publication.options.title')}
-                    </Typography>
-
-                    {/* Publication Settings for new events or specific cases */}
-                    {!isEdit && (
-                        <Box sx={{ mb: 3 }}>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={data.request_review || false}
-                                        onChange={(e) => handleChange('request_review', e.target.checked)}
-                                    />
-                                }
-                                label={
-                                    <Box>
-                                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                                            {t('organizer:publication.actions.submitReview')}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {data.request_review
-                                                ? t('organizer:publication.options.submitAfterCreation')
-                                                : t('organizer:publication.options.stayDraftAfterCreation')
-                                            }
-                                        </Typography>
-                                    </Box>
-                                }
-                            />
-
-                            {data.request_review && (
-                                <Alert severity="info" sx={{ mt: 1 }}>
-                                    <Typography variant="caption">
-                                        {t('organizer:publication.options.reviewTime')}
-                                    </Typography>
-                                </Alert>
-                            )}
-                        </Box>
-                    )}
-
-                    {/* Request Review Switch - only for non-approved events when editing */}
-                    {isEdit &&
-                        adminData?.moderation_status !== "approved" &&
-                        adminData?.moderation_status !== "under_review" && (
-                            <Box sx={{ mb: 3 }}>
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            checked={data.request_review || false}
-                                            onChange={(e) => handleChange('request_review', e.target.checked)}
-                                        />
-                                    }
-                                    label={
-                                        <Box>
-                                            <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                                                {t('organizer:publication.actions.submitReview')}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {data.request_review
-                                                    ? t('organizer:publication.options.submitForReviewShort')
-                                                    : t('organizer:publication.options.stayDraftShort')
-                                                }
-                                            </Typography>
-                                        </Box>
-                                    }
-                                />
-                                {data.request_review && (
-                                    <Alert severity="info" sx={{ mt: 1, p: 1 }}>
-                                        <Typography variant="caption">
-                                            {t('organizer:publication.options.reviewSoon')}
-                                        </Typography>
-                                    </Alert>
-                                )}
-                            </Box>
-                        )}
-                </Grid>
-
                 {/* Help Information */}
                 <Grid size={{ xs: 12 }}>
                     <Card sx={{ bgcolor: 'grey.50' }}>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
-                                {t('organizer:publication.process.title')}
+                                Processus de publication
                             </Typography>
 
                             <Stack spacing={1.5}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Chip label="1" size="small" color="primary" />
+                                    <Chip label="1" size="small" color="default" />
                                     <Typography variant="body2">
-                                        <strong>{t('organizer:publication.process.draft')}:</strong> {t('organizer:publication.process.draftDescription')}
+                                        <strong>Créer :</strong> Créez votre événement en brouillon
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip label="2" size="small" color="info" />
                                     <Typography variant="body2">
-                                        <strong>{t('organizer:publication.process.review')}:</strong> {t('organizer:publication.process.reviewDescription')}
+                                        <strong>Soumettre :</strong> Envoyez votre événement pour approbation admin
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip label="3" size="small" color="success" />
                                     <Typography variant="body2">
-                                        <strong>{t('organizer:publication.process.approved')}:</strong> {t('organizer:publication.process.approvedDescription')}
+                                        <strong>Approuvé :</strong> L'équipe valide la qualité de votre événement
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip label="4" size="small" color="success" />
                                     <Typography variant="body2">
-                                        <strong>{t('organizer:publication.process.published')}:</strong> {t('organizer:publication.process.publishedDescription')}
+                                        <strong>Publier :</strong> Vous choisissez de rendre l'événement visible
                                     </Typography>
                                 </Box>
                             </Stack>
 
                             <Divider sx={{ my: 2 }} />
 
-                            <Typography variant="body2" color="text.secondary">
-                                <strong>{t('organizer:publication.process.note')}:</strong> {t('organizer:publication.process.noteDescription')}
-                            </Typography>
+                            <Alert severity="info" sx={{ mt: 2 }}>
+                                <Typography variant="body2">
+                                    <strong>📋 Contrôles séparés :</strong>
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                    • <strong>Admin :</strong> Vérifie la qualité et conformité (approbation)<br/>
+                                    • <strong>Vous :</strong> Décidez si vous voulez publier (intention)<br/>
+                                    • <strong>Résultat :</strong> Visible uniquement si les deux sont vrais
+                                </Typography>
+                            </Alert>
                         </CardContent>
                     </Card>
                 </Grid>
 
-                {/* Final Actions */}
-                <Grid size={{ xs: 12 }}>
-                    <Alert severity="info">
-                        <Typography variant="body2">
-                            {isEdit
-                                ? t('organizer:publication.messages.saveChanges')
-                                : t('organizer:publication.messages.createEvent')
-                            }
-                        </Typography>
-
-                        {data.request_review && (
-                            <Typography variant="body2" sx={{ mt: 1 }}>
-                                {t('organizer:publication.messages.notifyAdmin')}
+                {/* Navigation Help */}
+                {!isEdit && (
+                    <Grid size={{ xs: 12 }}>
+                        <Alert severity="info">
+                            <Typography variant="body2">
+                                💡 <strong>Création d'événement :</strong> Complétez toutes les étapes, puis votre événement sera créé en brouillon. Vous pourrez ensuite le soumettre pour révision.
                             </Typography>
-                        )}
-                    </Alert>
-                </Grid>
-
-                {/* Complete Button Preview */}
-                <Grid size={{ xs: 12 }}>
-                    <Box sx={{ textAlign: 'center', pt: 2 }}>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : (data.request_review ? <SendIcon /> : <CheckCircleIcon />)}
-                            disabled
-                            sx={{ minWidth: 200 }}
-                        >
-                            {loading
-                                ? t('organizer:publication.messages.saving')
-                                : data.request_review
-                                    ? t('organizer:publication.messages.finalizeSubmit')
-                                    : isEdit
-                                        ? t('organizer:publication.messages.saveChangesBtn')
-                                        : t('organizer:publication.messages.createEventBtn')
-                            }
-                        </Button>
-
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                            {t('organizer:publication.messages.useNavigation')}
-                        </Typography>
-                    </Box>
-                </Grid>
+                        </Alert>
+                    </Grid>
+                )}
             </Grid>
         </Box>
     );
