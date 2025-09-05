@@ -67,5 +67,5 @@ EXPOSE 3000
 
 # Start the server with translation initialization
 # TO DISABLE: Replace with CMD ["node", "src/index.js"]
-# CMD ["sh", "-c", "./init-translations.sh && node src/index.js"]
-CMD ["node", "src/index.js"]
+CMD ["sh", "-c", "./init-translations.sh && node src/index.js"]
+# CMD ["node", "src/index.js"]

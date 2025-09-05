@@ -1773,7 +1773,7 @@ jobs:
         if [ -f "src-tauri/gen/apple/app.xcodeproj/project.pbxproj" ]; then
           echo "📝 Updating Xcode project settings..."
 
-          # Make a backup first
+          # Make a backup firstSs
           cp src-tauri/gen/apple/app.xcodeproj/project.pbxproj src-tauri/gen/apple/app.xcodeproj/project.pbxproj.backup
 
           # Check for development team requirement
