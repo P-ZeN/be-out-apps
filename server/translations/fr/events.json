@@ -1,0 +1,30 @@
+{
+    "details": {
+        "title": "Détails de l'événement",
+        "description": "Renseignez les informations principales de votre événement.",
+        "fields": {
+            "title": "Titre de l'événement",
+            "titlePlaceholder": "Entrez le titre de votre événement",
+            "description": "Description",
+            "descriptionPlaceholder": "Décrivez votre événement en détail",
+            "dateTime": "Date et heure",
+            "category": "Catégorie"
+        }
+    },
+    "price": "Prix (€)",
+    "freeEventHint": "Laissez vide ou 0 pour un événement gratuit",
+    "maxParticipants": "Nombre maximum de participants",
+    "unlimitedHint": "Laissez vide pour un nombre illimité",
+    "tags": "Tags",
+    "eventImage": "Image de l'événement",
+    "chooseImage": "Choisir une image",
+    "selectedFile": "Fichier sélectionné :",
+    "requirements": "Prérequis",
+    "requirementsPlaceholder": "Équipement nécessaire, restrictions d'âge, etc.",
+    "requirementsHelp": "Indiquez les prérequis pour participer à cet événement",
+    "cancellationPolicy": "Politique d'annulation",
+    "cancellationPolicyPlaceholder": "Conditions d'annulation et de remboursement",
+    "cancellationPolicyHelp": "Décrivez votre politique d'annulation",
+    "featuredEvent": "Événement mis en avant",
+    "featuredEventHelp": "Les événements mis en avant apparaissent en premier dans les résultats de recherche"
+}

@@ -104,46 +104,46 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
 
     const getStatusText = (status) => {
         switch (status) {
-            case 'approved': return t('Approuvé');
-            case 'rejected': return t('Rejeté');
-            case 'under_review': return t('En cours de révision');
-            case 'revision_requested': return t('Révision demandée');
-            case 'flagged': return t('Signalé');
-            case 'pending': return t('En attente de révision');
-            default: return t('Statut inconnu');
+            case 'approved': return t('organizer:publication.status.approved');
+            case 'rejected': return t('organizer:publication.status.rejected');
+            case 'under_review': return t('organizer:publication.status.underReview');
+            case 'revision_requested': return t('organizer:publication.status.revisionRequested');
+            case 'flagged': return t('organizer:publication.status.flagged');
+            case 'pending': return t('organizer:publication.status.pending');
+            default: return t('organizer:publication.status.unknown');
         }
     };
 
     const getEventStatusLabel = (status, moderationStatus, isPublished) => {
         // Priority: moderation status overrides regular status for display
         if (moderationStatus === 'rejected') {
-            return t('Rejeté');
+            return t('organizer:publication.status.rejected');
         }
         if (moderationStatus === 'revision_requested') {
-            return t('Révision demandée');
+            return t('organizer:publication.status.revisionRequested');
         }
         if (moderationStatus === 'under_review') {
-            return t('En cours de révision');
+            return t('organizer:publication.status.underReview');
         }
         if (moderationStatus === 'flagged') {
-            return t('Signalé');
+            return t('organizer:publication.status.flagged');
         }
 
         switch (status) {
             case 'active':
-                return isPublished ? t('Publié') : t('Approuvé (non publié)');
+                return isPublished ? t('organizer:publication.status.published') : t('organizer:publication.status.approvedNotPublished');
             case 'draft':
-                return t('Brouillon');
+                return t('organizer:publication.status.draft');
             case 'candidate':
-                return t('En attente de validation');
+                return t('organizer:publication.status.pendingValidation');
             case 'cancelled':
-                return t('Annulé');
+                return t('organizer:publication.status.cancelled');
             case 'suspended':
-                return t('Suspendu');
+                return t('organizer:publication.status.suspended');
             case 'completed':
-                return t('Terminé');
+                return t('organizer:publication.status.finished');
             default:
-                return t('Statut inconnu');
+                return t('organizer:publication.status.unknown');
         }
     };
 
@@ -174,11 +174,11 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
     return (
         <Box sx={{ p: 3 }}>
             <Typography variant="h5" gutterBottom>
-                {t('Publication et modération')}
+                {t('organizer:publication.title')}
             </Typography>
 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                {t('Gérez la publication de votre événement et suivez son statut de modération.')}
+                {t('organizer:publication.description')}
             </Typography>
 
             <Grid container spacing={3}>
@@ -187,7 +187,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                     <Card variant="outlined">
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
-                                {t('Récapitulatif de l\'événement')}
+                                {t('organizer:publication.summary.title')}
                             </Typography>
 
                             <List dense>
@@ -196,8 +196,8 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         <EventIcon color="primary" />
                                     </ListItemIcon>
                                     <ListItemText
-                                        primary={t('Détails de l\'événement')}
-                                        secondary={`✅ ${t('Titre, description et détails configurés')}`}
+                                        primary={t('organizer:publication.summary.details')}
+                                        secondary={`✅ ${t('organizer:publication.summary.detailsComplete')}`}
                                     />
                                 </ListItem>
 
@@ -206,8 +206,8 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         <PlaceIcon color="primary" />
                                     </ListItemIcon>
                                     <ListItemText
-                                        primary={t('Lieu')}
-                                        secondary={`✅ ${t('Lieu sélectionné et configuré')}`}
+                                        primary={t('organizer:publication.summary.venue')}
+                                        secondary={`✅ ${t('organizer:publication.summary.venueComplete')}`}
                                     />
                                 </ListItem>
 
@@ -216,8 +216,8 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         <TicketIcon color="primary" />
                                     </ListItemIcon>
                                     <ListItemText
-                                        primary={t('Billetterie')}
-                                        secondary={`✅ ${t('Configuration des billets terminée')}`}
+                                        primary={t('organizer:publication.summary.ticketing')}
+                                        secondary={`✅ ${t('organizer:publication.summary.ticketingComplete')}`}
                                     />
                                 </ListItem>
                             </List>
@@ -231,7 +231,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>
-                                    {t('Statut actuel de l\'événement')}
+                                    {t('organizer:publication.status.current')}
                                 </Typography>
 
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
@@ -240,7 +240,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         <Typography
                                             variant="body2"
                                             sx={{ fontWeight: 'medium', minWidth: '140px' }}>
-                                            {t('Statut d\'approbation:')}
+                                            {t('organizer:publication.status.approval')}
                                         </Typography>
                                         <Chip
                                             icon={getStatusIcon(adminData.moderation_status)}
@@ -255,7 +255,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                         <Typography
                                             variant="body2"
                                             sx={{ fontWeight: 'medium', minWidth: '140px' }}>
-                                            {t('Statut général:')}
+                                            {t('organizer:publication.status.general')}
                                         </Typography>
                                         <Chip
                                             label={getEventStatusLabel(adminData.status, adminData.moderation_status, adminData.is_published)}
@@ -293,7 +293,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                     <Typography
                                         variant="body2"
                                         sx={{ fontWeight: 'medium', mb: 1 }}>
-                                        {t('Commentaires de l\'administrateur:')}
+                                        {t('organizer:publication.admin.comments')}
                                     </Typography>
                                     {adminData.admin_notes ? (
                                         <Alert
@@ -315,7 +315,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                             color="text.secondary"
                                             sx={{ fontStyle: 'italic' }}
                                         >
-                                            {t('Aucun commentaire de l\'administrateur')}
+                                            {t('organizer:publication.admin.noComments')}
                                         </Typography>
                                     )}
                                 </Box>
@@ -330,7 +330,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>
-                                    {t('Actions disponibles')}
+                                    {t('organizer:publication.actions.title')}
                                 </Typography>
 
                                 <Stack spacing={2}>
@@ -340,10 +340,10 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
                                                     <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                                        {t('Soumettre pour révision')}
+                                                        {t('organizer:publication.actions.submitReview')}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        {t('Envoyez votre événement à l\'équipe de modération pour approbation')}
+                                                        {t('organizer:publication.actions.submitDescription')}
                                                     </Typography>
                                                 </Box>
                                                 <Button
@@ -352,7 +352,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                     onClick={onSubmitForReview}
                                                     color="primary"
                                                 >
-                                                    {t('Soumettre')}
+                                                    {t('organizer:publication.actions.submit')}
                                                 </Button>
                                             </Box>
                                         </Paper>
@@ -364,10 +364,10 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
                                                     <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                                        {t('Remettre en brouillon')}
+                                                        {t('organizer:publication.actions.revertDraft')}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        {t('Retirez votre événement de la révision pour le modifier')}
+                                                        {t('organizer:publication.actions.revertDescription')}
                                                     </Typography>
                                                 </Box>
                                                 <Button
@@ -375,7 +375,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                     startIcon={<UndoIcon />}
                                                     onClick={onRevert}
                                                 >
-                                                    {t('Remettre en brouillon')}
+                                                    {t('organizer:publication.actions.revertDraft')}
                                                 </Button>
                                             </Box>
                                         </Paper>
@@ -387,12 +387,12 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
                                                     <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                                        {adminData?.is_published ? t('Dépublier l\'événement') : t('Publier l\'événement')}
+                                                        {adminData?.is_published ? t('organizer:publication.actions.unpublish') : t('organizer:publication.actions.publish')}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">
                                                         {adminData?.is_published
-                                                            ? t('Masquez votre événement du public temporairement')
-                                                            : t('Rendez votre événement visible au public')
+                                                            ? t('organizer:publication.actions.unpublishDescription')
+                                                            : t('organizer:publication.actions.publishDescription')
                                                         }
                                                     </Typography>
                                                 </Box>
@@ -402,7 +402,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                     onClick={adminData?.is_published ? onUnpublish : onPublish}
                                                     color={adminData?.is_published ? "default" : "success"}
                                                 >
-                                                    {adminData?.is_published ? t('Dépublier') : t('Publier')}
+                                                    {adminData?.is_published ? t('organizer:publication.actions.unpublishBtn') : t('organizer:publication.actions.publishBtn')}
                                                 </Button>
                                             </Box>
                                         </Paper>
@@ -414,10 +414,10 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
                                                     <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                                        {t('Voir la page publique')}
+                                                        {t('organizer:publication.actions.viewPublic')}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        {t('Consultez votre événement tel qu\'il apparaît aux visiteurs')}
+                                                        {t('organizer:publication.actions.viewPublicDescription')}
                                                     </Typography>
                                                 </Box>
                                                 <Button
@@ -425,7 +425,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                     startIcon={<VisibilityIcon />}
                                                     onClick={handleViewPublicPage}
                                                 >
-                                                    {t('Voir la page')}
+                                                    {t('organizer:publication.actions.viewPage')}
                                                 </Button>
                                             </Box>
                                         </Paper>
@@ -437,10 +437,10 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Box>
                                                     <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                                        {t('Historique des statuts')}
+                                                        {t('organizer:publication.actions.statusHistory')}
                                                     </Typography>
                                                     <Typography variant="body2" color="text.secondary">
-                                                        {t('Consultez l\'historique complet des modifications de statut')}
+                                                        {t('organizer:publication.actions.statusHistoryDescription')}
                                                     </Typography>
                                                 </Box>
                                                 <Button
@@ -448,7 +448,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                     startIcon={<HistoryIcon />}
                                                     onClick={handleViewStatusHistory}
                                                 >
-                                                    {t('Voir l\'historique')}
+                                                    {t('organizer:publication.actions.viewHistory')}
                                                 </Button>
                                             </Box>
                                         </Paper>
@@ -462,7 +462,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                 {/* Publication Options */}
                 <Grid size={{ xs: 12 }}>
                     <Typography variant="h6" gutterBottom>
-                        {t('Options de publication')}
+                        {t('organizer:publication.options.title')}
                     </Typography>
 
                     {/* Publication Settings for new events or specific cases */}
@@ -478,12 +478,12 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                 label={
                                     <Box>
                                         <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                                            {t('Soumettre pour révision')}
+                                            {t('organizer:publication.actions.submitReview')}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
                                             {data.request_review
-                                                ? t('Sera soumis à la révision après création')
-                                                : t('Rester en brouillon après création')
+                                                ? t('organizer:publication.options.submitAfterCreation')
+                                                : t('organizer:publication.options.stayDraftAfterCreation')
                                             }
                                         </Typography>
                                     </Box>
@@ -493,7 +493,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                             {data.request_review && (
                                 <Alert severity="info" sx={{ mt: 1 }}>
                                     <Typography variant="caption">
-                                        {t('Votre événement sera examiné par notre équipe dans un délai de 24-48 heures')}
+                                        {t('organizer:publication.options.reviewTime')}
                                     </Typography>
                                 </Alert>
                             )}
@@ -515,12 +515,12 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                     label={
                                         <Box>
                                             <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                                                {t('Soumettre pour révision')}
+                                                {t('organizer:publication.actions.submitReview')}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 {data.request_review
-                                                    ? t('Sera soumis à la révision')
-                                                    : t('Rester en brouillon')
+                                                    ? t('organizer:publication.options.submitForReviewShort')
+                                                    : t('organizer:publication.options.stayDraftShort')
                                                 }
                                             </Typography>
                                         </Box>
@@ -529,7 +529,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                 {data.request_review && (
                                     <Alert severity="info" sx={{ mt: 1, p: 1 }}>
                                         <Typography variant="caption">
-                                            {t('Votre événement sera examiné bientôt')}
+                                            {t('organizer:publication.options.reviewSoon')}
                                         </Typography>
                                     </Alert>
                                 )}
@@ -542,32 +542,32 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                     <Card sx={{ bgcolor: 'grey.50' }}>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
-                                {t('Processus de modération')}
+                                {t('organizer:publication.process.title')}
                             </Typography>
 
                             <Stack spacing={1.5}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip label="1" size="small" color="primary" />
                                     <Typography variant="body2">
-                                        <strong>{t('Brouillon:')}</strong> {t('Votre événement est en cours de création, vous pouvez le modifier librement')}
+                                        <strong>{t('organizer:publication.process.draft')}:</strong> {t('organizer:publication.process.draftDescription')}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip label="2" size="small" color="info" />
                                     <Typography variant="body2">
-                                        <strong>{t('En révision:')}</strong> {t('Notre équipe examine votre événement (24-48h)')}
+                                        <strong>{t('organizer:publication.process.review')}:</strong> {t('organizer:publication.process.reviewDescription')}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip label="3" size="small" color="success" />
                                     <Typography variant="body2">
-                                        <strong>{t('Approuvé:')}</strong> {t('Vous pouvez maintenant publier votre événement')}
+                                        <strong>{t('organizer:publication.process.approved')}:</strong> {t('organizer:publication.process.approvedDescription')}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Chip label="4" size="small" color="success" />
                                     <Typography variant="body2">
-                                        <strong>{t('Publié:')}</strong> {t('Votre événement est visible par le public et les réservations sont ouvertes')}
+                                        <strong>{t('organizer:publication.process.published')}:</strong> {t('organizer:publication.process.publishedDescription')}
                                     </Typography>
                                 </Box>
                             </Stack>
@@ -575,7 +575,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                             <Divider sx={{ my: 2 }} />
 
                             <Typography variant="body2" color="text.secondary">
-                                <strong>{t('Note:')}</strong> {t('Vous pouvez modifier un événement en brouillon ou si l\'administrateur demande des révisions. Une fois approuvé et publié, les modifications majeures nécessiteront une nouvelle révision.')}
+                                <strong>{t('organizer:publication.process.note')}:</strong> {t('organizer:publication.process.noteDescription')}
                             </Typography>
                         </CardContent>
                     </Card>
@@ -586,14 +586,14 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                     <Alert severity="info">
                         <Typography variant="body2">
                             {isEdit
-                                ? t('Les modifications seront sauvegardées lors de la finalisation.')
-                                : t('L\'événement sera créé lors de la finalisation.')
+                                ? t('organizer:publication.messages.saveChanges')
+                                : t('organizer:publication.messages.createEvent')
                             }
                         </Typography>
 
                         {data.request_review && (
                             <Typography variant="body2" sx={{ mt: 1 }}>
-                                {t('Une notification sera envoyée aux administrateurs pour la révision.')}
+                                {t('organizer:publication.messages.notifyAdmin')}
                             </Typography>
                         )}
                     </Alert>
@@ -610,17 +610,17 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                             sx={{ minWidth: 200 }}
                         >
                             {loading
-                                ? t('Sauvegarde en cours...')
+                                ? t('organizer:publication.messages.saving')
                                 : data.request_review
-                                    ? t('Finaliser et soumettre')
+                                    ? t('organizer:publication.messages.finalizeSubmit')
                                     : isEdit
-                                        ? t('Sauvegarder les modifications')
-                                        : t('Créer l\'événement')
+                                        ? t('organizer:publication.messages.saveChangesBtn')
+                                        : t('organizer:publication.messages.createEventBtn')
                             }
                         </Button>
 
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                            {t('Utilisez les boutons de navigation pour finaliser')}
+                            {t('organizer:publication.messages.useNavigation')}
                         </Typography>
                     </Box>
                 </Grid>

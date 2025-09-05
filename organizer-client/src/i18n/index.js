@@ -31,6 +31,7 @@ const i18nConfig = {
         "auth",
         "organizer", // NEW: Organizer-specific namespace
         "events",    // Shared with client
+        "venues",    // Venues for event creation
         "navigation" // Shared with client
     ],
 };

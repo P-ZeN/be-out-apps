@@ -44,35 +44,35 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
 
     // Ticket size options
     const ticketSizes = [
-        { id: 'a4', name: t('A4 (210×297mm)'), description: t('Format standard complet') },
-        { id: 'half-a4', name: t('1/2 A4 (210×148mm)'), description: t('Format paysage') },
-        { id: 'quarter-a4', name: t('1/4 A4 (105×148mm)'), description: t('Format ticket compact') },
+        { id: 'a4', name: t('organizer:tickets.design.format.a4'), description: t('organizer:tickets.design.format.standardFull') },
+        { id: 'half-a4', name: t('organizer:tickets.design.format.halfA4'), description: t('organizer:tickets.design.format.landscape') },
+        { id: 'quarter-a4', name: t('organizer:tickets.design.format.quarterA4'), description: t('organizer:tickets.design.format.compact') },
     ];
 
     // QR Code content options
     const qrCodeOptions = [
         {
             id: 'verification_url',
-            name: t('URL de vérification'),
-            description: t('Lien vers une page de validation du billet (recommandé)'),
+            name: t('organizer:tickets.design.qrCode.verificationUrl'),
+            description: t('organizer:tickets.design.qrCode.verificationDescription'),
             example: 'https://be-out.app/verify/ABC123'
         },
         {
             id: 'booking_reference',
-            name: t('Référence de réservation'),
-            description: t('Code de référence unique du billet'),
+            name: t('organizer:tickets.design.qrCode.bookingReference'),
+            description: t('organizer:tickets.design.qrCode.bookingDescription'),
             example: 'BE-OUT-001234'
         },
         {
             id: 'ticket_hash',
-            name: t('Hash de sécurité'),
-            description: t('Code cryptographique unique (plus sécurisé)'),
+            name: t('organizer:tickets.design.qrCode.securityHash'),
+            description: t('organizer:tickets.design.qrCode.securityDescription'),
             example: 'a1b2c3d4e5f6...'
         },
         {
             id: 'custom_data',
-            name: t('Données personnalisées'),
-            description: t('Format JSON avec informations de votre choix'),
+            name: t('organizer:tickets.design.qrCode.customData'),
+            description: t('organizer:tickets.design.qrCode.customDescription'),
             example: '{"event":"Concert","date":"2025-08-12"}'
         },
     ];
@@ -144,25 +144,25 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
     return (
         <Box sx={{ p: 3 }}>
             <Typography variant="h5" gutterBottom>
-                {t('Design et billetterie')}
+                {t('organizer:tickets.design.title')}
             </Typography>
 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                {t('Configurez l\'apparence de vos billets et les options de réservation.')}
+                {t('organizer:tickets.design.description')}
             </Typography>
 
             <Grid container spacing={3}>
                 {/* Template Selection */}
                 <Grid size={{ xs: 12 }}>
                     <FormControl fullWidth>
-                        <InputLabel>{t('Modèle de billet')}</InputLabel>
+                        <InputLabel>{t('organizer:tickets.design.template')}</InputLabel>
                         <Select
                             value={data.template_id || ''}
                             onChange={(e) => handleChange('template_id', e.target.value)}
-                            label={t('Modèle de billet')}
+                            label={t('organizer:tickets.design.template')}
                         >
                             <MenuItem value="">
-                                <em>{t('Modèle par défaut')}</em>
+                                <em>{t('organizer:tickets.design.defaultTemplate')}</em>
                             </MenuItem>
                             {templates.map((template) => (
                                 <MenuItem key={template.id} value={template.id}>
@@ -194,7 +194,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                 {/* Template Customizations */}
                 <Grid size={{ xs: 12 }}>
                     <Typography variant="h6" gutterBottom>
-                        {t('Personnalisation')}
+                        {t('organizer:tickets.design.customization')}
                     </Typography>
 
                     <Grid container spacing={2}>
@@ -202,7 +202,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                         <Grid size={{ xs: 12 }}>
                             <FormControl fullWidth>
                                 <Typography variant="subtitle2" gutterBottom>
-                                    {t('Format du billet')}
+                                    {t('organizer:tickets.design.format.title')}
                                 </Typography>
                                 <RadioGroup
                                     value={data.customizations?.ticket_size || 'a4'}
@@ -234,7 +234,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                         {/* Background Image Upload */}
                         <Grid size={{ xs: 12 }}>
                             <Typography variant="subtitle2" gutterBottom>
-                                {t('Image de fond')}
+                                {t('organizer:tickets.design.backgroundImage')}
                             </Typography>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                                 <Button
@@ -243,7 +243,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                     startIcon={<CloudUploadIcon />}
                                     sx={{ minWidth: 150 }}
                                 >
-                                    {t('Choisir une image')}
+                                    {t('organizer:tickets.design.chooseImage')}
                                     <input
                                         type="file"
                                         hidden
@@ -258,7 +258,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                         startIcon={<DeleteIcon />}
                                         onClick={removeBackgroundImage}
                                     >
-                                        {t('Supprimer')}
+                                        {t('organizer:tickets.design.remove')}
                                     </Button>
                                 )}
                             </Box>
@@ -282,7 +282,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
-                                label={t('Couleur principale')}
+                                label={t('organizer:tickets.design.primaryColor')}
                                 type="color"
                                 value={data.customizations?.primary_color || '#1976d2'}
                                 onChange={(e) => handleCustomizationChange('primary_color', e.target.value)}
@@ -292,7 +292,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                         <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
-                                label={t('Couleur secondaire')}
+                                label={t('organizer:tickets.design.secondaryColor')}
                                 type="color"
                                 value={data.customizations?.secondary_color || '#f50057'}
                                 onChange={(e) => handleCustomizationChange('secondary_color', e.target.value)}
@@ -302,7 +302,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                         {/* App Logo Selection */}
                         <Grid size={{ xs: 12 }}>
                             <Typography variant="subtitle2" gutterBottom>
-                                {t('Logo Be-Out dans le pied de page')}
+                                {t('organizer:tickets.design.logo.footer')}
                             </Typography>
                             <FormControl fullWidth>
                                 <Select
@@ -315,7 +315,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             <Avatar sx={{ width: 24, height: 24 }}>
                                                 <img src="/be-out_logo.svg" alt="Logo SVG" style={{ width: '100%', height: '100%' }} />
                                             </Avatar>
-                                            {t('Logo SVG (recommandé)')}
+                                            {t('organizer:tickets.design.logo.svg')}
                                         </Box>
                                     </MenuItem>
                                     <MenuItem value="be-out_logo_orange.png">
@@ -323,7 +323,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             <Avatar sx={{ width: 24, height: 24 }}>
                                                 <img src="/be-out_logo_orange.png" alt="Logo Orange" style={{ width: '100%', height: '100%' }} />
                                             </Avatar>
-                                            {t('Logo Orange PNG')}
+                                            {t('organizer:tickets.design.logo.orangePng')}
                                         </Box>
                                     </MenuItem>
                                     <MenuItem value="be-out_logo_noir.png">
@@ -331,7 +331,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             <Avatar sx={{ width: 24, height: 24 }}>
                                                 <img src="/be-out_logo_noir.png" alt="Logo Noir" style={{ width: '100%', height: '100%' }} />
                                             </Avatar>
-                                            {t('Logo Noir PNG')}
+                                            {t('organizer:tickets.design.logo.blackPng')}
                                         </Box>
                                     </MenuItem>
                                     <MenuItem value="be-out_logo_blanc.png">
@@ -339,11 +339,11 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             <Avatar sx={{ width: 24, height: 24 }}>
                                                 <img src="/be-out_logo_blanc.png" alt="Logo Blanc" style={{ width: '100%', height: '100%' }} />
                                             </Avatar>
-                                            {t('Logo Blanc PNG')}
+                                            {t('organizer:tickets.design.logo.whitePng')}
                                         </Box>
                                     </MenuItem>
                                     <MenuItem value="">
-                                        <em>{t('Aucun logo')}</em>
+                                        <em>{t('organizer:tickets.design.logo.none')}</em>
                                     </MenuItem>
                                 </Select>
                             </FormControl>
@@ -354,10 +354,10 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                 fullWidth
                                 multiline
                                 rows={2}
-                                label={t('Message personnalisé')}
+                                label={t('organizer:tickets.design.customMessage')}
                                 value={data.customizations?.custom_message || ''}
                                 onChange={(e) => handleCustomizationChange('custom_message', e.target.value)}
-                                placeholder={t('Merci pour votre participation!')}
+                                placeholder={t('organizer:tickets.design.customMessageDefault')}
                             />
                         </Grid>
                     </Grid>
@@ -374,18 +374,18 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <QrCodeIcon color="primary" />
                                 <Typography variant="h6">
-                                    {t('Configuration du QR Code')}
+                                    {t('organizer:tickets.design.qrCode.title')}
                                 </Typography>
                             </Box>
                         </AccordionSummary>
                         <AccordionDetails>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                                {t('Le QR Code permet de vérifier l\'authenticité des billets et facilite le contrôle d\'accès à vos événements.')}
+                                {t('organizer:tickets.design.qrCode.description')}
                             </Typography>
 
                             <FormControl fullWidth sx={{ mb: 3 }}>
                                 <Typography variant="subtitle2" gutterBottom>
-                                    {t('Contenu du QR Code')}
+                                    {t('organizer:tickets.design.qrCode.content')}
                                 </Typography>
                                 <RadioGroup
                                     value={data.customizations?.qr_code_type || 'verification_url'}
@@ -405,7 +405,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                                             {option.description}
                                                         </Typography>
                                                         <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', mt: 0.5, color: 'primary.main' }}>
-                                                            {t('Exemple')}: {option.example}
+                                                            {t('organizer:tickets.design.qrCode.example')}: {option.example}
                                                         </Typography>
                                                     </Box>
                                                 }
@@ -420,11 +420,11 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                     fullWidth
                                     multiline
                                     rows={3}
-                                    label={t('Données personnalisées (JSON)')}
+                                    label={t('organizer:tickets.design.qrCode.customJsonLabel')}
                                     value={data.customizations?.qr_custom_data || ''}
                                     onChange={(e) => handleCustomizationChange('qr_custom_data', e.target.value)}
                                     placeholder='{"event_id": "123", "organizer": "Mon Organisation", "valid_until": "2025-12-31"}'
-                                    helperText={t('Format JSON valide requis')}
+                                    helperText={t('organizer:tickets.design.qrCode.jsonRequired')}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -437,7 +437,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
 
                             <Alert severity="info" sx={{ mt: 2 }}>
                                 <Typography variant="body2">
-                                    <strong>{t('Recommandation')}:</strong> {t('L\'URL de vérification est l\'option la plus sécurisée car elle permet de valider en temps réel l\'authenticité du billet et son statut.')}
+                                    <strong>{t('organizer:tickets.design.qrCode.recommendation')}:</strong> {t('L\'URL de vérification est l\'option la plus sécurisée car elle permet de valider en temps réel l\'authenticité du billet et son statut.')}
                                 </Typography>
                             </Alert>
                         </AccordionDetails>
@@ -452,7 +452,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                 <Grid size={{ xs: 12 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                            {t('Tarifs et catégories')}
+                            {t('organizer:tickets.pricing.title')}
                         </Typography>
                         <Button
                             startIcon={<AddIcon />}
@@ -460,13 +460,13 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                             variant="outlined"
                             size="small"
                         >
-                            {t('Ajouter un tarif')}
+                            {t('organizer:tickets.pricing.addRate')}
                         </Button>
                     </Box>
 
                     {(!data.pricing_tiers || data.pricing_tiers.length === 0) && (
                         <Alert severity="info" sx={{ mb: 2 }}>
-                            {t('Aucun tarif spécifique défini. Le prix principal de l\'événement sera utilisé.')}
+                            {t('organizer:tickets.pricing.noRates')}
                         </Alert>
                     )}
 
@@ -475,7 +475,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                             <CardContent>
                                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                                        {t('Tarif')} {index + 1}
+                                        {t('organizer:tickets.pricing.rate')} {index + 1}
                                     </Typography>
                                     <IconButton
                                         onClick={() => removePricingTier(tier.id)}
@@ -490,10 +490,10 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                     <Grid size={{ xs: 12, md: 6 }}>
                                         <TextField
                                             fullWidth
-                                            label={t('Nom du tarif')}
+                                            label={t('organizer:tickets.pricing.rateName')}
                                             value={tier.name || ''}
                                             onChange={(e) => updatePricingTier(tier.id, 'name', e.target.value)}
-                                            placeholder={t('Ex: Tarif réduit, VIP, Étudiant')}
+                                            placeholder={t('organizer:tickets.pricing.rateNamePlaceholder')}
                                         />
                                     </Grid>
 
@@ -501,7 +501,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                         <TextField
                                             fullWidth
                                             type="number"
-                                            label={t('Prix (€)')}
+                                            label={t('organizer:tickets.pricing.price')}
                                             value={tier.price || ''}
                                             onChange={(e) => updatePricingTier(tier.id, 'price', e.target.value)}
                                         />
@@ -511,7 +511,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                         <TextField
                                             fullWidth
                                             type="number"
-                                            label={t('Quantité')}
+                                            label={t('organizer:tickets.pricing.quantity')}
                                             value={tier.quantity || ''}
                                             onChange={(e) => updatePricingTier(tier.id, 'quantity', e.target.value)}
                                         />
@@ -522,10 +522,10 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             fullWidth
                                             multiline
                                             rows={2}
-                                            label={t('Description')}
+                                            label={t('organizer:tickets.pricing.description')}
                                             value={tier.description || ''}
                                             onChange={(e) => updatePricingTier(tier.id, 'description', e.target.value)}
-                                            placeholder={t('Décrivez ce qui est inclus dans ce tarif')}
+                                            placeholder={t('organizer:tickets.pricing.description')}
                                         />
                                     </Grid>
                                 </Grid>
@@ -541,20 +541,20 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                 {/* Booking Settings */}
                 <Grid size={{ xs: 12 }}>
                     <Typography variant="h6" gutterBottom>
-                        {t('Paramètres de réservation')}
+                        {t('organizer:tickets.booking.settings')}
                     </Typography>
 
                     <Grid container spacing={2}>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <DateTimePicker
-                                label={t('Date limite de réservation')}
+                                label={t('organizer:tickets.booking.deadline')}
                                 value={data.booking_settings?.booking_deadline}
                                 onChange={(newValue) => handleBookingSettingsChange('booking_deadline', newValue)}
                                 format="dd/MM/yyyy HH:mm"
                                 slotProps={{
                                     textField: {
                                         fullWidth: true,
-                                        helperText: t('Laissez vide pour permettre les réservations jusqu\'au début de l\'événement'),
+                                        helperText: t('organizer:tickets.booking.deadlineHelp'),
                                     },
                                 }}
                             />
@@ -564,7 +564,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                             <TextField
                                 fullWidth
                                 type="number"
-                                label={t('Maximum de réservations par utilisateur')}
+                                label={t('organizer:tickets.booking.maxPerUser')}
                                 value={data.booking_settings?.max_bookings_per_user || 1}
                                 onChange={(e) => handleBookingSettingsChange('max_bookings_per_user', parseInt(e.target.value) || 1)}
                                 inputProps={{ min: 1, max: 10 }}
@@ -579,7 +579,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                         onChange={(e) => handleBookingSettingsChange('allow_multiple_bookings', e.target.checked)}
                                     />
                                 }
-                                label={t('Autoriser plusieurs réservations par utilisateur')}
+                                label={t('organizer:tickets.booking.allowMultiple')}
                             />
                         </Grid>
                     </Grid>

@@ -202,6 +202,8 @@ app.get("/api/translations/:language/:namespace", async (req, res) => {
             "dashboard",
             "footer", // Client footer translations
             "organizer", // New: Organizer-specific translations
+            "events", // Events namespace for organizer-client
+            "venues", // Venues namespace for organizer-client
         ];
         if (!allowedNamespaces.includes(namespace)) {
             return res.status(400).json({ error: "Invalid namespace" });
