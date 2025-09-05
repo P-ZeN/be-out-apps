@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -23,10 +23,12 @@ import {
 } from "@mui/material";
 import { Close, Person, Email, Phone, CreditCard, EventSeat, Schedule, LocationOn, Euro } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
+import { useAuth } from "../context/AuthContext";
 import BookingService from "../services/bookingService";
 
 const BookingModal = ({ open, onClose, event }) => {
     const theme = useTheme();
+    const { user } = useAuth();
     const [activeStep, setActiveStep] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -41,6 +43,22 @@ const BookingModal = ({ open, onClose, event }) => {
         special_requests: "",
         acceptTerms: false,
     });
+
+    // Pre-fill user information when component mounts or user changes
+    useEffect(() => {
+        if (user && open) {
+            const customerName = user.first_name && user.last_name
+                ? `${user.first_name} ${user.last_name}`.trim()
+                : "";
+
+            setFormData(prev => ({
+                ...prev,
+                customer_name: customerName,
+                customer_email: user.email || "",
+                customer_phone: user.phone || "",
+            }));
+        }
+    }, [user, open]);
 
     const steps = ["Détails", "Informations", "Paiement", "Confirmation"];
 
@@ -128,14 +146,21 @@ const BookingModal = ({ open, onClose, event }) => {
 
     const handleClose = () => {
         setActiveStep(0);
+
+        // Reset form but keep user information
+        const customerName = user && user.first_name && user.last_name
+            ? `${user.first_name} ${user.last_name}`.trim()
+            : "";
+
         setFormData({
             quantity: 1,
-            customer_name: "",
-            customer_email: "",
-            customer_phone: "",
+            customer_name: customerName,
+            customer_email: user?.email || "",
+            customer_phone: user?.phone || "",
             special_requests: "",
             acceptTerms: false,
         });
+
         setError("");
         setSuccess(false);
         setBookingResult(null);

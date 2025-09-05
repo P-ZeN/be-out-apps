@@ -309,6 +309,64 @@
         "suspended": "Suspended",
         "rejected": "Rejected"
     },
+    "bookings": {
+        "title": "Bookings",
+        "subtitle": "Manage all bookings for your events",
+        "empty": "No bookings found",
+        "search": {
+            "placeholder": "Search by name, email or reference..."
+        },
+        "filters": {
+            "status": "Status",
+            "event": "Event",
+            "all": "All"
+        },
+        "status": {
+            "confirmed": "Confirmed",
+            "pending": "Pending",
+            "cancelled": "Cancelled",
+            "refunded": "Refunded"
+        },
+        "table": {
+            "reference": "Reference",
+            "customer": "Customer",
+            "event": "Event",
+            "date": "Date", 
+            "quantity": "Quantity",
+            "amount": "Amount",
+            "status": "Status",
+            "actions": "Actions"
+        },
+        "details": {
+            "title": "Booking Details",
+            "bookingInfo": "Booking Information",
+            "customerInfo": "Customer Information",
+            "eventInfo": "Event Information",
+            "reference": "Reference",
+            "status": "Status",
+            "bookingDate": "Booking Date",
+            "quantity": "Quantity",
+            "tickets": "ticket(s)",
+            "totalAmount": "Total Amount",
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone",
+            "specialRequests": "Special Requests",
+            "close": "Close"
+        },
+        "export": {
+            "button": "Export",
+            "notImplemented": "Export functionality in development"
+        },
+        "refresh": "Refresh",
+        "clearFilters": "Clear Filters",
+        "pagination": {
+            "rowsPerPage": "Rows per page:"
+        },
+        "errors": {
+            "loadFailed": "Error loading bookings"
+        }
+    },
     "common": {
         "loading": "Loading...",
         "save": "Save",

@@ -309,6 +309,64 @@
         "suspended": "Suspendido",
         "rejected": "Rechazado"
     },
+    "bookings": {
+        "title": "Reservas",
+        "subtitle": "Gestiona todas las reservas de tus eventos",
+        "empty": "No se encontraron reservas",
+        "search": {
+            "placeholder": "Buscar por nombre, email o referencia..."
+        },
+        "filters": {
+            "status": "Estado",
+            "event": "Evento",
+            "all": "Todos"
+        },
+        "status": {
+            "confirmed": "Confirmada",
+            "pending": "Pendiente",
+            "cancelled": "Cancelada",
+            "refunded": "Reembolsada"
+        },
+        "table": {
+            "reference": "Referencia",
+            "customer": "Cliente",
+            "event": "Evento",
+            "date": "Fecha",
+            "quantity": "Cantidad",
+            "amount": "Importe",
+            "status": "Estado",
+            "actions": "Acciones"
+        },
+        "details": {
+            "title": "Detalles de la Reserva",
+            "bookingInfo": "Información de Reserva",
+            "customerInfo": "Información del Cliente",
+            "eventInfo": "Información del Evento",
+            "reference": "Referencia",
+            "status": "Estado",
+            "bookingDate": "Fecha de Reserva",
+            "quantity": "Cantidad",
+            "tickets": "boleto(s)",
+            "totalAmount": "Importe Total",
+            "name": "Nombre",
+            "email": "Email",
+            "phone": "Teléfono",
+            "specialRequests": "Solicitudes Especiales",
+            "close": "Cerrar"
+        },
+        "export": {
+            "button": "Exportar",
+            "notImplemented": "Funcionalidad de exportación en desarrollo"
+        },
+        "refresh": "Actualizar",
+        "clearFilters": "Limpiar Filtros",
+        "pagination": {
+            "rowsPerPage": "Filas por página:"
+        },
+        "errors": {
+            "loadFailed": "Error al cargar las reservas"
+        }
+    },
     "common": {
         "loading": "Cargando...",
         "save": "Guardar",

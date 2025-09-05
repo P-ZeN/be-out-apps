@@ -309,6 +309,64 @@
         "suspended": "Suspendu",
         "rejected": "Rejeté"
     },
+    "bookings": {
+        "title": "Réservations",
+        "subtitle": "Gérez toutes les réservations de vos événements",
+        "empty": "Aucune réservation trouvée",
+        "search": {
+            "placeholder": "Rechercher par nom, email ou référence..."
+        },
+        "filters": {
+            "status": "Statut",
+            "event": "Événement",
+            "all": "Tous"
+        },
+        "status": {
+            "confirmed": "Confirmée",
+            "pending": "En attente",
+            "cancelled": "Annulée",
+            "refunded": "Remboursée"
+        },
+        "table": {
+            "reference": "Référence",
+            "customer": "Client",
+            "event": "Événement", 
+            "date": "Date",
+            "quantity": "Quantité",
+            "amount": "Montant",
+            "status": "Statut",
+            "actions": "Actions"
+        },
+        "details": {
+            "title": "Détails de la réservation",
+            "bookingInfo": "Informations de réservation",
+            "customerInfo": "Informations client",
+            "eventInfo": "Informations événement",
+            "reference": "Référence",
+            "status": "Statut",
+            "bookingDate": "Date de réservation",
+            "quantity": "Quantité",
+            "tickets": "billet(s)",
+            "totalAmount": "Montant total",
+            "name": "Nom",
+            "email": "Email",
+            "phone": "Téléphone",
+            "specialRequests": "Demandes spéciales",
+            "close": "Fermer"
+        },
+        "export": {
+            "button": "Exporter",
+            "notImplemented": "Fonctionnalité d'export en cours de développement"
+        },
+        "refresh": "Actualiser",
+        "clearFilters": "Effacer les filtres",
+        "pagination": {
+            "rowsPerPage": "Lignes par page :"
+        },
+        "errors": {
+            "loadFailed": "Erreur lors du chargement des réservations"
+        }
+    },
     "common": {
         "loading": "Chargement...",
         "save": "Enregistrer",
