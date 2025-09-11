@@ -1781,7 +1781,7 @@ jobs:
             TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
             echo "� Using Apple Development Team: $TEAM_ID"
 
-            # Method 1: Replace any existing DEVELOPMENT_TEAM values first
+            # Method 1: Replace any existing DEVELOPMENT_TEAM valuesss first
             echo "🔧 Step 1: Updating existing DEVELOPMENT_TEAM valuess..."
             sed -i '' "s/DEVELOPMENT_TEAM = \"\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
             sed -i '' "s/DEVELOPMENT_TEAM = \"[^\"]*\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" src-tauri/gen/apple/app.xcodeproj/project.pbxproj
