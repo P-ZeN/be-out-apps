@@ -1779,7 +1779,7 @@ jobs:
           # Check for development team requirement
           if [ -n "${{ secrets.APPLE_DEVELOPMENT_TEAM }}" ]; then
             TEAM_ID="${{ secrets.APPLE_DEVELOPMENT_TEAM }}"
-            echo "� Using Apple Development Team: $TEAM_ID"
+            echo "Using Apple Development Team: $TEAM_ID"
 
             # Method 1: Replace any existing DEVELOPMENT_TEAM valuesss first
             echo "🔧 Step 1: Updating existing DEVELOPMENT_TEAM valuess..."
