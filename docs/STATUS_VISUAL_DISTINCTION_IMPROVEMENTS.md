@@ -18,7 +18,7 @@ After implementing the dual-control publication system (organizer intent + admin
 const getStatusColor = (status, moderationStatus, isPublished, organizerWantsPublished) => {
     // Priority: moderation status issues first
     if (moderationStatus === "rejected") return "error"; // Red
-    if (moderationStatus === "revision_requested") return "warning"; // Orange  
+    if (moderationStatus === "revision_requested") return "warning"; // Orange
     if (moderationStatus === "under_review") return "info"; // Blue
     if (moderationStatus === "flagged") return "error"; // Red
 
@@ -59,7 +59,7 @@ const getStatusLabel = (status, moderationStatus, isPublished, organizerWantsPub
 const getStatusTooltip = (status, moderationStatus, isPublished, organizerWantsPublished) => {
     if (moderationStatus === "approved") {
         const wantsPublished = organizerWantsPublished !== undefined ? organizerWantsPublished : isPublished;
-        return wantsPublished 
+        return wantsPublished
             ? "Votre événement est publié et visible par le public."
             : "Votre événement est approuvé par l'admin mais vous l'avez gardé privé.";
     }
@@ -94,7 +94,7 @@ All status functions now accept the new dual-control parameters:
 getStatusColor(status, moderationStatus)
 getStatusLabel(status, moderationStatus, isPublished)
 
-// After  
+// After
 getStatusColor(status, moderationStatus, isPublished, organizerWantsPublished)
 getStatusLabel(status, moderationStatus, isPublished, organizerWantsPublished)
 getStatusTooltip(status, moderationStatus, isPublished, organizerWantsPublished)
@@ -128,7 +128,7 @@ ALTER TABLE events ADD COLUMN organizer_wants_published BOOLEAN DEFAULT true;
 - No visual distinction between approved states
 - Confusing dual controls
 
-### After  
+### After
 - Semantic color coding with clear meaning
 - Instant visual recognition of publication state
 - Consistent experience across organizer and admin views

@@ -61,16 +61,16 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
     };
 
     // Clearer separation of concerns (backward compatible)
-    const organizerWantsPublished = adminData?.organizer_wants_published !== undefined 
-        ? adminData.organizer_wants_published 
+    const organizerWantsPublished = adminData?.organizer_wants_published !== undefined
+        ? adminData.organizer_wants_published
         : adminData?.is_published || false; // Fallback for existing data
     const adminApproved = adminData?.moderation_status === 'approved';
     const eventVisibleToPublic = organizerWantsPublished && adminApproved;
-    
+
     // Simplified status checks
-    const canSubmitForReview = adminData?.status === 'draft' || 
-                              adminData?.moderation_status === 'rejected' || 
-                              adminData?.moderation_status === 'revision_requested' || 
+    const canSubmitForReview = adminData?.status === 'draft' ||
+                              adminData?.moderation_status === 'rejected' ||
+                              adminData?.moderation_status === 'revision_requested' ||
                               adminData?.moderation_status === 'flagged';
     const canRevertToDraft = adminData?.status === 'candidate' && adminData?.moderation_status === 'under_review';
     const canTogglePublication = adminApproved; // Only toggle if admin approved
@@ -95,19 +95,19 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'approved': 
+            case 'approved':
                 return 'success'; // Green for approved
-            case 'rejected': 
+            case 'rejected':
                 return 'error'; // Red for rejected
-            case 'under_review': 
+            case 'under_review':
                 return 'info'; // Blue for under review
-            case 'revision_requested': 
+            case 'revision_requested':
                 return 'warning'; // Orange for revision requested
-            case 'flagged': 
+            case 'flagged':
                 return 'error'; // Red for flagged
-            case 'pending': 
+            case 'pending':
                 return 'default'; // Gray for pending
-            default: 
+            default:
                 return 'default'; // Gray as fallback
         }
     };
@@ -258,8 +258,8 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                 size="medium"
                                             />
                                             <Typography variant="body2" color="text.secondary">
-                                                {adminApproved 
-                                                    ? "Votre événement est approuvé par l'équipe" 
+                                                {adminApproved
+                                                    ? "Votre événement est approuvé par l'équipe"
                                                     : "En attente d'approbation par l'équipe"}
                                             </Typography>
                                         </Box>
@@ -278,8 +278,8 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                 size="medium"
                                             />
                                             <Typography variant="body2" color="text.secondary">
-                                                {organizerWantsPublished 
-                                                    ? "Vous souhaitez que cet événement soit visible" 
+                                                {organizerWantsPublished
+                                                    ? "Vous souhaitez que cet événement soit visible"
                                                     : "Vous gardez cet événement privé"}
                                             </Typography>
                                         </Box>
@@ -298,7 +298,7 @@ const PublicationStep = ({ data, onChange, adminData, isEdit, loading, onSubmitF
                                                 size="medium"
                                             />
                                             <Typography variant="body2" color="text.secondary">
-                                                {eventVisibleToPublic 
+                                                {eventVisibleToPublic
                                                     ? "✅ Les visiteurs peuvent voir et réserver cet événement"
                                                     : "❌ Cet événement n'apparaît pas sur le site public"}
                                             </Typography>

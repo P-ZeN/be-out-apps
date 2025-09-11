@@ -89,7 +89,7 @@ const theme = useTheme();
 
 ### Semantic Status Colors:
 - `"success"` (Green) - Published, approved, confirmed states
-- `"error"` (Red) - Rejected, cancelled, failed states  
+- `"error"` (Red) - Rejected, cancelled, failed states
 - `"warning"` (Orange) - Revision requested, pending review
 - `"info"` (Blue) - Under review, candidate, processing states
 - `"default"` (Grey) - Draft, neutral states

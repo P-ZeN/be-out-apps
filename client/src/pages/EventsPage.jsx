@@ -45,13 +45,21 @@ const EventsPage = () => {
     // Use the enhanced categories hook for multi-language support
     const { categories: categoriesData, loading: categoriesLoading, error: categoriesError } = useCategories();
 
+    // Reset selected category when language changes to avoid mismatches
+    useEffect(() => {
+        if (selectedCategory !== "all") {
+            setSelectedCategory("all");
+        }
+    }, [i18n.language]);
+
     // Format categories for the UI
     const categories = [
         { key: "all", label: t("home:categories.all"), name: "all" },
         ...categoriesData.map((cat) => ({
-            key: cat.name.toLowerCase(),
+            key: cat.id.toString(), // Use stable ID instead of language-dependent name
             label: cat.name,
             name: cat.name,
+            id: cat.id,
             event_count: cat.event_count,
         })),
     ];
@@ -68,7 +76,9 @@ const EventsPage = () => {
                     limit: 12,
                     sortBy: filters.sortBy,
                     lang: i18n.language, // Include current language
-                    ...(selectedCategory !== "all" && { category: selectedCategory }),
+                    ...(selectedCategory !== "all" && {
+                        categoryId: selectedCategory // Use category ID instead of name
+                    }),
                     ...(searchQuery && { search: searchQuery }),
                     ...(filters.lastMinuteOnly && { lastMinute: true }),
                     minPrice: filters.priceRange[0],

@@ -11,6 +11,7 @@ router.get("/", async (req, res) => {
             page = 1,
             limit = 12,
             category,
+            categoryId, // Add support for category ID
             search,
             city,
             minPrice,
@@ -35,6 +36,10 @@ router.get("/", async (req, res) => {
         if (category) {
             whereConditions.push(`c.name = $${paramIndex}`);
             queryParams.push(category);
+            paramIndex++;
+        } else if (categoryId) {
+            whereConditions.push(`c.id = $${paramIndex}`);
+            queryParams.push(categoryId);
             paramIndex++;
         }
 

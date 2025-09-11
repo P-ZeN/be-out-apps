@@ -135,7 +135,7 @@ const Events = () => {
         if (moderationStatus === "under_review") {
             return "info"; // Blue for under review
         }
-        
+
         // If approved, show the publication state
         if (moderationStatus === "approved") {
             // Use new logic if organizer_wants_published is available, fallback to is_published
@@ -237,9 +237,9 @@ const Events = () => {
     };
 
     const canSubmitForReview = (event) => {
-        return event.status === "draft" || 
-               event.moderation_status === "rejected" || 
-               event.moderation_status === "revision_requested" || 
+        return event.status === "draft" ||
+               event.moderation_status === "rejected" ||
+               event.moderation_status === "revision_requested" ||
                event.moderation_status === "flagged";
     };
 

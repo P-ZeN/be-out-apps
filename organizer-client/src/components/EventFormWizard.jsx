@@ -185,7 +185,7 @@ const EventFormWizard = () => {
     // Handle immediate publication actions
     const handleSubmitForReview = async () => {
         if (!isEdit || !eventId) return;
-        
+
         setLoading(true);
         setError("");
         try {
@@ -203,16 +203,16 @@ const EventFormWizard = () => {
 
     const handleTogglePublication = async () => {
         if (!isEdit || !eventId) return;
-        
+
         const currentWantsPublished = formData.adminData?.organizer_wants_published || false;
         const newWantsPublished = !currentWantsPublished;
-        
+
         setLoading(true);
         setError("");
         try {
             await organizerService.toggleEventPublication(eventId, newWantsPublished);
-            setSuccess(newWantsPublished ? 
-                "Événement marqué pour publication !" : 
+            setSuccess(newWantsPublished ?
+                "Événement marqué pour publication !" :
                 "Événement retiré de la publication !");
             // Reload event data to reflect new status
             const eventData = await organizerService.getEvent(eventId);
@@ -226,7 +226,7 @@ const EventFormWizard = () => {
 
     const handleRevert = async () => {
         if (!isEdit || !eventId) return;
-        
+
         setLoading(true);
         setError("");
         try {

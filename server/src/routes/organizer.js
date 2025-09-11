@@ -926,9 +926,9 @@ router.patch("/events/:id/submit", verifyOrganizerToken, async (req, res) => {
             const event = checkResult.rows[0];
 
             // Allow submission from draft status or events that need resubmission (rejected, revision_requested, flagged)
-            if (event.status !== "draft" && 
-                event.moderation_status !== "rejected" && 
-                event.moderation_status !== "revision_requested" && 
+            if (event.status !== "draft" &&
+                event.moderation_status !== "rejected" &&
+                event.moderation_status !== "revision_requested" &&
                 event.moderation_status !== "flagged") {
                 return res.status(400).json({
                     message: "Only draft events or events requiring resubmission can be submitted for review",
@@ -1028,7 +1028,7 @@ router.patch("/events/:id/publish", verifyOrganizerToken, async (req, res) => {
 router.patch("/events/:id/toggle-publication", verifyOrganizerToken, async (req, res) => {
     try {
         const { organizer_wants_published } = req.body;
-        
+
         if (typeof organizer_wants_published !== 'boolean') {
             return res.status(400).json({ message: "organizer_wants_published must be a boolean" });
         }
@@ -1279,7 +1279,7 @@ router.get("/ticket-templates", verifyOrganizerToken, async (req, res) => {
                 'SELECT * FROM ticket_templates WHERE organizer_id = $1 ORDER BY created_at DESC',
                 [req.user.id]
             );
-            
+
             res.json(result.rows);
         } finally {
             client.release();
@@ -1294,14 +1294,14 @@ router.get("/ticket-templates", verifyOrganizerToken, async (req, res) => {
 router.post("/ticket-templates", verifyOrganizerToken, async (req, res) => {
     try {
         const { name, description, template_data } = req.body;
-        
+
         const client = await pool.connect();
         try {
             const result = await client.query(
                 'INSERT INTO ticket_templates (name, description, template_data, organizer_id) VALUES ($1, $2, $3, $4) RETURNING *',
                 [name, description, JSON.stringify(template_data), req.user.id]
             );
-            
+
             res.json(result.rows[0]);
         } finally {
             client.release();
@@ -1317,18 +1317,18 @@ router.put("/ticket-templates/:id", verifyOrganizerToken, async (req, res) => {
     try {
         const { name, description, template_data } = req.body;
         const templateId = req.params.id;
-        
+
         const client = await pool.connect();
         try {
             const result = await client.query(
                 'UPDATE ticket_templates SET name = $1, description = $2, template_data = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 AND organizer_id = $5 RETURNING *',
                 [name, description, JSON.stringify(template_data), templateId, req.user.id]
             );
-            
+
             if (result.rows.length === 0) {
                 return res.status(404).json({ message: 'Ticket template not found or not authorized' });
             }
-            
+
             res.json(result.rows[0]);
         } finally {
             client.release();
@@ -1343,18 +1343,18 @@ router.put("/ticket-templates/:id", verifyOrganizerToken, async (req, res) => {
 router.delete("/ticket-templates/:id", verifyOrganizerToken, async (req, res) => {
     try {
         const templateId = req.params.id;
-        
+
         const client = await pool.connect();
         try {
             const result = await client.query(
                 'DELETE FROM ticket_templates WHERE id = $1 AND organizer_id = $2 RETURNING *',
                 [templateId, req.user.id]
             );
-            
+
             if (result.rows.length === 0) {
                 return res.status(404).json({ message: 'Ticket template not found or not authorized' });
             }
-            
+
             res.json({ message: 'Template deleted successfully' });
         } finally {
             client.release();
