@@ -97,8 +97,8 @@ const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) =>
                     limit: 12,
                     sortBy: filters.sortBy,
                     lang: i18n.language, // Include current language
-                    ...(selectedCategory !== "all" && {
-                        categoryId: selectedCategory // Use category ID instead of name
+                    ...(filters.categories && filters.categories.length > 0 && {
+                        categoryIds: filters.categories // Use category IDs from filters
                     }),
                     ...(searchQuery && { search: searchQuery }),
                     ...(filters.lastMinuteOnly && { lastMinute: true }),

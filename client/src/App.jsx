@@ -220,7 +220,10 @@ const AppContent = () => {
                 onClose={() => setFilterDrawerOpen(false)}
                 filters={filters}
                 onFiltersChange={setFilters}
-                categories={categoriesData.filter((cat) => cat.key !== "all")} // Exclude 'all' category for filter drawer
+                categories={categoriesData.map((cat) => ({
+                    key: cat.id.toString(),
+                    label: cat.name,
+                }))}
             />
         </>
     );

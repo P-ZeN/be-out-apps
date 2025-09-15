@@ -4,8 +4,6 @@ import {
     Container,
     Button,
     Grid,
-    Tabs,
-    Tab,
     Divider,
     Paper,
 } from "@mui/material";
@@ -25,7 +23,6 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
     const { t, i18n } = useTranslation(["home", "common"]);
     const theme = useTheme();
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("all");
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -54,13 +51,6 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
     // Use the enhanced categories hook for multi-language support
     const { categories: categoriesData, loading: categoriesLoading, error: categoriesError } = useCategories();
 
-    // Reset selected category when language changes to avoid mismatches
-    useEffect(() => {
-        if (selectedCategory !== "all") {
-            setSelectedCategory("all");
-        }
-    }, [i18n.language]);
-
     // Format categories for the UI
     const categories = [
         { key: "all", label: t("home:categories.all"), name: "all" },
@@ -85,8 +75,8 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
                     limit: 12,
                     sortBy: filters.sortBy,
                     lang: i18n.language, // Include current language
-                    ...(selectedCategory !== "all" && {
-                        categoryId: selectedCategory // Use category ID instead of name
+                    ...(filters.categories && filters.categories.length > 0 && {
+                        categoryIds: filters.categories // Use category IDs from filters
                     }),
                     ...(searchQuery && { search: searchQuery }),
                     ...(filters.lastMinuteOnly && { lastMinute: true }),
@@ -109,7 +99,7 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
         if (!categoriesLoading) {
             loadEvents();
         }
-    }, [selectedCategory, searchQuery, filters, categoriesLoading, i18n.language]);
+    }, [searchQuery, filters, categoriesLoading, i18n.language]);
 
     // Since filtering is now done on the server side via API calls,
     // we can use the events directly from state
@@ -140,19 +130,6 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
             {/* Main Content */}
             {!loading && !categoriesLoading && !error && !categoriesError && (
                 <>
-                    {/* Category Tabs */}
-                    <Box sx={{ mb: 4 }}>
-                        <Tabs
-                            value={selectedCategory}
-                            onChange={(e, newValue) => setSelectedCategory(newValue)}
-                            variant="scrollable"
-                            scrollButtons="auto"
-                            sx={{ borderBottom: 1, borderColor: "divider" }}>
-                            {categories.map((category) => (
-                                <Tab key={category.key} label={category.label} value={category.key} />
-                            ))}
-                        </Tabs>
-                    </Box>
 
                     {/* Last Minute Deals */}
                     {lastMinuteEvents.length > 0 && (
@@ -177,11 +154,7 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
                     {/* Main Events Section */}
                     <Box sx={{ mb: 4 }}>
                         <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: "bold" }}>
-                            {selectedCategory === "all"
-                                ? t("home:sections.allEvents")
-                                : t("home:sections.categoryEvents", {
-                                      category: categories.find((c) => c.key === selectedCategory)?.label,
-                                  })}
+                            {t("home:sections.allEvents")}
                         </Typography>
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                             {filteredEvents.length} {t("home:eventsFound")}

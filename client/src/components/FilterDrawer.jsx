@@ -1,28 +1,34 @@
-import {
-    Box,
-    Drawer,
-    Typography,
-    Button,
-    Slider,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Chip,
-    Stack,
-    Divider,
-    Switch,
-    FormControlLabel,
-    TextField,
-    IconButton,
-} from "@mui/material";
-import { Close, FilterList } from "@mui/icons-material";
-import { useState } from "react";
+    import {
+        Drawer,
+        Box,
+        Typography,
+        Chip,
+        Slider,
+        FormControl,
+        Select,
+        MenuItem,
+        InputLabel,
+        Switch,
+        FormControlLabel,
+        FormGroup,
+        Checkbox,
+        Divider,
+        Stack,
+        Button,
+        IconButton,
+    } from "@mui/material";
+import { Close, Tune } from "@mui/icons-material";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = [] }) => {
     const { t } = useTranslation(["home", "common"]);
     const [localFilters, setLocalFilters] = useState(filters);
+
+    // Sync external filters with local filters
+    useEffect(() => {
+        setLocalFilters(filters);
+    }, [filters]);
 
     // Fallback categories if none provided
     const defaultCategories = [
@@ -33,7 +39,7 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
     ];
 
     // Use provided categories or fallback to defaults
-    const categoryOptions = categories.length > 0 ? categories : defaultCategories;
+    const categoryOptions = categories && categories.length > 0 ? categories : defaultCategories;
 
     const sortOptions = [
         { key: "date", label: t("home:filters.sortOptions.date") },
@@ -101,11 +107,16 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
                 "& .MuiDrawer-paper": {
                     width: { xs: "100%", sm: 400 },
                     p: 3,
+                    marginTop: "64px", // Account for TopNavbar
+                    marginBottom: "72px", // Account for BottomNavbar
+                    height: "calc(100vh - 64px - 72px)", // Full height minus navbars
+                    display: "flex",
+                    flexDirection: "column",
                 },
             }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    <FilterList sx={{ mr: 1, verticalAlign: "middle" }} />
+                    <Tune sx={{ mr: 1, verticalAlign: "middle" }} />
                     {t("home:filters.title")}
                 </Typography>
                 <IconButton onClick={onClose}>
@@ -162,18 +173,27 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: "bold" }}>
                     {t("home:filters.categories")}
                 </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <FormGroup>
                     {categoryOptions.map((category) => (
-                        <Chip
+                        <FormControlLabel
                             key={category.key}
+                            control={
+                                <Checkbox
+                                    checked={localFilters.categories.includes(category.key)}
+                                    onChange={() => handleCategoryChange(category.key)}
+                                    color="primary"
+                                />
+                            }
                             label={category.label}
-                            onClick={() => handleCategoryChange(category.key)}
-                            color={localFilters.categories.includes(category.key) ? "primary" : "default"}
-                            variant={localFilters.categories.includes(category.key) ? "filled" : "outlined"}
-                            clickable
+                            sx={{
+                                "& .MuiFormControlLabel-label": {
+                                    fontSize: "0.95rem",
+                                    fontWeight: "500",
+                                },
+                            }}
                         />
                     ))}
-                </Stack>
+                </FormGroup>
             </Box>
 
             <Divider sx={{ my: 2 }} />

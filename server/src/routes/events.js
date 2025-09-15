@@ -11,7 +11,8 @@ router.get("/", async (req, res) => {
             page = 1,
             limit = 12,
             category,
-            categoryId, // Add support for category ID
+            categoryId, // Add support for category ID (single)
+            categoryIds, // Add support for multiple category IDs
             search,
             city,
             minPrice,
@@ -41,6 +42,25 @@ router.get("/", async (req, res) => {
             whereConditions.push(`c.id = $${paramIndex}`);
             queryParams.push(categoryId);
             paramIndex++;
+        } else if (categoryIds) {
+            // Handle multiple category IDs - they are UUIDs, not integers
+            let idsArray = [];
+            if (typeof categoryIds === 'string') {
+                idsArray = categoryIds.split(',').map(id => id.trim()).filter(id => id.length > 0);
+            } else if (Array.isArray(categoryIds)) {
+                idsArray = categoryIds.filter(id => id && typeof id === 'string' && id.length > 0);
+            }
+
+            if (idsArray.length > 0) {
+                // Create IN clause with proper parameter numbering
+                const placeholders = [];
+                idsArray.forEach(() => {
+                    placeholders.push(`$${paramIndex}`);
+                    paramIndex++;
+                });
+                whereConditions.push(`c.id IN (${placeholders.join(',')})`);
+                queryParams.push(...idsArray);
+            }
         }
 
         if (search) {
