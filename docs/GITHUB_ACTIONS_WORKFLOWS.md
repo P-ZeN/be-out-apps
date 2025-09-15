@@ -6,8 +6,8 @@ This repository uses a two-tier GitHub Actions approach to optimize CI/CD resour
 
 ### 1. Client Test and Build (`client-build.yml`)
 **Triggers:**
-- Push to `main`, `develop` branches
-- Pull requests to `main`, `develop` branches
+- Push to `staging` branch
+- Pull requests to `staging` branch
 - Only when client-related files change
 
 **What it does:**
