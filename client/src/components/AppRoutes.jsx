@@ -9,13 +9,13 @@ import UserDashboard from "./UserDashboard";
 import GoogleSignInTest from "./GoogleSignInTest";
 import { EventsPage, EventDetail, MapView, Bookings, Favorites } from "../pages";
 
-const AppRoutes = () => {
+const AppRoutes = ({ searchQuery, filters }) => {
     return (
         <Routes>
-            <Route path="/" element={<HomeWrapper />} />
-            <Route path="/home" element={<HomeWrapper />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/map" element={<MapView />} />
+            <Route path="/" element={<HomeWrapper searchQuery={searchQuery} filters={filters} />} />
+            <Route path="/home" element={<HomeWrapper searchQuery={searchQuery} filters={filters} />} />
+            <Route path="/events" element={<EventsPage searchQuery={searchQuery} filters={filters} />} />
+            <Route path="/map" element={<MapView searchQuery={searchQuery} filters={filters} />} />
             <Route path="/event/:id" element={<EventDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

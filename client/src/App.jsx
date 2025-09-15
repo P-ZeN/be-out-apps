@@ -2,8 +2,9 @@ import { HashRouter as Router } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import AppRoutes from "./components/AppRoutes";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import TopNavbar from "./components/TopNavbar";
+import BottomNavbar from "./components/BottomNavbar";
+import FilterDrawer from "./components/FilterDrawer";
 // import PlatformDebug from "./components/PlatformDebug"; // Temporarily disabled - might be causing red indicator
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WebViewProvider } from "./context/WebViewContext";
@@ -12,14 +13,40 @@ import { getIsTauriApp } from "./utils/platformDetection";
 import { isAndroid } from "./utils/platform";
 // import { getSafeAreaInsets, applySafeAreaInsets } from "./utils/safeAreaUtils"; // Disabled - using CSS approach
 import { useAutoHideSplashScreen } from "./hooks/useSplashScreen";
+import { useCategories } from "./services/enhancedCategoryService";
 import "./App.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 // Build timestamp for deployment verification
 console.log("App build timestamp:", "2025-07-29-10:00");
 
 const AppContent = () => {
     const { loginWithToken } = useAuth();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showSearchField, setShowSearchField] = useState(false);
+    const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+    const [filters, setFilters] = useState({
+        priceRange: [0, 200],
+        categories: [],
+        sortBy: "date",
+        maxDistance: 50,
+        lastMinuteOnly: false,
+        availableOnly: true,
+    });
+
+    // Load categories for the filter drawer
+    const { categories: categoriesData } = useCategories();
+
+    // Hide splash screen when app is ready
+    useAutoHideSplashScreen(1200); // Wait 1.2 seconds to ensure smooth loading
+
+    const handleToggleSearch = () => {
+        setShowSearchField(!showSearchField);
+    };
+
+    const handleFilterOpen = () => {
+        setFilterDrawerOpen(true);
+    };
 
     // Hide splash screen when app is ready
     useAutoHideSplashScreen(1200); // Wait 1.2 seconds to ensure smooth loading
@@ -168,11 +195,33 @@ const AppContent = () => {
     return (
         <>
             {/* <PlatformDebug /> */}
-            <Header />
-            <div className="main-content">
-                <AppRoutes />
+            <TopNavbar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onFilterOpen={handleFilterOpen}
+            />
+            <div
+                className="main-content"
+                style={{
+                    paddingTop: '64px', // Top navbar height
+                    paddingBottom: '72px', // Bottom navbar height
+                    minHeight: 'calc(100vh - 136px)', // Full height minus both navbars
+                }}>
+                <AppRoutes searchQuery={searchQuery} filters={filters} />
             </div>
-            <Footer />
+            <BottomNavbar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                showSearchField={showSearchField}
+                onToggleSearch={handleToggleSearch}
+            />
+            <FilterDrawer
+                open={filterDrawerOpen}
+                onClose={() => setFilterDrawerOpen(false)}
+                filters={filters}
+                onFiltersChange={setFilters}
+                categories={categoriesData.filter((cat) => cat.key !== "all")} // Exclude 'all' category for filter drawer
+            />
         </>
     );
 };

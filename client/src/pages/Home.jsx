@@ -8,23 +8,16 @@ import {
     CardContent,
     CardMedia,
     Chip,
-    TextField,
-    InputAdornment,
-    IconButton,
     Stack,
     Tabs,
     Tab,
-    Avatar,
     Divider,
     Paper,
 } from "@mui/material";
 import {
-    Search,
     LocationOn,
-    FilterList,
     Schedule,
     LocalOffer,
-    FavoriteOutlined,
     Share,
     ArrowForward,
 } from "@mui/icons-material";
@@ -38,7 +31,7 @@ import FavoriteButton from "../components/FavoriteButton";
 import EventService from "../services/eventService";
 import { useCategories } from "../services/enhancedCategoryService";
 
-const Home = () => {
+const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) => {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
     const { t, i18n } = useTranslation(["home", "common"]);
@@ -48,7 +41,6 @@ const Home = () => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
     const [filters, setFilters] = useState({
         priceRange: [0, 200],
         categories: [],
@@ -57,6 +49,19 @@ const Home = () => {
         lastMinuteOnly: false,
         availableOnly: true,
     });
+
+    // Sync external search query and filters
+    useEffect(() => {
+        if (externalSearchQuery !== undefined) {
+            setSearchQuery(externalSearchQuery);
+        }
+    }, [externalSearchQuery]);
+
+    useEffect(() => {
+        if (externalFilters) {
+            setFilters(externalFilters);
+        }
+    }, [externalFilters]);
 
     // Use the enhanced categories hook for multi-language support
     const { categories: categoriesData, loading: categoriesLoading, error: categoriesError } = useCategories();
@@ -250,70 +255,6 @@ const Home = () => {
             {/* Main Content */}
             {!loading && !categoriesLoading && !error && !categoriesError && (
                 <>
-                    {/* Hero Section */}
-                    <Paper
-                        sx={{
-                            textAlign: "center",
-                            mb: 4,
-                            py: 6,
-                            background: `linear-gradient(135deg, ${theme.palette.brand.orange} 0%, ${theme.palette.brand.creme} 100%)`,
-                            color: theme.palette.brand.sombre,
-                            borderRadius: 0,
-                            boxShadow: "none",
-                            border: "none",
-                        }}>
-                        <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: "bold" }}>
-                            {t("home:title")}
-                        </Typography>
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                mb: 4,
-                                opacity: 0.9,
-                                maxWidth: "600px",
-                                mx: "auto",
-                                fontWeight: 200, // Extra light - showing designers we understand the subtle art of typography 😉
-                                fontFamily: '"ClashGrotesk-Variable", sans-serif',
-                            }}>
-                            {t("home:subtitle")}
-                        </Typography>
-
-                        {/* Search Bar */}
-                        <Box sx={{ maxWidth: "600px", mx: "auto" }}>
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                placeholder={t("home:searchPlaceholder")}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                sx={{
-                                    backgroundColor: theme.palette.background.paper,
-                                    borderRadius: 2,
-                                    "& .MuiOutlinedInput-root": {
-                                        borderRadius: 2,
-                                    },
-                                }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Search />
-                                        </InputAdornment>
-                                    ),
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton>
-                                                <LocationOn />
-                                            </IconButton>
-                                            <IconButton onClick={() => setFilterDrawerOpen(true)}>
-                                                <FilterList />
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-                        </Box>
-                    </Paper>
-
                     {/* Category Tabs */}
                     <Box sx={{ mb: 4 }}>
                         <Tabs
@@ -401,15 +342,6 @@ const Home = () => {
                             </Box>
                         </Paper>
                     )}
-
-                    {/* Filter Drawer */}
-                    <FilterDrawer
-                        open={filterDrawerOpen}
-                        onClose={() => setFilterDrawerOpen(false)}
-                        filters={filters}
-                        onFiltersChange={setFilters}
-                        categories={categories.filter((cat) => cat.key !== "all")} // Exclude 'all' category for filter drawer
-                    />
                 </>
             )}
         </Container>

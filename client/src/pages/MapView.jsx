@@ -218,36 +218,6 @@ const MapView = () => {
 
     return (
         <>
-            {/* Hero Section - True Full Width */}
-            <Box
-                sx={{
-                    textAlign: "center",
-                    py: 6, // Reduced padding since no logo/text
-                    backgroundColor: theme.palette.primary.main, // Orange background
-                    borderRadius: 0,
-                    boxShadow: "none",
-                    border: "none",
-                    width: "100vw", // Full viewport width
-                    marginLeft: "calc(-50vw + 50%)", // Center and expand to full width
-                    marginRight: "calc(-50vw + 50%)", // Center and expand to full width
-                }}>
-                <Container maxWidth="lg">
-                    {/* Only Search Bar - no logo or text */}
-                    <Box sx={{ maxWidth: "500px", mx: "auto" }}>
-                        <AddressSearch
-                            onLocationSelect={handleLocationSelect}
-                            onCurrentLocation={handleCurrentLocation}
-                            placeholder={t("searchPlaceholder")}
-                            sx={{
-                                "& .MuiOutlinedInput-root": {
-                                    backgroundColor: "white",
-                                    borderRadius: 2,
-                                },
-                            }}
-                        />
-                    </Box>
-                </Container>
-            </Box>
 
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <Grid container spacing={3}>
@@ -375,7 +345,10 @@ const MapView = () => {
                 <Snackbar
                     open={snackbar.open}
                     autoHideDuration={4000}
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    sx={{
+                        bottom: { xs: 80, sm: 80 }, // Position above bottom navbar (72px + 8px margin)
+                    }}>
                     <Alert
                         onClose={() => setSnackbar({ ...snackbar, open: false })}
                         severity={snackbar.severity}

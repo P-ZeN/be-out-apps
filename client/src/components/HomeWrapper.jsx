@@ -9,7 +9,7 @@ import { EventsPage } from "../pages";
  * - Web browser: Shows landing page with app store links and project description
  * - Tauri app (mobile): Shows the events page as the home page
  */
-const HomeWrapper = () => {
+const HomeWrapper = ({ searchQuery, filters }) => {
     const [isTauriApp, setIsTauriApp] = useState(null);
     const { isAuthenticated, user } = useAuth();
 
@@ -33,7 +33,7 @@ const HomeWrapper = () => {
 
     // If running in Tauri (mobile app), show events page
     if (isTauriApp) {
-        return <EventsPage />;
+        return <EventsPage searchQuery={searchQuery} filters={filters} />;
     }
 
     // If running in web browser, show landing page with project description
