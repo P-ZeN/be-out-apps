@@ -29,6 +29,7 @@ import {
     StarBorder,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
+import { getIsTauriApp } from "../utils/platformDetection";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
@@ -419,9 +420,12 @@ const EventDetail = () => {
             <Paper
                 sx={{
                     position: "fixed",
-                    bottom: "72px", // Above BottomNavbar
-                    left: 0,
-                    right: 0,
+                    // Position above BottomNavbar + safe area for mobile
+                    bottom: getIsTauriApp()
+                        ? `calc(72px + env(safe-area-inset-bottom, 0px))` // BottomNavbar height + safe area
+                        : "72px", // Standard web positioning
+                    left: getIsTauriApp() ? 'env(safe-area-inset-left, 0px)' : 0,
+                    right: getIsTauriApp() ? 'env(safe-area-inset-right, 0px)' : 0,
                     p: 2,
                     backgroundColor: "white",
                     borderTop: "1px solid",

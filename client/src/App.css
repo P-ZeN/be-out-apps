@@ -60,7 +60,7 @@ body.tauri-ios::before {
 .main-content {
     max-width: 1280px;
     width: 100%;
-    padding: 64px 0 72px 0; /* Top navbar height + Bottom navbar height */
+    padding: 64px 0 72px 0; /* Default: Top navbar height + Bottom navbar height */
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -105,7 +105,7 @@ body.tauri-ios .main-content {
         padding-top: calc(48px + 64px); /* Fallback */
         padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     }
-    
+
     body.tauri-ios .main-content {
         /* iOS mobile: CSS env() handles safe areas */
         padding-top: calc(env(safe-area-inset-top, 0px) + 64px);

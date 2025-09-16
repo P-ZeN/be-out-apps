@@ -89,7 +89,7 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                     sx={{
                         position: "fixed",
                         // Position above the bottom navbar + safe area
-                        bottom: isTauriApp 
+                        bottom: isTauriApp
                             ? `calc(72px + env(safe-area-inset-bottom, 0px) + 8px)` // navbar + safe area + margin
                             : 80, // Standard web spacing above navbar
                         left: 0,

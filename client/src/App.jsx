@@ -209,8 +209,7 @@ const AppContent = () => {
             <div
                 className="main-content"
                 style={{
-                    paddingTop: '64px', // Top navbar height
-                    paddingBottom: '72px', // Bottom navbar height
+                    // Remove fixed padding - let CSS classes handle platform-specific padding
                     minHeight: 'calc(100vh - 136px)', // Full height minus both navbars
                 }}>
                 <AppRoutes searchQuery={searchQuery} filters={filters} />

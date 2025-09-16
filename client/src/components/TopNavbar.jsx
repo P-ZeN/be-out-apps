@@ -93,7 +93,7 @@ const TopNavbar = ({ onFilterOpen, searchQuery, onSearchChange }) => {
                         fontWeight: "bold",
                         color: "#000000", // Black text
                         textDecoration: "none",
-                        fontSize: "1.55rem",
+                        fontSize: "1.65rem",
                         fontFamily: '"ClashGrotesk-Variable", sans-serif',
                         verticalAlign: "bottom",
                         marginTop: "12px",
