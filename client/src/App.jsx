@@ -56,6 +56,7 @@ const AppContent = () => {
         const isTauriApp = getIsTauriApp();
         console.log('🔍 Platform Detection Debug:', {
             isTauriApp,
+            isAndroid: isAndroid(),
             userAgent: navigator.userAgent,
             location: window.location.href,
             tauriApis: {
@@ -69,9 +70,10 @@ const AppContent = () => {
             document.body.classList.add('tauri-mobile');
             console.log('✅ Added tauri-mobile class to body for proper mobile safe area handling');
 
-            // For Android: Apply dynamic content padding to ensure content appears below AppBar
+            // Platform-specific safe area handling
             if (isAndroid()) {
                 console.log('📱 Android Tauri detected - setting up dynamic content padding');
+                document.body.classList.add('tauri-android');
 
                 // Calculate status bar height using the same method as MainMenu
                 const tempDiv = document.createElement('div');
@@ -99,18 +101,18 @@ const AppContent = () => {
                     const mainContent = document.querySelector('.main-content');
                     if (mainContent) {
                         const isMobile = window.innerWidth <= 600;
-                        const appBarHeight = isMobile ? 64 : 72;
+                        const appBarHeight = 64; // Consistent height for new design
                         const totalTopPadding = statusBarHeight + appBarHeight;
 
                         mainContent.style.paddingTop = `${totalTopPadding}px`;
                         console.log(`✅ Android: Set content padding-top to ${totalTopPadding}px (${statusBarHeight}px status bar + ${appBarHeight}px AppBar)`);
                     }
 
-                    // Also update the orange background height
+                    // Also update the background height
                     const style = document.createElement('style');
                     style.textContent = `
-                        body.tauri-mobile::before {
-                            height: ${statusBarHeight + (window.innerWidth <= 600 ? 64 : 72)}px !important;
+                        body.tauri-android::before {
+                            height: ${statusBarHeight + 64}px !important;
                         }
                     `;
                     // Remove existing style if any
@@ -129,15 +131,19 @@ const AppContent = () => {
                 // Cleanup function
                 return () => {
                     window.removeEventListener('resize', updateContentPadding);
-                    document.body.classList.remove('tauri-mobile');
+                    document.body.classList.remove('tauri-mobile', 'tauri-android');
                 };
+            } else {
+                // iOS or other platform - rely on CSS env() which works better on iOS
+                console.log('🍎 iOS/Other Tauri detected - using CSS env() for safe areas');
+                document.body.classList.add('tauri-ios');
             }
         } else {
             console.log('ℹ️ Not a Tauri app - using web layout');
         }
 
         return () => {
-            document.body.classList.remove('tauri-mobile');
+            document.body.classList.remove('tauri-mobile', 'tauri-android', 'tauri-ios');
         };
     }, []);
 

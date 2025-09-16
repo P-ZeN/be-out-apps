@@ -85,15 +85,15 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
 
     const handleApplyFilters = () => {
         onFiltersChange(localFilters);
-        
+
         // Context-aware navigation based on current route
         const currentPath = location.pathname;
-        
+
         // If we're not on a filtered page, navigate to events page
         if (currentPath !== '/home' && currentPath !== '/' && currentPath !== '/events' && currentPath !== '/map') {
             navigate('/events');
         }
-        
+
         onClose();
     };
 

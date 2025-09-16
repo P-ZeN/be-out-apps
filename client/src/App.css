@@ -27,25 +27,32 @@ body.tauri-mobile {
     margin: 0 !important;
 }
 
-/* Create white background container that covers the entire top safe area and extends under AppBar */
-body.tauri-mobile::before {
+/* Android-specific styles - uses dynamic JavaScript calculation */
+body.tauri-android::before {
     content: "";
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    /* Height covers safe area + AppBar to ensure seamless white background */
-    height: calc(env(safe-area-inset-top, 48px) + 64px); /* Use fallback for Android, updated for new navbar height */
+    /* Height set by JavaScript for accurate Android status bar calculation */
+    height: calc(48px + 64px); /* Fallback: approximate status bar + AppBar */
     background-color: #FFFFFF; /* White background matching new design */
     z-index: 999; /* Just below AppBar (which should be 1100+) */
     pointer-events: none;
 }
 
-/* Mobile version with smaller AppBar */
-@media (max-width: 600px) {
-    body.tauri-mobile::before {
-        height: calc(env(safe-area-inset-top, 48px) + 64px); /* Use fallback for Android, consistent with new navbar height */
-    }
+/* iOS-specific styles - uses CSS env() which works reliably on iOS */
+body.tauri-ios::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* iOS safe area + AppBar height */
+    height: calc(env(safe-area-inset-top, 0px) + 64px);
+    background-color: #FFFFFF; /* White background matching new design */
+    z-index: 999; /* Just below AppBar (which should be 1100+) */
+    pointer-events: none;
 }
 
 /* Add top padding to main content to avoid being hidden under AppBar */
@@ -72,27 +79,37 @@ body.tauri-mobile::before {
 
 /* Tauri mobile app specific adjustments */
 body.tauri-mobile .main-content {
-    /* For Tauri mobile apps, we need to account for:
-     * 1. Status bar safe area + Top navbar height
-     * 2. Side safe areas for content
-     * 3. Bottom safe area + bottom navbar height
-     *
-     * For Android: JavaScript calculates actual status bar height
-     * For iOS: CSS env() works reliably
-     *
-     * We use a fallback approach: try CSS env() first, then JavaScript override
-     */
-    padding-top: calc(env(safe-area-inset-top, 48px) + 64px); /* Safe area + Top navbar height */
+    /* Base padding that applies to all Tauri mobile apps */
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* Bottom navbar height + safe area */
+}
+
+/* Android-specific content padding - uses JavaScript calculation */
+body.tauri-android .main-content {
+    /* Android: JavaScript calculates actual status bar height and sets padding-top dynamically */
+    /* Fallback padding in case JavaScript fails */
+    padding-top: calc(48px + 64px); /* Approximate status bar + navbar */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* Bottom navbar + safe area */
+}
+
+/* iOS-specific content padding - uses CSS env() which works reliably */
+body.tauri-ios .main-content {
+    /* iOS: CSS env() works reliably for safe area detection */
+    padding-top: calc(env(safe-area-inset-top, 0px) + 64px); /* Safe area + Top navbar */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* Bottom navbar + safe area */
 }
 
 @media (max-width: 600px) {
-    body.tauri-mobile .main-content {
-        /* Mobile Tauri: Same navbar heights */
-        padding-top: calc(env(safe-area-inset-top, 48px) + 64px); /* Safe area + mobile top navbar height */
-        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* Bottom navbar height + safe area */
+    body.tauri-android .main-content {
+        /* Android mobile: Same navbar heights, JavaScript handles status bar */
+        padding-top: calc(48px + 64px); /* Fallback */
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+    
+    body.tauri-ios .main-content {
+        /* iOS mobile: CSS env() handles safe areas */
+        padding-top: calc(env(safe-area-inset-top, 0px) + 64px);
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     }
 }
 

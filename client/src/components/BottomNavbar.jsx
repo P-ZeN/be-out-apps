@@ -88,7 +88,10 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                 <Box
                     sx={{
                         position: "fixed",
-                        bottom: 80, // Above bottom navbar
+                        // Position above the bottom navbar + safe area
+                        bottom: isTauriApp 
+                            ? `calc(72px + env(safe-area-inset-bottom, 0px) + 8px)` // navbar + safe area + margin
+                            : 80, // Standard web spacing above navbar
                         left: 0,
                         right: 0,
                         backgroundColor: "#FFFFFF",
@@ -140,7 +143,7 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                 position="fixed"
                 sx={{
                     top: "auto",
-                    bottom: 0,
+                    bottom: 0, // Always stick to bottom, don't create gap
                     backgroundColor: "#FFFFFF", // White background
                     color: "#000000", // Black text/icons
                     borderTop: "1px solid #E0E0E0",
@@ -150,8 +153,10 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                     ...(isTauriApp && {
                         left: 'env(safe-area-inset-left, 0px)',
                         right: 'env(safe-area-inset-right, 0px)',
-                        bottom: 'env(safe-area-inset-bottom, 0px)',
+                        // Don't set bottom: env() - keep it at bottom: 0 to avoid gaps
                         width: 'auto',
+                        // Add padding to extend navbar into safe area instead
+                        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                     }),
                 }}>
                 <Toolbar

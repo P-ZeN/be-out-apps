@@ -271,9 +271,9 @@ const EventDetail = () => {
                                             lng: parseFloat(event.venue_longitude),
                                             category: event.categories?.[0]?.toLowerCase() || "default",
                                         }]}
-                                        center={{ 
-                                            lat: parseFloat(event.venue_latitude), 
-                                            lng: parseFloat(event.venue_longitude) 
+                                        center={{
+                                            lat: parseFloat(event.venue_latitude),
+                                            lng: parseFloat(event.venue_longitude)
                                         }}
                                         zoom={15}
                                         height="300px"
@@ -462,7 +462,7 @@ const EventDetail = () => {
                             size="large"
                             onClick={handlePurchase}
                             disabled={event.available_tickets <= 0 || new Date() > new Date(event.event_date) || (event.booking_deadline && new Date() > new Date(event.booking_deadline))}
-                            sx={{ 
+                            sx={{
                                 minWidth: 160,
                                 height: 48,
                                 fontWeight: "bold",
@@ -474,9 +474,9 @@ const EventDetail = () => {
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                             }}>
-                            {event.available_tickets <= 0 
+                            {event.available_tickets <= 0
                                 ? "Complet"
-                                : new Date() > new Date(event.event_date) 
+                                : new Date() > new Date(event.event_date)
                                 ? "Terminé"
                                 : (event.booking_deadline && new Date() > new Date(event.booking_deadline))
                                 ? "Réservations fermées"
