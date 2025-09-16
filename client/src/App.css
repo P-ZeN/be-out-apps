@@ -95,7 +95,7 @@ body.tauri-android .main-content {
 /* iOS-specific content padding - uses CSS env() which works reliably */
 body.tauri-ios .main-content {
     /* iOS: CSS env() works reliably for safe area detection */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 64px); /* Safe area + Top navbar */
+    padding-top: calc(env(safe-area-inset-top, 0px) + 64px + 8px); /* Safe area + Top navbar + extra spacing */
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* Bottom navbar + safe area */
 }
 
@@ -108,7 +108,7 @@ body.tauri-ios .main-content {
 
     body.tauri-ios .main-content {
         /* iOS mobile: CSS env() handles safe areas */
-        padding-top: calc(env(safe-area-inset-top, 0px) + 64px);
+        padding-top: calc(env(safe-area-inset-top, 0px) + 64px + 8px); /* Extra spacing for iOS */
         padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     }
 }

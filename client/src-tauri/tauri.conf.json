@@ -1,5 +1,5 @@
 {
-    "productName": "BeOut",
+    "productName": "Be Out",
     "version": "1.0.0",
     "identifier": "com.beout.app",
     "build": {
@@ -14,7 +14,7 @@
                 "fullscreen": false,
                 "height": 600,
                 "resizable": true,
-                "title": "Be Out!",
+                "title": "Be Out",
                 "width": 800
             }
         ],
@@ -26,7 +26,7 @@
     "bundle": {
         "active": true,
         "category": "Lifestyle",
-        "copyright": "Copyright © 2025 Be Out!",
+        "copyright": "Copyright © 2025 Be Out",
         "icon": [
             "icons/32x32.png",
             "icons/64x64.png",
