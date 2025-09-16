@@ -248,7 +248,7 @@ const MapView = ({ searchQuery: externalSearchQuery, filters: externalFilters })
     return (
         <>
 
-            <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Container maxWidth="lg" sx={{ pb: 4 }}> {/* Only bottom padding - top handled by main-content */}
                 <Grid container spacing={3}>
                     {/* Interactive Map */}
                     <Grid size={{ xs: 12, md: 8 }}>
