@@ -24,11 +24,19 @@ import AddressSearch from "../components/AddressSearch";
 import { GeocodingService } from "../services/geocodingService";
 import EventService from "../services/eventService";
 
-const MapView = () => {
-    const { t } = useTranslation(["map", "common"]);
+const MapView = ({ searchQuery: externalSearchQuery, filters: externalFilters }) => {
+    const { t, i18n } = useTranslation(["map", "common"]);
     const theme = useTheme();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
+    const [filters, setFilters] = useState({
+        priceRange: [0, 200],
+        categories: [],
+        sortBy: "date",
+        maxDistance: 50,
+        lastMinuteOnly: false,
+        availableOnly: true,
+    });
     const [selectedEventId, setSelectedEventId] = useState(null);
     const [mapCenter, setMapCenter] = useState({ lat: 48.8566, lng: 2.3522 });
     const [mapZoom, setMapZoom] = useState(12);
@@ -38,12 +46,33 @@ const MapView = () => {
     const [loading, setLoading] = useState(true);
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
+    // Sync external props with local state
+    useEffect(() => {
+        if (externalSearchQuery !== undefined) {
+            setSearchQuery(externalSearchQuery);
+        }
+    }, [externalSearchQuery]);
+
+    useEffect(() => {
+        if (externalFilters) {
+            setFilters(externalFilters);
+        }
+    }, [externalFilters]);
+
     const loadRealEvents = async () => {
         try {
             setLoading(true);
             const response = await EventService.getAllEvents({
                 limit: 50,
-                lang: "fr",
+                lang: i18n.language, // Use current language
+                ...(filters.categories && filters.categories.length > 0 && {
+                    categoryIds: filters.categories
+                }),
+                ...(searchQuery && { search: searchQuery }),
+                ...(filters.lastMinuteOnly && { lastMinute: true }),
+                minPrice: filters.priceRange[0],
+                maxPrice: filters.priceRange[1],
+                sortBy: filters.sortBy,
             });
 
             if (response && response.events) {
@@ -214,7 +243,7 @@ const MapView = () => {
     // Initialize with real events or fallback to mock
     useEffect(() => {
         loadRealEvents();
-    }, []);
+    }, [filters, searchQuery, i18n.language]);
 
     return (
         <>

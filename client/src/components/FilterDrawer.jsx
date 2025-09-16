@@ -20,9 +20,12 @@
 import { Close, Tune } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = [] }) => {
     const { t } = useTranslation(["home", "common"]);
+    const location = useLocation();
+    const navigate = useNavigate();
     const [localFilters, setLocalFilters] = useState(filters);
 
     // Sync external filters with local filters
@@ -82,6 +85,15 @@ const FilterDrawer = ({ open, onClose, filters, onFiltersChange, categories = []
 
     const handleApplyFilters = () => {
         onFiltersChange(localFilters);
+        
+        // Context-aware navigation based on current route
+        const currentPath = location.pathname;
+        
+        // If we're not on a filtered page, navigate to events page
+        if (currentPath !== '/home' && currentPath !== '/' && currentPath !== '/events' && currentPath !== '/map') {
+            navigate('/events');
+        }
+        
         onClose();
     };
 

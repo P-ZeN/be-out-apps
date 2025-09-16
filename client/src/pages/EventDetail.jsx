@@ -34,6 +34,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import EventService from "../services/eventService";
 import BookingModal from "../components/BookingModal";
+import MapComponent from "../components/MapComponent";
 import FavoriteButton from "../components/FavoriteButton";
 
 const EventDetail = () => {
@@ -165,7 +166,7 @@ const EventDetail = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth="lg" sx={{ py: 4, pb: 12 }}> {/* Extra bottom padding for sticky CTA */}
             {/* Breadcrumbs */}
             <Breadcrumbs sx={{ mb: 3 }}>
                 <Link component="button" variant="body2" onClick={() => navigate("/")} sx={{ textDecoration: "none" }}>
@@ -253,6 +254,35 @@ const EventDetail = () => {
                                 </Box>
                             </Grid>
                         </Grid>
+
+                        {/* Map Section */}
+                        {event.venue_latitude && event.venue_longitude && (
+                            <>
+                                <Typography variant="h6" sx={{ mt: 3, mb: 2, fontWeight: "bold" }}>
+                                    {t("eventDetail:location.mapTitle", "Localisation")}
+                                </Typography>
+                                <Paper sx={{ height: 300, mb: 3, overflow: "hidden" }}>
+                                    <MapComponent
+                                        events={[{
+                                            id: event.id,
+                                            title: event.title,
+                                            venue_name: event.venue?.name || event.venue_name,
+                                            lat: parseFloat(event.venue_latitude),
+                                            lng: parseFloat(event.venue_longitude),
+                                            category: event.categories?.[0]?.toLowerCase() || "default",
+                                        }]}
+                                        center={{ 
+                                            lat: parseFloat(event.venue_latitude), 
+                                            lng: parseFloat(event.venue_longitude) 
+                                        }}
+                                        zoom={15}
+                                        height="300px"
+                                        showSearch={false}
+                                        onMarkerClick={() => {}} // No action needed for single event
+                                    />
+                                </Paper>
+                            </>
+                        )}
 
                         <Divider sx={{ my: 3 }} />
 
@@ -384,6 +414,80 @@ const EventDetail = () => {
 
             {/* Booking Modal */}
             <BookingModal open={bookingModalOpen} onClose={() => setBookingModalOpen(false)} event={event} />
+
+            {/* Sticky CTA Bar */}
+            <Paper
+                sx={{
+                    position: "fixed",
+                    bottom: "72px", // Above BottomNavbar
+                    left: 0,
+                    right: 0,
+                    p: 2,
+                    backgroundColor: "white",
+                    borderTop: "1px solid",
+                    borderColor: "divider",
+                    zIndex: 1100,
+                    boxShadow: "0 -2px 8px rgba(0,0,0,0.15)",
+                }}>
+                <Container maxWidth="lg">
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
+                        {/* Left side: Price, discount, availability */}
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1 }}>
+                            <Box>
+                                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                                    <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                                        {event.discounted_price}€
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ textDecoration: "line-through", color: "text.secondary" }}>
+                                        {event.original_price}€
+                                    </Typography>
+                                    <Chip
+                                        label={`-${event.discount_percentage}%`}
+                                        color="success"
+                                        size="small"
+                                        sx={{ fontWeight: "bold" }}
+                                    />
+                                </Box>
+                                <Typography variant="body2" color="text.secondary">
+                                    {event.available_tickets} places disponibles
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        {/* Right side: Book Now button */}
+                        <Button
+                            variant="contained"
+                            size="large"
+                            onClick={handlePurchase}
+                            disabled={event.available_tickets <= 0 || new Date() > new Date(event.event_date) || (event.booking_deadline && new Date() > new Date(event.booking_deadline))}
+                            sx={{ 
+                                minWidth: 160,
+                                height: 48,
+                                fontWeight: "bold",
+                                fontSize: "0.95rem",
+                                lineHeight: 1.3,
+                                px: 2,
+                                py: 1.5,
+                                textAlign: "center",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}>
+                            {event.available_tickets <= 0 
+                                ? "Complet"
+                                : new Date() > new Date(event.event_date) 
+                                ? "Terminé"
+                                : (event.booking_deadline && new Date() > new Date(event.booking_deadline))
+                                ? "Réservations fermées"
+                                : isAuthenticated
+                                ? "Réserver maintenant"
+                                : "Se connecter pour réserver"
+                            }
+                        </Button>
+                    </Box>
+                </Container>
+            </Paper>
         </Container>
     );
 };

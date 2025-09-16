@@ -21,8 +21,9 @@ const EventCard = ({ event }) => {
                     boxShadow: 1,
                 },
                 position: "relative",
-                boxShadow: 0,
+                boxShadow: 1,
                 borderRadius: 0,
+
             }}
             onClick={() => navigate(`/event/${event.id}`)}>
             {/* Favorite Button - positioned absolutely */}

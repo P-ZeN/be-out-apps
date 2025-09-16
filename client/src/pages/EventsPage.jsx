@@ -107,7 +107,7 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
     const lastMinuteEvents = events.filter((event) => event.is_last_minute);
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth="lg" sx={{ py: 4, backgroundColor: "#fff" }}>
             {/* Loading State */}
             {(loading || categoriesLoading) && (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
