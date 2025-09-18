@@ -996,12 +996,20 @@ router.patch("/events/:id/publish", verifyOrganizerToken, async (req, res) => {
                 });
             }
 
+            // CRITICAL FIX: Ensure event status is 'active' when publishing
+            // This prevents events from being approved but stuck in 'candidate' status
+            let statusUpdate = "";
+            if (is_published && event.status !== "active") {
+                statusUpdate = ", status = 'active'";
+            }
+
             // Update publication status
             const result = await client.query(
                 `UPDATE events
                  SET is_published = $1,
                      status_changed_by = $2,
                      status_changed_at = NOW()
+                     ${statusUpdate}
                  WHERE id = $3 AND organizer_id = $4
                  RETURNING *`,
                 [is_published, req.user.id, req.params.id, req.user.id]

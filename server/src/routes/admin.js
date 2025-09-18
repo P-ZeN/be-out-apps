@@ -339,13 +339,19 @@ router.patch("/events/:id/status", requireAdmin, async (req, res) => {
 
         updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
 
-        // If approving, set approved_by and approved_at
+        // If approving, set approved_by, approved_at, and make event active
         if (moderation_status === "approved") {
             updateFields.push(`approved_by = $${paramIndex}`);
             updateValues.push(req.adminUser.id);
             paramIndex++;
 
             updateFields.push(`approved_at = CURRENT_TIMESTAMP`);
+
+            // CRITICAL FIX: When approving an event, automatically set status to 'active'
+            // so it becomes visible in the frontend
+            if (!status) { // Only set if status wasn't explicitly provided
+                updateFields.push(`status = 'active'`);
+            }
         }
 
         updateValues.push(id); // WHERE condition
