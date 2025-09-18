@@ -76,9 +76,15 @@
                 "cancellationPlaceholder": "Ex: Remboursement intégral jusqu'à 48h avant l'événement...",
                 "cancellationHelp": "Décrivez les conditions de remboursement et d'annulation",
                 "featured": "Événement mis en avant",
-                "featuredHelp": "Les événements mis en avant apparaissent en priorité dans les recherches"
+                "featuredHelp": "Les événements mis en avant apparaissent en priorité dans les recherches",
+                "lastMinuteOffer": "Offre de dernière minute",
+                "lastMinuteOfferHelp": "Les offres de dernière minute apparaissent dans la section spéciale de la page d'accueil"
             }
-        }
+        },
+        "featuredEvent": "Événement mis en avant",
+        "featuredEventHelp": "Les événements mis en avant apparaissent en priorité dans les recherches",
+        "lastMinuteOffer": "Offre de dernière minute",
+        "lastMinuteOfferHelp": "Les offres de dernière minute apparaissent dans la section spéciale de la page d'accueil"
     },
     "venues": {
         "title": "Lieu de l'événement",

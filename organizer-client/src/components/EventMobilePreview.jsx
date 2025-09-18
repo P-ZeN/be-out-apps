@@ -154,19 +154,51 @@ const EventMobilePreview = ({ formData, venues, categories, imagePreview }) => {
                             />
                         )}
 
-                        {/* Price badge */}
-                        {formData.price && (
-                            <Chip
-                                icon={<Euro />}
-                                label={`${formData.price}€`}
-                                color="primary"
+                        {/* Price badge with discount support */}
+                        {(formData.discounted_price || formData.original_price || formData.price) && (
+                            <Box
                                 sx={{
                                     position: "absolute",
                                     bottom: 10,
                                     right: 10,
-                                    fontWeight: "bold",
-                                }}
-                            />
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "flex-end",
+                                    gap: 0.5,
+                                }}>
+                                {formData.original_price && formData.discounted_price &&
+                                 formData.original_price !== formData.discounted_price && (
+                                    <Chip
+                                        label={`-${formData.discount_percentage || 0}%`}
+                                        size="small"
+                                        color="success"
+                                        sx={{ fontSize: "10px", height: "20px" }}
+                                    />
+                                )}
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    {formData.original_price && formData.discounted_price &&
+                                     formData.original_price !== formData.discounted_price && (
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                textDecoration: "line-through",
+                                                color: "text.secondary",
+                                                fontSize: "10px",
+                                            }}>
+                                            {formData.original_price}€
+                                        </Typography>
+                                    )}
+                                    <Chip
+                                        icon={<Euro />}
+                                        label={`${formData.discounted_price || formData.original_price || formData.price}€`}
+                                        color="primary"
+                                        sx={{
+                                            fontWeight: "bold",
+                                            fontSize: "12px",
+                                        }}
+                                    />
+                                </Box>
+                            </Box>
                         )}
                     </Box>
 
@@ -305,8 +337,9 @@ const EventMobilePreview = ({ formData, venues, categories, imagePreview }) => {
                                 fontWeight: "bold",
                                 fontSize: "16px",
                             }}>
-                            {formData.price && Number(formData.price) > 0
-                                ? `Réserver - ${formData.price}€`
+                            {(formData.discounted_price || formData.original_price || formData.price) &&
+                             Number(formData.discounted_price || formData.original_price || formData.price) > 0
+                                ? `Réserver - ${formData.discounted_price || formData.original_price || formData.price}€`
                                 : "Participer gratuitement"}
                         </Button>
                     </Box>

@@ -76,7 +76,9 @@
                 "cancellationPlaceholder": "Ex: Full refund up to 48h before the event...",
                 "cancellationHelp": "Describe refund and cancellation conditions",
                 "featured": "Featured Event",
-                "featuredHelp": "Featured events appear as priority in searches"
+                "featuredHelp": "Featured events appear as priority in searches",
+                "lastMinuteOffer": "Last Minute Offer",
+                "lastMinuteOfferHelp": "Mark this event as a last-minute offer for special promotion"
             }
         }
     },

@@ -76,7 +76,9 @@
                 "cancellationPlaceholder": "Ej: Reembolso completo hasta 48h antes del evento...",
                 "cancellationHelp": "Describa las condiciones de reembolso y cancelación",
                 "featured": "Evento Destacado",
-                "featuredHelp": "Los eventos destacados aparecen con prioridad en las búsquedas"
+                "featuredHelp": "Los eventos destacados aparecen con prioridad en las búsquedas",
+                "lastMinuteOffer": "Oferta de Último Momento",
+                "lastMinuteOfferHelp": "Las ofertas de último momento aparecen en la sección especial de la página de inicio"
             }
         }
     },

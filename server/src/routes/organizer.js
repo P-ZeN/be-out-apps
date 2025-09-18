@@ -359,14 +359,23 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
             event_date,
             venue_id,
             category_id,
-            price,
+            original_price,
+            discounted_price,
+            discount_percentage,
+            price, // Fallback for old form format
             max_participants,
             requirements,
             cancellation_policy,
+            is_last_minute,
         } = req.body;
 
+        // Handle backwards compatibility - if old format is used, treat price as both original and discounted
+        const finalOriginalPrice = original_price !== undefined ? original_price : price;
+        const finalDiscountedPrice = discounted_price !== undefined ? discounted_price : price;
+        const finalDiscountPercentage = discount_percentage !== undefined ? discount_percentage : 0;
+
         // Validation
-        if (!title || !description || !event_date || !venue_id || !category_id || price === undefined) {
+        if (!title || !description || !event_date || !venue_id || !category_id || finalOriginalPrice === undefined) {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
@@ -378,10 +387,10 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
             const eventResult = await client.query(
                 `INSERT INTO events (
                     title, description, event_date, venue_id, organizer_id,
-                    original_price, discounted_price, total_tickets, available_tickets,
-                    is_featured, requirements, cancellation_policy, status, is_published,
+                    original_price, discounted_price, discount_percentage, total_tickets, available_tickets,
+                    is_featured, is_last_minute, requirements, cancellation_policy, status, is_published,
                     moderation_status, status_changed_by, status_changed_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
                 RETURNING *`,
                 [
                     title,
@@ -389,11 +398,13 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     event_date,
                     venue_id,
                     req.user.id,
-                    price, // original_price
-                    price, // discounted_price (same as original for now)
+                    finalOriginalPrice, // original_price
+                    finalDiscountedPrice, // discounted_price
+                    finalDiscountPercentage, // discount_percentage
                     max_participants || 100, // total_tickets
                     max_participants || 100, // available_tickets
                     false, // is_featured
+                    is_last_minute || false, // is_last_minute
                     requirements || null, // requirements
                     cancellation_policy || null, // cancellation_policy
                     "draft", // status - all new events start as draft
@@ -435,11 +446,20 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
             event_date,
             venue_id,
             category_id,
-            price,
+            original_price,
+            discounted_price,
+            discount_percentage,
+            price, // Fallback for old form format
             max_participants,
             requirements,
             cancellation_policy,
+            is_last_minute,
         } = req.body;
+
+        // Handle backwards compatibility - if old format is used, treat price as both original and discounted
+        const finalOriginalPrice = original_price !== undefined ? original_price : price;
+        const finalDiscountedPrice = discounted_price !== undefined ? discounted_price : price;
+        const finalDiscountPercentage = discount_percentage !== undefined ? discount_percentage : 0;
 
         // Validation
         if (!title || !description || !event_date || !venue_id || !category_id) {
@@ -464,20 +484,22 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
             const eventResult = await client.query(
                 `UPDATE events SET
                     title = $1, description = $2, event_date = $3, venue_id = $4,
-                    original_price = $5, discounted_price = $6, total_tickets = $7,
-                    available_tickets = $8, requirements = $9, cancellation_policy = $10,
+                    original_price = $5, discounted_price = $6, discount_percentage = $7, total_tickets = $8,
+                    available_tickets = $9, is_last_minute = $10, requirements = $11, cancellation_policy = $12,
                     updated_at = NOW()
-                WHERE id = $11 AND organizer_id = $12
+                WHERE id = $13 AND organizer_id = $14
                 RETURNING *`,
                 [
                     title,
                     description,
                     event_date,
                     venue_id,
-                    price, // original_price
-                    price, // discounted_price
+                    finalOriginalPrice, // original_price
+                    finalDiscountedPrice, // discounted_price
+                    finalDiscountPercentage, // discount_percentage
                     max_participants || 100, // total_tickets
                     max_participants || 100, // available_tickets
+                    is_last_minute || false, // is_last_minute
                     requirements || null, // requirements
                     cancellation_policy || null, // cancellation_policy
                     req.params.id,
