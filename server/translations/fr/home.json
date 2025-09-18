@@ -11,6 +11,9 @@
     },
     "sections": {
         "lastMinute": "⚡ Offres de Dernière Minute",
+        "today": "Aujourd'hui",
+        "thisWeek": "Cette semaine",
+        "thisMonth": "Ce mois-ci",
         "allEvents": "Tous les Événements",
         "categoryEvents": "Événements {{category}}",
         "recommended": "Recommandés pour Vous",

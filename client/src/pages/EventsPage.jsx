@@ -3,212 +3,282 @@ import {
     Typography,
     Container,
     Button,
-    Grid,
-    Divider,
     Paper,
 } from "@mui/material";
-import { LocalOffer } from "@mui/icons-material";
+import {
+    LocalOffer,
+    Today,
+    DateRange,
+    CalendarMonth,
+    Recommend,
+    LocationOn
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useTheme } from "@mui/material/styles";
-import EventCard from "../components/EventCard";
 import EventService from "../services/eventService";
 import { useCategories } from "../services/enhancedCategoryService";
+import HorizontalEventsSection from "../components/HorizontalEventsSection";
 
 const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters }) => {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
     const { t, i18n } = useTranslation(["home", "common"]);
     const theme = useTheme();
-    const [searchQuery, setSearchQuery] = useState("");
-    const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [filters, setFilters] = useState({
-        priceRange: [0, 200],
-        categories: [],
-        sortBy: "date",
-        maxDistance: 50,
-        lastMinuteOnly: false,
-        availableOnly: true,
+
+    // Section data state
+    const [sectionsData, setSectionsData] = useState({
+        lastMinute: { events: [], loading: true },
+        today: { events: [], loading: true },
+        thisWeek: { events: [], loading: true },
+        thisMonth: { events: [], loading: true },
+        recommended: { events: [], loading: true },
+        nearYou: { events: [], loading: true },
+        categories: {}
     });
 
-    // Sync external search query and filters
-    useEffect(() => {
-        if (externalSearchQuery !== undefined) {
-            setSearchQuery(externalSearchQuery);
-        }
-    }, [externalSearchQuery]);
-
-    useEffect(() => {
-        if (externalFilters) {
-            setFilters(externalFilters);
-        }
-    }, [externalFilters]);
+    // User location state
+    const [userLocation, setUserLocation] = useState(null);
 
     // Use the enhanced categories hook for multi-language support
-    const { categories: categoriesData, loading: categoriesLoading, error: categoriesError } = useCategories();
+    const { categories: categoriesData, loading: categoriesLoading } = useCategories();
 
-    // Format categories for the UI
-    const categories = [
-        { key: "all", label: t("home:categories.all"), name: "all" },
-        ...categoriesData.map((cat) => ({
-            key: cat.id.toString(), // Use stable ID instead of language-dependent name
-            label: cat.name,
-            name: cat.name,
-            id: cat.id,
-            event_count: cat.event_count,
-        })),
-    ];
-
-    // Load events from API
+    // Get user location on mount
     useEffect(() => {
-        const loadEvents = async () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    });
+                },
+                (error) => {
+                    console.log("Geolocation error:", error);
+                    // Continue without location
+                }
+            );
+        }
+    }, []);
+
+    // Load all sections data
+    useEffect(() => {
+        const loadAllSections = async () => {
+            const currentLang = i18n.language;
+
             try {
-                setLoading(true);
-                setError(null);
-
-                // Load events
-                const params = {
-                    limit: 12,
-                    sortBy: filters.sortBy,
-                    lang: i18n.language, // Include current language
-                    ...(filters.categories && filters.categories.length > 0 && {
-                        categoryIds: filters.categories // Use category IDs from filters
+                // Load time-based sections
+                const [lastMinuteData, todayData, thisWeekData, thisMonthData, recommendedData] = await Promise.all([
+                    EventService.getAllEvents({
+                        lang: currentLang,
+                        limit: 12,
+                        lastMinute: true,
+                        sortBy: "date"
                     }),
-                    ...(searchQuery && { search: searchQuery }),
-                    ...(filters.lastMinuteOnly && { lastMinute: true }),
-                    minPrice: filters.priceRange[0],
-                    maxPrice: filters.priceRange[1],
-                };
+                    EventService.getEventsByTimePeriod("today", currentLang, 12),
+                    EventService.getEventsByTimePeriod("thisWeek", currentLang, 12),
+                    EventService.getEventsByTimePeriod("thisMonth", currentLang, 12),
+                    EventService.getRecommendedEvents(currentLang, 12)
+                ]);
 
-                const eventsData = await EventService.getAllEvents(params);
-                const formattedData = EventService.formatEvents(eventsData);
-                setEvents(formattedData.events);
-            } catch (err) {
-                console.error("Error loading events:", err);
-                setError("Failed to load events. Please try again.");
-            } finally {
-                setLoading(false);
+                // Load nearby events if location available
+                let nearYouData = { events: [] };
+                if (userLocation) {
+                    nearYouData = await EventService.getNearbyEvents(
+                        userLocation.lat,
+                        userLocation.lng,
+                        currentLang,
+                        12
+                    );
+                }
+
+                // Update sections data
+                setSectionsData(prev => ({
+                    ...prev,
+                    lastMinute: {
+                        events: EventService.formatEvents(lastMinuteData).events,
+                        loading: false
+                    },
+                    today: {
+                        events: EventService.formatEvents(todayData).events,
+                        loading: false
+                    },
+                    thisWeek: {
+                        events: EventService.formatEvents(thisWeekData).events,
+                        loading: false
+                    },
+                    thisMonth: {
+                        events: EventService.formatEvents(thisMonthData).events,
+                        loading: false
+                    },
+                    recommended: {
+                        events: EventService.formatEvents(recommendedData).events,
+                        loading: false
+                    },
+                    nearYou: {
+                        events: EventService.formatEvents(nearYouData).events,
+                        loading: false
+                    }
+                }));
+
+            } catch (error) {
+                console.error("Error loading sections:", error);
+                // Set all sections as not loading with empty events
+                setSectionsData(prev => ({
+                    ...prev,
+                    lastMinute: { events: [], loading: false },
+                    today: { events: [], loading: false },
+                    thisWeek: { events: [], loading: false },
+                    thisMonth: { events: [], loading: false },
+                    recommended: { events: [], loading: false },
+                    nearYou: { events: [], loading: false }
+                }));
             }
         };
 
-        // Only load events if categories are available or not needed
-        if (!categoriesLoading) {
-            loadEvents();
-        }
-    }, [searchQuery, filters, categoriesLoading, i18n.language]);
+        loadAllSections();
+    }, [i18n.language, userLocation]);
 
-    // Since filtering is now done on the server side via API calls,
-    // we can use the events directly from state
-    const filteredEvents = events;
-    const lastMinuteEvents = events.filter((event) => event.is_last_minute);
+    // Load category sections
+    useEffect(() => {
+        const loadCategorySections = async () => {
+            if (categoriesLoading || !categoriesData.length) return;
+
+            const currentLang = i18n.language;
+            const categoryPromises = categoriesData.map(async (category) => {
+                try {
+                    const data = await EventService.getEventsByCategory(category.id, currentLang, 12);
+                    return {
+                        id: category.id,
+                        events: EventService.formatEvents(data).events
+                    };
+                } catch (error) {
+                    console.error(`Error loading category ${category.id}:`, error);
+                    return {
+                        id: category.id,
+                        events: []
+                    };
+                }
+            });
+
+            const categoryResults = await Promise.all(categoryPromises);
+            const categorySections = {};
+
+            categoryResults.forEach(({ id, events }) => {
+                categorySections[id] = { events, loading: false };
+            });
+
+            setSectionsData(prev => ({
+                ...prev,
+                categories: categorySections
+            }));
+        };
+
+        loadCategorySections();
+    }, [categoriesData, categoriesLoading, i18n.language]);
 
     return (
         <Container maxWidth="lg" sx={{ py: 4, backgroundColor: "#fff" }}>
-            {/* Loading State */}
-            {(loading || categoriesLoading) && (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-                    <Typography variant="h6">Loading events...</Typography>
-                </Box>
+            {/* Last Minute Deals Section */}
+            <HorizontalEventsSection
+                title={t("home:sections.lastMinute")}
+                events={sectionsData.lastMinute.events}
+                loading={sectionsData.lastMinute.loading}
+                icon={<LocalOffer />}
+                viewAllLabel={t("common:buttons.viewAll")}
+            />
+
+            {/* Today Section */}
+            <HorizontalEventsSection
+                title={t("home:sections.today")}
+                events={sectionsData.today.events}
+                loading={sectionsData.today.loading}
+                icon={<Today />}
+                viewAllLabel={t("common:buttons.viewAll")}
+            />
+
+            {/* This Week Section */}
+            <HorizontalEventsSection
+                title={t("home:sections.thisWeek")}
+                events={sectionsData.thisWeek.events}
+                loading={sectionsData.thisWeek.loading}
+                icon={<DateRange />}
+                viewAllLabel={t("common:buttons.viewAll")}
+            />
+
+            {/* This Month Section */}
+            <HorizontalEventsSection
+                title={t("home:sections.thisMonth")}
+                events={sectionsData.thisMonth.events}
+                loading={sectionsData.thisMonth.loading}
+                icon={<CalendarMonth />}
+                viewAllLabel={t("common:buttons.viewAll")}
+            />
+
+            {/* Recommended Section */}
+            <HorizontalEventsSection
+                title={t("home:sections.recommended")}
+                events={sectionsData.recommended.events}
+                loading={sectionsData.recommended.loading}
+                icon={<Recommend />}
+                viewAllLabel={t("common:buttons.viewAll")}
+            />
+
+            {/* Near You Section - Only show if we have location */}
+            {userLocation && (
+                <HorizontalEventsSection
+                    title={t("home:sections.nearYou")}
+                    events={sectionsData.nearYou.events}
+                    loading={sectionsData.nearYou.loading}
+                    icon={<LocationOn />}
+                    viewAllLabel={t("common:buttons.viewAll")}
+                />
             )}
 
-            {/* Error State */}
-            {(error || categoriesError) && (
-                <Box sx={{ textAlign: "center", py: 8 }}>
-                    <Typography variant="h6" color="error" gutterBottom>
-                        {error || categoriesError}
+            {/* Category Sections */}
+            {categoriesData.map((category) => {
+                const categorySection = sectionsData.categories[category.id];
+                if (!categorySection) return null;
+
+                return (
+                    <HorizontalEventsSection
+                        key={category.id}
+                        title={category.name}
+                        events={categorySection.events}
+                        loading={categorySection.loading}
+                        viewAllLabel={t("common:buttons.viewAll")}
+                    />
+                );
+            })}
+
+            {/* CTA Section for non-authenticated users */}
+            {!isAuthenticated && (
+                <Paper
+                    sx={{
+                        textAlign: "center",
+                        p: 4,
+                        mt: 6,
+                        backgroundColor: "grey.50",
+                        borderRadius: 0,
+                        boxShadow: 0,
+                    }}>
+                    <Typography variant="h5" gutterBottom>
+                        {t("home:cta.title")}
                     </Typography>
-                    <Button variant="contained" onClick={() => window.location.reload()}>
-                        Retry
-                    </Button>
-                </Box>
-            )}
-
-            {/* Main Content */}
-            {!loading && !categoriesLoading && !error && !categoriesError && (
-                <>
-
-                    {/* Last Minute Deals */}
-                    {lastMinuteEvents.length > 0 && (
-                        <Box sx={{ mb: 6 }}>
-                            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                                <LocalOffer sx={{ mr: 1, color: "error.main" }} />
-                                <Typography variant="h5" component="h2" sx={{ fontWeight: "bold" }}>
-                                    {t("home:sections.lastMinute")}
-                                </Typography>
-                            </Box>
-                            <Grid container spacing={3}>
-                                {lastMinuteEvents.slice(0, 3).map((event) => (
-                                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
-                                        <EventCard event={event} />
-                                    </Grid>
-                                ))}
-                            </Grid>
-                            <Divider sx={{ my: 4 }} />
-                        </Box>
-                    )}
-
-                    {/* Main Events Section */}
-                    <Box sx={{ mb: 4 }}>
-                        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: "bold" }}>
-                            {t("home:sections.allEvents")}
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                            {filteredEvents.length} {t("home:eventsFound")}
-                        </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                        {t("home:cta.description")}
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                        <Button variant="outlined" size="large" onClick={() => navigate("/register")}>
+                            {t("common:buttons.signUp")}
+                        </Button>
+                        <Button variant="contained" size="large" onClick={() => navigate("/login")}>
+                            {t("common:buttons.signIn")}
+                        </Button>
                     </Box>
-
-                    {/* Events Grid */}
-                    <Grid container spacing={3}>
-                        {filteredEvents.map((event) => (
-                            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={event.id}>
-                                <EventCard event={event} />
-                            </Grid>
-                        ))}
-                    </Grid>
-
-                    {filteredEvents.length === 0 && (
-                        <Box sx={{ textAlign: "center", py: 8 }}>
-                            <Typography variant="h6" color="text.secondary" gutterBottom>
-                                {t("home:noEventsFound")}
-                            </Typography>
-                            <Button variant="outlined" onClick={() => setSearchQuery("")} sx={{ mt: 2 }}>
-                                {t("home:clearFilters")}
-                            </Button>
-                        </Box>
-                    )}
-
-                    {/* CTA Section for non-authenticated users */}
-                    {!isAuthenticated && (
-                        <Paper
-                            sx={{
-                                textAlign: "center",
-                                p: 4,
-                                mt: 6,
-                                backgroundColor: "grey.50",
-                                borderRadius: 0,
-                                boxShadow: 0,
-                            }}>
-                            <Typography variant="h5" gutterBottom>
-                                {t("home:cta.title")}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                                {t("home:cta.description")}
-                            </Typography>
-                            <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-                                <Button variant="outlined" size="large" onClick={() => navigate("/register")}>
-                                    {t("common:buttons.signUp")}
-                                </Button>
-                                <Button variant="contained" size="large" onClick={() => navigate("/login")}>
-                                    {t("common:buttons.signIn")}
-                                </Button>
-                            </Box>
-                        </Paper>
-                    )}
-                </>
+                </Paper>
             )}
         </Container>
     );

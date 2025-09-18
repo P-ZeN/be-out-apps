@@ -19,6 +19,11 @@ router.get("/", async (req, res) => {
             maxPrice,
             lastMinute,
             featured,
+            startDate, // Add support for start date filtering
+            endDate, // Add support for end date filtering
+            latitude, // Add support for location-based filtering
+            longitude, // Add support for location-based filtering
+            maxDistance, // Maximum distance in km for location filtering
             sortBy = "event_date",
             lang = "fr", // Language parameter for translations
         } = req.query;
@@ -95,6 +100,47 @@ router.get("/", async (req, res) => {
             whereConditions.push("e.is_featured = true");
         }
 
+        // Date range filtering
+        if (startDate) {
+            whereConditions.push(`e.event_date >= $${paramIndex}`);
+            queryParams.push(startDate);
+            paramIndex++;
+        }
+
+        if (endDate) {
+            whereConditions.push(`e.event_date <= $${paramIndex}`);
+            queryParams.push(endDate);
+            paramIndex++;
+        }
+
+        // Location-based filtering (if coordinates and distance provided)
+        let distanceSelect = "";
+        if (latitude && longitude && maxDistance) {
+            // Calculate distance using Haversine formula
+            distanceSelect = `, (
+                6371 * acos(
+                    cos(radians($${paramIndex})) *
+                    cos(radians(a.latitude)) *
+                    cos(radians(a.longitude) - radians($${paramIndex + 1})) +
+                    sin(radians($${paramIndex})) *
+                    sin(radians(a.latitude))
+                )
+            ) AS distance`;
+
+            whereConditions.push(`(
+                6371 * acos(
+                    cos(radians($${paramIndex})) *
+                    cos(radians(a.latitude)) *
+                    cos(radians(a.longitude) - radians($${paramIndex + 1})) +
+                    sin(radians($${paramIndex})) *
+                    sin(radians(a.latitude))
+                )
+            ) <= $${paramIndex + 2}`);
+
+            queryParams.push(parseFloat(latitude), parseFloat(longitude), parseFloat(maxDistance));
+            paramIndex += 3;
+        }
+
         // Build ORDER BY clause
         let orderBy = "e.event_date ASC";
         switch (sortBy) {
@@ -106,6 +152,12 @@ router.get("/", async (req, res) => {
                 break;
             case "discount":
                 orderBy = "e.discount_percentage DESC";
+                break;
+            case "distance":
+                orderBy = latitude && longitude ? "distance ASC" : "e.event_date ASC";
+                break;
+            case "popularity":
+                orderBy = "tickets_sold DESC, e.event_date ASC";
                 break;
             case "date":
             default:
@@ -150,7 +202,9 @@ router.get("/", async (req, res) => {
                 a.address_line_1 as venue_address,
                 a.latitude as venue_latitude,
                 a.longitude as venue_longitude,
-                ARRAY_AGG(DISTINCT ${categoryNameSelect}) as categories
+                ARRAY_AGG(DISTINCT ${categoryNameSelect}) as categories,
+                COALESCE(e.total_tickets - e.available_tickets, 0) as tickets_sold
+                ${distanceSelect}
             FROM events e
             LEFT JOIN venues v ON e.venue_id = v.id
             LEFT JOIN address_relationships ar ON ar.entity_type = 'venue' AND ar.entity_id = v.id

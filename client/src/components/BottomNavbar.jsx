@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,26 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = useState(null);
     const [isTauriApp] = useState(getIsTauriApp());
+    const searchContainerRef = useRef(null);
+
+    // Handle click outside search field to close it
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showSearchField &&
+                searchContainerRef.current &&
+                !searchContainerRef.current.contains(event.target)) {
+                onToggleSearch();
+            }
+        };
+
+        if (showSearchField) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showSearchField, onToggleSearch]);
 
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -86,6 +106,7 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
             {/* Search Field Overlay - appears when search is toggled */}
             {showSearchField && (
                 <Box
+                    ref={searchContainerRef}
                     sx={{
                         position: "fixed",
                         // Position above the bottom navbar + safe area
