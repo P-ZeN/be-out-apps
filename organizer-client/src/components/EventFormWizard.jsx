@@ -140,9 +140,14 @@ const EventFormWizard = () => {
                             request_review: false,
                         },
                         adminData: {
+                            id: eventData.id || "",
                             status: eventData.status || "",
                             moderation_status: eventData.moderation_status || "",
                             admin_notes: eventData.admin_notes || "",
+                            is_published: eventData.is_published || false,
+                            organizer_wants_published: eventData.organizer_wants_published !== undefined
+                                ? eventData.organizer_wants_published
+                                : eventData.is_published || false,
                         }
                     });
 
@@ -193,7 +198,20 @@ const EventFormWizard = () => {
             setSuccess("Événement soumis pour révision avec succès !");
             // Reload event data to reflect new status
             const eventData = await organizerService.getEvent(eventId);
-            setFormData(prev => ({ ...prev, adminData: eventData }));
+            setFormData(prev => ({
+                ...prev,
+                adminData: {
+                    ...prev.adminData,
+                    id: eventData.id,
+                    status: eventData.status,
+                    moderation_status: eventData.moderation_status,
+                    admin_notes: eventData.admin_notes,
+                    is_published: eventData.is_published,
+                    organizer_wants_published: eventData.organizer_wants_published !== undefined
+                        ? eventData.organizer_wants_published
+                        : eventData.is_published,
+                }
+            }));
         } catch (err) {
             setError(err.message || "Erreur lors de la soumission pour révision");
         } finally {
@@ -216,7 +234,20 @@ const EventFormWizard = () => {
                 "Événement retiré de la publication !");
             // Reload event data to reflect new status
             const eventData = await organizerService.getEvent(eventId);
-            setFormData(prev => ({ ...prev, adminData: eventData }));
+            setFormData(prev => ({
+                ...prev,
+                adminData: {
+                    ...prev.adminData,
+                    id: eventData.id,
+                    status: eventData.status,
+                    moderation_status: eventData.moderation_status,
+                    admin_notes: eventData.admin_notes,
+                    is_published: eventData.is_published,
+                    organizer_wants_published: eventData.organizer_wants_published !== undefined
+                        ? eventData.organizer_wants_published
+                        : eventData.is_published,
+                }
+            }));
         } catch (err) {
             setError(err.message || "Erreur lors du changement de statut de publication");
         } finally {
@@ -234,7 +265,20 @@ const EventFormWizard = () => {
             setSuccess("Événement remis en brouillon avec succès !");
             // Reload event data to reflect new status
             const eventData = await organizerService.getEvent(eventId);
-            setFormData(prev => ({ ...prev, adminData: eventData }));
+            setFormData(prev => ({
+                ...prev,
+                adminData: {
+                    ...prev.adminData,
+                    id: eventData.id,
+                    status: eventData.status,
+                    moderation_status: eventData.moderation_status,
+                    admin_notes: eventData.admin_notes,
+                    is_published: eventData.is_published,
+                    organizer_wants_published: eventData.organizer_wants_published !== undefined
+                        ? eventData.organizer_wants_published
+                        : eventData.is_published,
+                }
+            }));
         } catch (err) {
             setError(err.message || "Erreur lors de la remise en brouillon");
         } finally {

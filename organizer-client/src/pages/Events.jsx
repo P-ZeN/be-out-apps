@@ -104,11 +104,13 @@ const Events = () => {
                     showSnackbar("Événement remis en brouillon avec succès");
                     break;
                 case "publish":
-                    response = await organizerService.publishEvent(eventId, true);
+                    // Use toggleEventPublication for organizer's publication intent
+                    response = await organizerService.toggleEventPublication(eventId, true);
                     showSnackbar("Événement publié avec succès");
                     break;
                 case "unpublish":
-                    response = await organizerService.publishEvent(eventId, false);
+                    // Use toggleEventPublication for organizer's publication intent
+                    response = await organizerService.toggleEventPublication(eventId, false);
                     showSnackbar("Événement dépublié avec succès");
                     break;
                 default:
@@ -435,7 +437,10 @@ const Events = () => {
                 {/* Publish/Unpublish - only for approved events */}
                 {selectedEvent && canPublishUnpublish(selectedEvent) && (
                     <>
-                        {!selectedEvent.is_published ? (
+                        {/* Use organizer_wants_published if available, fallback to is_published */}
+                        {!(selectedEvent.organizer_wants_published !== undefined
+                           ? selectedEvent.organizer_wants_published
+                           : selectedEvent.is_published) ? (
                             <MenuItem onClick={() => handleConfirmDialog("publish", selectedEvent.id)}>
                                 <ListItemIcon>
                                     <Publish fontSize="small" />
