@@ -26,21 +26,21 @@ import {
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { 
-    Save, 
-    Cancel, 
-    PhotoCamera, 
-    Delete, 
+import {
+    Save,
+    Cancel,
+    PhotoCamera,
+    Delete,
     Add,
-    LocationOn 
+    LocationOn
 } from "@mui/icons-material";
 import AdminService from "../services/adminService";
 
-const AdminEventForm = ({ 
-    open, 
-    onClose, 
+const AdminEventForm = ({
+    open,
+    onClose,
     event = null, // null for create, event object for edit
-    onSave 
+    onSave
 }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -50,7 +50,7 @@ const AdminEventForm = ({
     const [imagePreview, setImagePreview] = useState("");
     const [showAddVenueDialog, setShowAddVenueDialog] = useState(false);
     const fileInputRef = useRef();
-    
+
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -79,7 +79,7 @@ const AdminEventForm = ({
                     AdminService.getVenues(),
                     AdminService.getCategories()
                 ]);
-                
+
                 setVenues(venuesData || []);
                 setCategories(categoriesData || []);
             } catch (err) {
@@ -103,11 +103,11 @@ const AdminEventForm = ({
                     setLoading(true);
                     // Fetch complete event data with categories
                     const fullEventData = await AdminService.getEvent(event.id);
-                    
+
                     console.log("=== FULL EVENT DATA ===");
                     console.log("Full event object:", fullEventData);
                     console.log("Full event categories:", fullEventData.categories);
-                    
+
                     // Extract category_id from the categories array if available
                     let categoryId = "";
                     if (fullEventData.categories && fullEventData.categories.length > 0) {
@@ -118,7 +118,7 @@ const AdminEventForm = ({
                     } else if (fullEventData.category_id) {
                         categoryId = String(fullEventData.category_id);
                     }
-                    
+
                     console.log("Final resolved category_id:", categoryId);
 
                     setFormData({
@@ -137,7 +137,7 @@ const AdminEventForm = ({
                         is_last_minute: fullEventData.is_last_minute || false,
                         is_published: fullEventData.is_published || false,
                     });
-                    
+
                     // Set image preview if event has an image
                     if (fullEventData.image_url) {
                         setImagePreview(fullEventData.image_url);
@@ -145,7 +145,7 @@ const AdminEventForm = ({
                         setImagePreview("");
                     }
                     setImageFile(null);
-                    
+
                 } catch (err) {
                     console.error("Error loading full event data:", err);
                     setError("Erreur lors du chargement des données de l'événement");
@@ -153,7 +153,7 @@ const AdminEventForm = ({
                     setLoading(false);
                 }
             };
-            
+
             loadFullEventData();
         } else if (open && !event) {
             // Reset form for new event
@@ -193,7 +193,7 @@ const AdminEventForm = ({
         if (field === 'original_price' || field === 'discounted_price') {
             const original = parseFloat(field === 'original_price' ? value : formData.original_price) || 0;
             const discounted = parseFloat(field === 'discounted_price' ? value : formData.discounted_price) || 0;
-            
+
             if (original > 0 && discounted >= 0) {
                 const percentage = Math.round(((original - discounted) / original) * 100);
                 updatedData.discount_percentage = Math.max(0, Math.min(100, percentage));
@@ -207,7 +207,7 @@ const AdminEventForm = ({
         const file = event.target.files[0];
         if (file) {
             setImageFile(file);
-            
+
             // Create preview URL
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -231,7 +231,7 @@ const AdminEventForm = ({
     };
 
     const handleSubmit = async () => {
-        if (!formData.title || !formData.description || !formData.event_date || 
+        if (!formData.title || !formData.description || !formData.event_date ||
             !formData.venue_id || !formData.category_id) {
             setError("Veuillez remplir tous les champs obligatoires");
             return;
@@ -272,10 +272,10 @@ const AdminEventForm = ({
     };
 
     return (
-        <Dialog 
-            open={open} 
-            onClose={handleClose} 
-            maxWidth="md" 
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="md"
             fullWidth
             PaperProps={{
                 sx: { minHeight: '80vh' }
@@ -284,7 +284,7 @@ const AdminEventForm = ({
             <DialogTitle>
                 {isEdit ? `Modifier l'événement` : "Créer un nouvel événement"}
             </DialogTitle>
-            
+
             <DialogContent dividers>
                 {error && (
                     <Alert severity="error" sx={{ mb: 2 }}>
@@ -515,22 +515,22 @@ const AdminEventForm = ({
                             >
                                 <MenuItem value={false}>
                                     <Box display="flex" alignItems="center" gap={1}>
-                                        <Chip 
-                                            label="Non publié" 
-                                            color="default" 
-                                            size="small" 
-                                            sx={{ minWidth: 80 }} 
+                                        <Chip
+                                            label="Non publié"
+                                            color="default"
+                                            size="small"
+                                            sx={{ minWidth: 80 }}
                                         />
                                         <Typography>Masqué du public</Typography>
                                     </Box>
                                 </MenuItem>
                                 <MenuItem value={true}>
                                     <Box display="flex" alignItems="center" gap={1}>
-                                        <Chip 
-                                            label="Publié" 
-                                            color="success" 
-                                            size="small" 
-                                            sx={{ minWidth: 80 }} 
+                                        <Chip
+                                            label="Publié"
+                                            color="success"
+                                            size="small"
+                                            sx={{ minWidth: 80 }}
                                         />
                                         <Typography>Visible du public</Typography>
                                     </Box>
@@ -604,16 +604,16 @@ const AdminEventForm = ({
             </DialogContent>
 
             <DialogActions>
-                <Button 
-                    onClick={handleClose} 
+                <Button
+                    onClick={handleClose}
                     startIcon={<Cancel />}
                     disabled={loading}
                 >
                     Annuler
                 </Button>
-                <Button 
-                    onClick={handleSubmit} 
-                    variant="contained" 
+                <Button
+                    onClick={handleSubmit}
+                    variant="contained"
                     startIcon={loading ? <CircularProgress size={20} /> : <Save />}
                     disabled={loading}
                 >

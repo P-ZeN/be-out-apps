@@ -34,10 +34,6 @@ import {
     FormControlLabel,
     Divider,
 } from "@mui/material";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { fr } from "date-fns/locale";
 import {
     Edit,
     Delete,
@@ -79,7 +75,7 @@ const AdminEvents = ({ user }) => {
         moderation_status: "",
         notes: "",
     });
-    
+
     // State for the new event form
     const [eventFormOpen, setEventFormOpen] = useState(false);
     const [eventFormData, setEventFormData] = useState(null); // null for create, event object for edit
