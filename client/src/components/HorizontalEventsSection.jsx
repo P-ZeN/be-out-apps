@@ -154,6 +154,8 @@ const HorizontalEventsSection = ({
                                 key={event.id}
                                 sx={{
                                     minWidth: 300,
+                                    maxWidth: 300,
+                                    width: 300,
                                     flexShrink: 0,
                                 }}
                             >
