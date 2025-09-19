@@ -414,7 +414,7 @@ router.delete("/events/:id", requireAdmin, async (req, res) => {
         const event = eventCheck.rows[0];
 
         // Delete related records in order to maintain referential integrity
-        await client.query("DELETE FROM favorites WHERE event_id = $1", [id]);
+        await client.query("DELETE FROM user_favorites WHERE event_id = $1", [id]);
         await client.query("DELETE FROM event_categories WHERE event_id = $1", [id]);
         await client.query("DELETE FROM address_relationships WHERE entity_type = 'event' AND entity_id = $1", [id]);
 
@@ -1848,6 +1848,110 @@ router.get("/bookings", requireAdmin, async (req, res) => {
         res.status(500).json({ error: "Failed to fetch bookings" });
     } finally {
         client.release();
+    }
+});
+
+// Create venue endpoint for admin
+router.post("/venues", requireAdmin, async (req, res) => {
+    try {
+        const {
+            name,
+            capacity,
+            address_line_1,
+            address_line_2,
+            locality,
+            administrative_area,
+            postal_code,
+            country_code,
+            latitude,
+            longitude,
+        } = req.body;
+
+        // Validation
+        if (!name || !address_line_1 || !locality || !country_code) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Create the address
+            const addressResult = await client.query(
+                `INSERT INTO addresses (
+                    address_line_1, address_line_2, locality, administrative_area,
+                    postal_code, country_code, latitude, longitude,
+                    address_type, label, is_verified
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                RETURNING id`,
+                [
+                    address_line_1,
+                    address_line_2 || null,
+                    locality,
+                    administrative_area || null,
+                    postal_code || null,
+                    country_code,
+                    latitude || null,
+                    longitude || null,
+                    "venue",
+                    name,
+                    false,
+                ]
+            );
+
+            const addressId = addressResult.rows[0].id;
+
+            // Create the venue (admin creates venues, use admin's user ID as organizer)
+            const venueResult = await client.query(
+                `INSERT INTO venues (name, capacity, organizer_id)
+                 VALUES ($1, $2, $3)
+                 RETURNING *`,
+                [name, capacity || null, req.adminUser.id] // Use admin's user ID
+            );
+
+            const venueId = venueResult.rows[0].id;
+
+            // Link venue to address
+            await client.query(
+                `INSERT INTO address_relationships (address_id, entity_type, entity_id, relationship_type, is_active)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [addressId, "venue", venueId, "venue_location", true]
+            );
+
+            // Log admin action
+            await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+                req.adminUser.id,
+                "create_venue",
+                "venue", 
+                venueId,
+                `Created venue: ${name}`,
+                JSON.stringify({ name, capacity, locality })
+            ]);
+
+            await client.query("COMMIT");
+
+            // Return the venue with address information
+            const fullResult = await client.query(
+                `SELECT v.*, a.address_line_1, a.address_line_2, a.locality,
+                        a.administrative_area, a.postal_code, a.country_code,
+                        a.latitude, a.longitude
+                 FROM venues v
+                 LEFT JOIN address_relationships ar ON (ar.entity_type = 'venue' AND ar.entity_id = v.id)
+                 LEFT JOIN addresses a ON a.id = ar.address_id
+                 WHERE v.id = $1`,
+                [venueId]
+            );
+
+            res.status(201).json(fullResult.rows[0]);
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error creating venue:", error);
+        res.status(500).json({ message: "Error creating venue" });
     }
 });
 

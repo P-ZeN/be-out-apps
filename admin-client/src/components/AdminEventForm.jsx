@@ -49,6 +49,19 @@ const AdminEventForm = ({
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState("");
     const [showAddVenueDialog, setShowAddVenueDialog] = useState(false);
+    const [venueDialogLoading, setVenueDialogLoading] = useState(false);
+    const [newVenueData, setNewVenueData] = useState({
+        name: "",
+        capacity: "",
+        address_line_1: "",
+        address_line_2: "",
+        locality: "",
+        administrative_area: "",
+        postal_code: "",
+        country_code: "FR",
+        latitude: "",
+        longitude: "",
+    });
     const fileInputRef = useRef();
 
     const [formData, setFormData] = useState({
@@ -65,7 +78,7 @@ const AdminEventForm = ({
         cancellation_policy: "",
         is_featured: false,
         is_last_minute: false,
-        status: "active", // active, inactive, cancelled, pending
+        is_published: false, // Default to hidden from public
     });
 
     const isEdit = Boolean(event);
@@ -226,8 +239,63 @@ const AdminEventForm = ({
     };
 
     const handleAddVenue = () => {
-        // TODO: Implement venue creation dialog
-        alert("Fonctionnalité d'ajout de lieu à venir. Contactez l'administrateur pour ajouter un nouveau lieu.");
+        setNewVenueData({
+            name: "",
+            capacity: "",
+            address_line_1: "",
+            address_line_2: "",
+            locality: "",
+            administrative_area: "",
+            postal_code: "",
+            country_code: "FR",
+            latitude: "",
+            longitude: "",
+        });
+        setShowAddVenueDialog(true);
+    };
+
+    const handleVenueDataChange = (field, value) => {
+        setNewVenueData((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+    const handleSaveNewVenue = async () => {
+        // Basic validation
+        if (!newVenueData.name.trim() || !newVenueData.address_line_1.trim() || !newVenueData.locality.trim()) {
+            setError("Veuillez remplir les champs obligatoires du nouveau lieu");
+            return;
+        }
+
+        setVenueDialogLoading(true);
+
+        try {
+            const venueData = {
+                ...newVenueData,
+                capacity: newVenueData.capacity ? Number(newVenueData.capacity) : null,
+                latitude: newVenueData.latitude ? Number(newVenueData.latitude) : null,
+                longitude: newVenueData.longitude ? Number(newVenueData.longitude) : null,
+            };
+
+            const newVenue = await AdminService.createVenue(venueData);
+
+            // Reload venues
+            const venuesData = await AdminService.getVenues();
+            setVenues(venuesData || []);
+
+            // Select the new venue
+            handleChange('venue_id', String(newVenue.id));
+
+            setShowAddVenueDialog(false);
+            
+            // Clear any previous errors
+            setError("");
+        } catch (error) {
+            setError(error.message || "Erreur lors de la création du lieu");
+        } finally {
+            setVenueDialogLoading(false);
+        }
     };
 
     const handleSubmit = async () => {
@@ -272,15 +340,17 @@ const AdminEventForm = ({
     };
 
     return (
-        <Dialog
-            open={open}
-            onClose={handleClose}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{
-                sx: { minHeight: '80vh' }
-            }}
-        >
+        <div>
+            <Dialog
+                open={open}
+                onClose={handleClose}
+                maxWidth="md"
+                fullWidth
+                disableRestoreFocus={true}
+                PaperProps={{
+                    sx: { minHeight: '80vh' }
+                }}
+            >
             <DialogTitle>
                 {isEdit ? `Modifier l'événement` : "Créer un nouvel événement"}
             </DialogTitle>
@@ -330,6 +400,9 @@ const AdminEventForm = ({
                                     textField: {
                                         fullWidth: true,
                                         required: true,
+                                    },
+                                    popper: {
+                                        disablePortal: true,
                                     },
                                 }}
                             />
@@ -509,7 +582,7 @@ const AdminEventForm = ({
                         <FormControl fullWidth disabled={loading}>
                             <InputLabel>Visibilité de l'événement</InputLabel>
                             <Select
-                                value={formData.is_published}
+                                value={formData.is_published ?? false}
                                 onChange={(e) => handleChange('is_published', e.target.value)}
                                 label="Visibilité de l'événement"
                             >
@@ -621,6 +694,128 @@ const AdminEventForm = ({
                 </Button>
             </DialogActions>
         </Dialog>
+
+        {/* Venue Creation Dialog */}
+        <Dialog 
+            open={showAddVenueDialog} 
+            onClose={() => setShowAddVenueDialog(false)} 
+            maxWidth="md" 
+            fullWidth
+            disablePortal
+            sx={{ zIndex: 1400 }}
+            PaperProps={{
+                sx: { zIndex: 1400 }
+            }}
+        >
+            <DialogTitle>Créer un nouveau lieu</DialogTitle>
+            <DialogContent>
+                <Grid container spacing={3} sx={{ mt: 1 }}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            fullWidth
+                            label="Nom du lieu"
+                            value={newVenueData.name}
+                            onChange={(e) => handleVenueDataChange("name", e.target.value)}
+                            required
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            fullWidth
+                            label="Capacité"
+                            type="number"
+                            value={newVenueData.capacity}
+                            onChange={(e) => handleVenueDataChange("capacity", e.target.value)}
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12 }}>
+                        <TextField
+                            fullWidth
+                            label="Adresse"
+                            value={newVenueData.address_line_1}
+                            onChange={(e) => handleVenueDataChange("address_line_1", e.target.value)}
+                            required
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            fullWidth
+                            label="Ville"
+                            value={newVenueData.locality}
+                            onChange={(e) => handleVenueDataChange("locality", e.target.value)}
+                            required
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            fullWidth
+                            label="Code postal"
+                            value={newVenueData.postal_code}
+                            onChange={(e) => handleVenueDataChange("postal_code", e.target.value)}
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <FormControl fullWidth required>
+                            <InputLabel>Pays</InputLabel>
+                            <Select
+                                value={newVenueData.country_code}
+                                onChange={(e) => handleVenueDataChange("country_code", e.target.value)}
+                                label="Pays"
+                            >
+                                <MenuItem value="FR">France</MenuItem>
+                                <MenuItem value="ES">Espagne</MenuItem>
+                                <MenuItem value="IT">Italie</MenuItem>
+                                <MenuItem value="DE">Allemagne</MenuItem>
+                                <MenuItem value="GB">Royaume-Uni</MenuItem>
+                                <MenuItem value="BE">Belgique</MenuItem>
+                                <MenuItem value="CH">Suisse</MenuItem>
+                                <MenuItem value="LU">Luxembourg</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <TextField
+                            fullWidth
+                            label="Région/État"
+                            value={newVenueData.administrative_area}
+                            onChange={(e) => handleVenueDataChange("administrative_area", e.target.value)}
+                        />
+                    </Grid>
+
+                    <Grid size={{ xs: 12 }}>
+                        <TextField
+                            fullWidth
+                            label="Complément d'adresse"
+                            value={newVenueData.address_line_2}
+                            onChange={(e) => handleVenueDataChange("address_line_2", e.target.value)}
+                        />
+                    </Grid>
+                </Grid>
+            </DialogContent>
+            <DialogActions>
+                <Button 
+                    onClick={() => setShowAddVenueDialog(false)} 
+                    disabled={venueDialogLoading}
+                >
+                    Annuler
+                </Button>
+                <Button
+                    onClick={handleSaveNewVenue}
+                    variant="contained"
+                    disabled={venueDialogLoading}
+                    startIcon={venueDialogLoading ? <CircularProgress size={20} /> : <Save />}
+                >
+                    {venueDialogLoading ? "Création..." : "Créer le lieu"}
+                </Button>
+            </DialogActions>
+        </Dialog>
+        </div>
     );
 };
 
