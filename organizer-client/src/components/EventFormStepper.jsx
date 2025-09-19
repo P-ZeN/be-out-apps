@@ -9,15 +9,17 @@ import {
     Grid,
     Card,
     CardContent,
-    Chip,
+    CircularProgress,
 } from "@mui/material";
 import {
     Event,
     LocationOn,
     ConfirmationNumber,
     Publish,
-    Phone,
-    LocalPrintshop,
+    Save,
+    ArrowBack,
+    ArrowForward,
+    Check,
 } from "@mui/icons-material";
 
 const EventFormStepper = ({
@@ -25,32 +27,30 @@ const EventFormStepper = ({
     onStepChange,
     formData,
     onComplete,
+    onSave,
+    loading = false,
     children
 }) => {
     const steps = [
         {
             label: "Détails de l'événement",
             icon: <Event />,
-            description: "Informations générales",
-            previewType: "mobile"
+            description: "Informations générales"
         },
         {
             label: "Lieu et adresse",
             icon: <LocationOn />,
-            description: "Localisation de l'événement",
-            previewType: "mobile"
+            description: "Localisation de l'événement"
         },
         {
             label: "Billetterie et design",
             icon: <ConfirmationNumber />,
-            description: "Tarifs et tickets personnalisés",
-            previewType: "ticket"
+            description: "Tarifs et tickets personnalisés"
         },
         {
             label: "Publication",
             icon: <Publish />,
-            description: "Révision finale et publication",
-            previewType: "mobile"
+            description: "Révision finale et publication"
         }
     ];
 
@@ -86,14 +86,6 @@ const EventFormStepper = ({
                         {currentStep.label}
                     </Typography>
                 </Box>
-
-                <Chip
-                    icon={currentStep.previewType === "mobile" ? <Phone /> : <LocalPrintshop />}
-                    label={currentStep.previewType === "mobile" ? "Aperçu mobile" : "Aperçu ticket"}
-                    color="primary"
-                    variant="outlined"
-                    sx={{ ml: "auto" }}
-                />
             </Box>
 
             {/* Step Description */}
@@ -159,22 +151,37 @@ const EventFormStepper = ({
                             variant="outlined"
                             onClick={handleBack}
                             disabled={isFirstStep}
+                            startIcon={<ArrowBack />}
                         >
                             Précédent
                         </Button>
 
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "center" }}>
+                        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                            <Typography variant="body2" color="text.secondary">
                                 Étape {activeStep + 1} sur {steps.length}
                             </Typography>
                         </Box>
 
-                        <Button
-                            variant="contained"
-                            onClick={handleNext}
-                        >
-                            {isLastStep ? "Terminer" : "Suivant"}
-                        </Button>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            {/* Save/Apply Changes button */}
+                            <Button
+                                variant="outlined"
+                                onClick={onSave}
+                                disabled={loading}
+                                startIcon={loading ? <CircularProgress size={16} /> : <Save />}
+                            >
+                                {loading ? "Sauvegarde..." : "Sauvegarder"}
+                            </Button>
+
+                            {/* Next/Finish button */}
+                            <Button
+                                variant="contained"
+                                onClick={handleNext}
+                                endIcon={isLastStep ? <Check /> : <ArrowForward />}
+                            >
+                                {isLastStep ? "Terminer" : "Suivant"}
+                            </Button>
+                        </Box>
                     </Box>
                 </CardContent>
             </Card>

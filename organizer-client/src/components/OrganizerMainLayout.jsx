@@ -325,7 +325,6 @@ const OrganizerMainLayout = ({ children }) => {
                     flexGrow: 1,
                     width: { md: `calc(100% - ${drawerWidth}px)` },
                     minHeight: "100vh",
-                    bgcolor: "background.default",
                 }}>
                 <Toolbar />
                 <Box sx={{ p: 3 }}>{children}</Box>

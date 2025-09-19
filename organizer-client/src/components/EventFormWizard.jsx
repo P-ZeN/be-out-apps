@@ -18,10 +18,16 @@ import TicketPreview from "./ticket/TicketPreview";
 import organizerService from "../services/organizerService";
 
 const EventFormWizard = () => {
-    const { id: eventId } = useParams();
+    const { id: paramEventId } = useParams();
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const isEdit = Boolean(eventId);
+
+    // Event state (can change during creation)
+    const [currentEventId, setCurrentEventId] = useState(paramEventId);
+    const [isCurrentlyEdit, setIsCurrentlyEdit] = useState(Boolean(paramEventId));
+
+    const isEdit = Boolean(paramEventId); // For initial loading
+    const eventId = paramEventId;
 
     // Wizard state
     const [activeStep, setActiveStep] = useState(0);
@@ -44,10 +50,11 @@ const EventFormWizard = () => {
             description: "",
             event_date: null,
             category_id: "",
-            price: "",
+            original_price: "",
+            discounted_price: "",
+            discount_percentage: 0,
             max_participants: "",
             tags: [],
-            is_featured: false,
             requirements: "",
             cancellation_policy: "",
             image: null,
@@ -119,8 +126,6 @@ const EventFormWizard = () => {
                             discount_percentage: eventData.discount_percentage || 0,
                             max_participants: eventData.total_tickets || eventData.max_participants || "",
                             tags: eventData.tags || [],
-                            is_featured: eventData.is_featured || false,
-                            is_last_minute: eventData.is_last_minute || false,
                             requirements: eventData.requirements || "",
                             cancellation_policy: eventData.cancellation_policy || "",
                             image: null,
@@ -192,15 +197,16 @@ const EventFormWizard = () => {
 
     // Handle immediate publication actions
     const handleSubmitForReview = async () => {
-        if (!isEdit || !eventId) return;
+        const targetEventId = currentEventId || eventId;
+        if (!isCurrentlyEdit && !isEdit || !targetEventId) return;
 
         setLoading(true);
         setError("");
         try {
-            await organizerService.submitEventForReview(eventId);
+            await organizerService.submitEventForReview(targetEventId);
             setSuccess("Événement soumis pour révision avec succès !");
             // Reload event data to reflect new status
-            const eventData = await organizerService.getEvent(eventId);
+            const eventData = await organizerService.getEvent(targetEventId);
             setFormData(prev => ({
                 ...prev,
                 adminData: {
@@ -223,7 +229,8 @@ const EventFormWizard = () => {
     };
 
     const handleTogglePublication = async () => {
-        if (!isEdit || !eventId) return;
+        const targetEventId = currentEventId || eventId;
+        if (!isCurrentlyEdit && !isEdit || !targetEventId) return;
 
         const currentWantsPublished = formData.adminData?.organizer_wants_published || false;
         const newWantsPublished = !currentWantsPublished;
@@ -231,12 +238,12 @@ const EventFormWizard = () => {
         setLoading(true);
         setError("");
         try {
-            await organizerService.toggleEventPublication(eventId, newWantsPublished);
+            await organizerService.toggleEventPublication(targetEventId, newWantsPublished);
             setSuccess(newWantsPublished ?
                 "Événement marqué pour publication !" :
                 "Événement retiré de la publication !");
             // Reload event data to reflect new status
-            const eventData = await organizerService.getEvent(eventId);
+            const eventData = await organizerService.getEvent(targetEventId);
             setFormData(prev => ({
                 ...prev,
                 adminData: {
@@ -259,15 +266,16 @@ const EventFormWizard = () => {
     };
 
     const handleRevert = async () => {
-        if (!isEdit || !eventId) return;
+        const targetEventId = currentEventId || eventId;
+        if (!isCurrentlyEdit && !isEdit || !targetEventId) return;
 
         setLoading(true);
         setError("");
         try {
-            await organizerService.revertEventToDraft(eventId);
+            await organizerService.revertEventToDraft(targetEventId);
             setSuccess("Événement remis en brouillon avec succès !");
             // Reload event data to reflect new status
-            const eventData = await organizerService.getEvent(eventId);
+            const eventData = await organizerService.getEvent(targetEventId);
             setFormData(prev => ({
                 ...prev,
                 adminData: {
@@ -289,6 +297,67 @@ const EventFormWizard = () => {
         }
     };
 
+    // Handle saving changes without completing wizard
+    const handleSaveChanges = async () => {
+        setLoading(true);
+        setError("");
+        setSuccess("");
+
+        try {
+            // Combine all form data into event format
+            const eventData = {
+                ...formData.eventDetails,
+                ...formData.venue,
+                ...formData.publication,
+                ticket_template_id: formData.ticketConfig.template_id,
+                // Convert data types
+                original_price: Number(formData.eventDetails.original_price) || 0,
+                discounted_price: Number(formData.eventDetails.discounted_price) || 0,
+                discount_percentage: Number(formData.eventDetails.discount_percentage) || 0,
+                max_participants: Number(formData.eventDetails.max_participants),
+                event_date: formData.eventDetails.event_date?.toISOString(),
+                booking_deadline: formData.ticketConfig.booking_settings.booking_deadline?.toISOString(),
+            };
+
+            let result;
+            if (isCurrentlyEdit && currentEventId) {
+                result = await organizerService.updateEvent(currentEventId, eventData);
+                setSuccess("Modifications sauvegardées avec succès !");
+            } else {
+                result = await organizerService.createEvent(eventData);
+                // Update state to reflect that we now have an event and are in edit mode
+                if (result?.id) {
+                    setCurrentEventId(result.id);
+                    setIsCurrentlyEdit(true);
+                    // Update URL without page reload
+                    window.history.replaceState({}, '', `/events/${result.id}/edit`);
+                }
+                setSuccess("Événement sauvegardé comme brouillon !");
+            }
+
+            // Handle image upload if present
+            const targetEventId = currentEventId || result?.id;
+            if (formData.eventDetails.image && targetEventId) {
+                try {
+                    await organizerService.uploadEventImage(targetEventId, formData.eventDetails.image);
+                } catch (imageError) {
+                    console.error("Image upload failed:", imageError);
+                    // Don't show error for image upload failure on save, just log it
+                }
+            }
+
+            // Auto-hide success message after 3 seconds
+            setTimeout(() => {
+                setSuccess("");
+            }, 3000);
+
+        } catch (error) {
+            setError(error.message || "Erreur lors de la sauvegarde");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Handle wizard completion
     const handleComplete = async () => {
         setLoading(true);
@@ -304,7 +373,7 @@ const EventFormWizard = () => {
                 ticket_template_id: formData.ticketConfig.template_id,
                 // Convert data types
                 original_price: Number(formData.eventDetails.original_price) || 0,
-                discounted_price: Number(formData.eventDetails.discounted_price) || Number(formData.eventDetails.original_price) || 0,
+                discounted_price: Number(formData.eventDetails.discounted_price) || 0,
                 discount_percentage: Number(formData.eventDetails.discount_percentage) || 0,
                 max_participants: Number(formData.eventDetails.max_participants),
                 event_date: formData.eventDetails.event_date?.toISOString(),
@@ -312,8 +381,8 @@ const EventFormWizard = () => {
             };
 
             let result;
-            if (isEdit) {
-                result = await organizerService.updateEvent(eventId, eventData);
+            if (isCurrentlyEdit && currentEventId) {
+                result = await organizerService.updateEvent(currentEventId, eventData);
                 setSuccess("Événement mis à jour avec succès !");
             } else {
                 result = await organizerService.createEvent(eventData);
@@ -321,7 +390,7 @@ const EventFormWizard = () => {
             }
 
             // Handle image upload if present
-            const targetEventId = isEdit ? eventId : result?.id;
+            const targetEventId = currentEventId || result?.id;
             if (formData.eventDetails.image && targetEventId) {
                 try {
                     await organizerService.uploadEventImage(targetEventId, formData.eventDetails.image);
@@ -410,6 +479,8 @@ const EventFormWizard = () => {
             onStepChange={handleStepChange}
             formData={formData}
             onComplete={handleComplete}
+            onSave={handleSaveChanges}
+            loading={loading}
         >
             {/* Form Column */}
             <Grid size={{ xs: 12, lg: 8 }}>

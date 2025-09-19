@@ -340,38 +340,6 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                         helperText={t('events:cancellationPolicyHelp')}
                     />
                 </Grid>
-
-                {/* Featured Event Toggle */}
-                <Grid size={{ xs: 12 }}>
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={data.is_featured || false}
-                                onChange={(e) => handleChange('is_featured', e.target.checked)}
-                            />
-                        }
-                        label={t('events:featuredEvent')}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                        {t('events:featuredEventHelp')}
-                    </Typography>
-                </Grid>
-
-                {/* Last Minute Offer Toggle */}
-                <Grid size={{ xs: 12 }}>
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={data.is_last_minute || false}
-                                onChange={(e) => handleChange('is_last_minute', e.target.checked)}
-                            />
-                        }
-                        label={t('events.details.fields.lastMinuteOffer')}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                        {t('events.details.fields.lastMinuteOfferHelp')}
-                    </Typography>
-                </Grid>
             </Grid>
         </Box>
     );
