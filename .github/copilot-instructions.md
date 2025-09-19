@@ -10,6 +10,38 @@
 
 **Key Pattern**: Always run from project root `/home/zen/dev/be-out-apps` - use `npm run dev` to start all apps or `npm run dev:client|server|admin|organizer` for individual services.
 
+## Branch Strategy & Deployment
+
+**Critical Deployment Information**:
+- `staging` branch: **Deploys to Dockploy production** (client, admin-client, organizer-client, server)
+- `mobile-build` branch: **Triggers mobile CI/CD** (GitHub Actions for Android/iOS builds)
+- `main` branch: **Development baseline** (not used for deployment)
+
+**Deployment Workflow**:
+```bash
+# To deploy changes to production (Dockploy):
+git checkout staging
+git merge mobile-build  # or git merge main, depending on source
+git push origin staging
+
+# To trigger mobile builds:
+git checkout mobile-build
+git merge main  # or merge your feature branch
+git push origin mobile-build
+
+# Development workflow:
+git checkout main
+# Make changes, commit
+git checkout mobile-build
+git merge main
+git push origin mobile-build  # Triggers mobile build
+git checkout staging
+git merge mobile-build
+git push origin staging      # Deploys to production
+```
+
+**NEVER directly push to staging** - always merge from mobile-build or main to maintain proper CI/CD flow.
+
 ## Development Environment
 
 **Platform**: WSL/Linux with bash (not Windows PowerShell)
