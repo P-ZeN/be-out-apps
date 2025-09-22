@@ -70,6 +70,24 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
             example: 'a1b2c3d4e5f6...'
         },
         {
+            id: 'prefixed_number',
+            name: 'Numéro avec préfixe/suffixe',
+            description: 'Numéro de billet avec préfixe et suffixe personnalisés',
+            example: 'EVENT-001-VIP'
+        },
+        {
+            id: 'json_data',
+            name: 'Données JSON',
+            description: 'Informations complètes du billet au format JSON',
+            example: '{"event_id":"123","ticket":"ABC123"}'
+        },
+        {
+            id: 'simple_url',
+            name: 'URL personnalisée',
+            description: 'URL complètement personnalisée',
+            example: 'https://monsite.com/evenement/123'
+        },
+        {
             id: 'custom_data',
             name: t('organizer:tickets.design.qrCode.customData'),
             description: t('organizer:tickets.design.qrCode.customDescription'),
@@ -433,6 +451,53 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                         ),
                                     }}
                                 />
+                            )}
+
+                            {data.customizations?.qr_code_type === 'prefixed_number' && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Grid container spacing={2}>
+                                        <Grid size={{ xs: 6 }}>
+                                            <TextField
+                                                fullWidth
+                                                label="Préfixe"
+                                                value={data.customizations?.qr_prefix || ''}
+                                                onChange={(e) => handleCustomizationChange('qr_prefix', e.target.value)}
+                                                placeholder="EVENT-"
+                                                helperText="Texte affiché avant le numéro de billet"
+                                            />
+                                        </Grid>
+                                        <Grid size={{ xs: 6 }}>
+                                            <TextField
+                                                fullWidth
+                                                label="Suffixe"
+                                                value={data.customizations?.qr_suffix || ''}
+                                                onChange={(e) => handleCustomizationChange('qr_suffix', e.target.value)}
+                                                placeholder="-VIP"
+                                                helperText="Texte affiché après le numéro de billet"
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            )}
+
+                            {data.customizations?.qr_code_type === 'simple_url' && (
+                                <TextField
+                                    fullWidth
+                                    label="URL personnalisée"
+                                    value={data.customizations?.qr_custom_url || ''}
+                                    onChange={(e) => handleCustomizationChange('qr_custom_url', e.target.value)}
+                                    placeholder="https://monsite.com/evenement/123"
+                                    helperText="URL complète à encoder dans le QR code"
+                                    sx={{ mt: 2 }}
+                                />
+                            )}
+
+                            {data.customizations?.qr_code_type === 'json_data' && (
+                                <Alert severity="info" sx={{ mt: 2 }}>
+                                    <Typography variant="body2">
+                                        Le QR code contiendra automatiquement les informations de l'événement et du billet au format JSON.
+                                    </Typography>
+                                </Alert>
                             )}
 
                             <Alert severity="info" sx={{ mt: 2 }}>

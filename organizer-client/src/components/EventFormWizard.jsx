@@ -310,6 +310,7 @@ const EventFormWizard = () => {
                 ...formData.venue,
                 ...formData.publication,
                 ticket_template_id: formData.ticketConfig.template_id,
+                customizations: formData.ticketConfig.customizations,
                 // Convert data types
                 original_price: Number(formData.eventDetails.original_price) || 0,
                 discounted_price: Number(formData.eventDetails.discounted_price) || 0,

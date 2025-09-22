@@ -46,6 +46,7 @@ const AdminEventForm = ({
     const [error, setError] = useState("");
     const [venues, setVenues] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [organizers, setOrganizers] = useState([]);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState("");
     const [showAddVenueDialog, setShowAddVenueDialog] = useState(false);
@@ -79,22 +80,25 @@ const AdminEventForm = ({
         is_featured: false,
         is_last_minute: false,
         is_published: false, // Default to hidden from public
+        organizer_id: "", // Add organizer_id field
     });
 
     const isEdit = Boolean(event);
 
-    // Load venues and categories on mount
+    // Load venues, categories and organizers on mount
     useEffect(() => {
         const loadFormData = async () => {
             try {
                 setLoading(true);
-                const [venuesData, categoriesData] = await Promise.all([
+                const [venuesData, categoriesData, organizersData] = await Promise.all([
                     AdminService.getVenues(),
-                    AdminService.getCategories()
+                    AdminService.getCategories(),
+                    AdminService.getOrganizers()
                 ]);
 
                 setVenues(venuesData || []);
                 setCategories(categoriesData || []);
+                setOrganizers(organizersData?.users || []);
             } catch (err) {
                 setError("Erreur lors du chargement des données");
                 console.error(err);
@@ -108,9 +112,9 @@ const AdminEventForm = ({
         }
     }, [open]);
 
-    // Load event data when editing - but only after categories are loaded
+    // Load event data when editing - but only after categories and organizers are loaded
     useEffect(() => {
-        if (event && open && categories.length > 0) {
+        if (event && open && categories.length > 0 && organizers.length >= 0) {
             const loadFullEventData = async () => {
                 try {
                     setLoading(true);
@@ -134,6 +138,17 @@ const AdminEventForm = ({
 
                     console.log("Final resolved category_id:", categoryId);
 
+                    // Handle organizer_id - if it's an admin user, set to empty string to show "No organizer defined"
+                    let resolvedOrganizerId = "";
+                    if (fullEventData.organizer_id) {
+                        // Check if the organizer_id exists in our loaded organizers list
+                        const organizerExists = organizers.find(org => String(org.id) === String(fullEventData.organizer_id));
+                        if (organizerExists) {
+                            resolvedOrganizerId = String(fullEventData.organizer_id);
+                        }
+                        // If organizer doesn't exist in our list (likely an admin), leave as empty string
+                    }
+
                     setFormData({
                         title: fullEventData.title || "",
                         description: fullEventData.description || "",
@@ -149,6 +164,7 @@ const AdminEventForm = ({
                         is_featured: fullEventData.is_featured || false,
                         is_last_minute: fullEventData.is_last_minute || false,
                         is_published: fullEventData.is_published || false,
+                        organizer_id: resolvedOrganizerId,
                     });
 
                     // Set image preview if event has an image
@@ -185,12 +201,13 @@ const AdminEventForm = ({
                 is_featured: false,
                 is_last_minute: false,
                 is_published: false, // Default to "masqué du public"
+                organizer_id: "",
             });
             setImagePreview("");
             setImageFile(null);
         }
         setError("");
-    }, [event, open, categories]);
+    }, [event, open, categories, organizers]);
 
     const handleChange = (field, value) => {
         setFormData(prev => ({
@@ -288,7 +305,7 @@ const AdminEventForm = ({
             handleChange('venue_id', String(newVenue.id));
 
             setShowAddVenueDialog(false);
-            
+
             // Clear any previous errors
             setError("");
         } catch (error) {
@@ -316,6 +333,7 @@ const AdminEventForm = ({
                 discount_percentage: Number(formData.discount_percentage) || 0,
                 max_participants: Number(formData.max_participants) || null,
                 event_date: formData.event_date.toISOString(),
+                organizer_id: formData.organizer_id || null, // Send null instead of empty string
             };
 
             let result;
@@ -421,6 +439,32 @@ const AdminEventForm = ({
                                 {categories.map((category) => (
                                     <MenuItem key={category.id} value={String(category.id)}>
                                         {category.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+
+                    {/* Event Owner (Organizer) */}
+                    <Grid size={{ xs: 12, md: 6 }}>
+                        <FormControl fullWidth disabled={loading}>
+                            <InputLabel>Propriétaire de l'événement</InputLabel>
+                            <Select
+                                value={formData.organizer_id}
+                                onChange={(e) => handleChange('organizer_id', e.target.value)}
+                                label="Propriétaire de l'événement"
+                            >
+                                <MenuItem value="">
+                                    <em>Aucun organisateur défini</em>
+                                </MenuItem>
+                                {organizers.map((organizer) => (
+                                    <MenuItem key={organizer.id} value={String(organizer.id)}>
+                                        {organizer.email}
+                                        {organizer.first_name && organizer.last_name && (
+                                            <span style={{ marginLeft: '8px', opacity: 0.7 }}>
+                                                ({organizer.first_name} {organizer.last_name})
+                                            </span>
+                                        )}
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -696,10 +740,10 @@ const AdminEventForm = ({
         </Dialog>
 
         {/* Venue Creation Dialog */}
-        <Dialog 
-            open={showAddVenueDialog} 
-            onClose={() => setShowAddVenueDialog(false)} 
-            maxWidth="md" 
+        <Dialog
+            open={showAddVenueDialog}
+            onClose={() => setShowAddVenueDialog(false)}
+            maxWidth="md"
             fullWidth
             disablePortal
             sx={{ zIndex: 1400 }}
@@ -799,8 +843,8 @@ const AdminEventForm = ({
                 </Grid>
             </DialogContent>
             <DialogActions>
-                <Button 
-                    onClick={() => setShowAddVenueDialog(false)} 
+                <Button
+                    onClick={() => setShowAddVenueDialog(false)}
                     disabled={venueDialogLoading}
                 >
                     Annuler

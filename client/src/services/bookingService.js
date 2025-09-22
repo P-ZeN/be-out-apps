@@ -166,6 +166,140 @@ class BookingService {
         return `ticket:${ticketNumber}:${qrCode}`;
     }
 
+    // Ticket management methods
+
+    /**
+     * Get tickets for a specific booking
+     */
+    static async getBookingTickets(bookingId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/tickets/booking/${bookingId}/list`, {
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error fetching booking tickets:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Download PDF ticket
+     */
+    static async downloadTicketPDF(ticketId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/tickets/${ticketId}/pdf`, {
+                headers: {
+                    Authorization: `Bearer ${this.getAuthToken()}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            // Get filename from response headers or use default
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = 'ticket.pdf';
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (filenameMatch) {
+                    filename = filenameMatch[1];
+                }
+            }
+
+            // Create blob and download
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            window.URL.revokeObjectURL(url);
+
+            return { success: true, filename };
+        } catch (error) {
+            console.error("Error downloading ticket PDF:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Generate PDFs for all tickets in a booking
+     */
+    static async generateBookingTicketsPDFs(bookingId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/tickets/booking/${bookingId}/generate`, {
+                method: "POST",
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error generating booking tickets PDFs:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get ticket information
+     */
+    static async getTicketInfo(ticketId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/tickets/${ticketId}`, {
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error fetching ticket info:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Resend booking confirmation email with tickets
+     */
+    static async resendBookingTickets(bookingId) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/resend-tickets`, {
+                method: "POST",
+                headers: this.getAuthHeaders(),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error resending booking tickets:", error);
+            throw error;
+        }
+    }
+
     // Validate booking form data
     static validateBookingData(bookingData) {
         const errors = [];

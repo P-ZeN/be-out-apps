@@ -1225,6 +1225,8 @@ CREATE TABLE public.events (
     status_changed_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     status_changed_by uuid,
     ticket_template_id uuid,
+    organizer_wants_published boolean DEFAULT false,
+    customizations jsonb,
     CONSTRAINT events_moderation_status_check CHECK (((moderation_status)::text = ANY (ARRAY[('pending'::character varying)::text, ('under_review'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('flagged'::character varying)::text, ('revision_requested'::character varying)::text]))),
     CONSTRAINT events_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('candidate'::character varying)::text, ('active'::character varying)::text, ('sold_out'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('suspended'::character varying)::text])))
 );
@@ -1263,6 +1265,13 @@ COMMENT ON COLUMN public.events.status_changed_at IS 'Timestamp when the status 
 --
 
 COMMENT ON COLUMN public.events.status_changed_by IS 'User who changed the status';
+
+
+--
+-- Name: COLUMN events.customizations; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.events.customizations IS 'Per-event ticket customizations (colors, layout, QR type, etc.) stored as JSONB';
 
 
 --

@@ -1,5 +1,7 @@
-import emailService from "../services/emailService.js";
+import emailService from "./emailService.js";
 import pool from "../db.js";
+import pdfTicketService from "./pdfTicketService.js";
+import fs from 'fs/promises';
 
 class EmailNotificationService {
     /**
@@ -36,21 +38,24 @@ class EmailNotificationService {
                 `
                 SELECT
                     b.id,
-                    b.reference,
-                    b.total_amount,
-                    b.ticket_count,
-                    b.created_at,
+                    b.booking_reference,
+                    b.total_price as total_amount,
+                    b.quantity as ticket_count,
+                    b.booking_date,
                     u.email as user_email,
-                    u.name as user_name,
+                    CONCAT(COALESCE(up.first_name, ''), ' ', COALESCE(up.last_name, '')) as user_name,
                     u.id as user_id,
                     e.title as event_title,
                     e.event_date,
-                    e.event_time,
-                    e.location,
-                    format_address(e.address_id) as formatted_address
+                    v.name as venue_name,
+                    format_address(a.id) as formatted_address
                 FROM bookings b
                 JOIN users u ON b.user_id = u.id
+                LEFT JOIN user_profiles up ON u.id = up.user_id
                 JOIN events e ON b.event_id = e.id
+                LEFT JOIN venues v ON e.venue_id = v.id
+                LEFT JOIN address_relationships ar ON (ar.entity_type = 'venue' AND ar.entity_id = v.id)
+                LEFT JOIN addresses a ON ar.address_id = a.id
                 WHERE b.id = $1
             `,
                 [bookingId]
@@ -68,27 +73,69 @@ class EmailNotificationService {
                 month: "long",
                 day: "numeric",
             });
+            const formattedTime = eventDate.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
 
             // Get user's preferred language
             const language = await this.getUserLanguage(booking.user_id);
+
+            // Generate PDF tickets for this booking
+            console.log(`Generating PDF tickets for booking ${bookingId}...`);
+            let attachments = [];
+
+            try {
+                const pdfResults = await pdfTicketService.generateBookingTicketsPDFs(bookingId);
+
+                // Create attachments array from successful PDF generations
+                for (const pdfResult of pdfResults) {
+                    if (pdfResult.success && pdfResult.pdfPath) {
+                        try {
+                            // Read the PDF file
+                            const pdfBuffer = await fs.readFile(pdfResult.pdfPath);
+                            const base64Content = pdfBuffer.toString('base64');
+
+                            attachments.push({
+                                content: base64Content,
+                                filename: pdfResult.fileName,
+                                type: 'application/pdf',
+                                disposition: 'attachment'
+                            });
+
+                            console.log(`Added PDF attachment: ${pdfResult.fileName}`);
+                        } catch (fileError) {
+                            console.error(`Failed to read PDF file ${pdfResult.pdfPath}:`, fileError);
+                        }
+                    }
+                }
+
+                console.log(`Generated ${attachments.length} PDF ticket attachments`);
+            } catch (pdfError) {
+                console.error('Failed to generate PDF tickets:', pdfError);
+                // Continue with email sending even if PDF generation fails
+            }
 
             await emailService.sendTemplatedEmail(
                 "booking_confirmation",
                 booking.user_email,
                 {
-                    userName: booking.user_name,
-                    bookingReference: booking.reference,
+                    userName: booking.user_name.trim() || 'Customer',
+                    bookingReference: booking.booking_reference,
                     eventTitle: booking.event_title,
                     eventDate: formattedDate,
-                    eventTime: booking.event_time,
-                    eventLocation: booking.location || booking.formatted_address,
+                    eventTime: formattedTime,
+                    eventLocation: booking.venue_name || booking.formatted_address || 'Venue TBA',
                     ticketCount: booking.ticket_count.toString(),
                     totalAmount: `€${booking.total_amount}`,
                     bookingUrl: `${process.env.CLIENT_URL}/bookings/${booking.id}`,
                     appName: "BeOut",
                     currentYear: new Date().getFullYear().toString(),
                 },
-                { language }
+                {
+                    language,
+                    attachments: attachments.length > 0 ? attachments : undefined
+                }
             );
         } catch (error) {
             console.error("Failed to send booking confirmation email:", error);
@@ -158,16 +205,19 @@ class EmailNotificationService {
                 SELECT
                     b.id,
                     u.email as user_email,
-                    u.name as user_name,
+                    CONCAT(COALESCE(up.first_name, ''), ' ', COALESCE(up.last_name, '')) as user_name,
                     e.title as event_title,
                     e.event_date,
-                    e.event_time,
-                    e.location,
-                    format_address(e.address_id) as formatted_address
+                    v.name as venue_name,
+                    format_address(a.id) as formatted_address
                 FROM bookings b
                 JOIN users u ON b.user_id = u.id
+                LEFT JOIN user_profiles up ON u.id = up.user_id
                 JOIN events e ON b.event_id = e.id
-                WHERE e.id = $1 AND b.status = 'confirmed'
+                LEFT JOIN venues v ON e.venue_id = v.id
+                LEFT JOIN address_relationships ar ON (ar.entity_type = 'venue' AND ar.entity_id = v.id)
+                LEFT JOIN addresses a ON ar.address_id = a.id
+                WHERE e.id = $1 AND b.booking_status = 'confirmed'
             `,
                 [eventId]
             );
@@ -181,13 +231,17 @@ class EmailNotificationService {
                         month: "long",
                         day: "numeric",
                     });
+                    const formattedTime = eventDate.toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    });
 
                     await emailService.sendTemplatedEmail("event_reminder", booking.user_email, {
-                        userName: booking.user_name,
+                        userName: booking.user_name.trim() || 'Customer',
                         eventTitle: booking.event_title,
                         eventDate: formattedDate,
-                        eventTime: booking.event_time,
-                        eventLocation: booking.location || booking.formatted_address,
+                        eventTime: formattedTime,
+                        eventLocation: booking.venue_name || booking.formatted_address || 'Venue TBA',
                         timeBeforeEvent,
                         appName: "BeOut",
                         currentYear: new Date().getFullYear().toString(),

@@ -165,6 +165,16 @@ class AdminService {
         }
     }
 
+    static async getOrganizers() {
+        try {
+            const response = await this.getUsers({ role: 'organizer' });
+            return response;
+        } catch (error) {
+            console.error("Error fetching organizers:", error);
+            throw error;
+        }
+    }
+
     static async updateUserRole(userId, role) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/role`, {

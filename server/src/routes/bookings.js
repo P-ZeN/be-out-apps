@@ -65,6 +65,30 @@ router.post("/", async (req, res) => {
             });
         }
 
+        // Check for existing bookings to prevent accidental duplicates
+        const existingBookingsQuery = `
+            SELECT COUNT(*) as booking_count, 
+                   SUM(quantity) as total_tickets,
+                   MAX(booking_date) as latest_booking
+            FROM bookings 
+            WHERE event_id = $1 
+            AND customer_email = $2 
+            AND booking_status IN ('pending', 'confirmed')
+        `;
+        const existingBookingsResult = await client.query(existingBookingsQuery, [event_id, customer_email]);
+        const existingBookings = existingBookingsResult.rows[0];
+
+        // If user has existing bookings for this event, return warning but allow booking
+        let warnings = [];
+        if (existingBookings.booking_count > 0) {
+            warnings.push({
+                type: 'duplicate_booking',
+                message: `You already have ${existingBookings.booking_count} booking(s) for this event with ${existingBookings.total_tickets} ticket(s). Latest booking: ${new Date(existingBookings.latest_booking).toLocaleDateString()}`,
+                existing_bookings: parseInt(existingBookings.booking_count),
+                existing_tickets: parseInt(existingBookings.total_tickets)
+            });
+        }
+
         const unit_price = parseFloat(event.discounted_price);
         const total_price = unit_price * quantity;
 
@@ -92,13 +116,21 @@ router.post("/", async (req, res) => {
 
         const booking = bookingResult.rows[0];
 
-        // Generate individual tickets
+        // Generate individual tickets with enhanced uniqueness
         const tickets = [];
+        const baseTimestamp = Date.now();
+
         for (let i = 0; i < quantity; i++) {
-            const ticket_number = `${booking.booking_reference}-${String(i + 1).padStart(3, "0")}`;
+            // Generate a highly unique ticket number
+            // Include microseconds and random component for uniqueness
+            const microseconds = process.hrtime.bigint().toString().slice(-4); // last 4 digits
+            const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+
+            const ticket_number = `${booking.booking_reference}-${String(i + 1).padStart(3, "0")}-${microseconds}${randomSuffix}`;
+
             const qr_code = crypto
                 .createHash("sha256")
-                .update(`${booking.id}-${ticket_number}-${Date.now()}`)
+                .update(`${booking.id}-${ticket_number}-${baseTimestamp}-${i}`)
                 .digest("hex");
 
             const ticketQuery = `
@@ -121,13 +153,8 @@ router.post("/", async (req, res) => {
 
         await client.query("COMMIT");
 
-        // Send booking confirmation email
-        try {
-            await emailNotificationService.sendBookingConfirmation(booking.id);
-        } catch (error) {
-            console.error("Failed to send booking confirmation email:", error);
-            // Don't fail the booking if email fails
-        }
+        // Note: Booking confirmation email with PDF tickets is sent after payment confirmation
+        // in payments.js route, not here during initial booking creation
 
         res.status(201).json({
             booking,
@@ -136,6 +163,7 @@ router.post("/", async (req, res) => {
                 title: event.title,
                 event_date: event.event_date,
             },
+            warnings: warnings.length > 0 ? warnings : undefined,
         });
     } catch (err) {
         await client.query("ROLLBACK");
@@ -293,6 +321,16 @@ router.patch("/:id/confirm", async (req, res) => {
         }
 
         await client.query("COMMIT");
+
+        // Send booking confirmation email with PDF tickets after successful confirmation
+        try {
+            await emailNotificationService.sendBookingConfirmation(id);
+            console.log(`Booking confirmation email sent for booking ${id}`);
+        } catch (emailError) {
+            console.error(`Failed to send booking confirmation email for booking ${id}:`, emailError);
+            // Don't fail the booking confirmation if email fails
+        }
+
         res.json({ booking: result.rows[0] });
     } catch (err) {
         await client.query("ROLLBACK");
@@ -375,6 +413,47 @@ router.get("/stats/overview", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch booking statistics" });
     } finally {
         client.release();
+    }
+});
+
+// Resend booking confirmation email with tickets
+router.post("/:id/resend-tickets", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verify booking exists and belongs to authenticated user
+        const client = await pool.connect();
+        try {
+            const result = await client.query(
+                'SELECT id, user_id FROM bookings WHERE id = $1',
+                [id]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ error: "Booking not found" });
+            }
+
+            const booking = result.rows[0];
+
+            // Check if user has permission to resend tickets for this booking
+            if (req.user && booking.user_id !== req.user.id && req.user.role !== 'admin') {
+                return res.status(403).json({ error: "Not authorized to resend tickets for this booking" });
+            }
+
+            // Send booking confirmation email with fresh PDF tickets
+            await emailNotificationService.sendBookingConfirmation(id);
+
+            res.json({ 
+                success: true, 
+                message: "Tickets resent successfully" 
+            });
+
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error("Error resending tickets:", err);
+        res.status(500).json({ error: "Failed to resend tickets: " + err.message });
     }
 });
 

@@ -684,6 +684,7 @@ router.put("/events/:id", requireAdmin, async (req, res) => {
             is_featured,
             status,
             is_published,
+            organizer_id,
         } = req.body;
 
         // Validation
@@ -704,6 +705,26 @@ router.put("/events/:id", requireAdmin, async (req, res) => {
 
             const originalEvent = eventCheck.rows[0];
 
+            // Handle organizer_id - validate if provided
+            let eventOrganizerId = originalEvent.organizer_id; // Keep original by default
+            if (organizer_id !== undefined) {
+                if (organizer_id === null || organizer_id === "") {
+                    // Admin wants to assign to themselves (no specific organizer)
+                    eventOrganizerId = req.adminUser.id;
+                } else {
+                    // Validate the provided organizer_id
+                    const organizerCheck = await client.query(
+                        "SELECT id FROM users WHERE id = $1 AND role = 'organizer'",
+                        [organizer_id]
+                    );
+                    if (organizerCheck.rows.length === 0) {
+                        await client.query("ROLLBACK");
+                        return res.status(400).json({ message: "Invalid organizer_id" });
+                    }
+                    eventOrganizerId = organizer_id;
+                }
+            }
+
             // Update the event
             const finalOriginalPrice = original_price || originalEvent.original_price;
             const finalDiscountedPrice = discounted_price || finalOriginalPrice;
@@ -712,17 +733,18 @@ router.put("/events/:id", requireAdmin, async (req, res) => {
 
             const eventResult = await client.query(
                 `UPDATE events SET
-                    title = $1, description = $2, event_date = $3, venue_id = $4,
-                    original_price = $5, discounted_price = $6, discount_percentage = $7, total_tickets = $8,
-                    available_tickets = $9, is_last_minute = $10, requirements = $11, cancellation_policy = $12,
-                    is_featured = $13, status = $14, is_published = $15, updated_at = NOW()
-                WHERE id = $16
+                    title = $1, description = $2, event_date = $3, venue_id = $4, organizer_id = $5,
+                    original_price = $6, discounted_price = $7, discount_percentage = $8, total_tickets = $9,
+                    available_tickets = $10, is_last_minute = $11, requirements = $12, cancellation_policy = $13,
+                    is_featured = $14, status = $15, is_published = $16, updated_at = NOW()
+                WHERE id = $17
                 RETURNING *`,
                 [
                     title,
                     description,
                     event_date,
                     venue_id,
+                    eventOrganizerId,
                     finalOriginalPrice,
                     finalDiscountedPrice,
                     finalDiscountPercentage,
@@ -1922,7 +1944,7 @@ router.post("/venues", requireAdmin, async (req, res) => {
             await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
                 req.adminUser.id,
                 "create_venue",
-                "venue", 
+                "venue",
                 venueId,
                 `Created venue: ${name}`,
                 JSON.stringify({ name, capacity, locality })

@@ -421,10 +421,10 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                         {success ? (
                             <>
                                 <Typography variant="h5" color="success.main" gutterBottom>
-                                    🎉 Réservation confirmée !
+                                    {t('bookings:success.title')}
                                 </Typography>
                                 <Typography variant="body1" sx={{ mb: 3 }}>
-                                    Votre paiement a été traité avec succès et votre réservation est confirmée.
+                                    {t('bookings:success.message')}
                                 </Typography>
 
                                 {bookingResult?.booking && (
@@ -451,7 +451,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                                 )}
 
                                 <Typography variant="body2" sx={{ mt: 2, color: theme.palette.text.secondary }}>
-                                    Un email de confirmation a été envoyé à {formData.customer_email}
+                                    {t('bookings:success.email_info')}
                                 </Typography>
                             </>
                         ) : (

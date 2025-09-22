@@ -367,6 +367,8 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
             requirements,
             cancellation_policy,
             is_last_minute,
+            ticket_template_id,
+            customizations
         } = req.body;
 
         // Handle backwards compatibility - if old format is used, treat price as both original and discounted
@@ -389,8 +391,8 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     title, description, event_date, venue_id, organizer_id,
                     original_price, discounted_price, discount_percentage, total_tickets, available_tickets,
                     is_featured, is_last_minute, requirements, cancellation_policy, status, is_published,
-                    moderation_status, status_changed_by, status_changed_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+                    moderation_status, status_changed_by, status_changed_at, ticket_template_id, customizations
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
                 RETURNING *`,
                 [
                     title,
@@ -412,6 +414,8 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     "pending", // moderation_status - new events need review
                     req.user.id, // status_changed_by
                     new Date(), // status_changed_at
+                    ticket_template_id || null, // ticket_template_id
+                    customizations ? JSON.stringify(customizations) : null, // customizations (stored as JSONB)
                 ]
             );
 
@@ -454,6 +458,8 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
             requirements,
             cancellation_policy,
             is_last_minute,
+            ticket_template_id,
+            customizations
         } = req.body;
 
         // Handle backwards compatibility - if old format is used, treat price as both original and discounted
@@ -486,8 +492,8 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
                     title = $1, description = $2, event_date = $3, venue_id = $4,
                     original_price = $5, discounted_price = $6, discount_percentage = $7, total_tickets = $8,
                     available_tickets = $9, is_last_minute = $10, requirements = $11, cancellation_policy = $12,
-                    updated_at = NOW()
-                WHERE id = $13 AND organizer_id = $14
+                    ticket_template_id = $13, customizations = $14, updated_at = NOW()
+                WHERE id = $15 AND organizer_id = $16
                 RETURNING *`,
                 [
                     title,
@@ -502,6 +508,8 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
                     is_last_minute || false, // is_last_minute
                     requirements || null, // requirements
                     cancellation_policy || null, // cancellation_policy
+                    ticket_template_id || null, // ticket_template_id
+                    customizations ? JSON.stringify(customizations) : null, // customizations (stored as JSONB)
                     req.params.id,
                     req.user.id,
                 ]

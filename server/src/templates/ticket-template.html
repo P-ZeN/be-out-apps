@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket</title>
+    <style>
+        {{CSS_CONTENT}}
+    </style>
+</head>
+<body>
+    <div class="ticket {{TICKET_SIZE_CLASS}}">
+        {{#BACKGROUND_IMAGE}}
+        <div class="background-overlay" style="background-image: url('{{BACKGROUND_IMAGE}}');"></div>
+        {{/BACKGROUND_IMAGE}}
+
+        <div class="ticket-header" style="background: linear-gradient(135deg, {{PRIMARY_COLOR}}, {{SECONDARY_COLOR}});">
+            <div class="event-title">{{EVENT_TITLE}}</div>
+            {{#EVENT_CATEGORY}}
+            <div class="event-category">{{EVENT_CATEGORY}}</div>
+            {{/EVENT_CATEGORY}}
+        </div>
+
+        <div class="ticket-content">
+            <div class="event-details">
+                <div class="info-item">
+                    <span class="info-label">Date & Heure</span>
+                    <div class="info-value">{{FORMATTED_DATE}}</div>
+                    <div class="info-time">{{FORMATTED_TIME}}</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Lieu</span>
+                    <div class="info-value">{{EVENT_LOCATION}}</div>
+                </div>
+                {{#EVENT_CATEGORY}}
+                <div class="info-item">
+                    <div class="category-badge" style="background: {{PRIMARY_COLOR}};">{{EVENT_CATEGORY}}</div>
+                </div>
+                {{/EVENT_CATEGORY}}
+
+                <!-- QR Code on new line after category -->
+                <div class="qr-section">
+                    <img src="{{QR_CODE_DATA_URL}}" alt="QR Code" class="qr-code" />
+                    <div class="qr-label">QR Code</div>
+                    <div class="qr-type">URL Vérification</div>
+                </div>
+            </div>
+
+            <div class="ticket-info">
+                <div class="ticket-number-section">
+                    <div class="ticket-number-label">N° Billet</div>
+                    <div class="ticket-number">{{TICKET_NUMBER}}</div>
+                </div>
+            </div>
+        </div>
+
+        {{#CUSTOM_MESSAGE}}
+        <div class="custom-message">{{CUSTOM_MESSAGE}}</div>
+        {{/CUSTOM_MESSAGE}}
+
+        <div class="ticket-footer">
+            <div class="footer-text">Be-Out • Votre ticket pour sortir</div>
+            {{#APP_LOGO}}
+            <img src="{{APP_LOGO}}" class="app-logo" alt="Logo"/>
+            {{/APP_LOGO}}
+        </div>
+    </div>
+</body>
+</html>

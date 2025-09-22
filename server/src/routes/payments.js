@@ -2,6 +2,7 @@ import { Router } from "express";
 import StripeService from "../services/stripeService.js";
 import pool from "../db.js";
 import authenticateToken from "../middleware/authenticateToken.js";
+import emailNotificationService from "../services/emailNotificationService.js";
 
 const router = Router();
 
@@ -122,6 +123,15 @@ router.post("/confirm-payment", async (req, res) => {
                 );
 
                 await client.query("COMMIT");
+
+                // Send booking confirmation email with PDF tickets after successful payment
+                try {
+                    await emailNotificationService.sendBookingConfirmation(booking_id);
+                    console.log(`Booking confirmation email sent for booking ${booking_id}`);
+                } catch (emailError) {
+                    console.error(`Failed to send booking confirmation email for booking ${booking_id}:`, emailError);
+                    // Don't fail the payment if email fails
+                }
 
                 res.json({
                     success: true,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Dialog,
     DialogTitle,
@@ -29,6 +30,7 @@ import BookingService from "../services/bookingService";
 const BookingModal = ({ open, onClose, event }) => {
     const theme = useTheme();
     const { user } = useAuth();
+    const { t } = useTranslation(['bookings']);
     const [activeStep, setActiveStep] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -114,6 +116,7 @@ const BookingModal = ({ open, onClose, event }) => {
                 customer_email: formData.customer_email,
                 customer_phone: formData.customer_phone,
                 special_requests: formData.special_requests,
+                user_id: user?.id, // Associate booking with logged-in user
             };
 
             const validation = BookingService.validateBookingData(bookingData);
@@ -370,15 +373,15 @@ const BookingModal = ({ open, onClose, event }) => {
                         {success ? (
                             <>
                                 <Typography variant="h5" color="success.main" gutterBottom>
-                                    🎉 Réservation confirmée !
+                                    {t('bookings:success.title')}
                                 </Typography>
                                 <Typography variant="body1" sx={{ mb: 3 }}>
-                                    Votre réservation a été confirmée avec succès.
+                                    {t('bookings:success.message')}
                                 </Typography>
                                 {bookingResult && (
                                     <Paper sx={{ p: 2, backgroundColor: theme.palette.grey[50] }}>
                                         <Typography variant="subtitle1" gutterBottom>
-                                            Numéro de référence
+                                            {t('bookings:success.reference_label')}
                                         </Typography>
                                         <Typography
                                             variant="h6"
@@ -386,7 +389,7 @@ const BookingModal = ({ open, onClose, event }) => {
                                             {bookingResult.booking.booking_reference}
                                         </Typography>
                                         <Typography variant="body2" sx={{ mt: 1 }}>
-                                            Vous recevrez vos billets par email
+                                            {t('bookings:success.email_info')}
                                         </Typography>
                                     </Paper>
                                 )}

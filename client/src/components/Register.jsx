@@ -47,7 +47,8 @@ const Register = () => {
             // Redirect to onboarding instead of home
             navigate("/onboarding");
         } catch (error) {
-            setError(t("auth:register.failed"));
+            console.error("Registration error:", error);
+            setError(error.message || t("auth:register.failed"));
         }
     };
 

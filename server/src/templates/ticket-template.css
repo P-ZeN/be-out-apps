@@ -1,0 +1,339 @@
+/* Ticket PDF Template CSS - Matching React Preview Exactly */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', 'Arial', sans-serif;
+    background: #ffffff;
+    color: #333;
+}
+
+.ticket {
+    width: 210mm;
+    height: 297mm; /* A4 */
+    position: relative;
+    background: white;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Roboto', 'Arial', sans-serif;
+    overflow: hidden;
+}
+
+.background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.1;
+    z-index: 1;
+}
+
+/* Header - Exact match to React preview */
+.ticket-header {
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(135deg, #1976d2, #9c27b0);
+    color: white;
+    padding: 50px 50px;
+    text-align: center;
+    margin: 0;
+}
+
+.event-title {
+    font-size: 48px;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.event-category {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+/* Main content - Single column layout with QR code below event details */
+.ticket-content {
+    display: flex;
+    padding: 50px;
+    gap: 80px;
+    flex: 1;
+    position: relative;
+    z-index: 2;
+    background: white;
+    align-items: flex-start;
+}
+
+/* Left column - Event details with QR code below category */
+.event-details {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    align-items: stretch; /* Allow items to stretch to full width for proper centering */
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info-label {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #666;
+    margin: 0;
+}
+
+.info-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.info-time {
+    font-size: 20px;
+    font-weight: 500;
+    color: #666;
+    margin: 0;
+    margin-top: 4px;
+}
+
+.category-badge {
+    display: inline-block;
+    background: #1976d2;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 20px;
+    width: fit-content;
+}
+
+/* QR Code section - now within event-details */
+.qr-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+    padding: 30px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 16px;
+    border: 2px dashed #e0e0e0;
+    width: 100%;
+    text-align: center;
+}
+
+.qr-code {
+    width: 180px;
+    height: 180px;
+    border: 3px solid #f0f0f0;
+    border-radius: 12px;
+    display: block;
+}
+
+.qr-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.qr-type {
+    font-size: 12px;
+    color: #999;
+    margin: 0;
+}
+
+/* Right column - Ticket number info only */
+.ticket-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    min-width: 250px;
+}
+
+.ticket-number-section {
+    text-align: center;
+    padding: 30px 20px;
+    background: rgba(25, 118, 210, 0.05);
+    border-radius: 16px;
+    border: 2px solid rgba(25, 118, 210, 0.1);
+    width: 100%;
+}
+
+.ticket-number-label {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #666;
+    margin: 0 0 10px 0;
+}
+
+.ticket-number {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+/* Footer exactly like React preview */
+.ticket-footer {
+    position: absolute;
+    bottom: 40px;
+    left: 50px;
+    right: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 3;
+}
+
+.footer-text {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.app-logo {
+    width: 70px;
+    height: auto;
+    opacity: 0.8;
+}
+
+/* Custom message */
+.custom-message {
+    margin: 30px 50px 0 50px;
+    padding: 25px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    text-align: center;
+    font-style: italic;
+    font-size: 16px;
+    color: #555;
+    position: relative;
+    z-index: 2;
+}
+
+/* Responsive sizing for different ticket sizes */
+@media print {
+    .ticket {
+        page-break-inside: avoid;
+    }
+}
+
+/* Half A4 adjustments */
+.ticket.half-a4 {
+    height: 148mm;
+}
+
+.ticket.half-a4 .ticket-header {
+    padding: 30px 40px;
+}
+.ticket.half-a4 .event-title {
+    font-size: 36px;
+    margin-bottom: 15px;
+}
+.ticket.half-a4 .event-category {
+    padding: 8px 20px;
+    font-size: 14px;
+}
+.ticket.half-a4 .ticket-content {
+    padding: 30px 40px;
+    gap: 60px;
+}
+.ticket.half-a4 .info-value {
+    font-size: 20px;
+}
+.ticket.half-a4 .info-time {
+    font-size: 16px;
+}
+.ticket.half-a4 .qr-code {
+    width: 140px;
+    height: 140px;
+}
+.ticket.half-a4 .ticket-info {
+    min-width: 200px;
+}
+.ticket.half-a4 .ticket-footer {
+    bottom: 30px;
+    left: 40px;
+    right: 40px;
+}
+.ticket.half-a4 .app-logo {
+    width: 60px;
+}
+
+/* Quarter A4 adjustments */
+.ticket.quarter-a4 {
+    width: 148mm;
+    height: 105mm;
+}
+
+.ticket.quarter-a4 .ticket-header {
+    padding: 20px 30px;
+}
+.ticket.quarter-a4 .event-title {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+.ticket.quarter-a4 .event-category {
+    padding: 6px 16px;
+    font-size: 12px;
+}
+.ticket.quarter-a4 .ticket-content {
+    padding: 20px 30px;
+    gap: 40px;
+}
+.ticket.quarter-a4 .info-value {
+    font-size: 16px;
+}
+.ticket.quarter-a4 .info-time {
+    font-size: 14px;
+}
+.ticket.quarter-a4 .qr-code {
+    width: 120px;
+    height: 120px;
+}
+.ticket.quarter-a4 .ticket-info {
+    min-width: 160px;
+}
+.ticket.quarter-a4 .ticket-footer {
+    bottom: 20px;
+    left: 30px;
+    right: 30px;
+}
+.ticket.quarter-a4 .app-logo {
+    width: 50px;
+}

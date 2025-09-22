@@ -20,6 +20,7 @@ import organizerRoutes from "./routes/organizer.js";
 import addressesRoutes from "./routes/addresses.js";
 import emailsRoutes from "./routes/emails.js";
 import filesRoutes from "./routes/files.js";
+import ticketsRoutes from "./routes/tickets.js";
 import debugRoutes from "./routes/debug.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
@@ -169,6 +170,7 @@ app.use("/api/payments", paymentsRoutes);
 app.use("/api/webhooks", webhooksRoutes);
 app.use("/api/emails", emailsRoutes);
 app.use("/api/files", filesRoutes);
+app.use("/api/tickets", ticketsRoutes);
 app.use("/api/debug", debugRoutes);
 app.use("/api", addressesRoutes);
 
