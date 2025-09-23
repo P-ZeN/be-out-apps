@@ -171,10 +171,10 @@ const Bookings = () => {
             setError("");
             setSuccess("");
             setLoading(true);
-            
+
             // Resend booking confirmation email with fresh PDF tickets
             await BookingService.resendBookingTickets(bookingId);
-            
+
             setSuccess("Billets renvoyés avec succès ! Vérifiez votre email.");
         } catch (err) {
             setError("Erreur lors du renvoi des billets: " + err.message);

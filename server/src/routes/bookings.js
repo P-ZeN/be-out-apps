@@ -67,12 +67,12 @@ router.post("/", async (req, res) => {
 
         // Check for existing bookings to prevent accidental duplicates
         const existingBookingsQuery = `
-            SELECT COUNT(*) as booking_count, 
+            SELECT COUNT(*) as booking_count,
                    SUM(quantity) as total_tickets,
                    MAX(booking_date) as latest_booking
-            FROM bookings 
-            WHERE event_id = $1 
-            AND customer_email = $2 
+            FROM bookings
+            WHERE event_id = $1
+            AND customer_email = $2
             AND booking_status IN ('pending', 'confirmed')
         `;
         const existingBookingsResult = await client.query(existingBookingsQuery, [event_id, customer_email]);
@@ -443,9 +443,9 @@ router.post("/:id/resend-tickets", async (req, res) => {
             // Send booking confirmation email with fresh PDF tickets
             await emailNotificationService.sendBookingConfirmation(id);
 
-            res.json({ 
-                success: true, 
-                message: "Tickets resent successfully" 
+            res.json({
+                success: true,
+                message: "Tickets resent successfully"
             });
 
         } finally {

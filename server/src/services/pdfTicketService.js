@@ -16,7 +16,7 @@ class PDFTicketService {
      */
     async initBrowser() {
         if (!this.browser) {
-            this.browser = await puppeteer.launch({
+            const launchOptions = {
                 headless: true,
                 args: [
                     '--no-sandbox',
@@ -25,9 +25,48 @@ class PDFTicketService {
                     '--disable-accelerated-2d-canvas',
                     '--no-first-run',
                     '--no-zygote',
-                    '--disable-gpu'
+                    '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor'
                 ]
-            });
+            };
+
+            // In production (Docker), specify Chrome executable path
+            if (process.env.NODE_ENV === 'production') {
+                launchOptions.executablePath = '/usr/bin/google-chrome-stable';
+            }
+
+            try {
+                this.browser = await puppeteer.launch(launchOptions);
+                console.log('✅ Puppeteer browser initialized successfully');
+            } catch (error) {
+                console.error('❌ Failed to initialize Puppeteer browser:', error.message);
+
+                // Try alternative Chrome paths in production
+                if (process.env.NODE_ENV === 'production') {
+                    const alternativePaths = [
+                        '/usr/bin/chromium',
+                        '/usr/bin/chromium-browser',
+                        '/usr/bin/google-chrome',
+                        '/opt/google/chrome/google-chrome'
+                    ];
+
+                    for (const chromePath of alternativePaths) {
+                        try {
+                            launchOptions.executablePath = chromePath;
+                            this.browser = await puppeteer.launch(launchOptions);
+                            console.log(`✅ Chrome found at: ${chromePath}`);
+                            break;
+                        } catch (altError) {
+                            console.log(`❌ Chrome not found at: ${chromePath}`);
+                        }
+                    }
+                }
+
+                if (!this.browser) {
+                    throw new Error('Could not initialize Chrome browser for PDF generation');
+                }
+            }
         }
         return this.browser;
     }
@@ -54,7 +93,7 @@ class PDFTicketService {
             // Check if running from project root or server directory
             const isFromRoot = process.cwd().endsWith('be-out-apps');
             const basePath = isFromRoot ? 'server/src/templates' : 'src/templates';
-            
+
             const cssPath = path.join(process.cwd(), basePath, 'ticket-template.css');
             const htmlPath = path.join(process.cwd(), basePath, 'ticket-template.html');
 
@@ -185,8 +224,20 @@ class PDFTicketService {
         // Convert logo to base64 if it exists
         let logoBase64 = null;
         if (config.app_logo && config.app_logo !== '') {
-            const altLogoPath = '/home/zen/dev/be-out-apps/server/public/' + config.app_logo;
-            logoBase64 = await this.imageToBase64(altLogoPath);
+            // Determine the correct path based on environment
+            let logoPath;
+            if (process.env.NODE_ENV === 'production') {
+                // In Docker deployment, files are in /app
+                logoPath = path.join('/app/public', config.app_logo);
+            } else {
+                // Local development
+                const isFromRoot = process.cwd().endsWith('be-out-apps');
+                const basePath = isFromRoot ? 'server/public' : 'public';
+                logoPath = path.join(process.cwd(), basePath, config.app_logo);
+            }
+
+            console.log('🖼️ Looking for logo at:', logoPath);
+            logoBase64 = await this.imageToBase64(logoPath);
             console.log('🖼️ Logo base64 result:', logoBase64 ? 'SUCCESS' : 'FAILED');
         }
 
