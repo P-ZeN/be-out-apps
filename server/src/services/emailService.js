@@ -35,11 +35,21 @@ class EmailService {
                 throw new Error(`Email template '${templateName}' not found for language '${language}'`);
             }
 
+            console.log("📧 Email Template Debug:");
+            console.log("Template name:", templateName);
+            console.log("Language:", language);
+            console.log("Variables passed:", Object.keys(variables));
+            console.log("Template subject preview:", template.subject.substring(0, 100));
+            console.log("Template body preview:", template.body.substring(0, 200));
+
             const compiledSubject = handlebars.compile(template.subject);
             const compiledBody = handlebars.compile(template.body);
 
             const subject = compiledSubject(variables);
             const htmlBody = compiledBody(variables);
+
+            console.log("📧 Compiled subject:", subject);
+            console.log("📧 Variables used in template:", variables);
 
             const msg = {
                 to,

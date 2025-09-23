@@ -101,9 +101,12 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 **Remote PostgreSQL**: Database hosted on same server as Dockploy deployment
 - **CRITICAL**: All schema changes require operator execution via remote console
+- **AGENT RESTRICTION**: AI agents MUST NOT execute any database operations directly
+- **PROTOCOL**: ALL queries must be prepared as SQL statements for operator to execute manually
 - Always check `docs/schema.sql` before planning structure changes
 - Ask operator to verify current schema matches docs before modifications
 - Prepare SQL statements for operator to execute, then provide results back
+- Follow `docs/DATABASE_OPERATIONS_PROTOCOL.md` for all database interactions
 
 **Connection**: PostgreSQL with connection pooling (`server/src/db.js`)
 **File Storage**: Local volume storage (not MinIO) - files persist in Docker volumes

@@ -120,14 +120,14 @@ class EmailNotificationService {
                 "booking_confirmation",
                 booking.user_email,
                 {
-                    userName: booking.user_name.trim() || 'Customer',
+                    customerName: booking.user_name.trim() || 'Customer',
                     bookingReference: booking.booking_reference,
                     eventTitle: booking.event_title,
                     eventDate: formattedDate,
                     eventTime: formattedTime,
-                    eventLocation: booking.venue_name || booking.formatted_address || 'Venue TBA',
-                    ticketCount: booking.ticket_count.toString(),
-                    totalAmount: `€${booking.total_amount}`,
+                    venueName: booking.venue_name || booking.formatted_address || 'Venue TBA',
+                    quantity: booking.ticket_count.toString(),
+                    totalPrice: booking.total_amount, // No € symbol, template will add it
                     bookingUrl: `${process.env.CLIENT_URL}/bookings/${booking.id}`,
                     appName: "BeOut",
                     currentYear: new Date().getFullYear().toString(),

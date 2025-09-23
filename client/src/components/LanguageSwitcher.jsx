@@ -3,6 +3,8 @@ import { IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/mat
 import { Language as LanguageIcon } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@mui/material/styles";
+import { useAuth } from "../context/AuthContext";
+import userService from "../services/userService";
 
 const languages = [
     { code: "fr", name: "Français", flag: "🇫🇷" },
@@ -13,6 +15,7 @@ const languages = [
 const LanguageSwitcher = () => {
     const { i18n } = useTranslation();
     const theme = useTheme();
+    const { user } = useAuth();
     const [anchorEl, setAnchorEl] = React.useState(null);
 
     const handleMenuOpen = (event) => {
@@ -23,8 +26,21 @@ const LanguageSwitcher = () => {
         setAnchorEl(null);
     };
 
-    const handleLanguageChange = (langCode) => {
-        i18n.changeLanguage(langCode);
+    const handleLanguageChange = async (langCode) => {
+        try {
+            // Update frontend language
+            i18n.changeLanguage(langCode);
+            
+            // Save language preference to user profile if user is logged in
+            if (user && user.id) {
+                await userService.updateLanguagePreference(langCode);
+                console.log(`Language preference updated to: ${langCode}`);
+            }
+        } catch (error) {
+            console.error('Failed to update language preference:', error);
+            // Language change will still work on frontend even if server update fails
+        }
+        
         handleMenuClose();
     };
 

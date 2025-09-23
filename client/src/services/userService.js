@@ -25,7 +25,26 @@ const updateProfile = async (profileData) => {
     return response.json();
 };
 
+const updateLanguagePreference = async (languageCode) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/language-preference`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ preferred_language: languageCode }),
+    });
+    
+    if (!response.ok) {
+        throw new Error('Failed to update language preference');
+    }
+    
+    return response.json();
+};
+
 export default {
     getProfile,
     updateProfile,
+    updateLanguagePreference,
 };

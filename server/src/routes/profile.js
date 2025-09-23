@@ -58,7 +58,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
 
 // Complete onboarding endpoint
 router.post("/complete-onboarding", authenticateToken, async (req, res) => {
-    const { firstName, lastName, phone, dateOfBirth } = req.body;
+    const { firstName, lastName, phone, dateOfBirth, preferred_language } = req.body;
 
     // Validate required fields (addresses are now handled separately)
     if (!firstName || !lastName || !phone || !dateOfBirth) {
@@ -66,6 +66,12 @@ router.post("/complete-onboarding", authenticateToken, async (req, res) => {
             error: "Personal information fields (firstName, lastName, phone, dateOfBirth) are required for onboarding completion",
         });
     }
+
+    // Validate language code if provided
+    const validLanguages = ['fr', 'en', 'es'];
+    const languageToSave = preferred_language && validLanguages.includes(preferred_language) 
+        ? preferred_language 
+        : 'fr'; // Default to French if not provided or invalid
 
     try {
         const client = await pool.connect();
@@ -81,17 +87,17 @@ router.post("/complete-onboarding", authenticateToken, async (req, res) => {
                 // Create new profile with personal information only (addresses handled separately)
                 await client.query(
                     `INSERT INTO user_profiles
-                    (user_id, first_name, last_name, phone, date_of_birth, created_at, updated_at)
-                    VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-                    [userId, firstName, lastName, phone, dateOfBirth]
+                    (user_id, first_name, last_name, phone, date_of_birth, preferred_language, created_at, updated_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+                    [userId, firstName, lastName, phone, dateOfBirth, languageToSave]
                 );
             } else {
                 // Update existing profile with personal information only (addresses handled separately)
                 await client.query(
                     `UPDATE user_profiles
-                    SET first_name = $2, last_name = $3, phone = $4, date_of_birth = $5, updated_at = NOW()
+                    SET first_name = $2, last_name = $3, phone = $4, date_of_birth = $5, preferred_language = $6, updated_at = NOW()
                     WHERE user_id = $1`,
-                    [userId, firstName, lastName, phone, dateOfBirth]
+                    [userId, firstName, lastName, phone, dateOfBirth, languageToSave]
                 );
             }
 
@@ -179,6 +185,53 @@ router.put("/profile", authenticateToken, async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error updating profile" });
+    }
+});
+
+// Update user language preference
+router.put("/language-preference", authenticateToken, async (req, res) => {
+    const { preferred_language } = req.body;
+
+    // Validate language code
+    const validLanguages = ['fr', 'en', 'es'];
+    if (!preferred_language || !validLanguages.includes(preferred_language)) {
+        return res.status(400).json({ 
+            error: "Invalid language code. Supported languages: fr, en, es" 
+        });
+    }
+
+    try {
+        const client = await pool.connect();
+        try {
+            const userId = req.user.userId || req.user.id;
+
+            // Check if profile exists
+            const checkResult = await client.query("SELECT user_id FROM user_profiles WHERE user_id = $1", [userId]);
+
+            if (checkResult.rows.length === 0) {
+                // Create profile if it doesn't exist
+                await client.query(
+                    "INSERT INTO user_profiles (user_id, preferred_language, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())",
+                    [userId, preferred_language]
+                );
+            } else {
+                // Update existing profile
+                await client.query(
+                    "UPDATE user_profiles SET preferred_language = $1, updated_at = NOW() WHERE user_id = $2",
+                    [preferred_language, userId]
+                );
+            }
+
+            res.json({ 
+                message: "Language preference updated successfully",
+                preferred_language 
+            });
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error updating language preference:", error);
+        res.status(500).json({ error: "Failed to update language preference" });
     }
 });
 

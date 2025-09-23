@@ -1723,7 +1723,8 @@ CREATE TABLE public.user_profiles (
     street_name character varying(255),
     postal_code character varying(20),
     city character varying(100),
-    country character varying(100) DEFAULT 'France'::character varying
+    country character varying(100) DEFAULT 'France'::character varying,
+    preferred_language character varying(5) DEFAULT 'fr'::character varying
 );
 
 
@@ -1849,14 +1850,6 @@ ALTER TABLE ONLY public.booking_tickets
 
 ALTER TABLE ONLY public.bookings
     ADD CONSTRAINT bookings_pkey PRIMARY KEY (id);
-
-
---
--- Name: bookings bookings_user_id_event_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.bookings
-    ADD CONSTRAINT bookings_user_id_event_id_key UNIQUE (user_id, event_id);
 
 
 --
