@@ -6,6 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
+    gpg \
     ca-certificates \
     fonts-liberation \
     libappindicator3-1 \
@@ -24,9 +25,9 @@ RUN apt-get update && apt-get install -y \
     libgconf-2-4 \
     --no-install-recommends
 
-# Add Chrome's GPG key and repository
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+# Add Chrome's GPG key and repository (modern Debian method)
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
 
 # Install Chrome
 RUN apt-get update && apt-get install -y \
@@ -100,15 +101,13 @@ RUN chmod +x init-translations.sh
 # Create uploads directory
 RUN mkdir -p uploads/public/avatars uploads/public/events uploads/public/thumbnails uploads/private/documents uploads/private/temp
 
-# Create a non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# Create a non-root user (Debian syntax)
+RUN groupadd --gid 1001 nodejs
+RUN useradd --uid 1001 --gid nodejs --shell /bin/bash --create-home nodejs
 
-# Increase file descriptor limits
-RUN mkdir -p /etc/security
-RUN echo 'fs.file-max = 65536' >> /etc/sysctl.conf
-RUN echo '* soft nofile 65536' >> /etc/security/limits.conf
-RUN echo '* hard nofile 65536' >> /etc/security/limits.conf
+# Set file descriptor limits for the nodejs user (container-appropriate method)
+RUN echo "nodejs soft nofile 65536" >> /etc/security/limits.conf \
+    && echo "nodejs hard nofile 65536" >> /etc/security/limits.conf
 
 # Change ownership of the app directory (including uploads and translations)
 RUN chown -R nodejs:nodejs /app
