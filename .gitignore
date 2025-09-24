@@ -12,7 +12,7 @@
 # Production
 **/build/
 **/dist/
-
+**/server/uploads/*
 # Misc
 .DS_Store
 npm-debug.log*
