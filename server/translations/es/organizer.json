@@ -106,13 +106,34 @@
             "customMessageDefault": "¡Gracias por su participación!",
             "format": {
                 "title": "Formato del Boleto",
-                "a4": "A4 (210×297mm)",
-                "halfA4": "1/2 A4 (210×148mm)",
+                "A4": "A4 (210×297mm)",
+                "A5": "A5 (148×210mm)",
                 "quarterA4": "1/4 A4 (105×148mm)",
                 "standardFull": "Formato estándar completo",
                 "landscape": "Formato paisaje",
                 "compact": "Formato de boleto compacto"
             },
+            "images": {
+                "title": "Imágenes",
+                "useEventImage": "Usar imagen del evento"
+            },
+            "colors": {
+                "blue": "Azul",
+                "green": "Verde",
+                "orange": "Naranja",
+                "purple": "Morado",
+                "red": "Rojo",
+                "teal": "Turquesa"
+            },
+            "customColor": "Color primario personalizado",
+            "customSecondaryColor": "Color secundario personalizado",
+            "customText": "Texto personalizado",
+            "customTextPlaceholder": "Agregue un mensaje personalizado en sus boletos...",
+            "customTextHelp": "Este texto aparecerá en todos sus boletos",
+            "chooseImage": "Elegir imagen",
+            "removeImage": "Eliminar imagen",
+            "backgroundImageSelected": "Imagen de fondo seleccionada",
+            "backgroundImageNote": "Esta imagen será utilizada como fondo de sus boletos",
             "backgroundImage": "Imagen de Fondo",
             "remove": "Eliminar",
             "logo": {
@@ -123,35 +144,54 @@
                 "whitePng": "Logo PNG Blanco",
                 "none": "Sin logo"
             },
-            "qrCode": {
+            "qr": {
                 "title": "Configuración del Código QR",
                 "description": "El Código QR permite verificar la autenticidad de los boletos y facilita el control de acceso a sus eventos.",
-                "content": "Contenido del Código QR",
-                "verificationUrl": "URL de Verificación",
-                "verificationDescription": "Enlace a una página de validación del boleto (recomendado)",
-                "bookingReference": "Referencia de Reserva",
-                "bookingDescription": "Código de referencia único del boleto",
-                "securityHash": "Hash de Seguridad",
-                "securityDescription": "Código criptográfico único (más seguro)",
-                "customData": "Datos Personalizados",
-                "customDescription": "Formato JSON con información de su elección",
-                "example": "Ejemplo",
-                "customJsonLabel": "Datos Personalizados (JSON)",
-                "jsonRequired": "Formato JSON válido requerido",
-                "recommendation": "Recomendación",
-                "recommendationText": "La URL de verificación es la opción más segura ya que permite validar en tiempo real la autenticidad del boleto y su estado."
+                "contentType": "Tipo de contenido",
+                "showOnTicket": "Mostrar código QR en el boleto",
+                "options": {
+                    "bookingReference": "Referencia de reserva",
+                    "verificationUrl": "URL de verificación",
+                    "eventDetails": "Detalles del evento"
+                },
+                "descriptions": {
+                    "bookingReference": "Código de referencia único del boleto",
+                    "verificationUrl": "Enlace a una página de validación del boleto (recomendado)",
+                    "eventDetails": "Información completa sobre el evento"
+                },
+                "verificationUrl": "URL de verificación",
+                "verificationUrlHelp": "URL a su página de verificación. Use {booking_reference} como marcador.",
+                "bookingReferenceFormat": "Formato de referencia",
+                "bookingReferenceFormatHelp": "Formato personalizado para la referencia. Use {booking_id} para ID simple o {booking_reference} para referencia completa.",
+                "eventDetailsJson": "Detalles del evento (JSON)",
+                "eventDetailsJsonHelp": "Estructura JSON personalizada. Use marcadores como {event_title}, {booking_reference}, etc.",
+                "placeholdersTitle": "Marcadores disponibles:",
+                "placeholderTicketNumber": "Número único del boleto (recomendado)",
+                "placeholderBookingId": "UUID de reserva (mismo para todos los boletos)",
+                "placeholderBooking": "Referencia completa de reserva",
+                "placeholderTitle": "Título del evento",
+                "placeholderDate": "Fecha del evento",
+                "placeholderVenue": "Nombre del lugar"
             }
         },
         "pricing": {
             "title": "Tarifas y Categorías",
+            "addTier": "Agregar Nivel de Precio",
+            "noTiers": "No se han definido niveles de precios. Agregue niveles para ofrecer diferentes precios.",
+            "tier": "Nivel",
+            "tierName": "Nombre del Nivel",
             "addRate": "Agregar una Tarifa",
             "noRates": "No se ha definido una tarifa específica. Se utilizará el precio principal del evento.",
             "rate": "Tarifa",
             "rateName": "Nombre de la Tarifa",
             "rateNamePlaceholder": "Ej: Tarifa reducida, VIP, Estudiante",
-            "price": "Precio (€)",
+            "price": "Precio",
             "quantity": "Cantidad",
-            "description": "Describa qué está incluido en esta tarifa"
+            "quantityHelp": "Deje vacío para cantidad ilimitada",
+            "description": "Descripción",
+            "earlyBird": "Precio early bird",
+            "earlyBirdPrice": "Precio early bird",
+            "earlyBirdDeadline": "Fecha límite early bird"
         },
         "booking": {
             "settings": "Configuración de Reservas",

@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import QRCode from 'qrcode';
 import puppeteer from 'puppeteer';
 import pool from '../db.js';
+import fetch from 'node-fetch';
 
 class PDFTicketService {
     constructor() {
@@ -124,7 +125,11 @@ class PDFTicketService {
 
         // Handle conditional blocks
         processed = processed.replace(/{{#(\w+)}}(.*?){{\/\1}}/gs, (match, condition, content) => {
-            return data[condition] ? content : '';
+            const result = data[condition] ? content : '';
+            if (condition === 'has_background_image') {
+                console.log(`🖼️ Background Image: ${result ? 'INCLUDED' : 'EXCLUDED'} (${data.BACKGROUND_IMAGE ? data.BACKGROUND_IMAGE.length + ' chars' : 'none'})`);
+            }
+            return result;
         });
 
         return processed;
@@ -163,32 +168,71 @@ class PDFTicketService {
     }
 
     /**
-     * Get QR code content based on type
+     * Get QR code content based on type - matching React preview logic
      */
-    getQRCodeContent(qrType, ticketData, customData = null, templateConfig = null) {
+    getQRCodeContent(qrType, ticketData, templateConfig = null, eventData = null) {
         const baseUrl = process.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
+        // Create placeholders for replacement (matching React preview logic)
+        const placeholders = {
+            '{ticket_number}': ticketData.ticket_number,
+            '{booking_id}': ticketData.booking_id,
+            '{booking_reference}': ticketData.booking_reference,
+            '{event_title}': eventData?.title || 'Sample Event',
+            '{event_date}': eventData?.event_date ? new Date(eventData.event_date).toLocaleDateString('fr-FR') : '01/01/2024',
+            '{venue_name}': eventData?.location || 'Sample Venue'
+        };
+
+        // Helper function to replace placeholders in text
+        const replacePlaceholders = (text) => {
+            let result = text || '';
+            Object.entries(placeholders).forEach(([placeholder, value]) => {
+                result = result.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
+            });
+            return result;
+        };
+
         switch (qrType) {
+            case 'verification_url':
+                const verificationUrl = templateConfig?.qr_verification_url || `${baseUrl}/verify/{booking_reference}`;
+                return replacePlaceholders(verificationUrl);
+
             case 'booking_reference':
-                return ticketData.ticket_number || ticketData.booking_reference;
-            case 'ticket_hash':
-                return crypto.createHash('sha256').update(ticketData.ticket_number + ticketData.booking_reference).digest('hex').substring(0, 16);
-            case 'prefixed_number':
-                const prefix = templateConfig?.qr_prefix || 'BE';
-                return `${prefix}-${ticketData.ticket_number}`;
-            case 'json_data':
-                return JSON.stringify({
-                    ticket: ticketData.ticket_number,
-                    booking: ticketData.booking_reference,
-                    event: ticketData.event_id
+                const bookingFormat = templateConfig?.qr_booking_format || '{ticket_number}';
+                return replacePlaceholders(bookingFormat);
+
+            case 'event_details':
+                const eventDetails = templateConfig?.qr_event_details || JSON.stringify({
+                    event: '{event_title}',
+                    date: '{event_date}',
+                    venue: '{venue_name}',
+                    booking: '{booking_reference}'
                 });
-            case 'custom_data':
-                return customData || ticketData.ticket_number;
-            case 'simple_url':
-                const customUrl = templateConfig?.qr_custom_url || `${baseUrl}/ticket/${ticketData.id}`;
-                return customUrl;
+                try {
+                    // Try to parse as JSON and replace placeholders in the parsed object
+                    const parsed = JSON.parse(eventDetails);
+                    const processObject = (obj) => {
+                        if (typeof obj === 'string') {
+                            return replacePlaceholders(obj);
+                        } else if (Array.isArray(obj)) {
+                            return obj.map(processObject);
+                        } else if (typeof obj === 'object' && obj !== null) {
+                            const result = {};
+                            Object.entries(obj).forEach(([key, value]) => {
+                                result[key] = processObject(value);
+                            });
+                            return result;
+                        }
+                        return obj;
+                    };
+                    return JSON.stringify(processObject(parsed), null, 2);
+                } catch (e) {
+                    // If not valid JSON, treat as plain text
+                    return replacePlaceholders(eventDetails);
+                }
+
             default:
-                return ticketData.ticket_number;
+                return replacePlaceholders('{booking_reference}');
         }
     }
 
@@ -198,27 +242,27 @@ class PDFTicketService {
     async generateTicketHTML(ticketData, eventData, templateConfig = null) {
         // Get template configuration with defaults
         const config = {
-            ticket_size: templateConfig?.ticket_size || 'a4',
+            ticket_size: templateConfig?.ticket_size || 'A5',
             primary_color: templateConfig?.primary_color || '#1976d2',
             secondary_color: templateConfig?.secondary_color || '#9c27b0',
             background_image: templateConfig?.background_image || null,
             app_logo: templateConfig?.app_logo || 'be-out_logo_noir.png',
-            custom_message: templateConfig?.custom_message || '',
+            custom_message: templateConfig?.custom_text || templateConfig?.custom_message || '', // Fixed: use custom_text first
             qr_code_type: templateConfig?.qr_code_type || 'booking_reference',
             qr_custom_data: templateConfig?.qr_custom_data || null
         };
 
-        console.log('🎫 PDF Template Config:', {
-            ticket_size: config.ticket_size,
-            primary_color: config.primary_color,
-            qr_code_type: config.qr_code_type,
-            has_background_image: !!config.background_image,
-            has_app_logo: !!config.app_logo
+        console.log(`🎫 PDF Config: ${config.ticket_size}, QR: ${config.qr_code_type}, BG: ${config.background_image ? 'YES' : 'NO'}`);
+
+        console.log('🎫 Ticket Data for PDF:', {
+            ticket_number: ticketData.ticket_number,
+            booking_reference: ticketData.booking_reference,
+            booking_id: ticketData.booking_id || ticketData.id
         });
 
         // Generate QR code
-        const qrContent = this.getQRCodeContent(config.qr_code_type, ticketData, config.qr_custom_data, templateConfig);
-        console.log('Generated QR content:', qrContent, 'for type:', config.qr_code_type);
+        const qrContent = this.getQRCodeContent(config.qr_code_type, ticketData, templateConfig, eventData);
+        console.log(`🔗 QR Code: ${config.qr_code_type} (${qrContent.length} chars)`);
         const qrCodeDataURL = await this.generateQRCode(qrContent);
 
         // Convert logo to base64 if it exists
@@ -256,26 +300,110 @@ class PDFTicketService {
         // Load templates
         const { cssContent, htmlTemplate } = await this.loadTemplate();
 
+        // Handle event image
+        let eventImageBase64 = null;
+        if (eventData.image_url) {
+            try {
+                if (eventData.image_url.startsWith('http')) {
+                    // For remote images, fetch them first
+                    console.log('Remote image URL detected:', eventData.image_url);
+                    try {
+                        const response = await fetch(eventData.image_url);
+                        if (response.ok) {
+                            const buffer = await response.arrayBuffer();
+                            const base64 = Buffer.from(buffer).toString('base64');
+                            const mimeType = response.headers.get('content-type') || 'image/jpeg';
+                            eventImageBase64 = `data:${mimeType};base64,${base64}`;
+                            console.log('🖼️ Remote image fetched successfully');
+                        } else {
+                            console.log('🖼️ Failed to fetch remote image:', response.status);
+                        }
+                    } catch (fetchError) {
+                        console.log('🖼️ Error fetching remote image:', fetchError.message);
+                    }
+                } else {
+                    // Local image path
+                    const isFromRoot = process.cwd().endsWith('be-out-apps');
+                    const basePath = isFromRoot ? 'server/uploads' : 'uploads';
+                    const imagePath = path.join(process.cwd(), basePath, eventData.image_url);
+                    console.log('🖼️ Looking for event image at:', imagePath);
+                    eventImageBase64 = await this.imageToBase64(imagePath);
+                    console.log('🖼️ Event image base64 result:', eventImageBase64 ? 'SUCCESS' : 'FAILED');
+                }
+            } catch (error) {
+                console.log('Event image processing error:', error.message);
+            }
+        }
+
+        // Format purchase date
+        const purchaseDate = new Date(ticketData.created_at || ticketData.booking_date);
+        const formattedPurchaseDate = purchaseDate.toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit'
+        }) + ' ' + purchaseDate.toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        // Get QR content preview (truncated for display)
+        const qrContentPreview = qrContent.length > 30 ? qrContent.substring(0, 30) + '...' : qrContent;
+
         // Prepare template data
         const templateData = {
             CSS_CONTENT: cssContent,
-            TICKET_SIZE_CLASS: config.ticket_size === 'half-a4' ? 'half-a4' : config.ticket_size === 'quarter-a4' ? 'quarter-a4' : '',
+            TICKET_SIZE_CLASS: 'a5', // Always A5 now
             PRIMARY_COLOR: config.primary_color,
             SECONDARY_COLOR: config.secondary_color,
             BACKGROUND_IMAGE: config.background_image,
-            EVENT_TITLE: eventData.title,
-            EVENT_CATEGORY: eventData.category_name,
+            EVENT_TITLE: eventData.title || 'Event Title',
+            EVENT_CATEGORY: eventData.category_name || null,
+            EVENT_IMAGE: eventImageBase64,
+            EVENT_PRICE: eventData.price || null,
             FORMATTED_DATE: formattedDate,
             FORMATTED_TIME: formattedTime,
             EVENT_LOCATION: eventData.location || eventData.formatted_address || 'Lieu à confirmer',
             QR_CODE_DATA_URL: qrCodeDataURL,
-            TICKET_NUMBER: ticketData.ticket_number,
-            CUSTOM_MESSAGE: config.custom_message,
-            APP_LOGO: logoBase64
+            QR_CONTENT_PREVIEW: qrContentPreview,
+            TICKET_NUMBER: qrContent || 'N/A',
+            PURCHASE_DATE: formattedPurchaseDate,
+            CUSTOM_MESSAGE: config.custom_text || config.custom_message || null,
+            APP_LOGO: logoBase64,
+            has_background_image: !!config.background_image
         };
 
+        console.log('🎫 Final Template Data:', {
+            EVENT_TITLE: templateData.EVENT_TITLE,
+            EVENT_PRICE: templateData.EVENT_PRICE,
+            TICKET_NUMBER: templateData.TICKET_NUMBER,
+            CUSTOM_MESSAGE: templateData.CUSTOM_MESSAGE,
+            has_EVENT_IMAGE: !!templateData.EVENT_IMAGE,
+            EVENT_IMAGE_length: templateData.EVENT_IMAGE ? templateData.EVENT_IMAGE.length : 0,
+            has_background_image: templateData.has_background_image,
+            BACKGROUND_IMAGE_length: templateData.BACKGROUND_IMAGE ? templateData.BACKGROUND_IMAGE.length : 0,
+            QR_CONTENT_PREVIEW: templateData.QR_CONTENT_PREVIEW
+        });
+
         // Process template
-        return this.processTemplate(htmlTemplate, templateData);
+        const processedHTML = this.processTemplate(htmlTemplate, templateData);
+
+        // Debug: check if placeholders are being replaced
+        console.log('🎫 Template processing check:');
+        console.log('- EVENT_TITLE placeholder exists:', htmlTemplate.includes('{{EVENT_TITLE}}'));
+        console.log('- EVENT_TITLE replaced:', !processedHTML.includes('{{EVENT_TITLE}}'));
+        console.log('- TICKET_NUMBER replaced:', !processedHTML.includes('{{TICKET_NUMBER}}'));
+        console.log('- EVENT_PRICE replaced:', !processedHTML.includes('{{EVENT_PRICE}}'));
+        console.log('🖼️ Background image in processed HTML:', processedHTML.includes('background-image'));
+
+        // Log a snippet of the processed HTML around the background area
+        const bgIndex = processedHTML.indexOf('background-image');
+        if (bgIndex !== -1) {
+            console.log('🔍 Background CSS HTML snippet:', processedHTML.substring(bgIndex - 50, bgIndex + 200));
+        } else {
+            console.log('❌ No background-image CSS found in processed HTML');
+        }
+
+        return processedHTML;
     }
 
     /**
@@ -283,15 +411,15 @@ class PDFTicketService {
      */
     getTicketDimensions(size) {
         switch (size) {
-            case 'half-a4':
+            case 'A5':
                 return {
-                    width: 210,
-                    height: 148,
-                    layout: 'twoColumn',
+                    width: 148,
+                    height: 210,
+                    layout: 'portrait',
                     qrSize: 80,
                     fontScale: 0.9
                 };
-            case 'quarter-a4':
+            case 'quarter-A4':
                 return {
                     width: 148,
                     height: 105,
@@ -299,7 +427,7 @@ class PDFTicketService {
                     qrSize: 60,
                     fontScale: 0.7
                 };
-            case 'a4':
+            case 'A4':
             default:
                 return {
                     width: 210,
@@ -324,14 +452,20 @@ class PDFTicketService {
             const ticketQuery = `
                 SELECT
                     bt.*,
+                    b.id as booking_id,
                     b.booking_reference,
                     b.user_id,
                     b.booking_date,
                     e.title as event_title,
                     e.event_date,
+                    e.original_price,
+                    e.discounted_price,
+                    e.image_url,
                     e.customizations,
                     e.ticket_template_id,
                     v.name as venue_name,
+                    va.formatted_address as venue_address,
+                    va.locality as venue_city,
                     cat.name as category_name,
                     tt.template_data,
                     u.email,
@@ -342,6 +476,8 @@ class PDFTicketService {
                 JOIN users u ON b.user_id = u.id
                 LEFT JOIN user_profiles up ON u.id = up.user_id
                 LEFT JOIN venues v ON e.venue_id = v.id
+                LEFT JOIN address_relationships var ON (var.entity_type = 'venue' AND var.entity_id = v.id)
+                LEFT JOIN addresses va ON va.id = var.address_id
                 LEFT JOIN event_categories ec ON e.id = ec.event_id
                 LEFT JOIN categories cat ON ec.category_id = cat.id
                 LEFT JOIN ticket_templates tt ON e.ticket_template_id = tt.id
@@ -359,18 +495,17 @@ class PDFTicketService {
                 title: ticketData.event_title,
                 event_date: ticketData.event_date,
                 event_time: ticketData.event_date,
+                price: ticketData.discounted_price || ticketData.original_price, // Use discounted price if available
+                image_url: ticketData.image_url,
                 location: ticketData.venue_name || 'Lieu à confirmer',
                 formatted_address: ticketData.venue_name || 'Adresse à confirmer',
                 category_name: ticketData.category_name
             };
 
-            console.log('🎫 Event Data for PDF:', {
-                title: eventData.title,
-                location: eventData.location,
-                venue_name: ticketData.venue_name,
-                category_name: eventData.category_name,
-                event_date: eventData.event_date
-            });
+            console.log(`🎫 Event: "${eventData.title}" | Ticket: ${ticketData.ticket_number}`);
+
+            // Debug template data summary
+            console.log(`🎫 Template: ${ticketData.customizations?.ticket_size || 'default'}, BG: ${ticketData.customizations?.background_image ? 'YES' : 'NO'}`);
 
             // Merge template data with event-specific customizations
             const templateConfig = {
@@ -394,12 +529,11 @@ class PDFTicketService {
             const pdfFileName = `ticket-${ticketData.ticket_number}-${Date.now()}.pdf`;
             const pdfPath = path.join(this.uploadDir, pdfFileName);
 
-            const dimensions = this.getTicketDimensions(templateConfig?.ticket_size || 'a4');
-
+            // Always use A5 dimensions now
             await page.pdf({
                 path: pdfPath,
-                width: `${dimensions.width}mm`,
-                height: `${dimensions.height}mm`,
+                width: '148mm',  // A5 width
+                height: '210mm', // A5 height
                 printBackground: true,
                 margin: { top: 0, right: 0, bottom: 0, left: 0 }
             });

@@ -72,8 +72,8 @@ const EventFormWizard = () => {
             pricing_tiers: [],
             booking_settings: {
                 booking_deadline: null,
-                allow_multiple_bookings: false,
-                max_bookings_per_user: 1,
+                allow_multiple_bookings: true,
+                max_bookings_per_user: null,
             }
         },
 
@@ -135,12 +135,12 @@ const EventFormWizard = () => {
                         },
                         ticketConfig: {
                             template_id: eventData.ticket_template_id || null,
-                            customizations: {},
-                            pricing_tiers: [],
+                            customizations: eventData.customizations || {},
+                            pricing_tiers: eventData.customizations?.pricing_tiers || [],
                             booking_settings: {
                                 booking_deadline: eventData.booking_deadline ? new Date(eventData.booking_deadline) : null,
-                                allow_multiple_bookings: false,
-                                max_bookings_per_user: 1,
+                                allow_multiple_bookings: eventData.customizations?.booking_settings?.allow_multiple_bookings ?? true,
+                                max_bookings_per_user: eventData.customizations?.booking_settings?.max_bookings_per_user || 1,
                             }
                         },
                         publication: {
@@ -310,7 +310,11 @@ const EventFormWizard = () => {
                 ...formData.venue,
                 ...formData.publication,
                 ticket_template_id: formData.ticketConfig.template_id,
-                customizations: formData.ticketConfig.customizations,
+                customizations: {
+                    ...formData.ticketConfig.customizations,
+                    pricing_tiers: formData.ticketConfig.pricing_tiers,
+                    booking_settings: formData.ticketConfig.booking_settings
+                },
                 // Convert data types
                 original_price: Number(formData.eventDetails.original_price) || 0,
                 discounted_price: Number(formData.eventDetails.discounted_price) || 0,
@@ -372,6 +376,11 @@ const EventFormWizard = () => {
                 ...formData.venue,
                 ...formData.publication,
                 ticket_template_id: formData.ticketConfig.template_id,
+                customizations: {
+                    ...formData.ticketConfig.customizations,
+                    pricing_tiers: formData.ticketConfig.pricing_tiers,
+                    booking_settings: formData.ticketConfig.booking_settings
+                },
                 // Convert data types
                 original_price: Number(formData.eventDetails.original_price) || 0,
                 discounted_price: Number(formData.eventDetails.discounted_price) || 0,
@@ -457,7 +466,7 @@ const EventFormWizard = () => {
         } else {
             return (
                 <TicketPreview
-                    formData={formData}
+                    formData={{ ...formData, eventImagePreview: imagePreview }}
                     venues={venues}
                     categories={categories}
                     templates={ticketTemplates}

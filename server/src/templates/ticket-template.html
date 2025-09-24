@@ -1,54 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Ticket</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billet</title>
     <style>
         {{CSS_CONTENT}}
     </style>
 </head>
-<body>
-    <div class="ticket {{TICKET_SIZE_CLASS}}">
-        {{#BACKGROUND_IMAGE}}
-        <div class="background-overlay" style="background-image: url('{{BACKGROUND_IMAGE}}');"></div>
-        {{/BACKGROUND_IMAGE}}
+<body{{#BACKGROUND_IMAGE}} style="background-image: url('{{BACKGROUND_IMAGE}}'); background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0.9;"{{/BACKGROUND_IMAGE}}>
+    <div class="ticket a5">
 
         <div class="ticket-header" style="background: linear-gradient(135deg, {{PRIMARY_COLOR}}, {{SECONDARY_COLOR}});">
             <div class="event-title">{{EVENT_TITLE}}</div>
-            {{#EVENT_CATEGORY}}
-            <div class="event-category">{{EVENT_CATEGORY}}</div>
-            {{/EVENT_CATEGORY}}
+            <div class="event-subtitle">BILLET D'ENTRÉE</div>
         </div>
 
         <div class="ticket-content">
-            <div class="event-details">
-                <div class="info-item">
-                    <span class="info-label">Date & Heure</span>
-                    <div class="info-value">{{FORMATTED_DATE}}</div>
-                    <div class="info-time">{{FORMATTED_TIME}}</div>
+            <!-- Main content with image on left and details on right (like React preview) -->
+            <div class="main-content">
+                <!-- Event Image - Left side -->
+                {{#EVENT_IMAGE}}
+                <div class="event-image">
+                    <img src="{{EVENT_IMAGE}}" alt="{{EVENT_TITLE}}" class="event-img" />
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Lieu</span>
-                    <div class="info-value">{{EVENT_LOCATION}}</div>
-                </div>
-                {{#EVENT_CATEGORY}}
-                <div class="info-item">
-                    <div class="category-badge" style="background: {{PRIMARY_COLOR}};">{{EVENT_CATEGORY}}</div>
-                </div>
-                {{/EVENT_CATEGORY}}
+                {{/EVENT_IMAGE}}
 
-                <!-- QR Code on new line after category -->
-                <div class="qr-section">
-                    <img src="{{QR_CODE_DATA_URL}}" alt="QR Code" class="qr-code" />
-                    <div class="qr-label">QR Code</div>
-                    <div class="qr-type">URL Vérification</div>
+                <!-- Event Details - Right side -->
+                <div class="event-details">
+                    <div class="info-item">
+                        <span class="info-label">DATE & HEURE</span>
+                        <div class="info-value">{{FORMATTED_DATE}}</div>
+                        <div class="info-time">{{FORMATTED_TIME}}</div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">LIEU</span>
+                        <div class="info-value">{{EVENT_LOCATION}}</div>
+                    </div>
+                    <!-- Category and Price in a row -->
+                    <div class="category-price-row">
+                        {{#EVENT_CATEGORY}}
+                        <div class="category-badge" style="background: {{PRIMARY_COLOR}};">{{EVENT_CATEGORY}}</div>
+                        {{/EVENT_CATEGORY}}
+                        <div class="price-display" style="color: {{PRIMARY_COLOR}};">{{EVENT_PRICE}}€</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="ticket-info">
+            <!-- Divider -->
+            <div class="divider"></div>
+
+            <!-- Ticket Details Section -->
+            <div class="ticket-details">
                 <div class="ticket-number-section">
-                    <div class="ticket-number-label">N° Billet</div>
+                    <div class="ticket-number-label">N° BILLET</div>
                     <div class="ticket-number">{{TICKET_NUMBER}}</div>
+                    <div class="purchase-date">Acheté le {{PURCHASE_DATE}}</div>
+                </div>
+
+                <!-- QR Code -->
+                <div class="qr-section">
+                    <img src="{{QR_CODE_DATA_URL}}" alt="QR Code" class="qr-code" />
+                    <div class="qr-content">{{QR_CONTENT_PREVIEW}}</div>
                 </div>
             </div>
         </div>

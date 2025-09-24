@@ -69,8 +69,8 @@ router.post("/complete-onboarding", authenticateToken, async (req, res) => {
 
     // Validate language code if provided
     const validLanguages = ['fr', 'en', 'es'];
-    const languageToSave = preferred_language && validLanguages.includes(preferred_language) 
-        ? preferred_language 
+    const languageToSave = preferred_language && validLanguages.includes(preferred_language)
+        ? preferred_language
         : 'fr'; // Default to French if not provided or invalid
 
     try {
@@ -195,8 +195,8 @@ router.put("/language-preference", authenticateToken, async (req, res) => {
     // Validate language code
     const validLanguages = ['fr', 'en', 'es'];
     if (!preferred_language || !validLanguages.includes(preferred_language)) {
-        return res.status(400).json({ 
-            error: "Invalid language code. Supported languages: fr, en, es" 
+        return res.status(400).json({
+            error: "Invalid language code. Supported languages: fr, en, es"
         });
     }
 
@@ -222,9 +222,9 @@ router.put("/language-preference", authenticateToken, async (req, res) => {
                 );
             }
 
-            res.json({ 
+            res.json({
                 message: "Language preference updated successfully",
-                preferred_language 
+                preferred_language
             });
         } finally {
             client.release();

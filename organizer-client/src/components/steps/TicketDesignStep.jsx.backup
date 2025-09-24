@@ -1,0 +1,654 @@
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+    Box,
+    Typography,
+    Grid,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    TextField,
+    FormControlLabel,
+    Switch,
+    Card,
+    CardContent,
+    Divider,
+    Chip,
+    Button,
+    IconButton,
+    Alert,
+    Avatar,
+    Paper,
+    RadioGroup,
+    Radio,
+    InputAdornment,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+} from "@mui/material";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import {
+    Add as AddIcon,
+    Delete as DeleteIcon,
+    CloudUpload as CloudUploadIcon,
+    Image as ImageIcon,
+    QrCode as QrCodeIcon,
+    ExpandMore as ExpandMoreIcon,
+    Settings as SettingsIcon,
+} from "@mui/icons-material";
+
+const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
+    const { t } = useTranslation('organizer');
+    const [backgroundImageFile, setBackgroundImageFile] = useState(null);
+
+    // Ticket size options
+  const ticketSizes = [
+    { value: 'A4', label: t('A4', { ns: 'ticketDesign' }) },
+    { value: 'A5', label: t('A5', { ns: 'ticketDesign' }) }
+  ];    // QR Code content options
+    const qrCodeOptions = [
+        {
+            id: 'verification_url',
+            name: t('organizer:tickets.design.qrCode.verificationUrl'),
+            description: t('organizer:tickets.design.qrCode.verificationDescription'),
+            example: 'https://be-out.app/verify/ABC123'
+        },
+        {
+            id: 'booking_reference',
+            name: t('organizer:tickets.design.qrCode.bookingReference'),
+            description: t('organizer:tickets.design.qrCode.bookingDescription'),
+            example: 'BE-OUT-001234'
+        },
+        {
+            id: 'ticket_hash',
+            name: t('organizer:tickets.design.qrCode.securityHash'),
+            description: t('organizer:tickets.design.qrCode.securityDescription'),
+            example: 'a1b2c3d4e5f6...'
+        },
+        {
+            id: 'prefixed_number',
+            name: 'Numéro avec préfixe/suffixe',
+            description: 'Numéro de billet avec préfixe et suffixe personnalisés',
+            example: 'EVENT-001-VIP'
+        },
+        {
+            id: 'json_data',
+            name: 'Données JSON',
+            description: 'Informations complètes du billet au format JSON',
+            example: '{"event_id":"123","ticket":"ABC123"}'
+        },
+        {
+            id: 'simple_url',
+            name: 'URL personnalisée',
+            description: 'URL complètement personnalisée',
+            example: 'https://monsite.com/evenement/123'
+        },
+        {
+            id: 'custom_data',
+            name: t('organizer:tickets.design.qrCode.customData'),
+            description: t('organizer:tickets.design.qrCode.customDescription'),
+            example: '{"event":"Concert","date":"2025-08-12"}'
+        },
+    ];
+
+    const handleChange = (field, value) => {
+        onChange({
+            ...data,
+            [field]: value,
+        });
+    };
+
+    const handleBookingSettingsChange = (field, value) => {
+        handleChange('booking_settings', {
+            ...data.booking_settings,
+            [field]: value,
+        });
+    };
+
+    const handleCustomizationChange = (field, value) => {
+        handleChange('customizations', {
+            ...data.customizations,
+            [field]: value,
+        });
+    };
+
+    const handleBackgroundImageUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setBackgroundImageFile(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                handleCustomizationChange('background_image', e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeBackgroundImage = () => {
+        setBackgroundImageFile(null);
+        handleCustomizationChange('background_image', null);
+    };
+
+    const addPricingTier = () => {
+        const newTier = {
+            id: Date.now(),
+            name: '',
+            price: '',
+            quantity: '',
+            description: '',
+        };
+
+        handleChange('pricing_tiers', [...(data.pricing_tiers || []), newTier]);
+    };
+
+    const removePricingTier = (tierId) => {
+        const updatedTiers = (data.pricing_tiers || []).filter(tier => tier.id !== tierId);
+        handleChange('pricing_tiers', updatedTiers);
+    };
+
+    const updatePricingTier = (tierId, field, value) => {
+        const updatedTiers = (data.pricing_tiers || []).map(tier =>
+            tier.id === tierId ? { ...tier, [field]: value } : tier
+        );
+        handleChange('pricing_tiers', updatedTiers);
+    };
+
+    const selectedTemplate = templates.find(t => t.id === data.template_id);
+
+    return (
+        <Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+                {t('organizer:tickets.design.title')}
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                {t('organizer:tickets.design.description')}
+            </Typography>
+
+            <Grid container spacing={3}>
+                {/* Template Selection - COMMENTED OUT FOR NOW */}
+                {/* <Grid size={{ xs: 12 }}>
+                    <FormControl fullWidth>
+                        <InputLabel>{t('organizer:tickets.design.template')}</InputLabel>
+                        <Select
+                            value={data.template_id || ''}
+                            onChange={(e) => handleChange('template_id', e.target.value)}
+                            label={t('organizer:tickets.design.template')}
+                        >
+                            <MenuItem value="">
+                                <em>{t('organizer:tickets.design.defaultTemplate')}</em>
+                            </MenuItem>
+                            {templates.map((template) => (
+                                <MenuItem key={template.id} value={template.id}>
+                                    {template.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </Grid> */}
+
+                {/* Template Preview Info */}
+                {/* {selectedTemplate && (
+                    <Grid size={{ xs: 12 }}>
+                        <Card variant="outlined">
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    {selectedTemplate.name}
+                                </Typography>
+                                {selectedTemplate.description && (
+                                    <Typography variant="body2" color="text.secondary">
+                                        {selectedTemplate.description}
+                                    </Typography>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                )} */
+
+                {/* Template Customizations */}
+                {/* <Grid size={{ xs: 12 }}>
+                    <Typography variant="h6" gutterBottom>
+                        {t('organizer:tickets.design.customization')}
+                    </Typography>
+
+                    <Grid container spacing={2}>
+                        {/* Ticket Size Selection - COMMENTED OUT FOR NOW, FIXED TO A5 */}
+                        {/* <Grid size={{ xs: 12 }}>
+                            <FormControl fullWidth>
+                                <Typography variant="subtitle2" gutterBottom>
+                                    {t('organizer:tickets.design.format.title')}
+                                </Typography>
+                                <RadioGroup
+                                    value={data.customizations?.ticket_size || 'a5'}
+                                    onChange={(e) => handleCustomizationChange('ticket_size', e.target.value)}
+                                    row
+                                >
+                                    {ticketSizes.map((size) => (
+                                        <Box key={size.id} sx={{ mr: 3, mb: 1 }}>
+                                            <FormControlLabel
+                                                value={size.id}
+                                                control={<Radio />}
+                                                label={
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                            {size.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {size.description}
+                                                        </Typography>
+                                                    </Box>
+                                                }
+                                            />
+                                        </Box>
+                                    ))}
+                                </RadioGroup>
+                            </FormControl>
+                        </Grid> */}
+
+                        {/* Background Image Upload */}
+                        <Grid size={{ xs: 12 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                                {t('organizer:tickets.design.backgroundImage')}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    component="label"
+                                    startIcon={<CloudUploadIcon />}
+                                    sx={{ minWidth: 150 }}
+                                >
+                                    {t('organizer:tickets.design.chooseImage')}
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        onChange={handleBackgroundImageUpload}
+                                    />
+                                </Button>
+                                {data.customizations?.background_image && (
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<DeleteIcon />}
+                                        onClick={removeBackgroundImage}
+                                    >
+                                        {t('organizer:tickets.design.remove')}
+                                    </Button>
+                                )}
+                            </Box>
+
+                            {data.customizations?.background_image && (
+                                <Paper elevation={1} sx={{ p: 2, display: 'inline-block' }}>
+                                    <img
+                                        src={data.customizations.background_image}
+                                        alt="Background preview"
+                                        style={{
+                                            maxWidth: 200,
+                                            maxHeight: 120,
+                                            objectFit: 'cover',
+                                            borderRadius: 4,
+                                        }}
+                                    />
+                                </Paper>
+                            )}
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField
+                                fullWidth
+                                label={t('organizer:tickets.design.primaryColor')}
+                                type="color"
+                                value={data.customizations?.primary_color || '#1976d2'}
+                                onChange={(e) => handleCustomizationChange('primary_color', e.target.value)}
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField
+                                fullWidth
+                                label={t('organizer:tickets.design.secondaryColor')}
+                                type="color"
+                                value={data.customizations?.secondary_color || '#f50057'}
+                                onChange={(e) => handleCustomizationChange('secondary_color', e.target.value)}
+                            />
+                        </Grid>
+
+                        {/* App Logo Selection */}
+                        <Grid size={{ xs: 12 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                                {t('organizer:tickets.design.logo.footer')}
+                            </Typography>
+                            <FormControl fullWidth>
+                                <Select
+                                    value={data.customizations?.app_logo || 'be-out_logo.svg'}
+                                    onChange={(e) => handleCustomizationChange('app_logo', e.target.value)}
+                                    displayEmpty
+                                >
+                                    <MenuItem value="be-out_logo.svg">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 24, height: 24 }}>
+                                                <img src="/be-out_logo.svg" alt="Logo SVG" style={{ width: '100%', height: '100%' }} />
+                                            </Avatar>
+                                            {t('organizer:tickets.design.logo.svg')}
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="be-out_logo_orange.png">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 24, height: 24 }}>
+                                                <img src="/be-out_logo_orange.png" alt="Logo Orange" style={{ width: '100%', height: '100%' }} />
+                                            </Avatar>
+                                            {t('organizer:tickets.design.logo.orangePng')}
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="be-out_logo_noir.png">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 24, height: 24 }}>
+                                                <img src="/be-out_logo_noir.png" alt="Logo Noir" style={{ width: '100%', height: '100%' }} />
+                                            </Avatar>
+                                            {t('organizer:tickets.design.logo.blackPng')}
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="be-out_logo_blanc.png">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 24, height: 24 }}>
+                                                <img src="/be-out_logo_blanc.png" alt="Logo Blanc" style={{ width: '100%', height: '100%' }} />
+                                            </Avatar>
+                                            {t('organizer:tickets.design.logo.whitePng')}
+                                        </Box>
+                                    </MenuItem>
+                                    <MenuItem value="">
+                                        <em>{t('organizer:tickets.design.logo.none')}</em>
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        <Grid size={{ xs: 12 }}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={2}
+                                label={t('organizer:tickets.design.customMessage')}
+                                value={data.customizations?.custom_message || ''}
+                                onChange={(e) => handleCustomizationChange('custom_message', e.target.value)}
+                                placeholder={t('organizer:tickets.design.customMessageDefault')}
+                            />
+                        </Grid>
+                    </Grid>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                    <Divider />
+                </Grid>
+
+                {/* QR Code Configuration */}
+                <Grid size={{ xs: 12 }}>
+                    <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <QrCodeIcon color="primary" />
+                                <Typography variant="h6">
+                                    {t('organizer:tickets.design.qrCode.title')}
+                                </Typography>
+                            </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                {t('organizer:tickets.design.qrCode.description')}
+                            </Typography>
+
+                            <FormControl fullWidth sx={{ mb: 3 }}>
+                                <Typography variant="subtitle2" gutterBottom>
+                                    {t('organizer:tickets.design.qrCode.content')}
+                                </Typography>
+                                <RadioGroup
+                                    value={data.customizations?.qr_code_type || 'verification_url'}
+                                    onChange={(e) => handleCustomizationChange('qr_code_type', e.target.value)}
+                                >
+                                    {qrCodeOptions.map((option) => (
+                                        <Box key={option.id} sx={{ mb: 2 }}>
+                                            <FormControlLabel
+                                                value={option.id}
+                                                control={<Radio />}
+                                                label={
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                                            {option.name}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {option.description}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ display: 'block', fontFamily: 'monospace', mt: 0.5, color: 'primary.main' }}>
+                                                            {t('organizer:tickets.design.qrCode.example')}: {option.example}
+                                                        </Typography>
+                                                    </Box>
+                                                }
+                                            />
+                                        </Box>
+                                    ))}
+                                </RadioGroup>
+                            </FormControl>
+
+                            {data.customizations?.qr_code_type === 'custom_data' && (
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    label={t('organizer:tickets.design.qrCode.customJsonLabel')}
+                                    value={data.customizations?.qr_custom_data || ''}
+                                    onChange={(e) => handleCustomizationChange('qr_custom_data', e.target.value)}
+                                    placeholder='{"event_id": "123", "organizer": "Mon Organisation", "valid_until": "2025-12-31"}'
+                                    helperText={t('organizer:tickets.design.qrCode.jsonRequired')}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SettingsIcon />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            )}
+
+                            {data.customizations?.qr_code_type === 'prefixed_number' && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Grid container spacing={2}>
+                                        <Grid size={{ xs: 6 }}>
+                                            <TextField
+                                                fullWidth
+                                                label="Préfixe"
+                                                value={data.customizations?.qr_prefix || ''}
+                                                onChange={(e) => handleCustomizationChange('qr_prefix', e.target.value)}
+                                                placeholder="EVENT-"
+                                                helperText="Texte affiché avant le numéro de billet"
+                                            />
+                                        </Grid>
+                                        <Grid size={{ xs: 6 }}>
+                                            <TextField
+                                                fullWidth
+                                                label="Suffixe"
+                                                value={data.customizations?.qr_suffix || ''}
+                                                onChange={(e) => handleCustomizationChange('qr_suffix', e.target.value)}
+                                                placeholder="-VIP"
+                                                helperText="Texte affiché après le numéro de billet"
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            )}
+
+                            {data.customizations?.qr_code_type === 'simple_url' && (
+                                <TextField
+                                    fullWidth
+                                    label="URL personnalisée"
+                                    value={data.customizations?.qr_custom_url || ''}
+                                    onChange={(e) => handleCustomizationChange('qr_custom_url', e.target.value)}
+                                    placeholder="https://monsite.com/evenement/123"
+                                    helperText="URL complète à encoder dans le QR code"
+                                    sx={{ mt: 2 }}
+                                />
+                            )}
+
+                            {data.customizations?.qr_code_type === 'json_data' && (
+                                <Alert severity="info" sx={{ mt: 2 }}>
+                                    <Typography variant="body2">
+                                        Le QR code contiendra automatiquement les informations de l'événement et du billet au format JSON.
+                                    </Typography>
+                                </Alert>
+                            )}
+
+                            <Alert severity="info" sx={{ mt: 2 }}>
+                                <Typography variant="body2">
+                                    <strong>{t('organizer:tickets.design.qrCode.recommendation')}:</strong> {t('L\'URL de vérification est l\'option la plus sécurisée car elle permet de valider en temps réel l\'authenticité du billet et son statut.')}
+                                </Typography>
+                            </Alert>
+                        </AccordionDetails>
+                    </Accordion>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                    <Divider />
+                </Grid>
+
+                {/* Pricing Tiers */}
+                <Grid size={{ xs: 12 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                            {t('organizer:tickets.pricing.title')}
+                        </Typography>
+                        <Button
+                            startIcon={<AddIcon />}
+                            onClick={addPricingTier}
+                            variant="outlined"
+                            size="small"
+                        >
+                            {t('organizer:tickets.pricing.addRate')}
+                        </Button>
+                    </Box>
+
+                    {(!data.pricing_tiers || data.pricing_tiers.length === 0) && (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                            {t('organizer:tickets.pricing.noRates')}
+                        </Alert>
+                    )}
+
+                    {data.pricing_tiers && data.pricing_tiers.map((tier, index) => (
+                        <Card key={tier.id} variant="outlined" sx={{ mb: 2 }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                                        {t('organizer:tickets.pricing.rate')} {index + 1}
+                                    </Typography>
+                                    <IconButton
+                                        onClick={() => removePricingTier(tier.id)}
+                                        color="error"
+                                        size="small"
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Box>
+
+                                <Grid container spacing={2}>
+                                    <Grid size={{ xs: 12, md: 6 }}>
+                                        <TextField
+                                            fullWidth
+                                            label={t('organizer:tickets.pricing.rateName')}
+                                            value={tier.name || ''}
+                                            onChange={(e) => updatePricingTier(tier.id, 'name', e.target.value)}
+                                            placeholder={t('organizer:tickets.pricing.rateNamePlaceholder')}
+                                        />
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, md: 3 }}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label={t('organizer:tickets.pricing.price')}
+                                            value={tier.price || ''}
+                                            onChange={(e) => updatePricingTier(tier.id, 'price', e.target.value)}
+                                        />
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12, md: 3 }}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label={t('organizer:tickets.pricing.quantity')}
+                                            value={tier.quantity || ''}
+                                            onChange={(e) => updatePricingTier(tier.id, 'quantity', e.target.value)}
+                                        />
+                                    </Grid>
+
+                                    <Grid size={{ xs: 12 }}>
+                                        <TextField
+                                            fullWidth
+                                            multiline
+                                            rows={2}
+                                            label={t('organizer:tickets.pricing.description')}
+                                            value={tier.description || ''}
+                                            onChange={(e) => updatePricingTier(tier.id, 'description', e.target.value)}
+                                            placeholder={t('organizer:tickets.pricing.description')}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                    <Divider />
+                </Grid>
+
+                {/* Booking Settings */}
+                <Grid size={{ xs: 12 }}>
+                    <Typography variant="h6" gutterBottom>
+                        {t('organizer:tickets.booking.settings')}
+                    </Typography>
+
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <DateTimePicker
+                                label={t('organizer:tickets.booking.deadline')}
+                                value={data.booking_settings?.booking_deadline}
+                                onChange={(newValue) => handleBookingSettingsChange('booking_deadline', newValue)}
+                                format="dd/MM/yyyy HH:mm"
+                                slotProps={{
+                                    textField: {
+                                        fullWidth: true,
+                                        helperText: t('organizer:tickets.booking.deadlineHelp'),
+                                    },
+                                }}
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField
+                                fullWidth
+                                type="number"
+                                label={t('organizer:tickets.booking.maxPerUser')}
+                                value={data.booking_settings?.max_bookings_per_user || 1}
+                                onChange={(e) => handleBookingSettingsChange('max_bookings_per_user', parseInt(e.target.value) || 1)}
+                                inputProps={{ min: 1, max: 10 }}
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12 }}>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={data.booking_settings?.allow_multiple_bookings ?? true}
+                                        onChange={(e) => handleBookingSettingsChange('allow_multiple_bookings', e.target.checked)}
+                                    />
+                                }
+                                label={t('organizer:tickets.booking.allowMultiple')}
+                            />
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Box>
+    );
+};
+
+export default TicketDesignStep;

@@ -23,11 +23,9 @@ import {
     RadioGroup,
     Radio,
     InputAdornment,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    DialogContentText,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import {
@@ -36,20 +34,13 @@ import {
     CloudUpload as CloudUploadIcon,
     Image as ImageIcon,
     QrCode as QrCodeIcon,
+    ExpandMore as ExpandMoreIcon,
     Settings as SettingsIcon,
 } from "@mui/icons-material";
-import SavePresetDialog from "../dialogs/SavePresetDialog";
-import organizerService from "../../services/organizerService";
 
 const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
     const { t } = useTranslation('organizer');
     const [backgroundImageFile, setBackgroundImageFile] = useState(null);
-    const [selectedPreset, setSelectedPreset] = useState('');
-    const [savePresetDialogOpen, setSavePresetDialogOpen] = useState(false);
-    const [presets, setPresets] = useState([]);
-    const [isLoadingPresets, setIsLoadingPresets] = useState(true);
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-    const [presetToDelete, setPresetToDelete] = useState(null);
 
     // Ticket size options (for future use - currently fixed to A5)
     const ticketSizes = [
@@ -61,18 +52,18 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
     const qrCodeOptions = [
         {
             value: 'booking_reference',
-            label: t('organizer:tickets.design.qr.options.bookingReference'),
-            description: t('organizer:tickets.design.qr.descriptions.bookingReference')
+            label: t('organizer:tickets.qr.options.bookingReference'),
+            description: t('organizer:tickets.qr.descriptions.bookingReference')
         },
         {
             value: 'verification_url',
-            label: t('organizer:tickets.design.qr.options.verificationUrl'),
-            description: t('organizer:tickets.design.qr.descriptions.verificationUrl')
+            label: t('organizer:tickets.qr.options.verificationUrl'),
+            description: t('organizer:tickets.qr.descriptions.verificationUrl')
         },
         {
             value: 'event_details',
-            label: t('organizer:tickets.design.qr.options.eventDetails'),
-            description: t('organizer:tickets.design.qr.descriptions.eventDetails')
+            label: t('organizer:tickets.qr.options.eventDetails'),
+            description: t('organizer:tickets.qr.descriptions.eventDetails')
         }
     ];
 
@@ -86,46 +77,22 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
         { name: t('organizer:tickets.design.colors.teal'), value: '#00796b' }
     ];
 
-        // Initialize customizations with A5 as default
+    // Initialize customizations with A5 as default
     React.useEffect(() => {
         if (!data.customizations?.ticket_size) {
-            onChange({
-                ...data,
-                customizations: {
-                    ...data.customizations,
-                    ticket_size: 'A5'  // Set A5 as default
-                }
-            });
+            handleCustomizationChange('ticket_size', 'A5');
+        }
+        // Ensure multiple bookings is enabled by default
+        if (data.booking_settings?.allow_multiple_bookings === undefined || data.booking_settings?.allow_multiple_bookings === null) {
+            handleBookingSettingsChange('allow_multiple_bookings', true);
         }
     }, []);
 
-    // Load presets on component mount
-    React.useEffect(() => {
-        loadPresets();
-    }, []);
-
-    const loadPresets = async () => {
-        try {
-            setIsLoadingPresets(true);
-            const presetData = await organizerService.getTicketTemplates();
-            setPresets(presetData);
-        } catch (error) {
-            console.error('Error loading presets:', error);
-            // Could add a toast notification here
-        } finally {
-            setIsLoadingPresets(false);
-        }
-    };
-
-    // Handle changes to form data - follow the same pattern as other steps
     const handleChange = (field, value) => {
-        console.log('handleChange:', field, 'value:', value);
-        const newData = {
+        onChange({
             ...data,
-            [field]: value,
-        };
-        console.log('Calling onChange with:', newData);
-        onChange(newData);
+            [field]: value
+        });
     };
 
     const handleCustomizationChange = (field, value) => {
@@ -133,7 +100,6 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
             ...data.customizations,
             [field]: value
         };
-        console.log('handleCustomizationChange:', field, value, 'resulting in:', updatedCustomizations);
         handleChange('customizations', updatedCustomizations);
     };
 
@@ -143,106 +109,6 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
             [field]: value
         };
         handleChange('booking_settings', updatedBookingSettings);
-    };
-
-    const handleApplyPreset = (presetId) => {
-        const preset = presets.find(p => p.id === presetId);
-        if (preset && preset.template_data) {
-            console.log('Applying preset:', preset.name, 'with full template_data:', preset.template_data);
-            
-            // Handle both new format (with customizations/booking_settings) and old format (direct customizations)
-            let updatedData = { ...data };
-            
-            if (preset.template_data.customizations) {
-                // New format: separate customizations and booking_settings
-                updatedData.customizations = {
-                    ...data.customizations,
-                    ...preset.template_data.customizations
-                };
-                
-                if (preset.template_data.booking_settings) {
-                    updatedData.booking_settings = {
-                        ...data.booking_settings,
-                        ...preset.template_data.booking_settings
-                    };
-                }
-            } else {
-                // Old format: template_data contains customizations directly
-                updatedData.customizations = {
-                    ...data.customizations,
-                    ...preset.template_data
-                };
-            }
-            
-            console.log('Updated data after applying preset:', updatedData);
-            onChange(updatedData);
-            
-            // Could add a success toast notification here
-        } else {
-            console.log('No preset found or no template_data for preset ID:', presetId);
-            console.log('Available presets:', presets);
-        }
-    };
-
-    const handleDeletePreset = (presetId, presetName) => {
-        setPresetToDelete({ id: presetId, name: presetName });
-        setDeleteConfirmOpen(true);
-    };
-
-    const handleDeleteConfirm = async () => {
-        if (!presetToDelete) return;
-
-        try {
-            await organizerService.deleteTicketTemplate(presetToDelete.id);
-            
-            // Remove the preset from the list
-            setPresets(prev => prev.filter(p => p.id !== presetToDelete.id));
-            
-            console.log('Preset deleted successfully:', presetToDelete.name);
-            // Could add a success toast notification here
-        } catch (error) {
-            console.error('Error deleting preset:', error);
-            // Could add an error toast notification here
-        } finally {
-            setDeleteConfirmOpen(false);
-            setPresetToDelete(null);
-        }
-    };
-
-    const handleDeleteCancel = () => {
-        setDeleteConfirmOpen(false);
-        setPresetToDelete(null);
-    };
-
-    const handleSavePreset = () => {
-        setSavePresetDialogOpen(true);
-    };
-
-    const handleSavePresetConfirm = async (presetData) => {
-        try {
-            const templateData = {
-                name: presetData.name,
-                description: presetData.description,
-                template_data: {
-                    customizations: data.customizations,
-                    booking_settings: data.booking_settings
-                }
-            };
-            
-            const newPreset = await organizerService.createTicketTemplate(templateData);
-            
-            // Add the new preset to the list
-            setPresets(prev => [newPreset, ...prev]);
-            
-            // Close the dialog
-            setSavePresetDialogOpen(false);
-            
-            console.log('Preset saved successfully:', newPreset.name);
-            // Could add a success toast notification here
-        } catch (error) {
-            console.error('Error saving preset:', error);
-            // Could add an error toast notification here
-        }
     };
 
     const handleBackgroundImageUpload = (event) => {
@@ -300,92 +166,6 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 {t('organizer:tickets.design.description')}
             </Typography>
-
-            {/* Preset Management Hero Section */}
-            <Paper sx={{ p: 3, mb: 3, bgcolor: 'primary.50', border: '1px solid', borderColor: 'primary.200' }}>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <SettingsIcon color="primary" />
-                    {t('organizer:tickets.design.presets.title', 'Design Presets')}
-                </Typography>
-                
-                {/* Apply Preset Section */}
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {t('organizer:tickets.design.presets.applyDescription', 'Select a preset to apply to this ticket.')}
-                </Typography>
-                
-                {isLoadingPresets ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            {t('organizer:tickets.design.presets.loading', 'Loading presets...')}
-                        </Typography>
-                    </Box>
-                ) : presets.length === 0 ? (
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                            {t('organizer:tickets.design.presets.noPresetsYet', 'No presets yet')}
-                        </Typography>
-                    </Box>
-                ) : (
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                            {t('organizer:tickets.design.presets.availablePresets', 'Available Presets:')}
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            {presets.map((preset) => (
-                                <Card key={preset.id} variant="outlined" sx={{ p: 2 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <Box sx={{ flex: 1 }}>
-                                            <Typography variant="subtitle2" gutterBottom>
-                                                {preset.name}
-                                            </Typography>
-                                            {preset.description && (
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {preset.description}
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                        <Box sx={{ display: 'flex', gap: 1 }}>
-                                            <Button
-                                                size="small"
-                                                variant="outlined"
-                                                onClick={() => handleApplyPreset(preset.id)}
-                                            >
-                                                {t('organizer:tickets.design.presets.apply', 'Apply')}
-                                            </Button>
-                                            <IconButton
-                                                size="small"
-                                                color="error"
-                                                onClick={() => handleDeletePreset(preset.id, preset.name)}
-                                                title={t('organizer:tickets.design.presets.delete', 'Delete preset')}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Box>
-                                    </Box>
-                                </Card>
-                            ))}
-                        </Box>
-                    </Box>
-                )}
-                
-                <Divider sx={{ my: 2 }} />
-                
-                {/* Save Preset Section */}
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {t('organizer:tickets.design.presets.saveDescription', 'Save your current design as a preset to quickly apply it to future events.')}
-                </Typography>
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                    <Button
-                        variant="contained"
-                        onClick={handleSavePreset}
-                        startIcon={<AddIcon />}
-                        sx={{ minWidth: 140 }}
-                    >
-                        {t('organizer:tickets.design.presets.save', 'Save as Preset')}
-                    </Button>
-                </Box>
-            </Paper>
 
             <Grid container spacing={3}>
                 {/* Images Section */}
@@ -474,25 +254,30 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
 
                 {/* QR Code Configuration */}
                 <Grid size={{ xs: 12 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <QrCodeIcon color="action" />
-                        <Typography variant="h6">
-                            {t('organizer:tickets.design.qr.title')}
-                        </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        {t('organizer:tickets.design.qr.description')}
-                    </Typography>
-
-                    <Grid container spacing={2}>
+                    <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <QrCodeIcon color="action" />
+                                <Typography variant="h6">
+                                    {t('organizer:tickets.qr.title')}
+                                </Typography>
+                            </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Grid container spacing={2}>
+                                <Grid size={{ xs: 12 }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        {t('organizer:tickets.qr.description')}
+                                    </Typography>
+                                </Grid>
 
                                 <Grid size={{ xs: 12 }}>
                                     <FormControl fullWidth>
-                                        <InputLabel>{t('organizer:tickets.design.qr.contentType')}</InputLabel>
+                                        <InputLabel>{t('organizer:tickets.qr.contentType')}</InputLabel>
                                         <Select
                                             value={data.customizations?.qr_code_type || 'booking_reference'}
                                             onChange={(e) => handleCustomizationChange('qr_code_type', e.target.value)}
-                                            label={t('organizer:tickets.design.qr.contentType')}
+                                            label={t('organizer:tickets.qr.contentType')}
                                         >
                                             {qrCodeOptions.map((option) => (
                                                 <MenuItem key={option.value} value={option.value}>
@@ -510,62 +295,20 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                     </FormControl>
                                 </Grid>
 
-                                {/* QR Type-specific Configuration */}
-                                {data.customizations?.qr_code_type === 'verification_url' && (
-                                    <Grid size={{ xs: 12 }}>
-                                        <TextField
-                                            fullWidth
-                                            label={t('organizer:tickets.design.qr.verificationUrl')}
-                                            value={data.customizations?.qr_verification_url || ''}
-                                            onChange={(e) => handleCustomizationChange('qr_verification_url', e.target.value)}
-                                            placeholder="https://mon-site.com/verify/{booking_reference}"
-                                            helperText={t('organizer:tickets.design.qr.verificationUrlHelp')}
-                                        />
-                                    </Grid>
-                                )}
-
-                                {(data.customizations?.qr_code_type || 'booking_reference') === 'booking_reference' && (
-                                    <Grid size={{ xs: 12 }}>
-                                        <TextField
-                                            fullWidth
-                                            label={t('organizer:tickets.design.qr.bookingReferenceFormat')}
-                                            value={data.customizations?.qr_booking_format || '{ticket_number}'}
-                                            onChange={(e) => handleCustomizationChange('qr_booking_format', e.target.value)}
-                                            placeholder="{ticket_number}"
-                                            helperText={t('organizer:tickets.design.qr.bookingReferenceFormatHelp')}
-                                        />
-                                    </Grid>
-                                )}
-
-                                {data.customizations?.qr_code_type === 'event_details' && (
-                                    <Grid size={{ xs: 12 }}>
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            rows={4}
-                                            label={t('organizer:tickets.design.qr.eventDetailsJson')}
-                                            value={data.customizations?.qr_event_details || ''}
-                                            onChange={(e) => handleCustomizationChange('qr_event_details', e.target.value)}
-                                            placeholder='{"event": "{event_title}", "date": "{event_date}", "venue": "{venue_name}", "ticket": "{ticket_number}"}'
-                                            helperText={t('organizer:tickets.design.qr.eventDetailsJsonHelp')}
-                                        />
-                                    </Grid>
-                                )}
-
                                 <Grid size={{ xs: 12 }}>
-                                    <Alert severity="info" sx={{ mt: 2 }}>
-                                        <Typography variant="body2">
-                                            <strong>{t('organizer:tickets.design.qr.placeholdersTitle')}</strong><br />
-                                            • <code>{'{ticket_number}'}</code> - {t('organizer:tickets.design.qr.placeholderTicketNumber')}<br />
-                                            • <code>{'{booking_reference}'}</code> - {t('organizer:tickets.design.qr.placeholderBooking')}<br />
-                                            • <code>{'{booking_id}'}</code> - {t('organizer:tickets.design.qr.placeholderBookingId')}<br />
-                                            • <code>{'{event_title}'}</code> - {t('organizer:tickets.design.qr.placeholderTitle')}<br />
-                                            • <code>{'{event_date}'}</code> - {t('organizer:tickets.design.qr.placeholderDate')}<br />
-                                            • <code>{'{venue_name}'}</code> - {t('organizer:tickets.design.qr.placeholderVenue')}
-                                        </Typography>
-                                    </Alert>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch
+                                                checked={data.customizations?.show_qr_code ?? true}
+                                                onChange={(e) => handleCustomizationChange('show_qr_code', e.target.checked)}
+                                            />
+                                        }
+                                        label={t('organizer:tickets.qr.showOnTicket')}
+                                    />
                                 </Grid>
-                    </Grid>
+                            </Grid>
+                        </AccordionDetails>
+                    </Accordion>
                 </Grid>
 
                 {/* Design Customizations */}
@@ -579,9 +322,40 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                     <Grid container spacing={2}>
                         {/* Primary Color */}
                         <Grid size={{ xs: 12, md: 6 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>{t('organizer:tickets.design.primaryColor')}</InputLabel>
+                                <Select
+                                    value={data.customizations?.primary_color || '#1976d2'}
+                                    onChange={(e) => handleCustomizationChange('primary_color', e.target.value)}
+                                    label={t('organizer:tickets.design.primaryColor')}
+                                >
+                                    {colorPresets.map((color) => (
+                                        <MenuItem key={color.value} value={color.value}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Box
+                                                    sx={{
+                                                        width: 20,
+                                                        height: 20,
+                                                        backgroundColor: color.value,
+                                                        borderRadius: 1,
+                                                        border: '1px solid rgba(0,0,0,0.12)'
+                                                    }}
+                                                />
+                                                <Typography variant="body2">
+                                                    {color.name}
+                                                </Typography>
+                                            </Box>
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        {/* Custom Primary Color */}
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
-                                label={t('organizer:tickets.design.primaryColor')}
+                                label={t('organizer:tickets.design.customColor')}
                                 type="color"
                                 value={data.customizations?.primary_color || '#1976d2'}
                                 onChange={(e) => handleCustomizationChange('primary_color', e.target.value)}
@@ -593,32 +367,6 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                                     width: 20,
                                                     height: 20,
                                                     backgroundColor: data.customizations?.primary_color || '#1976d2',
-                                                    borderRadius: 1,
-                                                    border: '1px solid rgba(0,0,0,0.12)'
-                                                }}
-                                            />
-                                        </InputAdornment>
-                                    )
-                                }}
-                            />
-                        </Grid>
-
-                        {/* Secondary Color */}
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label={t('organizer:tickets.design.secondaryColor')}
-                                type="color"
-                                value={data.customizations?.secondary_color || '#9c27b0'}
-                                onChange={(e) => handleCustomizationChange('secondary_color', e.target.value)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <Box
-                                                sx={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    backgroundColor: data.customizations?.secondary_color || '#9c27b0',
                                                     borderRadius: 1,
                                                     border: '1px solid rgba(0,0,0,0.12)'
                                                 }}
@@ -789,7 +537,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                             <FormControlLabel
                                 control={
                                     <Switch
-                                        checked={data.booking_settings?.allow_multiple_bookings !== false}
+                                        checked={data.booking_settings?.allow_multiple_bookings ?? true}
                                         onChange={(e) => handleBookingSettingsChange('allow_multiple_bookings', e.target.checked)}
                                     />
                                 }
@@ -798,42 +546,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                         </Grid>
                     </Grid>
                 </Grid>
-
-
             </Grid>
-            
-            {/* Delete Confirmation Dialog */}
-            <Dialog
-                open={deleteConfirmOpen}
-                onClose={handleDeleteCancel}
-                aria-labelledby="delete-preset-dialog-title"
-                aria-describedby="delete-preset-dialog-description"
-            >
-                <DialogTitle id="delete-preset-dialog-title">
-                    {t('organizer:tickets.design.presets.deleteTitle', 'Delete Preset')}
-                </DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="delete-preset-dialog-description">
-                        {t('organizer:tickets.design.presets.deleteMessage', 'Are you sure you want to delete the preset "{presetName}"? This action cannot be undone.', { presetName: presetToDelete?.name })}
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDeleteCancel} color="primary">
-                        {t('organizer:tickets.design.presets.cancel', 'Cancel')}
-                    </Button>
-                    <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-                        {t('organizer:tickets.design.presets.deleteConfirm', 'Delete')}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Save Preset Dialog */}
-            <SavePresetDialog
-                open={savePresetDialogOpen}
-                onClose={() => setSavePresetDialogOpen(false)}
-                onSave={handleSavePresetConfirm}
-                currentCustomizations={data.customizations || {}}
-            />
         </Box>
     );
 };

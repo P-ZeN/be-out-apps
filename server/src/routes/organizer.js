@@ -1318,7 +1318,15 @@ router.get("/ticket-templates", verifyOrganizerToken, async (req, res) => {
                 [req.user.id]
             );
 
-            res.json(result.rows);
+            // Parse template_data JSON strings
+            const templates = result.rows.map(row => ({
+                ...row,
+                template_data: typeof row.template_data === 'string' 
+                    ? JSON.parse(row.template_data) 
+                    : row.template_data
+            }));
+
+            res.json(templates);
         } finally {
             client.release();
         }
@@ -1340,7 +1348,13 @@ router.post("/ticket-templates", verifyOrganizerToken, async (req, res) => {
                 [name, description, JSON.stringify(template_data), req.user.id]
             );
 
-            res.json(result.rows[0]);
+            // Parse template_data before returning
+            const newTemplate = {
+                ...result.rows[0],
+                template_data: template_data  // Use the original object, not the stringified version
+            };
+
+            res.json(newTemplate);
         } finally {
             client.release();
         }
@@ -1367,7 +1381,13 @@ router.put("/ticket-templates/:id", verifyOrganizerToken, async (req, res) => {
                 return res.status(404).json({ message: 'Ticket template not found or not authorized' });
             }
 
-            res.json(result.rows[0]);
+            // Parse template_data before returning
+            const updatedTemplate = {
+                ...result.rows[0],
+                template_data: template_data  // Use the original object, not the stringified version
+            };
+
+            res.json(updatedTemplate);
         } finally {
             client.release();
         }
