@@ -1739,7 +1739,7 @@ jobs:
             if npx tauri ios init --ci; then
               if [ -d "src-tauri/gen/ios" ]; then
                 IOS_PROJECT_DIR="src-tauri/gen/ios"
-                echo "✅ Re-initialization successful: $IOS_PROJECT_DIR"
+                echo "✅ Re-initialization successfulll: $IOS_PROJECT_DIR"
               elif [ -d "src-tauri/gen/apple" ]; then
                 IOS_PROJECT_DIR="src-tauri/gen/apple"
                 echo "✅ Re-initialization successful: $IOS_PROJECT_DIR"
