@@ -147,12 +147,12 @@ jobs:
           # Create a simple status page
           mkdir -p web-installer
           echo '<!DOCTYPE html>' > web-installer/index.html
-          echo '<html><head><meta charset="UTF-8"><title>BeOut Mobile App - No Builds Available</title></head>' >> web-installer/index.html
+          echo '<html><head><meta charset="UTF-8"><title>Application Mobile Be Out - Aucune Version Disponible</title></head>' >> web-installer/index.html
           echo '<body style="font-family: system-ui; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center;">' >> web-installer/index.html
-          echo '<h1>📱 BeOut Mobile App</h1>' >> web-installer/index.html
+          echo '<h1>📱 Application Mobile Be Out</h1>' >> web-installer/index.html
           echo '<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px;">' >> web-installer/index.html
-          echo '<h2>⚠️ No Builds Available</h2>' >> web-installer/index.html
-          echo '<p>No mobile app builds were found. Please check the GitHub Actions page for build status.</p>' >> web-installer/index.html
+          echo '<h2>⚠️ Aucune Version Disponible</h2>' >> web-installer/index.html
+          echo '<p>Aucune version mobile n'\''a été trouvée. Veuillez vérifier la page GitHub Actions pour le statut des compilations.</p>' >> web-installer/index.html
           echo '</div></body></html>' >> web-installer/index.html
           echo "✅ Created placeholder page"
         else

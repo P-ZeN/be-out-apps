@@ -180,7 +180,7 @@ class EventService {
                 discountedPrice = legacyDiscountedPrice;
                 originalPrice = legacyOriginalPrice > legacyDiscountedPrice ? legacyOriginalPrice : null;
                 discountPercentage = legacyDiscountPercentage > 0 ? legacyDiscountPercentage : null;
-                
+
                 // If we have discount percentage but no original price, calculate it
                 if (legacyDiscountPercentage > 0 && (!originalPrice || originalPrice <= discountedPrice)) {
                     originalPrice = Math.round((discountedPrice / (1 - legacyDiscountPercentage / 100)) * 100) / 100;

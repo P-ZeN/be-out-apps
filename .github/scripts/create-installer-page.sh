@@ -19,7 +19,7 @@ cat > web-installer/index.html << EOF
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeOut Mobile App Installer</title>
+    <title>Installateur Be Out Mobile</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -115,13 +115,13 @@ cat > web-installer/index.html << EOF
             const detectionDiv = document.getElementById('device-detection');
 
             if (isIOS) {
-                detectionDiv.innerHTML = '📱 iOS device detected - iOS installation recommended';
+                detectionDiv.innerHTML = '📱 Appareil iOS détecté - Installation iOS recommandée';
                 detectionDiv.style.background = '#e3f2fd';
             } else if (isAndroid) {
-                detectionDiv.innerHTML = '📱 Android device detected - Android installation recommended';
+                detectionDiv.innerHTML = '📱 Appareil Android détecté - Installation Android recommandée';
                 detectionDiv.style.background = '#e8f5e8';
             } else {
-                detectionDiv.innerHTML = '💻 Desktop detected - Choose your mobile platform below';
+                detectionDiv.innerHTML = '💻 Ordinateur détecté - Choisissez votre plateforme mobile ci-dessous';
                 detectionDiv.style.background = '#f3e5f5';
             }
         }
@@ -131,29 +131,29 @@ cat > web-installer/index.html << EOF
 </head>
 <body>
     <div class="container">
-        <h1>📱 Be Out Mobile App</h1>
-        <p>Install the latest development build of BeOut on your mobile device</p>
+        <h1>📱 Application Mobile Be Out</h1>
+        <p>Installez la dernière version de développement de Be Out sur votre appareil mobile</p>
 
         <div class="build-info">
-            <h2>📋 Build #${BUILD_NUMBER}</h2>
-            <p><strong>Commit:</strong> <code>${COMMIT_SHA}</code></p>
-            <p><strong>Branch:</strong> ${BRANCH_NAME}</p>
-            <p><strong>Build Date:</strong> ${BUILD_DATE}</p>
+            <h2>📋 Version #${BUILD_NUMBER}</h2>
+            <p><strong>Commit :</strong> <code>${COMMIT_SHA}</code></p>
+            <p><strong>Branche :</strong> ${BRANCH_NAME}</p>
+            <p><strong>Date de génération :</strong> ${BUILD_DATE}</p>
 EOF
 
 if [ "$HAS_IOS" = "true" ]; then
-    echo "            <p><strong>iOS IPA:</strong> ${IPA_NAME}</p>" >> web-installer/index.html
+    echo "            <p><strong>Fichier iOS IPA :</strong> ${IPA_NAME}</p>" >> web-installer/index.html
 fi
 
 if [ "$HAS_ANDROID" = "true" ]; then
-    echo "            <p><strong>Android APK:</strong> ${APK_NAME}</p>" >> web-installer/index.html
+    echo "            <p><strong>Fichier Android APK :</strong> ${APK_NAME}</p>" >> web-installer/index.html
 fi
 
 cat >> web-installer/index.html << 'EOF'
         </div>
 
         <div id="device-detection" class="device-detection">
-            Detecting your device...
+            Détection de votre appareil...
         </div>
 EOF
 
@@ -166,36 +166,36 @@ if [ "$HAS_IOS" = "true" ]; then
             <h2>iOS (iPhone/iPad)</h2>
 
             <div class="warning">
-                <strong>⚠️ iOS Requirements:</strong>
+                <strong>⚠️ Prérequis iOS :</strong>
                 <ul style="text-align: left; margin: 10px 0;">
-                    <li>Your device UDID must be registered in the provisioning profile</li>
-                    <li>Only works in Safari browser (not Chrome or others)</li>
-                    <li>You'll need to trust the developer certificate after installation</li>
+                    <li>L'UDID de votre appareil doit être enregistré dans le profil de provisioning</li>
+                    <li>Fonctionne uniquement dans Safari (pas Chrome ou autres)</li>
+                    <li>Vous devrez faire confiance au certificat développeur après l'installation</li>
                 </ul>
             </div>
 
             <a href="itms-services://?action=download-manifest&url=${GITHUB_PAGES_URL}/manifest.plist" class="install-button ios-button">
-                📥 Install iOS App
+                📥 Installer l'App iOS
             </a>
 
-            <h3>iOS Installation Steps:</h3>
+            <h3>Étapes d'installation iOS :</h3>
             <div class="step">
-                <strong>1.</strong> Tap "Install iOS App" button above (only works on iOS Safari)
+                <strong>1.</strong> Appuyez sur "Installer l'App iOS" ci-dessus (fonctionne uniquement dans Safari iOS)
             </div>
             <div class="step">
-                <strong>2.</strong> When prompted, tap "Install" to download the app
+                <strong>2.</strong> Quand demandé, appuyez sur "Installer" pour télécharger l'app
             </div>
             <div class="step">
-                <strong>3.</strong> Go to Settings → General → VPN & Device Management
+                <strong>3.</strong> Allez dans Réglages → Général → Gestion VPN et appareils
             </div>
             <div class="step">
-                <strong>4.</strong> Find your developer certificate and tap "Trust"
+                <strong>4.</strong> Trouvez votre certificat développeur et appuyez sur "Faire confiance"
             </div>
             <div class="step">
-                <strong>5.</strong> Enable Developer Mode in Settings → Privacy & Security → Developer Mode
+                <strong>5.</strong> Activez le Mode Développeur dans Réglages → Confidentialité et sécurité → Mode développeur
             </div>
             <div class="step">
-                <strong>6.</strong> The app should now work on your home screen
+                <strong>6.</strong> L'app devrait maintenant fonctionner sur votre écran d'accueil
             </div>
         </div>
 EOF
@@ -210,33 +210,33 @@ if [ "$HAS_ANDROID" = "true" ]; then
             <h2>Android</h2>
 
             <div class="warning">
-                <strong>⚠️ Android Requirements:</strong>
+                <strong>⚠️ Prérequis Android :</strong>
                 <ul style="text-align: left; margin: 10px 0;">
-                    <li>Enable "Install unknown apps" for your browser</li>
-                    <li>This is a debug/unsigned APK for testing</li>
-                    <li>You may see security warnings - this is normal for development builds</li>
+                    <li>Activez "Installer des apps inconnues" pour votre navigateur</li>
+                    <li>Ceci est un APK de débogage/non signé pour les tests</li>
+                    <li>Vous pourriez voir des avertissements de sécurité - c'est normal pour les versions de développement</li>
                 </ul>
             </div>
 
             <a href="${GITHUB_PAGES_URL}/${APK_NAME}" class="install-button android-button" download>
-                📥 Download Android APK
+                📥 Télécharger l'APK Android
             </a>
 
-            <h3>Android Installation Steps:</h3>
+            <h3>Étapes d'installation Android :</h3>
             <div class="step android-step">
-                <strong>1.</strong> Tap "Download Android APK" button above
+                <strong>1.</strong> Appuyez sur "Télécharger l'APK Android" ci-dessus
             </div>
             <div class="step android-step">
-                <strong>2.</strong> When download completes, tap the APK file in your notifications
+                <strong>2.</strong> Quand le téléchargement est terminé, appuyez sur le fichier APK dans vos notifications
             </div>
             <div class="step android-step">
-                <strong>3.</strong> If prompted, enable "Install unknown apps" for your browser
+                <strong>3.</strong> Si demandé, activez "Installer des apps inconnues" pour votre navigateur
             </div>
             <div class="step android-step">
-                <strong>4.</strong> Tap "Install" when Android asks for confirmation
+                <strong>4.</strong> Appuyez sur "Installer" quand Android demande confirmation
             </div>
             <div class="step android-step">
-                <strong>5.</strong> The app will appear in your app drawer once installed
+                <strong>5.</strong> L'app apparaîtra dans votre tiroir d'applications une fois installée
             </div>
         </div>
 EOF
@@ -247,14 +247,14 @@ cat >> web-installer/index.html << 'EOF'
         </div>
 
         <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-            <h3>🆘 Need Help?</h3>
-            <p>If you encounter issues:</p>
+            <h3>🆘 Besoin d'aide ?</h3>
+            <p>Si vous rencontrez des problèmes :</p>
             <ul style="text-align: left;">
-                <li><strong>iOS:</strong> Make sure your device UDID is registered with the developer</li>
-                <li><strong>Android:</strong> Enable "Unknown sources" in Android security settings</li>
-                <li><strong>Both:</strong> These are development builds - some features may not work perfectly</li>
+                <li><strong>iOS :</strong> Assurez-vous que l'UDID de votre appareil est enregistré chez le développeur</li>
+                <li><strong>Android :</strong> Activez "Sources inconnues" dans les paramètres de sécurité Android</li>
+                <li><strong>Les deux :</strong> Ce sont des versions de développement - certaines fonctionnalités peuvent ne pas fonctionner parfaitement</li>
             </ul>
-            <p>Contact the development team if you continue having problems.</p>
+            <p>Contactez l'équipe de développement si vous continuez à avoir des problèmes.</p>
         </div>
     </div>
 </body>

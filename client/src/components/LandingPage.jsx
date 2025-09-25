@@ -73,7 +73,6 @@ const LandingPage = () => {
                             sx={{
                                 height: 120, // Bigger logo (was 80)
                                 width: "auto",
-                                filter: "brightness(0) invert(1)", // Make logo white for orange background
                                 flexShrink: 0,
                             }}
                         />
