@@ -37,6 +37,7 @@ import EventService from "../services/eventService";
 import BookingModal from "../components/BookingModal";
 import MapComponent from "../components/MapComponent";
 import FavoriteButton from "../components/FavoriteButton";
+import { getEventPricingInfo, formatPriceDisplay, getBookingPricingOptions } from "../utils/pricingUtils";
 
 const EventDetail = () => {
     const navigate = useNavigate();
@@ -346,23 +347,62 @@ const EventDetail = () => {
                         {/* Price */}
                         <Box sx={{ mb: 3 }}>
                             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mb: 1 }}>
-                                <Typography variant="h4" color="primary" sx={{ fontWeight: "bold" }}>
-                                    {event.discounted_price}€
-                                </Typography>
-                                <Typography
-                                    variant="h6"
-                                    sx={{ textDecoration: "line-through", color: "text.secondary" }}>
-                                    {event.original_price}€
-                                </Typography>
-                                <Chip
-                                    label={`-${event.discount_percentage}%`}
-                                    color="success"
-                                    sx={{ fontWeight: "bold" }}
-                                />
+                                {(() => {
+                                    const pricingInfo = getEventPricingInfo(event);
+                                    const priceDisplay = formatPriceDisplay(pricingInfo);
+
+                                    if (pricingInfo.price === 0) {
+                                        return (
+                                            <Typography variant="h4" color="success.main" sx={{ fontWeight: "bold" }}>
+                                                {t("common:free", "Gratuit")}
+                                            </Typography>
+                                        );
+                                    }
+
+                                    return (
+                                        <>
+                                            <Typography variant="h4" color="primary" sx={{ fontWeight: "bold" }}>
+                                                {pricingInfo.hasMultiplePrices
+                                                    ? `À partir de ${pricingInfo.price}€`
+                                                    : `${pricingInfo.price}€`
+                                                }
+                                            </Typography>
+                                            {priceDisplay.showStrikethrough && (
+                                                <Typography
+                                                    variant="h6"
+                                                    sx={{ textDecoration: "line-through", color: "text.secondary" }}>
+                                                    {priceDisplay.originalPrice}
+                                                </Typography>
+                                            )}
+                                            {priceDisplay.showDiscountBadge && (
+                                                <Chip
+                                                    label={`-${priceDisplay.discountPercentage}%`}
+                                                    color="success"
+                                                    sx={{ fontWeight: "bold" }}
+                                                />
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </Box>
-                            <Typography variant="body2" color="text.secondary">
-                                par personne
-                            </Typography>
+                            {(() => {
+                                const pricingInfo = getEventPricingInfo(event);
+                                if (pricingInfo.price === 0) return null;
+
+                                if (pricingInfo.hasMultiplePrices) {
+                                    return (
+                                        <Typography variant="body2" color="text.secondary">
+                                            {pricingInfo.priceRange} - Plusieurs options disponibles
+                                        </Typography>
+                                    );
+                                }
+
+                                return (
+                                    <Typography variant="body2" color="text.secondary">
+                                        par personne
+                                    </Typography>
+                                );
+                            })()}
                         </Box>
 
                         {/* Availability */}
@@ -439,23 +479,50 @@ const EventDetail = () => {
                         <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1 }}>
                             <Box>
                                 <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                                    <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                                        {event.discounted_price}€
-                                    </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        sx={{ textDecoration: "line-through", color: "text.secondary" }}>
-                                        {event.original_price}€
-                                    </Typography>
-                                    <Chip
-                                        label={`-${event.discount_percentage}%`}
-                                        color="success"
-                                        size="small"
-                                        sx={{ fontWeight: "bold" }}
-                                    />
+                                    {(() => {
+                                        const pricingInfo = getEventPricingInfo(event);
+                                        const priceDisplay = formatPriceDisplay(pricingInfo);
+
+                                        if (pricingInfo.price === 0) {
+                                            return (
+                                                <Typography variant="h6" color="success.main" sx={{ fontWeight: "bold" }}>
+                                                    {t("common:free", "Gratuit")}
+                                                </Typography>
+                                            );
+                                        }
+
+                                        return (
+                                            <>
+                                                <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                                                    {pricingInfo.hasMultiplePrices
+                                                        ? `À partir de ${pricingInfo.price}€`
+                                                        : `${pricingInfo.price}€`
+                                                    }
+                                                </Typography>
+                                                {priceDisplay.showStrikethrough && (
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{ textDecoration: "line-through", color: "text.secondary" }}>
+                                                        {priceDisplay.originalPrice}
+                                                    </Typography>
+                                                )}
+                                                {priceDisplay.showDiscountBadge && (
+                                                    <Chip
+                                                        label={`-${priceDisplay.discountPercentage}%`}
+                                                        color="success"
+                                                        size="small"
+                                                        sx={{ fontWeight: "bold" }}
+                                                    />
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </Box>
                                 <Typography variant="body2" color="text.secondary">
-                                    {event.available_tickets} places disponibles
+                                    {event.available_tickets > 0
+                                        ? `${event.available_tickets} places disponibles`
+                                        : "Complet"
+                                    }
                                 </Typography>
                             </Box>
                         </Box>

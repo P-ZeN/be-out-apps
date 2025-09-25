@@ -23,6 +23,7 @@ import MapComponent from "../components/MapComponent";
 import AddressSearch from "../components/AddressSearch";
 import { GeocodingService } from "../services/geocodingService";
 import EventService from "../services/eventService";
+import { getEventPricingInfo, formatPriceDisplay } from "../utils/pricingUtils";
 
 const MapView = ({ searchQuery: externalSearchQuery, filters: externalFilters }) => {
     const { t, i18n } = useTranslation(["map", "common"]);
@@ -86,6 +87,12 @@ const MapView = ({ searchQuery: externalSearchQuery, filters: externalFilters })
                         id: event.id,
                         title: event.title,
                         category: event.categories?.[0]?.toLowerCase() || "default",
+                        // Keep all pricing fields for the utility
+                        discounted_price: event.discounted_price,
+                        original_price: event.original_price,
+                        discount_percentage: event.discount_percentage,
+                        pricing: event.pricing, // New pricing structure
+                        // Legacy aliases for backwards compatibility
                         discountedPrice: event.discounted_price,
                         originalPrice: event.original_price,
                         discount: event.discount_percentage,
@@ -328,26 +335,46 @@ const MapView = ({ searchQuery: externalSearchQuery, filters: externalFilters })
                                                 alignItems: "center",
                                             }}>
                                             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                                                <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                                                    {event.discountedPrice}€
-                                                </Typography>
-                                                {event.originalPrice !== event.discountedPrice && (
-                                                    <>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                textDecoration: "line-through",
-                                                                color: "text.secondary",
-                                                            }}>
-                                                            {event.originalPrice}€
-                                                        </Typography>
-                                                        <Chip
-                                                            label={`-${event.discount}%`}
-                                                            size="small"
-                                                            color="success"
-                                                        />
-                                                    </>
-                                                )}
+                                                {(() => {
+                                                    const pricingInfo = getEventPricingInfo(event);
+                                                    const priceDisplay = formatPriceDisplay(pricingInfo);
+
+                                                    if (pricingInfo.price === 0) {
+                                                        return (
+                                                            <Typography variant="h6" color="success.main" sx={{ fontWeight: "bold" }}>
+                                                                Gratuit
+                                                            </Typography>
+                                                        );
+                                                    }
+
+                                                    return (
+                                                        <>
+                                                            <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                                                                {pricingInfo.hasMultiplePrices
+                                                                    ? `À partir de ${pricingInfo.price}€`
+                                                                    : `${pricingInfo.price}€`
+                                                                }
+                                                            </Typography>
+                                                            {priceDisplay.showStrikethrough && (
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{
+                                                                        textDecoration: "line-through",
+                                                                        color: "text.secondary",
+                                                                    }}>
+                                                                    {priceDisplay.originalPrice}
+                                                                </Typography>
+                                                            )}
+                                                            {priceDisplay.showDiscountBadge && (
+                                                                <Chip
+                                                                    label={`-${priceDisplay.discountPercentage}%`}
+                                                                    size="small"
+                                                                    color="success"
+                                                                />
+                                                            )}
+                                                        </>
+                                                    );
+                                                })()}
                                             </Box>
                                             <Button
                                                 size="small"

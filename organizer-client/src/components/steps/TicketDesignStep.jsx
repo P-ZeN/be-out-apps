@@ -149,17 +149,17 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
         const preset = presets.find(p => p.id === presetId);
         if (preset && preset.template_data) {
             console.log('Applying preset:', preset.name, 'with full template_data:', preset.template_data);
-            
+
             // Handle both new format (with customizations/booking_settings) and old format (direct customizations)
             let updatedData = { ...data };
-            
+
             if (preset.template_data.customizations) {
                 // New format: separate customizations and booking_settings
                 updatedData.customizations = {
                     ...data.customizations,
                     ...preset.template_data.customizations
                 };
-                
+
                 if (preset.template_data.booking_settings) {
                     updatedData.booking_settings = {
                         ...data.booking_settings,
@@ -173,10 +173,10 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                     ...preset.template_data
                 };
             }
-            
+
             console.log('Updated data after applying preset:', updatedData);
             onChange(updatedData);
-            
+
             // Could add a success toast notification here
         } else {
             console.log('No preset found or no template_data for preset ID:', presetId);
@@ -194,10 +194,10 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
 
         try {
             await organizerService.deleteTicketTemplate(presetToDelete.id);
-            
+
             // Remove the preset from the list
             setPresets(prev => prev.filter(p => p.id !== presetToDelete.id));
-            
+
             console.log('Preset deleted successfully:', presetToDelete.name);
             // Could add a success toast notification here
         } catch (error) {
@@ -228,15 +228,15 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                     booking_settings: data.booking_settings
                 }
             };
-            
+
             const newPreset = await organizerService.createTicketTemplate(templateData);
-            
+
             // Add the new preset to the list
             setPresets(prev => [newPreset, ...prev]);
-            
+
             // Close the dialog
             setSavePresetDialogOpen(false);
-            
+
             console.log('Preset saved successfully:', newPreset.name);
             // Could add a success toast notification here
         } catch (error) {
@@ -307,12 +307,12 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                     <SettingsIcon color="primary" />
                     {t('organizer:tickets.design.presets.title', 'Design Presets')}
                 </Typography>
-                
+
                 {/* Apply Preset Section */}
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     {t('organizer:tickets.design.presets.applyDescription', 'Select a preset to apply to this ticket.')}
                 </Typography>
-                
+
                 {isLoadingPresets ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                         <Typography variant="body2" color="text.secondary">
@@ -367,14 +367,14 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                         </Box>
                     </Box>
                 )}
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 {/* Save Preset Section */}
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     {t('organizer:tickets.design.presets.saveDescription', 'Save your current design as a preset to quickly apply it to future events.')}
                 </Typography>
-                
+
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                     <Button
                         variant="contained"
@@ -801,7 +801,7 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
 
 
             </Grid>
-            
+
             {/* Delete Confirmation Dialog */}
             <Dialog
                 open={deleteConfirmOpen}

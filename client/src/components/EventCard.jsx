@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@mui/material/styles";
 import FavoriteButton from "./FavoriteButton";
+import { getEventPricingInfo, formatPriceDisplay } from "../utils/pricingUtils";
 
 const EventCard = ({ event }) => {
     const navigate = useNavigate();
@@ -89,23 +90,57 @@ const EventCard = ({ event }) => {
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Box>
                         <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                            <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                                {event.discounted_price}€
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{ textDecoration: "line-through", color: "text.secondary" }}>
-                                {event.original_price}€
-                            </Typography>
-                            <Chip
-                                label={`-${event.discount_percentage}%`}
-                                size="small"
-                                color="success"
-                                sx={{ fontWeight: "bold" }}
-                            />
+                            {(() => {
+                                const pricingInfo = getEventPricingInfo(event);
+                                const priceDisplay = formatPriceDisplay(pricingInfo, {
+                                    showRange: pricingInfo.hasMultiplePrices
+                                });
+
+                                if (pricingInfo.price === 0) {
+                                    return (
+                                        <Typography variant="h6" color="success.main" sx={{ fontWeight: "bold" }}>
+                                            {t("common:free", "Gratuit")}
+                                        </Typography>
+                                    );
+                                }
+
+                                return (
+                                    <>
+                                        <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                                            {priceDisplay.displayPrice}
+                                        </Typography>
+                                        {priceDisplay.showStrikethrough && (
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ textDecoration: "line-through", color: "text.secondary" }}>
+                                                {priceDisplay.originalPrice}
+                                            </Typography>
+                                        )}
+                                        {priceDisplay.showDiscountBadge && (
+                                            <Chip
+                                                label={`-${priceDisplay.discountPercentage}%`}
+                                                size="small"
+                                                color="success"
+                                                sx={{ fontWeight: "bold" }}
+                                            />
+                                        )}
+                                        {pricingInfo.hasMultiplePrices && (
+                                            <Chip
+                                                label="Plusieurs tarifs"
+                                                size="small"
+                                                color="info"
+                                                variant="outlined"
+                                            />
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </Box>
                         <Typography variant="caption" color="text.secondary">
-                            {event.available_tickets} {t("home:ticketsAvailable")}
+                            {event.available_tickets > 0
+                                ? `${event.available_tickets} ${t("home:ticketsAvailable", "billets disponibles")}`
+                                : t("home:soldOut", "Complet")
+                            }
                         </Typography>
                     </Box>
                     <Button variant="contained" size="small" endIcon={<ArrowForward />}>

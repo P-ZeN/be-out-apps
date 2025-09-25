@@ -30,6 +30,30 @@ const EventMobilePreview = ({ formData, venues, categories, imagePreview }) => {
         return categories.find((c) => c.id === formData.category_id);
     };
 
+    // Helper function to extract pricing information from new or old pricing structure
+    const getPricingInfo = () => {
+        // Check if we have new pricing structure first
+        if (formData.pricing?.categories?.length > 0) {
+            // Get the first available tier from the first category
+            const firstCategory = formData.pricing.categories[0];
+            if (firstCategory.tiers?.length > 0) {
+                const firstTier = firstCategory.tiers[0];
+                return {
+                    price: firstTier.price,
+                    originalPrice: firstTier.originalPrice,
+                    discountPercentage: firstTier.discountPercentage
+                };
+            }
+        }
+
+        // Fallback to old pricing structure
+        return {
+            price: formData.discounted_price || formData.original_price || formData.price,
+            originalPrice: formData.original_price,
+            discountPercentage: formData.discount_percentage
+        };
+    };
+
     const formatEventDate = (date) => {
         if (!date) return "";
         const eventDate = new Date(date);
@@ -155,51 +179,54 @@ const EventMobilePreview = ({ formData, venues, categories, imagePreview }) => {
                         )}
 
                         {/* Price badge with discount support */}
-                        {(formData.discounted_price || formData.original_price || formData.price) && (
-                            <Box
-                                sx={{
-                                    position: "absolute",
-                                    bottom: 10,
-                                    right: 10,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "flex-end",
-                                    gap: 0.5,
-                                }}>
-                                {formData.original_price && formData.discounted_price &&
-                                 formData.original_price !== formData.discounted_price && (
-                                    <Chip
-                                        label={`-${formData.discount_percentage || 0}%`}
-                                        size="small"
-                                        color="success"
-                                        sx={{ fontSize: "10px", height: "20px" }}
-                                    />
-                                )}
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    {formData.original_price && formData.discounted_price &&
-                                     formData.original_price !== formData.discounted_price && (
-                                        <Typography
-                                            variant="caption"
-                                            sx={{
-                                                textDecoration: "line-through",
-                                                color: "text.secondary",
-                                                fontSize: "10px",
-                                            }}>
-                                            {formData.original_price}€
-                                        </Typography>
+                        {(() => {
+                            const pricingInfo = getPricingInfo();
+                            return pricingInfo.price && (
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        bottom: 10,
+                                        right: 10,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "flex-end",
+                                        gap: 0.5,
+                                    }}>
+                                    {pricingInfo.originalPrice && pricingInfo.price &&
+                                     pricingInfo.originalPrice !== pricingInfo.price && pricingInfo.discountPercentage && (
+                                        <Chip
+                                            label={`-${pricingInfo.discountPercentage}%`}
+                                            size="small"
+                                            color="success"
+                                            sx={{ fontSize: "10px", height: "20px" }}
+                                        />
                                     )}
-                                    <Chip
-                                        icon={<Euro />}
-                                        label={`${formData.discounted_price || formData.original_price || formData.price}€`}
-                                        color="primary"
-                                        sx={{
-                                            fontWeight: "bold",
-                                            fontSize: "12px",
-                                        }}
-                                    />
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                        {pricingInfo.originalPrice && pricingInfo.price &&
+                                         pricingInfo.originalPrice !== pricingInfo.price && (
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    textDecoration: "line-through",
+                                                    color: "text.secondary",
+                                                    fontSize: "10px",
+                                                }}>
+                                                {pricingInfo.originalPrice}€
+                                            </Typography>
+                                        )}
+                                        <Chip
+                                            icon={<Euro />}
+                                            label={`${pricingInfo.price}€`}
+                                            color="primary"
+                                            sx={{
+                                                fontWeight: "bold",
+                                                fontSize: "12px",
+                                            }}
+                                        />
+                                    </Box>
                                 </Box>
-                            </Box>
-                        )}
+                            );
+                        })()}
                     </Box>
 
                     {/* Event Content */}
@@ -337,10 +364,12 @@ const EventMobilePreview = ({ formData, venues, categories, imagePreview }) => {
                                 fontWeight: "bold",
                                 fontSize: "16px",
                             }}>
-                            {(formData.discounted_price || formData.original_price || formData.price) &&
-                             Number(formData.discounted_price || formData.original_price || formData.price) > 0
-                                ? `Réserver - ${formData.discounted_price || formData.original_price || formData.price}€`
-                                : "Participer gratuitement"}
+                            {(() => {
+                                const pricingInfo = getPricingInfo();
+                                return pricingInfo.price && Number(pricingInfo.price) > 0
+                                    ? `Réserver - ${pricingInfo.price}€`
+                                    : "Participer gratuitement";
+                            })()}
                         </Button>
                     </Box>
                 </Box>

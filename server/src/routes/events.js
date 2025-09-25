@@ -191,6 +191,7 @@ router.get("/", async (req, res) => {
                 e.original_price,
                 e.discounted_price,
                 e.discount_percentage,
+                e.pricing,
                 e.available_tickets,
                 e.total_tickets,
                 e.event_date,

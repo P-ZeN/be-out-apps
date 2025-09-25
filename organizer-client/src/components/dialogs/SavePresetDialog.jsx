@@ -21,14 +21,14 @@ const SavePresetDialog = ({ open, onClose, onSave, currentCustomizations }) => {
 
     const handleSave = () => {
         if (!presetName.trim()) return;
-        
+
         onSave({
             name: presetName.trim(),
             description: description.trim(),
             customizations: currentCustomizations,
             is_default: setAsDefault
         });
-        
+
         // Reset form
         setPresetName('');
         setDescription('');
@@ -48,7 +48,7 @@ const SavePresetDialog = ({ open, onClose, onSave, currentCustomizations }) => {
             <DialogTitle>
                 {t('organizer:tickets.design.presets.saveTitle', 'Save Design as Preset')}
             </DialogTitle>
-            
+
             <DialogContent>
                 <Box sx={{ pt: 1 }}>
                     <TextField
@@ -60,7 +60,7 @@ const SavePresetDialog = ({ open, onClose, onSave, currentCustomizations }) => {
                         sx={{ mb: 2 }}
                         autoFocus
                     />
-                    
+
                     <TextField
                         fullWidth
                         label={t('organizer:tickets.design.presets.presetDescription', 'Description (optional)')}
@@ -71,7 +71,7 @@ const SavePresetDialog = ({ open, onClose, onSave, currentCustomizations }) => {
                         rows={2}
                         sx={{ mb: 2 }}
                     />
-                    
+
                     <FormControlLabel
                         control={
                             <Switch
@@ -81,19 +81,19 @@ const SavePresetDialog = ({ open, onClose, onSave, currentCustomizations }) => {
                         }
                         label={t('organizer:tickets.design.presets.setAsDefault', 'Use as default for new events')}
                     />
-                    
+
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                         {t('organizer:tickets.design.presets.saveNote', 'This will save your current colors, QR code setup, custom message, and background image.')}
                     </Typography>
                 </Box>
             </DialogContent>
-            
+
             <DialogActions>
                 <Button onClick={handleClose}>
                     {t('common:cancel', 'Cancel')}
                 </Button>
-                <Button 
-                    onClick={handleSave} 
+                <Button
+                    onClick={handleSave}
                     variant="contained"
                     disabled={!presetName.trim()}
                 >

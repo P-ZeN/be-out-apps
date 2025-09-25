@@ -7,6 +7,21 @@ import emailNotificationService from "../services/emailNotificationService.js";
 const router = Router();
 
 /**
+ * Health check endpoint to verify Stripe configuration
+ */
+router.get("/health", (req, res) => {
+    const stripeConfigured = !!process.env.STRIPE_SECRET_KEY;
+    const webhookConfigured = !!process.env.STRIPE_WEBHOOK_SECRET;
+
+    res.json({
+        status: "ok",
+        stripe_configured: stripeConfigured,
+        webhook_configured: webhookConfigured,
+        environment: process.env.NODE_ENV || "development"
+    });
+});
+
+/**
  * Create payment intent for booking
  */
 router.post("/create-payment-intent", async (req, res) => {

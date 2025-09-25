@@ -29,6 +29,8 @@ import { useTheme } from "@mui/material/styles";
 import FilterDrawer from "../components/FilterDrawer";
 import FavoriteButton from "../components/FavoriteButton";
 import EventService from "../services/eventService";
+import { getEventPricingInfo, formatPriceDisplay } from "../utils/pricingUtils";
+import { getEventPricingInfo, formatPriceDisplay } from "../utils/pricingUtils";
 import { useCategories } from "../services/enhancedCategoryService";
 
 const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) => {
@@ -204,20 +206,44 @@ const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) =>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Box>
                         <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                            <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                                {event.discounted_price}€
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{ textDecoration: "line-through", color: "text.secondary" }}>
-                                {event.original_price}€
-                            </Typography>
-                            <Chip
-                                label={`-${event.discount_percentage}%`}
-                                size="small"
-                                color="success"
-                                sx={{ fontWeight: "bold" }}
-                            />
+                            {(() => {
+                                const pricingInfo = getEventPricingInfo(event);
+                                const priceDisplay = formatPriceDisplay(pricingInfo);
+
+                                if (pricingInfo.price === 0) {
+                                    return (
+                                        <Typography variant="h6" color="success.main" sx={{ fontWeight: "bold" }}>
+                                            Gratuit
+                                        </Typography>
+                                    );
+                                }
+
+                                return (
+                                    <>
+                                        <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                                            {pricingInfo.hasMultiplePrices
+                                                ? `À partir de ${pricingInfo.price}€`
+                                                : `${pricingInfo.price}€`
+                                            }
+                                        </Typography>
+                                        {priceDisplay.showStrikethrough && (
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ textDecoration: "line-through", color: "text.secondary" }}>
+                                                {priceDisplay.originalPrice}
+                                            </Typography>
+                                        )}
+                                        {priceDisplay.showDiscountBadge && (
+                                            <Chip
+                                                label={`-${priceDisplay.discountPercentage}%`}
+                                                size="small"
+                                                color="success"
+                                                sx={{ fontWeight: "bold" }}
+                                            />
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </Box>
                         <Typography variant="caption" color="text.secondary">
                             {event.available_tickets} {t("home:ticketsAvailable")}

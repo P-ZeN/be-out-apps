@@ -14,6 +14,7 @@ import {
 import {
     Event,
     LocationOn,
+    LocalOffer,
     ConfirmationNumber,
     Publish,
     Save,
@@ -43,9 +44,14 @@ const EventFormStepper = ({
             description: "Localisation de l'événement"
         },
         {
-            label: "Billetterie et design",
+            label: "Tarifs et catégories",
+            icon: <LocalOffer />,
+            description: "Prix et catégories de billets"
+        },
+        {
+            label: "Design des billets",
             icon: <ConfirmationNumber />,
-            description: "Tarifs et tickets personnalisés"
+            description: "Personnalisation visuelle des billets"
         },
         {
             label: "Publication",

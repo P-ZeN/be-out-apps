@@ -17,9 +17,11 @@
 **Port Management**: Check `netstat -tlnp | grep -E ":(3000|5173|5174|5175)"` before starting to avoid conflicts
 
 **Always Running Applications**: Assume `npm run dev` is already running all 4 apps during development:
-- Don't suggest starting/stopping individual apps unless specifically needed
+- **NEVER** attempt to start/stop/restart development servers - this creates port conflicts and concurrent process mess
+- **NEVER** run `npm run dev`, `pkill`, or process management commands
+- **ASK OPERATOR** to restart servers if needed - it's faster than debugging port conflicts
 - Check existing terminal logs for debugging information instead of restarting
-- Use `get_terminal_output` or check running processes for status
+- Use `get_terminal_output` or check running processes for status only
 
 ```bash
 # Correct development startup

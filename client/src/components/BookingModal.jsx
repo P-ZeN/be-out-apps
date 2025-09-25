@@ -26,6 +26,7 @@ import { Close, Person, Email, Phone, CreditCard, EventSeat, Schedule, LocationO
 import { useTheme } from "@mui/material/styles";
 import { useAuth } from "../context/AuthContext";
 import BookingService from "../services/bookingService";
+import { getEventPricingInfo, getBookingPricingOptions } from "../utils/pricingUtils";
 
 const BookingModal = ({ open, onClose, event }) => {
     const theme = useTheme();
@@ -170,9 +171,13 @@ const BookingModal = ({ open, onClose, event }) => {
         onClose();
     };
 
-    const totalPrice = event ? (event.discounted_price * formData.quantity).toFixed(2) : 0;
-    const originalTotal = event ? (event.original_price * formData.quantity).toFixed(2) : 0;
-    const savings = event ? (originalTotal - totalPrice).toFixed(2) : 0;
+    // Calculate pricing using the new utility function
+    const pricingInfo = event ? getEventPricingInfo(event) : null;
+    const unitPrice = pricingInfo ? pricingInfo.price : 0;
+    const originalUnitPrice = pricingInfo ? pricingInfo.originalPrice : null;
+    const totalPrice = event ? (unitPrice * formData.quantity).toFixed(2) : 0;
+    const originalTotal = event && originalUnitPrice ? (originalUnitPrice * formData.quantity).toFixed(2) : 0;
+    const savings = event && originalUnitPrice ? (originalTotal - totalPrice).toFixed(2) : 0;
 
     const renderStepContent = (step) => {
         switch (step) {
@@ -206,7 +211,7 @@ const BookingModal = ({ open, onClose, event }) => {
                             </Typography>
                             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                                 <Typography>Prix unitaire :</Typography>
-                                <Typography>{event?.discounted_price}€</Typography>
+                                <Typography>{unitPrice}€</Typography>
                             </Box>
                             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                                 <Typography>Quantité :</Typography>
@@ -323,7 +328,7 @@ const BookingModal = ({ open, onClose, event }) => {
                             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                                 <Typography>Billets :</Typography>
                                 <Typography>
-                                    {formData.quantity} × {event?.discounted_price}€
+                                    {formData.quantity} × {unitPrice}€
                                 </Typography>
                             </Box>
                             <Divider sx={{ my: 1 }} />
@@ -449,12 +454,25 @@ const BookingModal = ({ open, onClose, event }) => {
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Euro sx={{ mr: 1 }} />
                         <Typography variant="body2">
-                            À partir de {event.discounted_price}€
-                            {event.original_price > event.discounted_price && (
-                                <span style={{ textDecoration: "line-through", marginLeft: 8 }}>
-                                    {event.original_price}€
-                                </span>
-                            )}
+                            {(() => {
+                                const pricingInfo = getEventPricingInfo(event);
+                                if (pricingInfo.price === 0) {
+                                    return "Gratuit";
+                                }
+                                if (pricingInfo.hasMultiplePrices) {
+                                    return `À partir de ${pricingInfo.price}€`;
+                                }
+                                return (
+                                    <>
+                                        {pricingInfo.price}€
+                                        {pricingInfo.originalPrice && pricingInfo.originalPrice > pricingInfo.price && (
+                                            <span style={{ textDecoration: "line-through", marginLeft: 8 }}>
+                                                {pricingInfo.originalPrice}€
+                                            </span>
+                                        )}
+                                    </>
+                                );
+                            })()}
                         </Typography>
                     </Box>
                 </Paper>

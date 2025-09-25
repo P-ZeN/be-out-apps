@@ -11,11 +11,59 @@ import {
 import EventFormStepper from "./EventFormStepper";
 import EventDetailsStep from "./steps/EventDetailsStep";
 import VenueStep from "./steps/VenueStep";
+import PricingStep from "./steps/PricingStep";
 import TicketDesignStep from "./steps/TicketDesignStep";
 import PublicationStep from "./steps/PublicationStep";
 import EventMobilePreview from "./EventMobilePreview";
 import TicketPreview from "./ticket/TicketPreview";
 import organizerService from "../services/organizerService";
+
+// Migration function to convert simple pricing to comprehensive pricing system
+const migrateSimplePricing = (eventData) => {
+    // If event has old pricing format but no new pricing structure
+    if ((eventData.original_price || eventData.discounted_price || eventData.price) &&
+        (!eventData.pricing?.categories?.length)) {
+
+        const originalPrice = parseFloat(eventData.original_price || eventData.price || 0);
+        const finalPrice = parseFloat(eventData.discounted_price || eventData.price || 0);
+        const discountPercentage = eventData.discount_percentage || 0;
+
+        // Calculate discount percentage if not available
+        let calculatedDiscountPercentage = discountPercentage;
+        if (!discountPercentage && originalPrice > finalPrice && originalPrice > 0) {
+            calculatedDiscountPercentage = Math.round(((originalPrice - finalPrice) / originalPrice) * 100);
+        }
+        return {
+            ...eventData,
+            pricing: {
+                categories: [{
+                    id: 'general-' + Date.now(),
+                    name: 'Tarif général',
+                    description: 'Tarif standard pour cet événement',
+                    tiers: [{
+                        id: 'standard-' + Date.now(),
+                        name: 'Standard',
+                        price: finalPrice || originalPrice || 0,
+                        originalPrice: originalPrice > finalPrice ? originalPrice : null,
+                        discountPercentage: calculatedDiscountPercentage > 0 ? calculatedDiscountPercentage : null,
+                        capacity: null, // unlimited
+                        availableFrom: null,
+                        availableUntil: null,
+                        description: ''
+                    }]
+                }],
+                settings: {
+                    currency: 'EUR',
+                    tax_included: true,
+                    refund_policy: 'flexible'
+                }
+            }
+        };
+    }
+
+    console.log('⏩ No migration needed');
+    return eventData;
+};
 
 const EventFormWizard = () => {
     const { id: paramEventId } = useParams();
@@ -50,9 +98,6 @@ const EventFormWizard = () => {
             description: "",
             event_date: null,
             category_id: "",
-            original_price: "",
-            discounted_price: "",
-            discount_percentage: 0,
             max_participants: "",
             tags: [],
             requirements: "",
@@ -65,11 +110,21 @@ const EventFormWizard = () => {
             venue_id: "",
         },
 
-        // Step 3: Ticket Design
+        // Step 3: Pricing
+        pricing: {
+            categories: [],
+            settings: {
+                currency: 'EUR',
+                tax_included: true,
+                refund_policy: 'flexible'
+            }
+        },
+
+        // Step 4: Ticket Design
         ticketConfig: {
             template_id: null,
             customizations: {},
-            pricing_tiers: [],
+            pricing_tiers: [], // Keep for backward compatibility
             booking_settings: {
                 booking_deadline: null,
                 allow_multiple_bookings: true,
@@ -77,7 +132,7 @@ const EventFormWizard = () => {
             }
         },
 
-        // Step 4: Publication
+        // Step 5: Publication
         publication: {
             is_published: false,
             request_review: false,
@@ -115,53 +170,61 @@ const EventFormWizard = () => {
                 if (isEdit) {
                     const eventData = await organizerService.getEvent(eventId);
 
+                    // Migrate simple pricing to comprehensive pricing system
+                    const migratedEventData = migrateSimplePricing(eventData);
+
                     setFormData({
                         eventDetails: {
-                            title: eventData.title || "",
-                            description: eventData.description || "",
-                            event_date: eventData.event_date ? new Date(eventData.event_date) : null,
-                            category_id: eventData.category_id || "",
-                            original_price: eventData.original_price || eventData.price || "",
-                            discounted_price: eventData.discounted_price || eventData.price || "",
-                            discount_percentage: eventData.discount_percentage || 0,
-                            max_participants: eventData.total_tickets || eventData.max_participants || "",
-                            tags: eventData.tags || [],
-                            requirements: eventData.requirements || "",
-                            cancellation_policy: eventData.cancellation_policy || "",
+                            title: migratedEventData.title || "",
+                            description: migratedEventData.description || "",
+                            event_date: migratedEventData.event_date ? new Date(migratedEventData.event_date) : null,
+                            category_id: migratedEventData.category_id || "",
+                            max_participants: migratedEventData.total_tickets || migratedEventData.max_participants || "",
+                            tags: migratedEventData.tags || [],
+                            requirements: migratedEventData.requirements || "",
+                            cancellation_policy: migratedEventData.cancellation_policy || "",
                             image: null,
                         },
                         venue: {
-                            venue_id: eventData.venue_id || "",
+                            venue_id: migratedEventData.venue_id || "",
+                        },
+                        pricing: {
+                            categories: migratedEventData?.pricing?.categories || [],
+                            settings: {
+                                currency: migratedEventData?.pricing?.settings?.currency || 'EUR',
+                                tax_included: migratedEventData?.pricing?.settings?.tax_included ?? true,
+                                refund_policy: migratedEventData?.pricing?.settings?.refund_policy || 'flexible'
+                            }
                         },
                         ticketConfig: {
-                            template_id: eventData.ticket_template_id || null,
-                            customizations: eventData.customizations || {},
-                            pricing_tiers: eventData.customizations?.pricing_tiers || [],
+                            template_id: migratedEventData.ticket_template_id || null,
+                            customizations: migratedEventData.customizations || {},
+                            pricing_tiers: migratedEventData.customizations?.pricing_tiers || [], // Keep for backward compatibility
                             booking_settings: {
-                                booking_deadline: eventData.booking_deadline ? new Date(eventData.booking_deadline) : null,
-                                allow_multiple_bookings: eventData.customizations?.booking_settings?.allow_multiple_bookings ?? true,
-                                max_bookings_per_user: eventData.customizations?.booking_settings?.max_bookings_per_user || 1,
+                                booking_deadline: migratedEventData.booking_deadline ? new Date(migratedEventData.booking_deadline) : null,
+                                allow_multiple_bookings: migratedEventData.customizations?.booking_settings?.allow_multiple_bookings ?? true,
+                                max_bookings_per_user: migratedEventData.customizations?.booking_settings?.max_bookings_per_user || 1,
                             }
                         },
                         publication: {
-                            is_published: eventData.is_published || false,
+                            is_published: migratedEventData.is_published || false,
                             request_review: false,
                         },
                         adminData: {
-                            id: eventData.id || "",
-                            status: eventData.status || "",
-                            moderation_status: eventData.moderation_status || "",
-                            admin_notes: eventData.admin_notes || "",
-                            is_published: eventData.is_published || false,
-                            organizer_wants_published: eventData.organizer_wants_published !== undefined
-                                ? eventData.organizer_wants_published
-                                : eventData.is_published || false,
+                            id: migratedEventData.id || "",
+                            status: migratedEventData.status || "",
+                            moderation_status: migratedEventData.moderation_status || "",
+                            admin_notes: migratedEventData.admin_notes || "",
+                            is_published: migratedEventData.is_published || false,
+                            organizer_wants_published: migratedEventData.organizer_wants_published !== undefined
+                                ? migratedEventData.organizer_wants_published
+                                : migratedEventData.is_published || false,
                         }
                     });
 
                     // Set image preview if event has an image
-                    if (eventData.image_url) {
-                        setImagePreview(eventData.image_url);
+                    if (migratedEventData.image_url) {
+                        setImagePreview(migratedEventData.image_url);
                     }
                 }
             } catch (error) {
@@ -304,6 +367,9 @@ const EventFormWizard = () => {
         setSuccess("");
 
         try {
+            // Debug: Log what we're about to save
+            console.log('🎯 Saving formData.pricing:', formData.pricing);
+
             // Combine all form data into event format
             const eventData = {
                 ...formData.eventDetails,
@@ -315,6 +381,8 @@ const EventFormWizard = () => {
                     pricing_tiers: formData.ticketConfig.pricing_tiers,
                     booking_settings: formData.ticketConfig.booking_settings
                 },
+                // Include new pricing structure
+                pricing: formData.pricing,
                 // Convert data types
                 original_price: Number(formData.eventDetails.original_price) || 0,
                 discounted_price: Number(formData.eventDetails.discounted_price) || 0,
@@ -323,6 +391,9 @@ const EventFormWizard = () => {
                 event_date: formData.eventDetails.event_date?.toISOString(),
                 booking_deadline: formData.ticketConfig.booking_settings.booking_deadline?.toISOString(),
             };
+
+            console.log('🎯 Complete eventData being sent:', eventData);
+            console.log('🎯 eventData.pricing specifically:', eventData.pricing);
 
             let result;
             if (isCurrentlyEdit && currentEventId) {
@@ -381,6 +452,8 @@ const EventFormWizard = () => {
                     pricing_tiers: formData.ticketConfig.pricing_tiers,
                     booking_settings: formData.ticketConfig.booking_settings
                 },
+                // Include new pricing structure
+                pricing: formData.pricing,
                 // Convert data types
                 original_price: Number(formData.eventDetails.original_price) || 0,
                 discounted_price: Number(formData.eventDetails.discounted_price) || 0,
@@ -426,8 +499,9 @@ const EventFormWizard = () => {
         switch (activeStep) {
             case 0: return formData.eventDetails;
             case 1: return formData.venue;
-            case 2: return formData.ticketConfig;
-            case 3: return formData.publication;
+            case 2: return formData.pricing;
+            case 3: return formData.ticketConfig;
+            case 4: return formData.publication;
             default: return {};
         }
     };
@@ -437,8 +511,9 @@ const EventFormWizard = () => {
         switch (activeStep) {
             case 0: return 'eventDetails';
             case 1: return 'venue';
-            case 2: return 'ticketConfig';
-            case 3: return 'publication';
+            case 2: return 'pricing';
+            case 3: return 'ticketConfig';
+            case 4: return 'publication';
             default: return 'eventDetails';
         }
     };
@@ -448,6 +523,7 @@ const EventFormWizard = () => {
         const stepConfig = [
             { previewType: "mobile" },  // Event Details
             { previewType: "mobile" },  // Venue
+            { previewType: "mobile" },  // Pricing
             { previewType: "ticket" },  // Ticket Design
             { previewType: "mobile" },  // Publication
         ];
@@ -457,7 +533,7 @@ const EventFormWizard = () => {
         if (currentConfig.previewType === "mobile") {
             return (
                 <EventMobilePreview
-                    formData={formData.eventDetails}
+                    formData={{ ...formData.eventDetails, pricing: formData.pricing }}
                     venues={venues}
                     categories={categories}
                     imagePreview={imagePreview}
@@ -528,6 +604,14 @@ const EventFormWizard = () => {
                 )}
 
                 {activeStep === 2 && (
+                    <PricingStep
+                        data={getCurrentStepData()}
+                        onChange={(data) => handleStepDataChange(getCurrentStepKey(), data)}
+                        eventData={formData}
+                    />
+                )}
+
+                {activeStep === 3 && (
                     <TicketDesignStep
                         data={getCurrentStepData()}
                         onChange={(data) => handleStepDataChange(getCurrentStepKey(), data)}
@@ -536,7 +620,7 @@ const EventFormWizard = () => {
                     />
                 )}
 
-                {activeStep === 3 && (
+                {activeStep === 4 && (
                     <PublicationStep
                         data={getCurrentStepData()}
                         onChange={(data) => handleStepDataChange(getCurrentStepKey(), data)}
