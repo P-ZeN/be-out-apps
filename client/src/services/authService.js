@@ -10,6 +10,19 @@ const register = async (userData) => {
         },
         body: JSON.stringify(userData),
     });
+
+    if (!response.ok) {
+        let errorMessage;
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData || "Registration failed";
+        } catch {
+            // If response is not JSON, fall back to status text
+            errorMessage = response.statusText || "Registration failed";
+        }
+        throw new Error(errorMessage);
+    }
+
     return response.json();
 };
 

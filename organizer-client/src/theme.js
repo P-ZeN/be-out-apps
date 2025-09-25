@@ -40,7 +40,7 @@ export const theme = createTheme({
             contrastText: "#ffffff",
         },
         background: {
-            default: "#FFECE1", // Crême - fond principal/pages (unified brand)
+            default: "#FFFAFA", // Crême - fond principal/pages (unified brand)
             paper: "#ffffff", // Keep white for cards/elevated surfaces
         },
         text: {

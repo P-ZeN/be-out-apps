@@ -367,6 +367,9 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
             requirements,
             cancellation_policy,
             is_last_minute,
+            ticket_template_id,
+            customizations,
+            pricing // New comprehensive pricing structure
         } = req.body;
 
         // Handle backwards compatibility - if old format is used, treat price as both original and discounted
@@ -389,8 +392,8 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     title, description, event_date, venue_id, organizer_id,
                     original_price, discounted_price, discount_percentage, total_tickets, available_tickets,
                     is_featured, is_last_minute, requirements, cancellation_policy, status, is_published,
-                    moderation_status, status_changed_by, status_changed_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+                    moderation_status, status_changed_by, status_changed_at, ticket_template_id, customizations, pricing
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
                 RETURNING *`,
                 [
                     title,
@@ -412,6 +415,9 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     "pending", // moderation_status - new events need review
                     req.user.id, // status_changed_by
                     new Date(), // status_changed_at
+                    ticket_template_id || null, // ticket_template_id
+                    customizations ? JSON.stringify(customizations) : null, // customizations (stored as JSONB)
+                    pricing ? JSON.stringify(pricing) : null, // pricing (stored as JSONB)
                 ]
             );
 
@@ -454,6 +460,9 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
             requirements,
             cancellation_policy,
             is_last_minute,
+            ticket_template_id,
+            customizations,
+            pricing // New comprehensive pricing structure
         } = req.body;
 
         // Handle backwards compatibility - if old format is used, treat price as both original and discounted
@@ -486,8 +495,8 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
                     title = $1, description = $2, event_date = $3, venue_id = $4,
                     original_price = $5, discounted_price = $6, discount_percentage = $7, total_tickets = $8,
                     available_tickets = $9, is_last_minute = $10, requirements = $11, cancellation_policy = $12,
-                    updated_at = NOW()
-                WHERE id = $13 AND organizer_id = $14
+                    ticket_template_id = $13, customizations = $14, pricing = $15, updated_at = NOW()
+                WHERE id = $16 AND organizer_id = $17
                 RETURNING *`,
                 [
                     title,
@@ -502,6 +511,9 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
                     is_last_minute || false, // is_last_minute
                     requirements || null, // requirements
                     cancellation_policy || null, // cancellation_policy
+                    ticket_template_id || null, // ticket_template_id
+                    customizations ? JSON.stringify(customizations) : null, // customizations (stored as JSONB)
+                    pricing ? JSON.stringify(pricing) : null, // pricing (stored as JSONB)
                     req.params.id,
                     req.user.id,
                 ]
@@ -1310,7 +1322,15 @@ router.get("/ticket-templates", verifyOrganizerToken, async (req, res) => {
                 [req.user.id]
             );
 
-            res.json(result.rows);
+            // Parse template_data JSON strings
+            const templates = result.rows.map(row => ({
+                ...row,
+                template_data: typeof row.template_data === 'string'
+                    ? JSON.parse(row.template_data)
+                    : row.template_data
+            }));
+
+            res.json(templates);
         } finally {
             client.release();
         }
@@ -1332,7 +1352,13 @@ router.post("/ticket-templates", verifyOrganizerToken, async (req, res) => {
                 [name, description, JSON.stringify(template_data), req.user.id]
             );
 
-            res.json(result.rows[0]);
+            // Parse template_data before returning
+            const newTemplate = {
+                ...result.rows[0],
+                template_data: template_data  // Use the original object, not the stringified version
+            };
+
+            res.json(newTemplate);
         } finally {
             client.release();
         }
@@ -1359,7 +1385,13 @@ router.put("/ticket-templates/:id", verifyOrganizerToken, async (req, res) => {
                 return res.status(404).json({ message: 'Ticket template not found or not authorized' });
             }
 
-            res.json(result.rows[0]);
+            // Parse template_data before returning
+            const updatedTemplate = {
+                ...result.rows[0],
+                template_data: template_data  // Use the original object, not the stringified version
+            };
+
+            res.json(updatedTemplate);
         } finally {
             client.release();
         }

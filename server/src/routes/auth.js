@@ -11,7 +11,7 @@ router.post("/register", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).send("Email and password are required");
+        return res.status(400).json({ message: "Email and password are required" });
     }
 
     try {
@@ -39,21 +39,21 @@ router.post("/register", async (req, res) => {
             }
 
             const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
-            res.status(201).send({ token, email: user.email, onboarding_complete: false });
+            res.status(201).json({ token, email: user.email, onboarding_complete: false });
         } catch (err) {
             await client.query("ROLLBACK");
             console.error(err);
             if (err.code === "23505") {
                 // Unique violation
-                return res.status(409).send("User with this email already exists");
+                return res.status(409).json({ message: "User with this email already exists" });
             }
-            res.status(500).send("Error registering user");
+            res.status(500).json({ message: "Error registering user" });
         } finally {
             client.release();
         }
     } catch (err) {
         console.error(err);
-        res.status(500).send("Error registering user");
+        res.status(500).json({ message: "Error registering user" });
     }
 });
 

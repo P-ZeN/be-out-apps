@@ -3,7 +3,13 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 
 // Load Stripe with your publishable key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "pk_test_...");
+const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+if (!publishableKey) {
+    console.warn("⚠️ VITE_STRIPE_PUBLISHABLE_KEY not configured - payment features will be disabled");
+}
+
+const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 const StripeContext = createContext();
 

@@ -32,6 +32,7 @@ import {
     Email,
     QrCode,
     Person,
+    Download,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useAuth } from "../context/AuthContext";
@@ -43,6 +44,7 @@ const Bookings = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const [activeTab, setActiveTab] = useState(0);
     const [cancelDialog, setCancelDialog] = useState({ open: false, booking: null });
     const [cancellationReason, setCancellationReason] = useState("");
@@ -50,6 +52,8 @@ const Bookings = () => {
     useEffect(() => {
         if (isAuthenticated && user?.id) {
             loadBookings();
+        } else {
+            setLoading(false);
         }
     }, [isAuthenticated, user, activeTab]);
 
@@ -57,6 +61,7 @@ const Bookings = () => {
         try {
             setLoading(true);
             setError("");
+            setSuccess("");
 
             const statusFilter =
                 activeTab === 0 ? "" : activeTab === 1 ? "confirmed" : activeTab === 2 ? "pending" : "cancelled";
@@ -83,6 +88,96 @@ const Bookings = () => {
             loadBookings(); // Reload bookings
         } catch (err) {
             setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Ticket management handlers
+    const handleViewTickets = async (bookingId) => {
+        try {
+            setSuccess("");
+            const result = await BookingService.getBookingTickets(bookingId);
+            console.log("Booking tickets:", result);
+
+            // Open tickets in new tabs for viewing
+            if (result.tickets && result.tickets.length > 0) {
+                setError("");
+                for (const ticket of result.tickets) {
+                    try {
+                        // Fetch PDF with authentication
+                        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+                        const token = localStorage.getItem('token');
+
+                        const response = await fetch(`${API_BASE_URL}/tickets/${ticket.id}/pdf?view=true`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                            },
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch PDF');
+                        }
+
+                        // Create blob URL and open in new tab
+                        const pdfBlob = await response.blob();
+                        const pdfUrl = URL.createObjectURL(pdfBlob);
+                        const newWindow = window.open(pdfUrl, '_blank');
+
+                        // Clean up blob URL after a delay to ensure it loads
+                        setTimeout(() => {
+                            URL.revokeObjectURL(pdfUrl);
+                        }, 1000);
+
+                        // Focus the new window if popup blocker didn't block it
+                        if (newWindow) {
+                            newWindow.focus();
+                        }
+                    } catch (ticketError) {
+                        console.error(`Failed to open ticket ${ticket.id}:`, ticketError);
+                        setError(`Erreur lors de l'ouverture du billet ${ticket.id}`);
+                    }
+                }
+            }
+        } catch (err) {
+            setError("Erreur lors de la récupération des billets: " + err.message);
+        }
+    };
+
+    const handleDownloadTickets = async (bookingId) => {
+        try {
+            setSuccess("");
+            const result = await BookingService.getBookingTickets(bookingId);
+            console.log("Booking tickets:", result);
+
+            // Download all tickets as PDFs
+            if (result.tickets && result.tickets.length > 0) {
+                setError("");
+                for (const ticket of result.tickets) {
+                    try {
+                        await BookingService.downloadTicketPDF(ticket.id);
+                    } catch (ticketError) {
+                        console.error(`Failed to download ticket ${ticket.id}:`, ticketError);
+                    }
+                }
+            }
+        } catch (err) {
+            setError("Erreur lors du téléchargement des billets: " + err.message);
+        }
+    };
+
+    const handleResendTickets = async (bookingId) => {
+        try {
+            setError("");
+            setSuccess("");
+            setLoading(true);
+
+            // Resend booking confirmation email with fresh PDF tickets
+            await BookingService.resendBookingTickets(bookingId);
+
+            setSuccess("Billets renvoyés avec succès ! Vérifiez votre email.");
+        } catch (err) {
+            setError("Erreur lors du renvoi des billets: " + err.message);
         } finally {
             setLoading(false);
         }
@@ -161,6 +256,13 @@ const Bookings = () => {
             {error && (
                 <Alert severity="error" sx={{ mb: 3 }}>
                     {error}
+                </Alert>
+            )}
+
+            {/* Success Alert */}
+            {success && (
+                <Alert severity="success" sx={{ mb: 3 }}>
+                    {success}
                 </Alert>
             )}
 
@@ -263,14 +365,35 @@ const Bookings = () => {
 
                                         {/* Actions */}
                                         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                                            <Button size="small" variant="outlined" startIcon={<Email />} disabled>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                startIcon={<Email />}
+                                                onClick={() => handleResendTickets(booking.id)}
+                                            >
                                                 Renvoyer billets
                                             </Button>
 
                                             {booking.booking_status === "confirmed" && (
-                                                <Button size="small" variant="outlined" startIcon={<QrCode />} disabled>
-                                                    QR Codes
-                                                </Button>
+                                                <>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        startIcon={<QrCode />}
+                                                        onClick={() => handleViewTickets(booking.id)}
+                                                    >
+                                                        Voir billets
+                                                    </Button>
+
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        startIcon={<Download />}
+                                                        onClick={() => handleDownloadTickets(booking.id)}
+                                                    >
+                                                        Télécharger billets
+                                                    </Button>
+                                                </>
                                             )}
 
                                             {(booking.booking_status === "confirmed" ||

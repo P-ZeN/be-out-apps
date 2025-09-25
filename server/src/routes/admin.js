@@ -414,7 +414,7 @@ router.delete("/events/:id", requireAdmin, async (req, res) => {
         const event = eventCheck.rows[0];
 
         // Delete related records in order to maintain referential integrity
-        await client.query("DELETE FROM favorites WHERE event_id = $1", [id]);
+        await client.query("DELETE FROM user_favorites WHERE event_id = $1", [id]);
         await client.query("DELETE FROM event_categories WHERE event_id = $1", [id]);
         await client.query("DELETE FROM address_relationships WHERE entity_type = 'event' AND entity_id = $1", [id]);
 
@@ -439,6 +439,357 @@ router.delete("/events/:id", requireAdmin, async (req, res) => {
         res.status(500).json({ error: "Failed to delete event" });
     } finally {
         client.release();
+    }
+});
+
+// Update event featured status
+router.patch("/events/:id/featured", requireAdmin, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        const { id } = req.params;
+        const { is_featured } = req.body;
+
+        if (typeof is_featured !== 'boolean') {
+            return res.status(400).json({ error: "is_featured must be a boolean" });
+        }
+
+        // Check if event exists
+        const eventCheck = await client.query("SELECT * FROM events WHERE id = $1", [id]);
+        if (eventCheck.rows.length === 0) {
+            await client.query("ROLLBACK");
+            return res.status(404).json({ error: "Event not found" });
+        }
+
+        const event = eventCheck.rows[0];
+
+        // Update featured status
+        await client.query(
+            "UPDATE events SET is_featured = $1, updated_at = NOW() WHERE id = $2",
+            [is_featured, id]
+        );
+
+        // Log admin action
+        await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+            req.adminUser.id,
+            is_featured ? "feature_event" : "unfeature_event",
+            "event",
+            id,
+            `${is_featured ? 'Featured' : 'Unfeatured'} event: ${event.title}`,
+            JSON.stringify({ is_featured }),
+        ]);
+
+        await client.query("COMMIT");
+        res.json({
+            message: `Event ${is_featured ? 'featured' : 'unfeatured'} successfully`,
+            eventId: id,
+            is_featured
+        });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Error updating event featured status:", err);
+        res.status(500).json({ error: "Failed to update event featured status" });
+    } finally {
+        client.release();
+    }
+});
+
+// Update event last minute status
+router.patch("/events/:id/last-minute", requireAdmin, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        const { id } = req.params;
+        const { is_last_minute } = req.body;
+
+        if (typeof is_last_minute !== 'boolean') {
+            return res.status(400).json({ error: "is_last_minute must be a boolean" });
+        }
+
+        // Check if event exists
+        const eventCheck = await client.query("SELECT * FROM events WHERE id = $1", [id]);
+        if (eventCheck.rows.length === 0) {
+            await client.query("ROLLBACK");
+            return res.status(404).json({ error: "Event not found" });
+        }
+
+        const event = eventCheck.rows[0];
+
+        // Update last minute status
+        await client.query(
+            "UPDATE events SET is_last_minute = $1, updated_at = NOW() WHERE id = $2",
+            [is_last_minute, id]
+        );
+
+        // Log admin action
+        await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+            req.adminUser.id,
+            is_last_minute ? "mark_last_minute" : "unmark_last_minute",
+            "event",
+            id,
+            `${is_last_minute ? 'Marked as last minute' : 'Unmarked as last minute'} event: ${event.title}`,
+            JSON.stringify({ is_last_minute }),
+        ]);
+
+        await client.query("COMMIT");
+        res.json({
+            message: `Event ${is_last_minute ? 'marked as last minute' : 'unmarked as last minute'} successfully`,
+            eventId: id,
+            is_last_minute
+        });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Error updating event last minute status:", err);
+        res.status(500).json({ error: "Failed to update event last minute status" });
+    } finally {
+        client.release();
+    }
+});
+
+// Create event (admin)
+router.post("/events", requireAdmin, async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            event_date,
+            venue_id,
+            category_id,
+            original_price,
+            discounted_price,
+            discount_percentage,
+            max_participants,
+            requirements,
+            cancellation_policy,
+            is_last_minute,
+            is_featured,
+            status,
+            is_published,
+            organizer_id,
+        } = req.body;
+
+        // Validation
+        if (!title || !description || !event_date || !venue_id || !category_id || original_price === undefined) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // If organizer_id is provided, verify it exists and is an organizer
+            let eventOrganizerId = req.adminUser.id; // Default to admin user
+            if (organizer_id) {
+                const organizerCheck = await client.query(
+                    "SELECT id FROM users WHERE id = $1 AND role = 'organizer'",
+                    [organizer_id]
+                );
+                if (organizerCheck.rows.length === 0) {
+                    await client.query("ROLLBACK");
+                    return res.status(400).json({ message: "Invalid organizer_id" });
+                }
+                eventOrganizerId = organizer_id;
+            }
+
+            // Handle price calculations like the organizer endpoint
+            const finalOriginalPrice = original_price || 0;
+            const finalDiscountedPrice = discounted_price || finalOriginalPrice;
+            const finalDiscountPercentage = discount_percentage || 0;
+            const finalMaxParticipants = max_participants || 100;
+
+            // Create the event
+            const eventResult = await client.query(
+                `INSERT INTO events (
+                    title, description, event_date, venue_id, organizer_id,
+                    original_price, discounted_price, discount_percentage, total_tickets, available_tickets,
+                    is_featured, is_last_minute, requirements, cancellation_policy, status, is_published,
+                    moderation_status, status_changed_by, status_changed_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+                RETURNING *`,
+                [
+                    title,
+                    description,
+                    event_date,
+                    venue_id,
+                    eventOrganizerId,
+                    finalOriginalPrice,
+                    finalDiscountedPrice,
+                    finalDiscountPercentage,
+                    finalMaxParticipants,
+                    finalMaxParticipants,
+                    is_featured || false,
+                    is_last_minute || false,
+                    requirements,
+                    cancellation_policy,
+                    "active", // Status should always be "active" for normal events
+                    is_published || false, // This controls public visibility
+                    "approved", // Admin-created events are auto-approved
+                    req.adminUser.id,
+                    new Date(),
+                ]
+            );
+
+            const eventId = eventResult.rows[0].id;
+
+            // Add category association
+            await client.query("INSERT INTO event_categories (event_id, category_id) VALUES ($1, $2)", [
+                eventId,
+                category_id,
+            ]);
+
+            // Log admin action
+            await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+                req.adminUser.id,
+                "create_event",
+                "event",
+                eventId,
+                `Created event: ${title}`,
+                JSON.stringify({ title, venue_id, category_id }),
+            ]);
+
+            await client.query("COMMIT");
+
+            // Return the created event data
+            res.status(201).json(eventResult.rows[0]);
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error("Error creating event:", err);
+        res.status(500).json({ error: "Failed to create event" });
+    }
+});
+
+// Update event (admin)
+router.put("/events/:id", requireAdmin, async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            event_date,
+            venue_id,
+            category_id,
+            original_price,
+            discounted_price,
+            discount_percentage,
+            max_participants,
+            requirements,
+            cancellation_policy,
+            is_last_minute,
+            is_featured,
+            status,
+            is_published,
+            organizer_id,
+        } = req.body;
+
+        // Validation
+        if (!title || !description || !event_date || !venue_id || !category_id) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Check if event exists
+            const eventCheck = await client.query("SELECT * FROM events WHERE id = $1", [req.params.id]);
+            if (eventCheck.rows.length === 0) {
+                await client.query("ROLLBACK");
+                return res.status(404).json({ message: "Event not found" });
+            }
+
+            const originalEvent = eventCheck.rows[0];
+
+            // Handle organizer_id - validate if provided
+            let eventOrganizerId = originalEvent.organizer_id; // Keep original by default
+            if (organizer_id !== undefined) {
+                if (organizer_id === null || organizer_id === "") {
+                    // Admin wants to assign to themselves (no specific organizer)
+                    eventOrganizerId = req.adminUser.id;
+                } else {
+                    // Validate the provided organizer_id
+                    const organizerCheck = await client.query(
+                        "SELECT id FROM users WHERE id = $1 AND role = 'organizer'",
+                        [organizer_id]
+                    );
+                    if (organizerCheck.rows.length === 0) {
+                        await client.query("ROLLBACK");
+                        return res.status(400).json({ message: "Invalid organizer_id" });
+                    }
+                    eventOrganizerId = organizer_id;
+                }
+            }
+
+            // Update the event
+            const finalOriginalPrice = original_price || originalEvent.original_price;
+            const finalDiscountedPrice = discounted_price || finalOriginalPrice;
+            const finalDiscountPercentage = discount_percentage || 0;
+            const finalMaxParticipants = max_participants || originalEvent.total_tickets;
+
+            const eventResult = await client.query(
+                `UPDATE events SET
+                    title = $1, description = $2, event_date = $3, venue_id = $4, organizer_id = $5,
+                    original_price = $6, discounted_price = $7, discount_percentage = $8, total_tickets = $9,
+                    available_tickets = $10, is_last_minute = $11, requirements = $12, cancellation_policy = $13,
+                    is_featured = $14, status = $15, is_published = $16, updated_at = NOW()
+                WHERE id = $17
+                RETURNING *`,
+                [
+                    title,
+                    description,
+                    event_date,
+                    venue_id,
+                    eventOrganizerId,
+                    finalOriginalPrice,
+                    finalDiscountedPrice,
+                    finalDiscountPercentage,
+                    finalMaxParticipants,
+                    finalMaxParticipants, // Keep same as total_tickets to avoid issues
+                    is_last_minute !== undefined ? is_last_minute : originalEvent.is_last_minute,
+                    requirements,
+                    cancellation_policy,
+                    is_featured !== undefined ? is_featured : originalEvent.is_featured,
+                    "active", // Always keep status as "active" for normal operations
+                    is_published !== undefined ? is_published : originalEvent.is_published,
+                    req.params.id,
+                ]
+            );
+
+            // Update category association
+            await client.query("DELETE FROM event_categories WHERE event_id = $1", [req.params.id]);
+            await client.query("INSERT INTO event_categories (event_id, category_id) VALUES ($1, $2)", [
+                req.params.id,
+                category_id,
+            ]);
+
+            // Log admin action
+            await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+                req.adminUser.id,
+                "update_event",
+                "event",
+                req.params.id,
+                `Updated event: ${title}`,
+                JSON.stringify({ title, venue_id, category_id, changes: req.body }),
+            ]);
+
+            await client.query("COMMIT");
+
+            // Return the updated event data
+            res.json(eventResult.rows[0]);
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error("Error updating event:", err);
+        res.status(500).json({ error: "Failed to update event" });
     }
 });
 
@@ -1519,6 +1870,110 @@ router.get("/bookings", requireAdmin, async (req, res) => {
         res.status(500).json({ error: "Failed to fetch bookings" });
     } finally {
         client.release();
+    }
+});
+
+// Create venue endpoint for admin
+router.post("/venues", requireAdmin, async (req, res) => {
+    try {
+        const {
+            name,
+            capacity,
+            address_line_1,
+            address_line_2,
+            locality,
+            administrative_area,
+            postal_code,
+            country_code,
+            latitude,
+            longitude,
+        } = req.body;
+
+        // Validation
+        if (!name || !address_line_1 || !locality || !country_code) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Create the address
+            const addressResult = await client.query(
+                `INSERT INTO addresses (
+                    address_line_1, address_line_2, locality, administrative_area,
+                    postal_code, country_code, latitude, longitude,
+                    address_type, label, is_verified
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                RETURNING id`,
+                [
+                    address_line_1,
+                    address_line_2 || null,
+                    locality,
+                    administrative_area || null,
+                    postal_code || null,
+                    country_code,
+                    latitude || null,
+                    longitude || null,
+                    "venue",
+                    name,
+                    false,
+                ]
+            );
+
+            const addressId = addressResult.rows[0].id;
+
+            // Create the venue (admin creates venues, use admin's user ID as organizer)
+            const venueResult = await client.query(
+                `INSERT INTO venues (name, capacity, organizer_id)
+                 VALUES ($1, $2, $3)
+                 RETURNING *`,
+                [name, capacity || null, req.adminUser.id] // Use admin's user ID
+            );
+
+            const venueId = venueResult.rows[0].id;
+
+            // Link venue to address
+            await client.query(
+                `INSERT INTO address_relationships (address_id, entity_type, entity_id, relationship_type, is_active)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [addressId, "venue", venueId, "venue_location", true]
+            );
+
+            // Log admin action
+            await client.query("SELECT log_admin_action($1, $2, $3, $4, $5, $6)", [
+                req.adminUser.id,
+                "create_venue",
+                "venue",
+                venueId,
+                `Created venue: ${name}`,
+                JSON.stringify({ name, capacity, locality })
+            ]);
+
+            await client.query("COMMIT");
+
+            // Return the venue with address information
+            const fullResult = await client.query(
+                `SELECT v.*, a.address_line_1, a.address_line_2, a.locality,
+                        a.administrative_area, a.postal_code, a.country_code,
+                        a.latitude, a.longitude
+                 FROM venues v
+                 LEFT JOIN address_relationships ar ON (ar.entity_type = 'venue' AND ar.entity_id = v.id)
+                 LEFT JOIN addresses a ON a.id = ar.address_id
+                 WHERE v.id = $1`,
+                [venueId]
+            );
+
+            res.status(201).json(fullResult.rows[0]);
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error creating venue:", error);
+        res.status(500).json({ message: "Error creating venue" });
     }
 });
 

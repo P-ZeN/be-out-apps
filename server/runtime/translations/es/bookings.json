@@ -1,7 +1,13 @@
 {
-  "bookings": {
-    "title": "Reservas",
-    "confirm": "Confirmar reserva",
-    "cancel": "Cancelar reserva"
-  }
+    "bookings": {
+        "title": "Reservas",
+        "confirm": "Confirmar reserva",
+        "cancel": "Cancelar reserva",
+        "success": {
+            "title": "🎉 ¡Reserva confirmada!",
+            "message": "Su reserva ha sido confirmada exitosamente.",
+            "reference_label": "Número de referencia",
+            "email_info": "Recibirá sus boletos por correo electrónico. También puede recuperar sus boletos desde su página de perfil."
+        }
+    }
 }

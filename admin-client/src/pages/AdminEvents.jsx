@@ -30,6 +30,9 @@ import {
     Select,
     MenuItem,
     Stack,
+    Switch,
+    FormControlLabel,
+    Divider,
 } from "@mui/material";
 import {
     Edit,
@@ -47,9 +50,13 @@ import {
     Cancel,
     Warning,
     Block,
+    Star,
+    FlashOn,
+    Security,
 } from "@mui/icons-material";
-import AdminService from "../services/adminService";
+import AdminService from '../services/adminService';
 import AdminEventDetail from "../components/AdminEventDetail";
+import AdminEventForm from "../components/AdminEventForm";
 
 const AdminEvents = ({ user }) => {
     const [events, setEvents] = useState([]);
@@ -69,13 +76,47 @@ const AdminEvents = ({ user }) => {
         notes: "",
     });
 
+    // State for the new event form
+    const [eventFormOpen, setEventFormOpen] = useState(false);
+    const [eventFormData, setEventFormData] = useState(null); // null for create, event object for edit
+    const [editFormData, setEditFormData] = useState({
+        title: "",
+        description: "",
+        event_date: "",
+        venue_id: "",
+        category_id: "",
+        original_price: "",
+        discounted_price: "",
+        discount_percentage: 0,
+        max_participants: "",
+        requirements: "",
+        cancellation_policy: "",
+    });
+    const [venues, setVenues] = useState([]);
+    const [categories, setCategories] = useState([]);
+
     useEffect(() => {
         if (user && user.id) {
             loadEvents();
+            loadFormData();
         } else {
             setLoading(false);
         }
     }, [user?.id]);
+
+    const loadFormData = async () => {
+        try {
+            // Load venues and categories for the edit form
+            const [venuesData, categoriesData] = await Promise.all([
+                AdminService.getVenues(),
+                AdminService.getCategories(),
+            ]);
+            setVenues(venuesData || []);
+            setCategories(categoriesData || []);
+        } catch (err) {
+            console.error("Error loading form data:", err);
+        }
+    };
 
     const loadEvents = async () => {
         if (!user || !user.id) {
@@ -149,6 +190,148 @@ const AdminEvents = ({ user }) => {
             setModerationDialogOpen(false);
             setSelectedEvent(null);
             setModerationData({ moderation_status: "", notes: "" });
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleToggleFeatured = async (eventId, isFeatured) => {
+        try {
+            await AdminService.updateEventFeatured(eventId, isFeatured);
+            // Update local state
+            setEvents(events.map(event =>
+                event.id === eventId
+                    ? { ...event, is_featured: isFeatured }
+                    : event
+            ));
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleToggleLastMinute = async (eventId, isLastMinute) => {
+        try {
+            await AdminService.updateEventLastMinute(eventId, isLastMinute);
+            // Update local state
+            setEvents(events.map(event =>
+                event.id === eventId
+                    ? { ...event, is_last_minute: isLastMinute }
+                    : event
+            ));
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    // Handlers for the new event form
+    const handleCreateEvent = () => {
+        setEventFormData(null); // null indicates create mode
+        setEventFormOpen(true);
+    };
+
+    const handleEventFormSave = async (savedEvent) => {
+        // Reload events to get updated data
+        await loadEvents();
+    };
+
+    const handleEditDialogOpen = (event) => {
+        if (event) {
+            // Editing existing event
+            setEditFormData({
+                title: event.title || "",
+                description: event.description || "",
+                event_date: event.event_date ? new Date(event.event_date).toISOString().slice(0, 16) : "",
+                venue_id: event.venue_id || "",
+                category_id: event.category_id || "",
+                original_price: event.original_price || "",
+                discounted_price: event.discounted_price || "",
+                discount_percentage: event.discount_percentage || 0,
+                max_participants: event.max_participants || event.total_tickets || "",
+                requirements: event.requirements || "",
+                cancellation_policy: event.cancellation_policy || "",
+            });
+        } else {
+            // Creating new event
+            setEditFormData({
+                title: "",
+                description: "",
+                event_date: "",
+                venue_id: "",
+                category_id: "",
+                original_price: "",
+                discounted_price: "",
+                discount_percentage: 0,
+                max_participants: "",
+                requirements: "",
+                cancellation_policy: "",
+            });
+        }
+        setEditDialogOpen(true);
+    };
+
+    const handleEditEventOld = async () => {
+        try {
+            const eventData = {
+                ...editFormData,
+                event_date: new Date(editFormData.event_date).toISOString(),
+                original_price: Number(editFormData.original_price) || 0,
+                discounted_price: Number(editFormData.discounted_price) || 0,
+                discount_percentage: Number(editFormData.discount_percentage) || 0,
+                max_participants: Number(editFormData.max_participants) || null,
+            };
+
+            if (selectedEvent) {
+                // Update existing event
+                await AdminService.updateEvent(selectedEvent.id, eventData);
+            } else {
+                // Create new event
+                await AdminService.createEvent(eventData);
+            }
+
+            await loadEvents(); // Reload events
+            setEditDialogOpen(false);
+            setSelectedEvent(null);
+            setEditFormData({
+                title: "",
+                description: "",
+                event_date: "",
+                venue_id: "",
+                category_id: "",
+                original_price: "",
+                discounted_price: "",
+                discount_percentage: 0,
+                max_participants: "",
+                requirements: "",
+                cancellation_policy: "",
+            });
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    // Handlers for the new AdminEventForm
+    const handleEditEvent = (event) => {
+        setSelectedEvent(event);
+        setEventFormOpen(true);
+    };
+
+    const handleAddEvent = () => {
+        setSelectedEvent(null); // No selected event = create new
+        setEventFormOpen(true);
+    };
+
+    const handleEventFormClose = () => {
+        setEventFormOpen(false);
+        setSelectedEvent(null);
+    };
+
+    const handleEventFormSubmit = async (eventData) => {
+        try {
+            // The AdminEventForm component already handles the API call
+            // This function just needs to handle UI state updates
+            await loadEvents(); // Reload events
+            setEventFormOpen(false);
+            setSelectedEvent(null);
         } catch (err) {
             setError(err.message);
         }
@@ -255,6 +438,13 @@ const AdminEvents = ({ user }) => {
                         <Typography variant="h5" component="h2" sx={{ fontWeight: "bold" }}>
                             Gestion des événements
                         </Typography>
+                        <Button
+                            variant="contained"
+                            startIcon={<Add />}
+                            onClick={handleAddEvent}
+                        >
+                            Nouvel événement
+                        </Button>
                     </Box>
 
                     {/* Error Alert */}
@@ -319,6 +509,7 @@ const AdminEvents = ({ user }) => {
                                         <TableCell>Date & Lieu</TableCell>
                                         <TableCell>Prix</TableCell>
                                         <TableCell>Statut</TableCell>
+                                        <TableCell>Promotion</TableCell>
                                         <TableCell>Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -405,6 +596,44 @@ const AdminEvents = ({ user }) => {
                                                 />
                                             </TableCell>
                                             <TableCell>
+                                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Switch
+                                                                size="small"
+                                                                checked={event.is_featured || false}
+                                                                onChange={(e) => handleToggleFeatured(event.id, e.target.checked)}
+                                                            />
+                                                        }
+                                                        label={
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                <Star sx={{ fontSize: '1rem', color: event.is_featured ? 'gold' : 'text.secondary' }} />
+                                                                <Typography variant="caption">Mis en avant</Typography>
+                                                            </Box>
+                                                        }
+                                                        labelPlacement="end"
+                                                        sx={{ margin: 0 }}
+                                                    />
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Switch
+                                                                size="small"
+                                                                checked={event.is_last_minute || false}
+                                                                onChange={(e) => handleToggleLastMinute(event.id, e.target.checked)}
+                                                            />
+                                                        }
+                                                        label={
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                <FlashOn sx={{ fontSize: '1rem', color: event.is_last_minute ? 'orange' : 'text.secondary' }} />
+                                                                <Typography variant="caption">Dernière min</Typography>
+                                                            </Box>
+                                                        }
+                                                        labelPlacement="end"
+                                                        sx={{ margin: 0 }}
+                                                    />
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
                                                 <Stack direction="row" spacing={1}>
                                                     <Tooltip title="Voir">
                                                         <IconButton
@@ -413,6 +642,13 @@ const AdminEvents = ({ user }) => {
                                                                 setSelectedEventId(event.id);
                                                             }}>
                                                             <Visibility />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Modifier">
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleEditEvent(event)}>
+                                                            <Edit />
                                                         </IconButton>
                                                     </Tooltip>
                                                     <Tooltip title="Modérer">
@@ -426,7 +662,7 @@ const AdminEvents = ({ user }) => {
                                                                 });
                                                                 setModerationDialogOpen(true);
                                                             }}>
-                                                            <Edit />
+                                                            <Security />
                                                         </IconButton>
                                                     </Tooltip>
                                                     <Tooltip title="Supprimer">
@@ -461,6 +697,16 @@ const AdminEvents = ({ user }) => {
                             />
                         </TableContainer>
                     )}
+
+                    {/* Admin Event Form Dialog */}
+                    <AdminEventForm
+                        open={eventFormOpen}
+                        onClose={handleEventFormClose}
+                        event={selectedEvent}
+                        onSave={handleEventFormSubmit}
+                        venues={venues}
+                        categories={categories}
+                    />
 
                     {/* Delete Confirmation Dialog */}
                     <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

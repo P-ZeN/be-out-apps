@@ -1,6 +1,41 @@
 # Backend API Server Dockerfile
-FROM node:20-alpine
+FROM node:20-slim
 WORKDIR /app
+
+# Install Chrome dependencies and Chrome
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    gpg \
+    ca-certificates \
+    fonts-liberation \
+    libappindicator3-1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    libxss1 \
+    libgconf-2-4 \
+    --no-install-recommends
+
+# Add Chrome's GPG key and repository (modern Debian method)
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
+
+# Install Chrome
+RUN apt-get update && apt-get install -y \
+    google-chrome-stable \
+    --no-install-recommends
+
+# Clean up to reduce image size
+RUN apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
@@ -17,58 +52,48 @@ RUN npm install
 
 # Copy source code
 COPY src ./src
+COPY public ./public
 COPY . .
 
-# Copy updated translation files from project root to a staging area
-COPY ../translations ./translations-staging
+# Copy updated translation files from server directory to staging area
+COPY translations ./translations-staging
 
 # Create initialization script for translations
-# COMMENT OUT the next block when no translation updates are needed
+# FORCE UPDATE: This deployment will force update all translations
 RUN cat > init-translations.sh << 'EOF'
 #!/bin/sh
-echo "=== Translation Initialization Script ==="
+echo "=== Translation Force Update Script ==="
 echo "Current user: $(whoami)"
 echo "Current directory: $(pwd)"
-echo "Checking translation files initialization..."
+echo "FORCING translation files update..."
 
 # Show staging area contents
 echo "Staging area contents:"
 ls -la translations-staging/ || echo "No staging area found"
 
-# Check if translations directory exists and its permissions
-if [ -d "translations" ]; then
-    echo "Translations directory exists:"
-    ls -la translations/
-    echo "Checking for key files..."
-    ls -la translations/fr/ 2>/dev/null || echo "No fr directory"
-else
-    echo "Translations directory does not exist"
-fi
+# Always update translations (force update for Sept 19, 2025 changes)
+echo "Force updating translations from staging area..."
+mkdir -p translations
 
-# Initialize if needed
-if [ ! -d "translations" ] || [ ! -f "translations/fr/footer.json" ] || [ ! -f "translations/fr/dashboard.json" ] || [ ! -f "translations/fr/venues.json" ]; then
-    echo "Initializing translations from staging area..."
-    mkdir -p translations
+# Ensure we have proper permissions
+chmod 755 translations
 
-    # Ensure we have proper permissions
-    chmod 755 translations
+# Remove existing translations to force fresh copy
+rm -rf translations/* 2>/dev/null || true
 
-    # Copy with verbose output
-    cp -rv translations-staging/* translations/
+# Copy with verbose output
+cp -rv translations-staging/* translations/
 
-    # Set proper permissions
-    chmod -R 644 translations/*.json 2>/dev/null || true
-    chmod -R 755 translations/*/ 2>/dev/null || true
+# Set proper permissions
+chmod -R 644 translations/*.json 2>/dev/null || true
+chmod -R 755 translations/*/ 2>/dev/null || true
 
-    echo "Translation files initialized successfully"
-    echo "Final translations directory:"
-    ls -la translations/
-else
-    echo "Translation files already exist, skipping initialization"
-    echo "Existing translations:"
-    ls -la translations/
-fi
-echo "=== End Translation Initialization ==="
+echo "Translation files force updated successfully"
+echo "Final translations directory:"
+ls -la translations/
+echo "Sample file check - fr/home.json:"
+head -5 translations/fr/home.json 2>/dev/null || echo "File not found"
+echo "=== End Translation Force Update ==="
 EOF
 
 RUN chmod +x init-translations.sh
@@ -76,15 +101,13 @@ RUN chmod +x init-translations.sh
 # Create uploads directory
 RUN mkdir -p uploads/public/avatars uploads/public/events uploads/public/thumbnails uploads/private/documents uploads/private/temp
 
-# Create a non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# Create a non-root user (Debian syntax)
+RUN groupadd --gid 1001 nodejs
+RUN useradd --uid 1001 --gid nodejs --shell /bin/bash --create-home nodejs
 
-# Increase file descriptor limits
-RUN mkdir -p /etc/security
-RUN echo 'fs.file-max = 65536' >> /etc/sysctl.conf
-RUN echo '* soft nofile 65536' >> /etc/security/limits.conf
-RUN echo '* hard nofile 65536' >> /etc/security/limits.conf
+# Set file descriptor limits for the nodejs user (container-appropriate method)
+RUN echo "nodejs soft nofile 65536" >> /etc/security/limits.conf \
+    && echo "nodejs hard nofile 65536" >> /etc/security/limits.conf
 
 # Change ownership of the app directory (including uploads and translations)
 RUN chown -R nodejs:nodejs /app

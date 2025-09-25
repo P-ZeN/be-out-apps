@@ -25,7 +25,7 @@ class EmailService {
      * @param {string} templateName - Name of the template
      * @param {string} to - Recipient email
      * @param {Object} variables - Variables to replace in template
-     * @param {Object} options - Additional options (language, from, etc.)
+     * @param {Object} options - Additional options (language, from, attachments, etc.)
      */
     async sendTemplatedEmail(templateName, to, variables = {}, options = {}) {
         try {
@@ -35,11 +35,21 @@ class EmailService {
                 throw new Error(`Email template '${templateName}' not found for language '${language}'`);
             }
 
+            console.log("📧 Email Template Debug:");
+            console.log("Template name:", templateName);
+            console.log("Language:", language);
+            console.log("Variables passed:", Object.keys(variables));
+            console.log("Template subject preview:", template.subject.substring(0, 100));
+            console.log("Template body preview:", template.body.substring(0, 200));
+
             const compiledSubject = handlebars.compile(template.subject);
             const compiledBody = handlebars.compile(template.body);
 
             const subject = compiledSubject(variables);
             const htmlBody = compiledBody(variables);
+
+            console.log("📧 Compiled subject:", subject);
+            console.log("📧 Variables used in template:", variables);
 
             const msg = {
                 to,
@@ -49,8 +59,14 @@ class EmailService {
                 ...options,
             };
 
+            // Add attachments if provided
+            if (options.attachments && Array.isArray(options.attachments)) {
+                msg.attachments = options.attachments;
+            }
+
             console.log("Attempting to send email:", { to, subject, from: msg.from });
             console.log("SendGrid API Key present:", !!process.env.SENDGRID_API_KEY);
+            console.log("Attachments:", options.attachments ? options.attachments.length : 0);
 
             const result = await sgMail.send(msg);
 
@@ -69,6 +85,14 @@ class EmailService {
             // Log specific SendGrid error details
             if (error.response?.body?.errors) {
                 console.error("SendGrid specific errors:", error.response.body.errors);
+                // Log each individual error for debugging
+                error.response.body.errors.forEach((sgError, index) => {
+                    console.error(`SendGrid Error ${index + 1}:`, {
+                        message: sgError.message,
+                        field: sgError.field,
+                        help: sgError.help
+                    });
+                });
             }
 
             await this.logEmailSent(to, templateName, "", "failed", error.message);

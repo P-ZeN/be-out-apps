@@ -49,9 +49,11 @@ git push origin staging      # Deploys to production
 **Port Management**: Check `netstat -tlnp | grep -E ":(3000|5173|5174|5175)"` before starting to avoid conflicts
 
 **Always Running Applications**: Assume `npm run dev` is already running all 4 apps during development:
-- Don't suggest starting/stopping individual apps unless specifically needed
+- **NEVER** attempt to start/stop/restart development servers - this creates port conflicts and concurrent process mess
+- **NEVER** run `npm run dev`, `pkill`, or process management commands
+- **ASK OPERATOR** to restart servers if needed - it's faster than debugging port conflicts
 - Check existing terminal logs for debugging information instead of restarting
-- Use `get_terminal_output` or check running processes for status
+- Use `get_terminal_output` or check running processes for status only
 
 ```bash
 # Correct development startup
@@ -133,9 +135,12 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 **Remote PostgreSQL**: Database hosted on same server as Dockploy deployment
 - **CRITICAL**: All schema changes require operator execution via remote console
+- **AGENT RESTRICTION**: AI agents MUST NOT execute any database operations directly
+- **PROTOCOL**: ALL queries must be prepared as SQL statements for operator to execute manually
 - Always check `docs/schema.sql` before planning structure changes
 - Ask operator to verify current schema matches docs before modifications
 - Prepare SQL statements for operator to execute, then provide results back
+- Follow `docs/DATABASE_OPERATIONS_PROTOCOL.md` for all database interactions
 
 **Connection**: PostgreSQL with connection pooling (`server/src/db.js`)
 **File Storage**: Local volume storage (not MinIO) - files persist in Docker volumes

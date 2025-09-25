@@ -312,6 +312,8 @@ const Onboarding = () => {
                     lastName: formData.lastName,
                     phone: formData.phone,
                     dateOfBirth: formatDateForServer(formData.dateOfBirth),
+                    // Save current language preference during onboarding
+                    preferred_language: i18n.language || 'fr'
                 };
 
                 console.log("Sending profile data to server:", profileData);

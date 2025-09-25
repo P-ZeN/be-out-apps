@@ -4,6 +4,7 @@ import { Box, Paper, Typography, Chip, Button, IconButton } from "@mui/material"
 import { LocationOn, LocalOffer, Close } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { getEventPricingInfo, formatPriceDisplay } from "../utils/pricingUtils";
 
 // Function to detect if running in Tauri
 const isTauri = () => {
@@ -369,18 +370,21 @@ const MapComponent = ({
                             flexWrap: "wrap",
                             justifyContent: "center",
                         }}>
-                        {event.discount && event.discount > 0 && (
-                            <Chip
-                                label={`-${event.discount}%`}
-                                size="small"
-                                color="success"
-                                sx={{
-                                    height: "16px",
-                                    fontSize: "0.6rem",
-                                    "& .MuiChip-label": { px: 0.5 },
-                                }}
-                            />
-                        )}
+                        {(() => {
+                            const pricingInfo = getEventPricingInfo(event);
+                            return pricingInfo.discountPercentage && pricingInfo.discountPercentage > 0 && (
+                                <Chip
+                                    label={`-${pricingInfo.discountPercentage}%`}
+                                    size="small"
+                                    color="success"
+                                    sx={{
+                                        height: "16px",
+                                        fontSize: "0.6rem",
+                                        "& .MuiChip-label": { px: 0.5 },
+                                    }}
+                                />
+                            );
+                        })()}
                         {event.isLastMinute && (
                             <Chip
                                 label="⚡"
@@ -746,26 +750,46 @@ const MapComponent = ({
                                             borderRadius: 1,
                                         }}>
                                         <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                                            <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                                                {selectedEvent.discountedPrice}€
-                                            </Typography>
-                                            {selectedEvent.originalPrice !== selectedEvent.discountedPrice && (
-                                                <>
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            textDecoration: "line-through",
-                                                            color: "text.secondary",
-                                                        }}>
-                                                        {selectedEvent.originalPrice}€
-                                                    </Typography>
-                                                    <Chip
-                                                        label={`-${selectedEvent.discount}%`}
-                                                        size="small"
-                                                        color="success"
-                                                    />
-                                                </>
-                                            )}
+                                            {(() => {
+                                                const pricingInfo = getEventPricingInfo(selectedEvent);
+                                                const priceDisplay = formatPriceDisplay(pricingInfo);
+
+                                                if (pricingInfo.price === 0) {
+                                                    return (
+                                                        <Typography variant="h6" color="success.main" sx={{ fontWeight: "bold" }}>
+                                                            Gratuit
+                                                        </Typography>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <>
+                                                        <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
+                                                            {pricingInfo.hasMultiplePrices
+                                                                ? `À partir de ${pricingInfo.price}€`
+                                                                : `${pricingInfo.price}€`
+                                                            }
+                                                        </Typography>
+                                                        {priceDisplay.showStrikethrough && (
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    textDecoration: "line-through",
+                                                                    color: "text.secondary",
+                                                                }}>
+                                                                {priceDisplay.originalPrice}
+                                                            </Typography>
+                                                        )}
+                                                        {priceDisplay.showDiscountBadge && (
+                                                            <Chip
+                                                                label={`-${priceDisplay.discountPercentage}%`}
+                                                                size="small"
+                                                                color="success"
+                                                            />
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
                                         </Box>
                                     </Box>
 

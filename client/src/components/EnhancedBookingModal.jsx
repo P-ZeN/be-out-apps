@@ -26,6 +26,7 @@ import { Close, Person, Email, Phone, CreditCard, EventSeat, Schedule, LocationO
 import { useTheme } from "@mui/material/styles";
 import BookingService from "../services/bookingService";
 import PaymentModal from "./PaymentModal";
+import { getEventPricingInfo } from "../utils/pricingUtils";
 
 const EnhancedBookingModal = ({ open, onClose, event }) => {
     const theme = useTheme();
@@ -148,8 +149,12 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
         onClose();
     };
 
-    const totalPrice = event ? (event.discounted_price * formData.quantity).toFixed(2) : 0;
-    const originalTotal = event ? (event.original_price * formData.quantity).toFixed(2) : 0;
+    // Calculate pricing using the new utility function
+    const pricingInfo = event ? getEventPricingInfo(event) : null;
+    const unitPrice = pricingInfo ? pricingInfo.price : 0;
+    const originalUnitPrice = pricingInfo ? pricingInfo.originalPrice : null;
+    const totalPrice = event ? (unitPrice * formData.quantity).toFixed(2) : 0;
+    const originalTotal = event && originalUnitPrice ? (originalUnitPrice * formData.quantity).toFixed(2) : 0;
     const savings = event ? (originalTotal - totalPrice).toFixed(2) : 0;
 
     const renderStepContent = (step) => {
@@ -191,8 +196,8 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                                         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                                             <Euro sx={{ mr: 1, fontSize: 16 }} />
                                             <Typography variant="body2">
-                                                {event.discounted_price}€ par billet
-                                                {event.original_price > event.discounted_price && (
+                                                {unitPrice}€ par billet
+                                                {originalUnitPrice && originalUnitPrice > unitPrice && (
                                                     <Typography
                                                         component="span"
                                                         sx={{
@@ -200,7 +205,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                                                             color: theme.palette.text.secondary,
                                                             ml: 1,
                                                         }}>
-                                                        {event.original_price}€
+                                                        {originalUnitPrice}€
                                                     </Typography>
                                                 )}
                                             </Typography>
@@ -238,7 +243,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                                 </Typography>
                                 <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                                     <Typography variant="body2">
-                                        {formData.quantity} × {event?.discounted_price}€
+                                        {formData.quantity} × {unitPrice}€
                                     </Typography>
                                     <Typography variant="body2">{totalPrice}€</Typography>
                                 </Box>
@@ -371,7 +376,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                                 <Typography>Billets :</Typography>
                                 <Typography>
-                                    {formData.quantity} × {event?.discounted_price}€
+                                    {formData.quantity} × {unitPrice}€
                                 </Typography>
                             </Box>
                             <Divider sx={{ my: 1 }} />
@@ -421,10 +426,10 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                         {success ? (
                             <>
                                 <Typography variant="h5" color="success.main" gutterBottom>
-                                    🎉 Réservation confirmée !
+                                    {t('bookings:success.title')}
                                 </Typography>
                                 <Typography variant="body1" sx={{ mb: 3 }}>
-                                    Votre paiement a été traité avec succès et votre réservation est confirmée.
+                                    {t('bookings:success.message')}
                                 </Typography>
 
                                 {bookingResult?.booking && (
@@ -451,7 +456,7 @@ const EnhancedBookingModal = ({ open, onClose, event }) => {
                                 )}
 
                                 <Typography variant="body2" sx={{ mt: 2, color: theme.palette.text.secondary }}>
-                                    Un email de confirmation a été envoyé à {formData.customer_email}
+                                    {t('bookings:success.email_info')}
                                 </Typography>
                             </>
                         ) : (

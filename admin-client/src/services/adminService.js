@@ -165,6 +165,16 @@ class AdminService {
         }
     }
 
+    static async getOrganizers() {
+        try {
+            const response = await this.getUsers({ role: 'organizer' });
+            return response;
+        } catch (error) {
+            console.error("Error fetching organizers:", error);
+            throw error;
+        }
+    }
+
     static async updateUserRole(userId, role) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/role`, {
@@ -261,6 +271,46 @@ class AdminService {
         }
     }
 
+    static async updateEventFeatured(eventId, isFeatured) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}/featured`, {
+                method: "PATCH",
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify({ is_featured: isFeatured }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error updating event featured status:", error);
+            throw error;
+        }
+    }
+
+    static async updateEventLastMinute(eventId, isLastMinute) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}/last-minute`, {
+                method: "PATCH",
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify({ is_last_minute: isLastMinute }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error updating event last minute status:", error);
+            throw error;
+        }
+    }
+
     static async moderateEvent(adminId, eventId, moderationData) {
         try {
             const response = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}/status`, {
@@ -349,6 +399,106 @@ class AdminService {
             return await response.json();
         } catch (error) {
             console.error("Error fetching admin profile:", error);
+            throw error;
+        }
+    }
+
+    static async getVenues() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/events/meta/venues`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error fetching venues:", error);
+            throw error;
+        }
+    }
+
+    static async getCategories() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/events/meta/categories`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+            throw error;
+        }
+    }
+
+    static async createVenue(venueData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/venues`, {
+                method: "POST",
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify(venueData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error creating venue:", error);
+            throw error;
+        }
+    }
+
+    static async createEvent(eventData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/events`, {
+                method: "POST",
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify(eventData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error creating event:", error);
+            throw error;
+        }
+    }
+
+    static async updateEvent(eventId, eventData) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}`, {
+                method: "PUT",
+                headers: this.getAdminHeaders(),
+                body: JSON.stringify(eventData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error updating event:", error);
             throw error;
         }
     }

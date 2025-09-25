@@ -4,21 +4,24 @@ const authenticateToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
-    //console.log("Auth header:", authHeader); // Debug log
-    //console.log("Token:", token); // Debug log
-    //console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET); // Debug log
-
     if (token == null) {
-        // console.log("No token provided"); // Debug log
         return res.sendStatus(401);
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
         if (err) {
-            //console.log("JWT verification error:", err); // Debug log
             return res.sendStatus(403);
         }
-        //console.log("JWT decoded user:", user); // Debug log
+
+        // Handle different JWT payload formats and ensure backward compatibility
+        // Some tokens use 'userId', others might use 'id'
+        const user = {
+            id: payload.userId || payload.id,           // For most routes (tickets, organizer, etc.)
+            userId: payload.userId || payload.id,       // For admin routes
+            email: payload.email,
+            role: payload.role
+        };
+
         req.user = user;
         next();
     });
