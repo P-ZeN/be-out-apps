@@ -7,5 +7,6 @@
     "noEventsFromAPI": "Aucun événement disponible pour le moment",
     "errorLoadingEvents": "Erreur lors du chargement des événements",
     "locationUpdated": "Position mise à jour: {{address}}",
-    "locationError": "Impossible d'obtenir votre position"
+    "locationError": "Impossible d'obtenir votre position",
+    "viewEventDetails": "Voir les détails"
 }

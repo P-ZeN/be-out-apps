@@ -7,5 +7,6 @@
     "noEventsFromAPI": "No events available at the moment",
     "errorLoadingEvents": "Error loading events",
     "locationUpdated": "Location updated: {{address}}",
-    "locationError": "Unable to get your location"
+    "locationError": "Unable to get your location",
+    "viewEventDetails": "View Details"
 }

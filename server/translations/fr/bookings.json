@@ -3,6 +3,12 @@
         "title": "Réservations",
         "confirm": "Confirmer la réservation",
         "cancel": "Annuler la réservation",
+        "success": {
+            "title": "🎉 Réservation confirmée !",
+            "message": "Votre réservation a été confirmée avec succès.",
+            "reference_label": "Numéro de référence",
+            "email_info": "Vous recevrez vos billets par email. Vous pouvez également récupérer vos billets dans votre page de profil."
+        },
         "modal": {
             "title": "Réserver {{eventTitle}}",
             "steps": {

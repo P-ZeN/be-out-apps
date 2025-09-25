@@ -7,5 +7,6 @@
     "noEventsFromAPI": "No hay eventos disponibles en este momento",
     "errorLoadingEvents": "Error al cargar los eventos",
     "locationUpdated": "Ubicación actualizada: {{address}}",
-    "locationError": "No se pudo obtener su ubicación"
+    "locationError": "No se pudo obtener su ubicación",
+    "viewEventDetails": "Ver Detalles"
 }
