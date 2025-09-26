@@ -60,6 +60,8 @@
         "discountPercentageHelp": "Mostrar insignia de descuento",
         "displayPrice": "Precio a mostrar",
         "displayPriceHelp": "Precio final mostrado a los usuarios",
+        "organizerEarnings": "Sus ganancias (después de comisión 11%)",
+        "organizerEarningsHelp": "Cantidad que recibirá por entrada vendida",
         "quantity": "Cantidad Disponible",
         "quantityHelp": "Deje vacío para ilimitado",
         "earlyBird": "Precio Early Bird",
@@ -87,6 +89,10 @@
             "vipPrice": "Precio VIP",
             "existingDataWarning": "Ya tiene precios configurados. Aplicar una plantilla reemplazará su estructura de precios actual.",
             "confirmReplace": "Esto reemplazará su estructura de precios actual. ¿Está seguro?"
-        }
+        },
+        "revenueInfo": "Información de Ingresos",
+        "platformFee": "Be Out cobra una comisión fija del 11% en cada entrada vendida. Usted recibe el 89% del precio de la entrada.",
+        "maxPotentialEarnings": "Ganancias potenciales máximas de niveles limitados",
+        "unlimitedTiersNote": "Más potencial de ganancias ilimitadas de niveles sin límite de cantidad"
     }
 }

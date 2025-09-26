@@ -880,6 +880,31 @@ const EventForm = () => {
                             <Grid size={{ xs: 12, md: 6 }}>
                                 <TextField
                                     fullWidth
+                                    label="Vos revenus (après commission 11%)"
+                                    type="text"
+                                    value={
+                                        formData.price && !isNaN(formData.price) && Number(formData.price) > 0
+                                            ? `${(Number(formData.price) * 0.89).toFixed(2)}`
+                                            : "0.00"
+                                    }
+                                    InputProps={{
+                                        startAdornment: <InputAdornment position="start">€</InputAdornment>,
+                                        readOnly: true,
+                                    }}
+                                    helperText="Montant que vous recevrez par billet vendu"
+                                    sx={{
+                                        "& .MuiInputBase-input": {
+                                            backgroundColor: "action.hover",
+                                            color: "success.main",
+                                            fontWeight: "medium",
+                                        },
+                                    }}
+                                />
+                            </Grid>
+
+                            <Grid size={{ xs: 12, md: 6 }}>
+                                <TextField
+                                    fullWidth
                                     label="Nombre maximum de participants"
                                     type="number"
                                     value={formData.max_participants}
@@ -895,6 +920,24 @@ const EventForm = () => {
                                     }}
                                     required
                                 />
+                            </Grid>
+
+                            {/* Revenue Information */}
+                            <Grid size={{ xs: 12 }}>
+                                <Alert severity="info" sx={{ mt: 2 }}>
+                                    <Typography variant="body2">
+                                        <strong>Structure de revenus :</strong> Be Out prélève une commission fixe de 11% sur chaque billet vendu.
+                                        Le montant restant (89%) vous sera reversé après la fin de l'événement.
+                                    </Typography>
+                                    {formData.price && !isNaN(formData.price) && Number(formData.price) > 0 && formData.max_participants && !isNaN(formData.max_participants) && Number(formData.max_participants) > 0 && (
+                                        <Typography variant="body2" sx={{ mt: 1 }}>
+                                            <strong>Revenus potentiels maximum :</strong> {
+                                                (Number(formData.price) * 0.89 * Number(formData.max_participants)).toFixed(2)
+                                            }€
+                                            (si tous les billets sont vendus)
+                                        </Typography>
+                                    )}
+                                </Alert>
                             </Grid>
 
                             {/* Tags */}

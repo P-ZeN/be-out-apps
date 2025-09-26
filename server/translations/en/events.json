@@ -60,6 +60,8 @@
         "discountPercentageHelp": "Display discount badge",
         "displayPrice": "Price to display",
         "displayPriceHelp": "Final price shown to users",
+        "organizerEarnings": "Your earnings (after 11% fee)",
+        "organizerEarningsHelp": "Amount you receive per ticket sold",
         "quantity": "Available Quantity",
         "quantityHelp": "Leave empty for unlimited",
         "earlyBird": "Early Bird Pricing",
@@ -87,6 +89,10 @@
             "vipPrice": "VIP Price",
             "existingDataWarning": "You already have pricing configured. Applying a template will replace your current pricing structure.",
             "confirmReplace": "This will replace your current pricing structure. Are you sure?"
-        }
+        },
+        "revenueInfo": "Revenue Information",
+        "platformFee": "Be Out charges a fixed 11% commission on each ticket sold. You receive 89% of the ticket price.",
+        "maxPotentialEarnings": "Maximum potential earnings from limited tiers",
+        "unlimitedTiersNote": "Plus unlimited earning potential from tiers without quantity limits"
     }
 }

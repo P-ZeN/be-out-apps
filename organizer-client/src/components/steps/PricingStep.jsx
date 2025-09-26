@@ -554,6 +554,30 @@ const PricingStep = ({ data, onChange }) => {
                                                 <Grid size={{ xs: 12, md: 6 }}>
                                                     <TextField
                                                         fullWidth
+                                                        label={t('events:pricing.organizerEarnings', 'Your earnings (after 11% fee)')}
+                                                        type="text"
+                                                        value={
+                                                            tier.price && !isNaN(tier.price) && Number(tier.price) > 0
+                                                                ? `${(Number(tier.price) * 0.89).toFixed(2)}`
+                                                                : "0.00"
+                                                        }
+                                                        InputProps={{
+                                                            startAdornment: <InputAdornment position="start">€</InputAdornment>,
+                                                            readOnly: true,
+                                                        }}
+                                                        helperText={t('events:pricing.organizerEarningsHelp', 'Amount you receive per ticket sold')}
+                                                        sx={{
+                                                            "& .MuiInputBase-input": {
+                                                                backgroundColor: "action.hover",
+                                                                color: "success.main",
+                                                                fontWeight: "medium",
+                                                            },
+                                                        }}
+                                                    />
+                                                </Grid>
+                                                <Grid size={{ xs: 12, md: 6 }}>
+                                                    <TextField
+                                                        fullWidth
                                                         label={t('events:pricing.quantity', 'Available Quantity')}
                                                         type="number"
                                                         value={tier.available_quantity || ''}
@@ -579,6 +603,49 @@ const PricingStep = ({ data, onChange }) => {
                             </AccordionDetails>
                         </Accordion>
                     ))}
+
+                    {/* Revenue Summary */}
+                    {pricingData.categories.length > 0 && (
+                        <Alert severity="info" sx={{ mt: 3 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                {t('events:pricing.revenueInfo', 'Revenue Information')}
+                            </Typography>
+                            <Typography variant="body2" sx={{ mb: 1 }}>
+                                {t('events:pricing.platformFee', 'Be Out charges a fixed 11% commission on each ticket sold. You receive 89% of the ticket price.')}
+                            </Typography>
+                            {(() => {
+                                const totalPotentialRevenue = pricingData.categories.reduce((total, category) => {
+                                    return total + (category.tiers || []).reduce((catTotal, tier) => {
+                                        const price = parseFloat(tier.price) || 0;
+                                        const quantity = parseInt(tier.available_quantity) || 0;
+                                        const earnings = price * 0.89;
+                                        return catTotal + (quantity > 0 ? earnings * quantity : 0);
+                                    }, 0);
+                                }, 0);
+
+                                const hasUnlimitedTiers = pricingData.categories.some(category =>
+                                    (category.tiers || []).some(tier =>
+                                        !tier.available_quantity && parseFloat(tier.price) > 0
+                                    )
+                                );
+
+                                if (totalPotentialRevenue > 0 || hasUnlimitedTiers) {
+                                    return (
+                                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                            {totalPotentialRevenue > 0 && (
+                                                <>
+                                                    {t('events:pricing.maxPotentialEarnings', 'Maximum potential earnings from limited tiers')}: {totalPotentialRevenue.toFixed(2)}€
+                                                    {hasUnlimitedTiers && <br />}
+                                                </>
+                                            )}
+                                            {hasUnlimitedTiers && t('events:pricing.unlimitedTiersNote', 'Plus unlimited earning potential from tiers without quantity limits')}
+                                        </Typography>
+                                    );
+                                }
+                                return null;
+                            })()}
+                        </Alert>
+                    )}
                 </Box>
             )}
         </Box>

@@ -60,6 +60,8 @@
         "discountPercentageHelp": "Badge de réduction affiché",
         "displayPrice": "Prix à afficher",
         "displayPriceHelp": "Prix final affiché aux utilisateurs",
+        "organizerEarnings": "Vos revenus (après commission 11%)",
+        "organizerEarningsHelp": "Montant que vous recevrez par billet vendu",
         "quantity": "Quantité Disponible",
         "quantityHelp": "Laissez vide pour illimité",
         "earlyBird": "Prix Early Bird",
@@ -87,6 +89,10 @@
             "vipPrice": "Prix VIP",
             "existingDataWarning": "Vous avez déjà des prix configurés. L'application d'un modèle remplacera votre structure tarifaire actuelle.",
             "confirmReplace": "Cela remplacera votre structure tarifaire actuelle. Êtes-vous sûr ?"
-        }
+        },
+        "revenueInfo": "Informations sur les Revenus",
+        "platformFee": "Be Out prélève une commission fixe de 11% sur chaque billet vendu. Vous recevez 89% du prix du billet.",
+        "maxPotentialEarnings": "Revenus potentiels maximum des niveaux limités",
+        "unlimitedTiersNote": "Plus un potentiel de revenus illimité des niveaux sans limite de quantité"
     }
 }
