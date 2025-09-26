@@ -71,28 +71,36 @@ echo "FORCING translation files update..."
 echo "Staging area contents:"
 ls -la translations-staging/ || echo "No staging area found"
 
-# Always update translations (force update for Sept 19, 2025 changes)
+# Always update translations (force update for Sept 26, 2025 changes)
 echo "Force updating translations from staging area..."
 mkdir -p translations
 
 # Ensure we have proper permissions
 chmod 755 translations
 
-# Remove existing translations to force fresh copy
+# Remove existing translations to force fresh copy - AGGRESSIVE MODE
+echo "Removing all existing translation files..."
 rm -rf translations/* 2>/dev/null || true
+rm -rf translations/.* 2>/dev/null || true
 
-# Copy with verbose output
-cp -rv translations-staging/* translations/
+# Copy with verbose output and force overwrite
+echo "Copying fresh translations from staging..."
+cp -rfv translations-staging/* translations/ 2>/dev/null || echo "Copy completed with warnings"
 
 # Set proper permissions
 chmod -R 644 translations/*.json 2>/dev/null || true
 chmod -R 755 translations/*/ 2>/dev/null || true
 
+# Create update timestamp to verify deployment
+echo "$(date): Translation files force updated - Build $(date +%Y%m%d-%H%M%S)" > translations/.last-update
+
 echo "Translation files force updated successfully"
 echo "Final translations directory:"
 ls -la translations/
-echo "Sample file check - fr/home.json:"
-head -5 translations/fr/home.json 2>/dev/null || echo "File not found"
+echo "Update timestamp:"
+cat translations/.last-update 2>/dev/null || echo "No timestamp file"
+echo "Sample file check - fr/bookings.json success keys:"
+grep -A3 '"success"' translations/fr/bookings.json 2>/dev/null || echo "Bookings file not found"
 echo "=== End Translation Force Update ==="
 EOF
 
