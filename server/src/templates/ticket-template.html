@@ -42,7 +42,13 @@
                         {{#EVENT_CATEGORY}}
                         <div class="category-badge" style="background: {{PRIMARY_COLOR}};">{{EVENT_CATEGORY}}</div>
                         {{/EVENT_CATEGORY}}
-                        <div class="price-display" style="color: {{PRIMARY_COLOR}};">{{EVENT_PRICE}}€</div>
+                        <div class="price-display" style="color: {{PRIMARY_COLOR}};">{{TIER_PRICE}}€</div>
+                    </div>
+
+                    <!-- Pricing Tier Information -->
+                    <div class="info-item">
+                        <span class="info-label">TYPE DE BILLET</span>
+                        <div class="info-value tier-info">{{PRICING_CATEGORY_TIER}}</div>
                     </div>
                 </div>
             </div>

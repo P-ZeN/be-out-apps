@@ -561,7 +561,10 @@ const TicketDesignStep = ({ data, onChange, templates, eventData }) => {
                                             • <code>{'{booking_id}'}</code> - {t('organizer:tickets.design.qr.placeholderBookingId')}<br />
                                             • <code>{'{event_title}'}</code> - {t('organizer:tickets.design.qr.placeholderTitle')}<br />
                                             • <code>{'{event_date}'}</code> - {t('organizer:tickets.design.qr.placeholderDate')}<br />
-                                            • <code>{'{venue_name}'}</code> - {t('organizer:tickets.design.qr.placeholderVenue')}
+                                            • <code>{'{venue_name}'}</code> - {t('organizer:tickets.design.qr.placeholderVenue')}<br />
+                                            • <code>{'{pricing_category}'}</code> - Pricing category name<br />
+                                            • <code>{'{pricing_tier}'}</code> - Pricing tier name<br />
+                                            • <code>{'{tier_price}'}</code> - Ticket price for this tier
                                         </Typography>
                                     </Alert>
                                 </Grid>

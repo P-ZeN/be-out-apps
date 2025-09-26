@@ -301,10 +301,10 @@ const EventFormWizard = () => {
         setLoading(true);
         setError("");
         try {
-            await organizerService.toggleEventPublication(targetEventId, newWantsPublished);
+            await organizerService.publishEvent(targetEventId, newWantsPublished);
             setSuccess(newWantsPublished ?
-                "Événement marqué pour publication !" :
-                "Événement retiré de la publication !");
+                "Événement publié avec succès !" :
+                "Événement dépublié avec succès !");
             // Reload event data to reflect new status
             const eventData = await organizerService.getEvent(targetEventId);
             setFormData(prev => ({

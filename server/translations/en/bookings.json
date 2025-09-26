@@ -1,15 +1,14 @@
 {
-    "bookings": {
-        "title": "Bookings",
-        "confirm": "Confirm booking",
-        "cancel": "Cancel booking",
-        "success": {
-            "title": "🎉 Booking confirmed!",
-            "message": "Your booking has been successfully confirmed.",
-            "reference_label": "Reference number",
-            "email_info": "You will receive your tickets by email. You can also retrieve your tickets from your profile page."
-        },
-        "modal": {
+    "title": "Bookings",
+    "confirm": "Confirm booking",
+    "cancel": "Cancel booking",
+    "success": {
+        "title": "🎉 Booking confirmed!",
+        "message": "Your booking has been successfully confirmed.",
+        "reference_label": "Reference number",
+        "email_info": "You will receive your tickets by email. You can also retrieve your tickets from your profile page."
+    },
+    "modal": {
             "title": "Book {{eventTitle}}",
             "steps": {
                 "details": "Details",
@@ -57,5 +56,4 @@
                 "bookingFailed": "Booking failed. Please try again."
             }
         }
-    }
 }

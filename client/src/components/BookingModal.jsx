@@ -45,6 +45,10 @@ const BookingModal = ({ open, onClose, event }) => {
         customer_phone: "",
         special_requests: "",
         acceptTerms: false,
+        // Multi-tier pricing support
+        pricing_category_id: null,
+        pricing_tier_id: null,
+        selected_pricing_option: null,
     });
 
     // Pre-fill user information when component mounts or user changes
@@ -63,7 +67,7 @@ const BookingModal = ({ open, onClose, event }) => {
         }
     }, [user, open]);
 
-    const steps = ["Détails", "Informations", "Paiement", "Confirmation"];
+    const steps = ["Tarification", "Détails", "Informations", "Paiement", "Confirmation"];
 
     const handleInputChange = (field) => (event) => {
         const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
@@ -77,14 +81,16 @@ const BookingModal = ({ open, onClose, event }) => {
     const validateStep = (step) => {
         switch (step) {
             case 0:
-                return formData.quantity >= 1 && formData.quantity <= (event?.available_tickets || 0);
+                return formData.pricingCategoryId && formData.pricingTierId;
             case 1:
+                return formData.quantity >= 1 && formData.quantity <= (event?.available_tickets || 0);
+            case 2:
                 return (
                     formData.customer_name.trim() &&
                     formData.customer_email.trim() &&
                     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)
                 );
-            case 2:
+            case 3:
                 return formData.acceptTerms;
             default:
                 return true;
@@ -118,6 +124,8 @@ const BookingModal = ({ open, onClose, event }) => {
                 customer_phone: formData.customer_phone,
                 special_requests: formData.special_requests,
                 user_id: user?.id, // Associate booking with logged-in user
+                pricing_category_id: formData.pricingCategoryId,
+                pricing_tier_id: formData.pricingTierId,
             };
 
             const validation = BookingService.validateBookingData(bookingData);
@@ -140,7 +148,7 @@ const BookingModal = ({ open, onClose, event }) => {
 
             setBookingResult(result);
             setSuccess(true);
-            setActiveStep(3);
+            setActiveStep(4);
         } catch (err) {
             setError(err.message || "Une erreur est survenue lors de la réservation.");
         } finally {
@@ -171,10 +179,19 @@ const BookingModal = ({ open, onClose, event }) => {
         onClose();
     };
 
-    // Calculate pricing using the new utility function
+    // Calculate pricing using the selected tier or default to cheapest
     const pricingInfo = event ? getEventPricingInfo(event) : null;
-    const unitPrice = pricingInfo ? pricingInfo.price : 0;
-    const originalUnitPrice = pricingInfo ? pricingInfo.originalPrice : null;
+    const pricingOptions = event ? getBookingPricingOptions(event) : [];
+
+    // Find the selected pricing option
+    const selectedPricingOption = pricingOptions.find(option =>
+        option.categoryId === formData.pricingCategoryId &&
+        option.tierId === formData.pricingTierId
+    );
+
+    // Use selected tier pricing or fallback to default
+    const unitPrice = selectedPricingOption ? selectedPricingOption.price : (pricingInfo ? pricingInfo.price : 0);
+    const originalUnitPrice = selectedPricingOption ? selectedPricingOption.originalPrice : (pricingInfo ? pricingInfo.originalPrice : null);
     const totalPrice = event ? (unitPrice * formData.quantity).toFixed(2) : 0;
     const originalTotal = event && originalUnitPrice ? (originalUnitPrice * formData.quantity).toFixed(2) : 0;
     const savings = event && originalUnitPrice ? (originalTotal - totalPrice).toFixed(2) : 0;
@@ -182,6 +199,86 @@ const BookingModal = ({ open, onClose, event }) => {
     const renderStepContent = (step) => {
         switch (step) {
             case 0:
+                const pricingOptions = getBookingPricingOptions(event);
+                return (
+                    <Box>
+                        <Typography variant="h6" gutterBottom>
+                            Choisissez votre tarif
+                        </Typography>
+                        <Grid container spacing={2}>
+                            {pricingOptions.map((option) => (
+                                <Grid size={{ xs: 12, sm: 6 }} key={option.id}>
+                                    <Paper
+                                        sx={{
+                                            p: 2,
+                                            cursor: 'pointer',
+                                            border: formData.pricingCategoryId === option.categoryId &&
+                                                   formData.pricingTierId === option.tierId
+                                                ? `2px solid ${theme.palette.primary.main}`
+                                                : `1px solid ${theme.palette.divider}`,
+                                            '&:hover': {
+                                                backgroundColor: theme.palette.action.hover,
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                pricingCategoryId: option.categoryId,
+                                                pricingTierId: option.tierId
+                                            }));
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <Box>
+                                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                                    {option.displayName}
+                                                </Typography>
+                                                {option.categoryDescription && (
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                        {option.categoryDescription}
+                                                    </Typography>
+                                                )}
+                                                {option.isEarlyBird && (
+                                                    <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 0.5 }}>
+                                                        🐦 Tarif Early Bird
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                            <Box sx={{ textAlign: 'right' }}>
+                                                <Typography variant="h6" color="primary.main">
+                                                    {option.price}€
+                                                </Typography>
+                                                {option.originalPrice && option.originalPrice > option.price && (
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{
+                                                            textDecoration: 'line-through',
+                                                            color: 'text.secondary'
+                                                        }}
+                                                    >
+                                                        {option.originalPrice}€
+                                                    </Typography>
+                                                )}
+                                                {option.discountPercentage && (
+                                                    <Typography variant="caption" color="success.main">
+                                                        -{option.discountPercentage}%
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        </Box>
+                                        {option.availableQuantity && option.availableQuantity < 10 && (
+                                            <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
+                                                ⚠️ Plus que {option.availableQuantity} places disponibles
+                                            </Typography>
+                                        )}
+                                    </Paper>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+                );
+
+            case 1:
                 return (
                     <Box>
                         <Typography variant="h6" gutterBottom>
@@ -242,7 +339,7 @@ const BookingModal = ({ open, onClose, event }) => {
                     </Box>
                 );
 
-            case 1:
+            case 2:
                 return (
                     <Box>
                         <Typography variant="h6" gutterBottom>
@@ -311,7 +408,7 @@ const BookingModal = ({ open, onClose, event }) => {
                     </Box>
                 );
 
-            case 2:
+            case 3:
                 return (
                     <Box>
                         <Typography variant="h6" gutterBottom>
@@ -325,6 +422,12 @@ const BookingModal = ({ open, onClose, event }) => {
                                 <Typography>Événement :</Typography>
                                 <Typography>{event?.title}</Typography>
                             </Box>
+                            {selectedPricingOption && (
+                                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                                    <Typography>Tarif :</Typography>
+                                    <Typography>{selectedPricingOption.displayName}</Typography>
+                                </Box>
+                            )}
                             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
                                 <Typography>Billets :</Typography>
                                 <Typography>
@@ -342,6 +445,16 @@ const BookingModal = ({ open, onClose, event }) => {
                                     {totalPrice}€
                                 </Typography>
                             </Box>
+                            {originalUnitPrice && originalUnitPrice > unitPrice && (
+                                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
+                                    <Typography variant="body2" color="success.main">
+                                        Économies :
+                                    </Typography>
+                                    <Typography variant="body2" color="success.main">
+                                        -{savings}€
+                                    </Typography>
+                                </Box>
+                            )}
                         </Paper>
 
                         <Box
@@ -372,7 +485,7 @@ const BookingModal = ({ open, onClose, event }) => {
                     </Box>
                 );
 
-            case 3:
+            case 4:
                 return (
                     <Box sx={{ textAlign: "center" }}>
                         {success ? (
@@ -501,17 +614,17 @@ const BookingModal = ({ open, onClose, event }) => {
                 <Button onClick={handleClose} disabled={loading}>
                     Annuler
                 </Button>
-                {activeStep > 0 && activeStep < 3 && (
+                {activeStep > 0 && activeStep < 4 && (
                     <Button onClick={handleBack} disabled={loading}>
                         Retour
                     </Button>
                 )}
-                {activeStep < 2 && (
+                {activeStep < 3 && (
                     <Button variant="contained" onClick={handleNext} disabled={loading}>
                         Suivant
                     </Button>
                 )}
-                {activeStep === 2 && (
+                {activeStep === 3 && (
                     <Button
                         variant="contained"
                         onClick={handleSubmit}
@@ -520,7 +633,7 @@ const BookingModal = ({ open, onClose, event }) => {
                         {loading ? "Traitement..." : `Payer ${totalPrice}€`}
                     </Button>
                 )}
-                {activeStep === 3 && success && (
+                {activeStep === 4 && success && (
                     <Button variant="contained" onClick={handleClose}>
                         Fermer
                     </Button>

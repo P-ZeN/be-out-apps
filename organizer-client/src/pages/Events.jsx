@@ -104,13 +104,13 @@ const Events = () => {
                     showSnackbar("Événement remis en brouillon avec succès");
                     break;
                 case "publish":
-                    // Use toggleEventPublication for organizer's publication intent
-                    response = await organizerService.toggleEventPublication(eventId, true);
+                    // Directly publish the event (sets is_published = true)
+                    response = await organizerService.publishEvent(eventId, true);
                     showSnackbar("Événement publié avec succès");
                     break;
                 case "unpublish":
-                    // Use toggleEventPublication for organizer's publication intent
-                    response = await organizerService.toggleEventPublication(eventId, false);
+                    // Directly unpublish the event (sets is_published = false)
+                    response = await organizerService.publishEvent(eventId, false);
                     showSnackbar("Événement dépublié avec succès");
                     break;
                 default:

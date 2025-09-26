@@ -1025,6 +1025,9 @@ CREATE TABLE public.booking_tickets (
     pdf_generated_at timestamp with time zone,
     pdf_file_url text,
     custom_fields jsonb,
+    pricing_category_name character varying(255),
+    pricing_tier_name character varying(255),
+    tier_price numeric(10,2),
     CONSTRAINT booking_tickets_ticket_status_check CHECK (((ticket_status)::text = ANY ((ARRAY['valid'::character varying, 'used'::character varying, 'cancelled'::character varying])::text[])))
 );
 
@@ -1054,6 +1057,10 @@ CREATE TABLE public.bookings (
     cancelled_at timestamp with time zone,
     cancellation_reason text,
     stripe_payment_intent_id character varying(255),
+    pricing_category_id uuid,
+    pricing_tier_id character varying(255),
+    pricing_category_name character varying(255),
+    pricing_tier_name character varying(255),
     CONSTRAINT bookings_booking_status_check CHECK (((booking_status)::text = ANY ((ARRAY['pending'::character varying, 'confirmed'::character varying, 'cancelled'::character varying, 'refunded'::character varying])::text[]))),
     CONSTRAINT bookings_payment_status_check CHECK (((payment_status)::text = ANY ((ARRAY['pending'::character varying, 'paid'::character varying, 'failed'::character varying, 'refunded'::character varying])::text[])))
 );
@@ -2292,6 +2299,20 @@ CREATE INDEX idx_bookings_event_id ON public.bookings USING btree (event_id);
 --
 
 CREATE INDEX idx_bookings_organizer_events ON public.bookings USING btree (event_id, booking_date DESC);
+
+
+--
+-- Name: idx_bookings_pricing_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_bookings_pricing_category ON public.bookings USING btree (pricing_category_id);
+
+
+--
+-- Name: idx_bookings_pricing_tier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_bookings_pricing_tier ON public.bookings USING btree (pricing_tier_id);
 
 
 --

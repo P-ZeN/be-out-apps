@@ -165,6 +165,14 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 - Address root issues directly rather than working around them
 - Less is more - prefer simple, maintainable solutions
 
+**Dead Code Cleanup**: Proactively identify and remove unused code
+- **ALWAYS investigate** when encountering multiple similar files/components
+- **CHECK imports and usage** before assuming code is needed
+- **DISTINGUISH** between commented-out code (kept for reference) vs truly dead code
+- **REMOVE dead code** immediately when confirmed unused
+- **DOCUMENT cleanup** in commit messages for transparency
+- **NEVER delete** code that has TODO comments or is explicitly marked for future use
+
 ## Common Patterns
 
 **Error Handling**: Check `get_errors` tool output when debugging - project has comprehensive error tracking

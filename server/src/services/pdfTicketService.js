@@ -349,7 +349,7 @@ class PDFTicketService {
         // Get QR content preview (truncated for display)
         const qrContentPreview = qrContent.length > 30 ? qrContent.substring(0, 30) + '...' : qrContent;
 
-        // Prepare template data
+        // Prepare template data with pricing tier information
         const templateData = {
             CSS_CONTENT: cssContent,
             TICKET_SIZE_CLASS: 'a5', // Always A5 now
@@ -360,6 +360,14 @@ class PDFTicketService {
             EVENT_CATEGORY: eventData.category_name || null,
             EVENT_IMAGE: eventImageBase64,
             EVENT_PRICE: eventData.price || null,
+            // New pricing tier information
+            PRICING_CATEGORY: ticketData.pricing_category_name || 'Standard',
+            PRICING_TIER: ticketData.pricing_tier_name || 'Regular',
+            TIER_PRICE: ticketData.tier_price || eventData.price || null,
+            PRICING_CATEGORY_TIER: ticketData.pricing_category_name && ticketData.pricing_tier_name
+                ? `${ticketData.pricing_category_name} - ${ticketData.pricing_tier_name}`
+                : 'Standard - Regular',
+            // Existing fields
             FORMATTED_DATE: formattedDate,
             FORMATTED_TIME: formattedTime,
             EVENT_LOCATION: eventData.location || eventData.formatted_address || 'Lieu à confirmer',
@@ -375,6 +383,10 @@ class PDFTicketService {
         console.log('🎫 Final Template Data:', {
             EVENT_TITLE: templateData.EVENT_TITLE,
             EVENT_PRICE: templateData.EVENT_PRICE,
+            PRICING_CATEGORY: templateData.PRICING_CATEGORY,
+            PRICING_TIER: templateData.PRICING_TIER,
+            TIER_PRICE: templateData.TIER_PRICE,
+            PRICING_CATEGORY_TIER: templateData.PRICING_CATEGORY_TIER,
             TICKET_NUMBER: templateData.TICKET_NUMBER,
             CUSTOM_MESSAGE: templateData.CUSTOM_MESSAGE,
             has_EVENT_IMAGE: !!templateData.EVENT_IMAGE,

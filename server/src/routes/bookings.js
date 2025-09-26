@@ -2,6 +2,40 @@ import { Router } from "express";
 import pool from "../db.js";
 import crypto from "crypto";
 import emailNotificationService from "../services/emailNotificationService.js";
+import {
+    getAvailablePricingOptions,
+    findPricingOption,
+    validatePricingSelection,
+    calculateBookingPrice,
+    generateTierAwareQRContent,
+    generateTierAwareTicketNumber
+} from "../utils/pricingUtils.js";
+
+/**
+ * Generate a deterministic UUID from a string ID
+ * This ensures consistent UUID generation for the same string input
+ */
+const stringToUUID = (str) => {
+    if (!str) return null;
+
+    // If it's already a UUID, return as-is
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(str)) {
+        return str;
+    }
+
+    // Generate deterministic UUID from string using SHA-256 hash
+    const hash = crypto.createHash('sha256').update(str).digest('hex');
+
+    // Format as UUID v4
+    return [
+        hash.substr(0, 8),
+        hash.substr(8, 4),
+        '4' + hash.substr(13, 3), // Version 4
+        ((parseInt(hash.substr(16, 1), 16) & 0x3) | 0x8).toString(16) + hash.substr(17, 3), // Variant bits
+        hash.substr(20, 12)
+    ].join('-');
+};
 
 const router = Router();
 
@@ -19,6 +53,8 @@ router.post("/", async (req, res) => {
             customer_phone,
             special_requests,
             user_id = null, // Optional for authenticated users
+            pricing_category_id = null, // New: Selected pricing category
+            pricing_tier_id = null, // New: Selected pricing tier
         } = req.body;
 
         // Validate required fields
@@ -32,7 +68,7 @@ router.post("/", async (req, res) => {
         const eventQuery = `
             SELECT
                 id, title, discounted_price, available_tickets,
-                booking_deadline, event_date, status
+                booking_deadline, event_date, status, pricing
             FROM events
             WHERE id = $1 AND status = 'active'
         `;
@@ -57,12 +93,41 @@ router.post("/", async (req, res) => {
             return res.status(400).json({ error: "Event has already occurred" });
         }
 
-        // Check ticket availability
-        if (event.available_tickets < quantity) {
-            await client.query("ROLLBACK");
-            return res.status(400).json({
-                error: `Only ${event.available_tickets} tickets available`,
-            });
+        // Handle pricing tier selection and validation
+        let pricingOption = null;
+        let pricingValidation = null;
+
+        if (pricing_category_id && pricing_tier_id) {
+            // New multi-tier pricing system
+            pricingValidation = validatePricingSelection(event, pricing_category_id, pricing_tier_id, quantity);
+
+            if (!pricingValidation.success) {
+                await client.query("ROLLBACK");
+                return res.status(400).json({
+                    error: pricingValidation.error,
+                    code: pricingValidation.code
+                });
+            }
+
+            pricingOption = pricingValidation.option;
+        } else {
+            // Legacy single pricing or default to first available option
+            const availableOptions = getAvailablePricingOptions(event);
+
+            if (availableOptions.length === 0) {
+                await client.query("ROLLBACK");
+                return res.status(400).json({ error: "No pricing options available for this event" });
+            }
+
+            pricingOption = availableOptions[0]; // Use first available option as default
+
+            // Validate availability for legacy system
+            if (event.available_tickets < quantity) {
+                await client.query("ROLLBACK");
+                return res.status(400).json({
+                    error: `Only ${event.available_tickets} tickets available`,
+                });
+            }
         }
 
         // Check for existing bookings to prevent accidental duplicates
@@ -89,16 +154,17 @@ router.post("/", async (req, res) => {
             });
         }
 
-        const unit_price = parseFloat(event.discounted_price);
-        const total_price = unit_price * quantity;
+        // Calculate pricing based on selected tier
+        const priceCalculation = calculateBookingPrice(pricingOption, quantity);
 
-        // Create booking
+        // Create booking with pricing tier information
         const bookingQuery = `
             INSERT INTO bookings (
                 user_id, event_id, quantity, unit_price, total_price,
                 customer_name, customer_email, customer_phone, special_requests,
+                pricing_category_id, pricing_tier_id, pricing_category_name, pricing_tier_name,
                 booking_status, payment_status
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', 'pending')
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', 'pending')
             RETURNING *
         `;
 
@@ -106,46 +172,62 @@ router.post("/", async (req, res) => {
             user_id,
             event_id,
             quantity,
-            unit_price,
-            total_price,
+            priceCalculation.unit_price,
+            priceCalculation.total_price,
             customer_name,
             customer_email,
             customer_phone,
             special_requests,
+            stringToUUID(pricingOption.category_id), // Convert string ID to deterministic UUID
+            pricingOption.tier_id, // tier_id is varchar, can stay as string
+            pricingOption.category_name,
+            pricingOption.tier_name,
         ]);
 
         const booking = bookingResult.rows[0];
 
-        // Generate individual tickets with enhanced uniqueness
+        // Generate individual tickets with pricing tier information
         const tickets = [];
         const baseTimestamp = Date.now();
 
         for (let i = 0; i < quantity; i++) {
-            // Generate a highly unique ticket number
-            // Include microseconds and random component for uniqueness
-            const microseconds = process.hrtime.bigint().toString().slice(-4); // last 4 digits
-            const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            // Generate tier-aware ticket number
+            const ticket_number = generateTierAwareTicketNumber(
+                booking.booking_reference,
+                i,
+                pricingOption
+            );
 
-            const ticket_number = `${booking.booking_reference}-${String(i + 1).padStart(3, "0")}-${microseconds}${randomSuffix}`;
+            // Create temporary ticket data for QR generation
+            const tempTicketData = {
+                ticket_number,
+                holder_name: customer_name,
+                qr_code: crypto
+                    .createHash("sha256")
+                    .update(`${booking.id}-${ticket_number}-${baseTimestamp}-${i}`)
+                    .digest("hex")
+            };
 
-            const qr_code = crypto
-                .createHash("sha256")
-                .update(`${booking.id}-${ticket_number}-${baseTimestamp}-${i}`)
-                .digest("hex");
+            // Generate QR code content with tier information
+            const qrContent = generateTierAwareQRContent(booking, tempTicketData);
 
             const ticketQuery = `
                 INSERT INTO booking_tickets (
-                    booking_id, ticket_number, qr_code, holder_name, holder_email
-                ) VALUES ($1, $2, $3, $4, $5)
+                    booking_id, ticket_number, qr_code, holder_name, holder_email,
+                    pricing_category_name, pricing_tier_name, tier_price
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING *
             `;
 
             const ticketResult = await client.query(ticketQuery, [
                 booking.id,
                 ticket_number,
-                qr_code,
+                tempTicketData.qr_code,
                 customer_name,
                 customer_email,
+                pricingOption.category_name,
+                pricingOption.tier_name,
+                pricingOption.price,
             ]);
 
             tickets.push(ticketResult.rows[0]);
