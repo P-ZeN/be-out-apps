@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
                 // Get user profile with the new token
                 const userData = await userService.getProfile();
                 setUser(userData);
-                
+
                 // Store credentials securely if user wants to be remembered
                 if (secureStorage.getRememberMe()) {
                     await secureStorage.storeCredentials({
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
                         user: userData
                     });
                 }
-                
+
                 // Redirect to onboarding if not complete
                 if (!userData.onboarding_complete) {
                     navigate("/onboarding");
@@ -99,14 +99,14 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (userData, rememberMe = false) => {
         localStorage.setItem("token", userData.token);
-        
+
         // Store remember preference
         await secureStorage.setRememberMe(rememberMe);
-        
+
         try {
             const profileData = await userService.getProfile();
             setUser(profileData);
-            
+
             // Store credentials securely if user wants to be remembered
             if (rememberMe) {
                 await secureStorage.storeCredentials({
@@ -114,7 +114,7 @@ export const AuthProvider = ({ children }) => {
                     user: profileData
                 });
             }
-            
+
             // Check if onboarding is complete and redirect accordingly
             if (!profileData.onboarding_complete) {
                 navigate("/onboarding");
@@ -160,7 +160,7 @@ export const AuthProvider = ({ children }) => {
                     console.log("[AUTH_CONTEXT] Full user profile retrieved:", fullUserData);
                     setUser(fullUserData);
                     result = { user: fullUserData, token };
-                    
+
                     // Store credentials securely for mobile (default behavior for native login)
                     if (rememberMe) {
                         await secureStorage.storeCredentials({
@@ -172,7 +172,7 @@ export const AuthProvider = ({ children }) => {
                     console.warn("[AUTH_CONTEXT] Could not get full profile, using provided data:", profileError);
                     setUser(userData);
                     result = { user: userData, token };
-                    
+
                     // Store credentials securely for mobile
                     if (rememberMe) {
                         await secureStorage.storeCredentials({
@@ -186,7 +186,7 @@ export const AuthProvider = ({ children }) => {
                 console.log("[AUTH_CONTEXT] Using native auth service");
                 result = await nativeAuthService.signIn();
                 setUser(result.user);
-                
+
                 // Store credentials securely for mobile
                 if (rememberMe && result.token) {
                     await secureStorage.storeCredentials({

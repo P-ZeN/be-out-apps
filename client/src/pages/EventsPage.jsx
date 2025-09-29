@@ -155,7 +155,7 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
     const handleRefresh = async () => {
         console.log("[EVENTS_PAGE] Pull-to-refresh triggered");
         await loadAllSections(true);
-        
+
         // Also reload category sections
         const loadCategorySections = async () => {
             if (categoriesLoading || !categoriesData.length) return;
@@ -232,8 +232,8 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
     }, [categoriesData, categoriesLoading, i18n.language]);
 
     return (
-        <PullToRefresh 
-            onRefresh={handleRefresh} 
+        <PullToRefresh
+            onRefresh={handleRefresh}
             refreshing={refreshing}
         >
             <Container maxWidth="lg" sx={{ py: 4, backgroundColor: "#fff" }}>

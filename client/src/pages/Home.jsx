@@ -271,8 +271,8 @@ const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) =>
     );
 
     return (
-        <PullToRefresh 
-            onRefresh={handleRefresh} 
+        <PullToRefresh
+            onRefresh={handleRefresh}
             refreshing={refreshing}
             disabled={loading || categoriesLoading}
         >

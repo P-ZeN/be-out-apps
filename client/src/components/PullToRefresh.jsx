@@ -8,13 +8,13 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { getIsTauriApp } from '../utils/platformDetection';
 
-const PullToRefresh = ({ 
-    children, 
-    onRefresh, 
-    refreshing = false, 
+const PullToRefresh = ({
+    children,
+    onRefresh,
+    refreshing = false,
     pullDistance = 80,
     triggerDistance = 60,
-    disabled = false 
+    disabled = false
 }) => {
     const theme = useTheme();
     const [pulling, setPulling] = useState(false);
@@ -28,7 +28,7 @@ const PullToRefresh = ({
 
     const handleTouchStart = (e) => {
         if (!isEnabled || refreshing) return;
-        
+
         const container = containerRef.current;
         if (!container || container.scrollTop > 0) return;
 
@@ -70,7 +70,7 @@ const PullToRefresh = ({
     // Mouse events for desktop testing
     const handleMouseDown = (e) => {
         if (!isEnabled || refreshing) return;
-        
+
         const container = containerRef.current;
         if (!container || container.scrollTop > 0) return;
 
@@ -114,7 +114,7 @@ const PullToRefresh = ({
         if (pulling && !isMobile) {
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
-            
+
             return () => {
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);

@@ -57,7 +57,7 @@ class SecureStorageService {
             }
 
             const credentials = JSON.parse(credentialsStr);
-            
+
             // Check if credentials are expired (30 days)
             const expirationTime = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
             if (credentials.timestamp && (Date.now() - credentials.timestamp) > expirationTime) {
@@ -124,7 +124,7 @@ class SecureStorageService {
         try {
             const key = `${this.storagePrefix}preferences`;
             const preferencesStr = localStorage.getItem(key);
-            
+
             if (!preferencesStr) {
                 return null;
             }
@@ -183,14 +183,14 @@ class SecureStorageService {
             } catch (error) {
                 console.warn('[SECURE_STORAGE] Tauri store not available, falling back to localStorage:', error);
             }
-            
+
             try {
                 // Enhanced localStorage retrieval
                 const obfuscatedValue = localStorage.getItem(`${this.storagePrefix}secure_${key}`);
                 if (obfuscatedValue) {
                     return decodeURIComponent(escape(atob(obfuscatedValue)));
                 }
-                
+
                 // Fallback to regular localStorage
                 return localStorage.getItem(`${this.storagePrefix}${key}`);
             } catch (error) {
@@ -216,7 +216,7 @@ class SecureStorageService {
             } catch (error) {
                 console.warn('[SECURE_STORAGE] Tauri store not available, falling back to localStorage removal:', error);
             }
-            
+
             try {
                 localStorage.removeItem(`${this.storagePrefix}secure_${key}`);
                 localStorage.removeItem(`${this.storagePrefix}${key}`); // Remove fallback too
