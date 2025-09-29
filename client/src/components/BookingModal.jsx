@@ -533,12 +533,20 @@ const BookingModal = ({ open, onClose, event }) => {
                 </Box>
             </DialogTitle>
 
-            <DialogContent>
+            <DialogContent 
+                sx={{ 
+                    px: { xs: 2, sm: 3 }, // Reduced horizontal padding on mobile
+                    py: { xs: 2, sm: 3 }, // Reduced vertical padding on mobile
+                    '&.MuiDialogContent-root': {
+                        paddingTop: { xs: 16, sm: 20 } // Override default padding top
+                    }
+                }}
+            >
                 {/* Event Info Header */}
                 <Paper
                     sx={{
-                        p: 2,
-                        mb: 3,
+                        p: { xs: 1.5, sm: 2 }, // Responsive padding for event info
+                        mb: { xs: 2, sm: 3 },
                         backgroundColor: theme.palette.primary.light,
                         color: theme.palette.primary.contrastText,
                     }}>
@@ -587,8 +595,52 @@ const BookingModal = ({ open, onClose, event }) => {
                     </Box>
                 </Paper>
 
-                {/* Stepper */}
-                <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
+                {/* Stepper - Mobile Responsive */}
+                <Stepper 
+                    activeStep={activeStep} 
+                    sx={{ 
+                        mb: 3,
+                        // Mobile responsive stepper
+                        '& .MuiStepper-root': {
+                            flexWrap: 'wrap'
+                        },
+                        '& .MuiStep-root': {
+                            // Allow steps to wrap on mobile
+                            minWidth: {
+                                xs: '60px', // Very compact on mobile
+                                sm: '80px',
+                                md: 'auto'
+                            },
+                            padding: {
+                                xs: '2px',
+                                sm: '4px',
+                                md: '8px'
+                            }
+                        },
+                        '& .MuiStepLabel-label': {
+                            fontSize: {
+                                xs: '0.7rem',  // Smaller text on mobile
+                                sm: '0.8rem',
+                                md: '0.875rem'
+                            },
+                            // Hide step labels on very small screens
+                            display: {
+                                xs: 'none',
+                                sm: 'block'
+                            }
+                        },
+                        // Show only step numbers on mobile
+                        '& .MuiStepIcon-root': {
+                            fontSize: {
+                                xs: '1.2rem',
+                                sm: '1.5rem',
+                                md: '1.5rem'
+                            }
+                        }
+                    }}
+                    orientation="horizontal"
+                    alternativeLabel
+                >
                     {steps.map((label) => (
                         <Step key={label}>
                             <StepLabel>{label}</StepLabel>
