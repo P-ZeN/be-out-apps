@@ -193,14 +193,7 @@ class EventService {
                 discountPercentage = null;
             }
 
-            console.log('🐛 Using legacy pricing:', {
-                legacyDiscountedPrice,
-                legacyOriginalPrice,
-                legacyDiscountPercentage,
-                discountedPrice,
-                originalPrice,
-                discountPercentage
-            });
+                        // Using legacy pricing structure
 
             return {
                 discounted_price: discountedPrice,
@@ -217,17 +210,17 @@ class EventService {
         if (typeof event.pricing === 'string') {
             try {
                 pricing = JSON.parse(event.pricing);
-                console.log('🐛 Parsed pricing JSON:', pricing);
+                // Parsed pricing JSON successfully
             } catch (e) {
                 console.warn('Failed to parse pricing JSON:', e);
             }
         } else if (typeof event.pricing === 'object' && event.pricing !== null) {
             pricing = event.pricing;
-            console.log('🐛 Using pricing object:', pricing);
+            // Using structured pricing object
         }
 
         if (!pricing || !pricing.categories || pricing.categories.length === 0) {
-            console.log('🐛 NO PRICING DATA - showing as free', { pricing, categories: pricing?.categories });
+            // No pricing data available - event will show as free
             // No pricing info - show as free
             return {
                 discounted_price: 0,
@@ -281,7 +274,7 @@ class EventService {
             const legacyOriginal = parseFloat(event.original_price) || 0;
 
             if (legacyPrice > 0 || legacyOriginal > 0) {
-                console.log('🐛 FALLBACK: Using legacy pricing as backup', { legacyPrice, legacyOriginal });
+                // Fallback to legacy pricing structure
                 const finalPrice = legacyPrice || legacyOriginal;
                 return {
                     discounted_price: finalPrice,
@@ -299,14 +292,7 @@ class EventService {
         const discountPercentage = lowestOriginalPrice && lowestPrice < lowestOriginalPrice ?
             Math.round(((lowestOriginalPrice - lowestPrice) / lowestOriginalPrice) * 100) : 0;
 
-        console.log('🐛 Final pricing result:', {
-            lowestPrice,
-            lowestOriginalPrice,
-            discountPercentage,
-            availableTickets,
-            totalTickets,
-            is_free: (lowestPrice === null || lowestPrice === 0)
-        });
+        // Final pricing result calculated
 
         return {
             discounted_price: lowestPrice || 0,

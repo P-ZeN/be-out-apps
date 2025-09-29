@@ -126,7 +126,7 @@ router.post("/confirm-payment", async (req, res) => {
                 }
 
                 // Update booking tickets status
-                await client.query(`UPDATE booking_tickets SET ticket_status = 'active' WHERE booking_id = $1`, [
+                await client.query(`UPDATE booking_tickets SET ticket_status = 'valid' WHERE booking_id = $1`, [
                     booking_id,
                 ]);
 

@@ -26,6 +26,7 @@ import { Close, Person, Email, Phone, CreditCard, EventSeat, Schedule, LocationO
 import { useTheme } from "@mui/material/styles";
 import { useAuth } from "../context/AuthContext";
 import BookingService from "../services/bookingService";
+import PaymentModal from "./PaymentModal";
 import { getEventPricingInfo, getBookingPricingOptions } from "../utils/pricingUtils";
 
 const BookingModal = ({ open, onClose, event }) => {
@@ -37,6 +38,7 @@ const BookingModal = ({ open, onClose, event }) => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [bookingResult, setBookingResult] = useState(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     const [formData, setFormData] = useState({
         quantity: 1,
@@ -102,6 +104,13 @@ const BookingModal = ({ open, onClose, event }) => {
             setError("Veuillez remplir tous les champs requis correctement.");
             return;
         }
+
+        // If we're on the payment step, show the payment modal
+        if (activeStep === 3) {
+            setShowPaymentModal(true);
+            return;
+        }
+
         setActiveStep((prev) => prev + 1);
         setError("");
     };
@@ -111,11 +120,10 @@ const BookingModal = ({ open, onClose, event }) => {
         setError("");
     };
 
-    const handleSubmit = async () => {
+    const handlePaymentSuccess = async (paymentResult) => {
         setLoading(true);
-        setError("");
-
         try {
+            // Update the booking with customer information
             const bookingData = {
                 event_id: event.id,
                 quantity: parseInt(formData.quantity),
@@ -123,37 +131,24 @@ const BookingModal = ({ open, onClose, event }) => {
                 customer_email: formData.customer_email,
                 customer_phone: formData.customer_phone,
                 special_requests: formData.special_requests,
-                user_id: user?.id, // Associate booking with logged-in user
-                pricing_category_id: formData.pricingCategoryId,
-                pricing_tier_id: formData.pricingTierId,
+                payment_intent_id: paymentResult.paymentIntent.id,
             };
 
-            const validation = BookingService.validateBookingData(bookingData);
-            if (!validation.isValid) {
-                setError(validation.errors.join(", "));
-                setLoading(false);
-                return;
-            }
-
-            const result = await BookingService.createBooking(bookingData);
-
-            // Simulate payment processing
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            // Confirm the booking
-            await BookingService.confirmBooking(result.booking.id, {
-                payment_method: "card",
-                transaction_id: `TXN_${Date.now()}`,
-            });
-
-            setBookingResult(result);
+            // The payment confirmation already created the booking, so we just need to update it
+            setBookingResult(paymentResult);
             setSuccess(true);
             setActiveStep(4);
+            setShowPaymentModal(false);
         } catch (err) {
-            setError(err.message || "Une erreur est survenue lors de la réservation.");
+            setError(err.message || "Une erreur est survenue lors de la finalisation de la réservation.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePaymentError = (error) => {
+        setError(error.message || "Une erreur est survenue lors du paiement.");
+        setShowPaymentModal(false);
     };
 
     const handleClose = () => {
@@ -176,6 +171,7 @@ const BookingModal = ({ open, onClose, event }) => {
         setError("");
         setSuccess(false);
         setBookingResult(null);
+        setShowPaymentModal(false);
         onClose();
     };
 
@@ -468,7 +464,7 @@ const BookingModal = ({ open, onClose, event }) => {
                             }}>
                             <CreditCard sx={{ mr: 2, color: theme.palette.info.main }} />
                             <Typography variant="body2">
-                                Paiement sécurisé simulé - Aucune carte réelle n'est requise
+                                Paiement sécurisé via Stripe - Cartes acceptées: Visa, Mastercard, American Express
                             </Typography>
                         </Box>
 
@@ -526,6 +522,7 @@ const BookingModal = ({ open, onClose, event }) => {
     if (!event) return null;
 
     return (
+        <>
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
             <DialogTitle>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -627,10 +624,9 @@ const BookingModal = ({ open, onClose, event }) => {
                 {activeStep === 3 && (
                     <Button
                         variant="contained"
-                        onClick={handleSubmit}
-                        disabled={loading || !formData.acceptTerms}
-                        startIcon={loading ? <CircularProgress size={20} /> : null}>
-                        {loading ? "Traitement..." : `Payer ${totalPrice}€`}
+                        onClick={handleNext}
+                        disabled={loading || !formData.acceptTerms}>
+                        {`Payer ${totalPrice}€`}
                     </Button>
                 )}
                 {activeStep === 4 && success && (
@@ -640,6 +636,19 @@ const BookingModal = ({ open, onClose, event }) => {
                 )}
             </DialogActions>
         </Dialog>
+
+        <PaymentModal
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            event={{
+                ...event,
+                price: parseFloat(totalPrice),
+            }}
+            bookingData={formData}
+            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentError={handlePaymentError}
+        />
+    </>
     );
 };
 

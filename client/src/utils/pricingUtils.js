@@ -20,16 +20,7 @@
  *   - categories: array of pricing categories (for new system)
  */
 export const getEventPricingInfo = (event) => {
-    console.log('🔍 getEventPricingInfo called with:', {
-        eventId: event?.id,
-        eventTitle: event?.title,
-        pricing: event?.pricing,
-        pricingType: typeof event?.pricing,
-        original_price: event?.original_price,
-        discounted_price: event?.discounted_price,
-        discount_percentage: event?.discount_percentage,
-        price: event?.price
-    });
+    // Debug logging removed to reduce console noise
 
     // Check if event has new pricing structure and it's valid
     const hasValidNewPricing = event.pricing &&
@@ -38,17 +29,12 @@ export const getEventPricingInfo = (event) => {
                               Array.isArray(event.pricing.categories) &&
                               event.pricing.categories.length > 0;
 
-    console.log('🔍 hasValidNewPricing:', hasValidNewPricing);
-
     if (hasValidNewPricing) {
-        const result = extractNewPricingInfo(event.pricing.categories);
-        console.log('🔍 New pricing result:', result);
-        return result;
+        return extractNewPricingInfo(event.pricing.categories);
     }
 
     // Fallback to legacy pricing structure
-    const result = extractLegacyPricingInfo(event);
-    console.log('🔍 Legacy pricing result:', result);
+    return extractLegacyPricingInfo(event);
     return result;
 };
 

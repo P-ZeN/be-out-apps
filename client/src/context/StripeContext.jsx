@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 
@@ -22,6 +22,38 @@ export const useStripe = () => {
 };
 
 export const StripeProvider = ({ children }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!publishableKey) {
+            setError("Stripe publishable key is not configured");
+            setIsLoading(false);
+            return;
+        }
+
+        // Test if Stripe loads successfully
+        if (stripePromise) {
+            stripePromise
+                .then((stripe) => {
+                    if (stripe) {
+                        setIsLoading(false);
+                    } else {
+                        setError("Failed to initialize Stripe");
+                        setIsLoading(false);
+                    }
+                })
+                .catch((err) => {
+                    console.error("Error loading Stripe:", err);
+                    setError("Failed to load Stripe");
+                    setIsLoading(false);
+                });
+        } else {
+            setError("Stripe is not available");
+            setIsLoading(false);
+        }
+    }, []);
+
     const options = {
         // Stripe Elements options
         appearance: {
@@ -38,6 +70,22 @@ export const StripeProvider = ({ children }) => {
         },
         loader: "auto",
     };
+
+    if (error) {
+        return (
+            <div className="stripe-error">
+                <p>Payment system is unavailable: {error}</p>
+            </div>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="stripe-loading">
+                <p>Loading payment system...</p>
+            </div>
+        );
+    }
 
     return (
         <Elements stripe={stripePromise} options={options}>
