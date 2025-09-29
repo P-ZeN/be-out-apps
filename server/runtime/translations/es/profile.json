@@ -1,0 +1,36 @@
+{
+    "profile": {
+        "title": "Mi Perfil",
+        "edit": "Editar Perfil",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "saving": "Guardando...",
+        "updateSuccess": "¡Perfil actualizado con éxito!",
+        "updateError": "Error al actualizar el perfil. Por favor, inténtelo de nuevo.",
+        "fetchError": "Error al cargar el perfil",
+        "sections": {
+            "personalInfo": "Información Personal",
+            "address": "Dirección"
+        },
+        "fields": {
+            "firstName": "Nombre",
+            "lastName": "Apellido",
+            "email": "Email",
+            "emailHelper": "El email no se puede cambiar",
+            "phone": "Teléfono",
+            "dateOfBirth": "Fecha de Nacimiento",
+            "streetNumber": "Número de Calle",
+            "streetName": "Nombre de Calle",
+            "postalCode": "Código Postal",
+            "city": "Ciudad",
+            "country": "País"
+        },
+        "placeholders": {
+            "phone": "+34 123 456 789",
+            "streetNumber": "123",
+            "streetName": "Calle de la Paz",
+            "postalCode": "28001",
+            "city": "Madrid"
+        }
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "brand": {
+        "name": "Be Out",
+        "description": "Discover incredible events at reduced prices. From last-minute offers to exclusive experiences, find your perfect next outing."
+    },
+    "navigation": {
+        "title": "Navigation",
+        "home": "Home",
+        "map": "Map",
+        "categories": "Categories",
+        "todayOffers": "Today's Offers"
+    },
+    "categories": {
+        "title": "Categories",
+        "music": "Music",
+        "sports": "Sports",
+        "theater": "Theater",
+        "gastronomy": "Gastronomy"
+    },
+    "support": {
+        "title": "Support",
+        "helpCenter": "Help Center",
+        "contact": "Contact",
+        "terms": "Terms of Use",
+        "privacy": "Privacy"
+    },
+    "partners": {
+        "title": "Partners",
+        "becomePartner": "Become a partner",
+        "partnerSpace": "Partner space",
+        "apiDocs": "API Documentation"
+    },
+    "legal": {
+        "copyright": "© {{year}} Be Out. All rights reserved.",
+        "developer": "@ZeN"
+    }
+}

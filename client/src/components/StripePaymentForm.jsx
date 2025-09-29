@@ -72,6 +72,8 @@ const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentS
                 console.log("Payment succeeded:", paymentIntent);
 
                 // Payment succeeded - confirm on server
+                console.log('About to confirm payment with booking_id:', bookingId, 'payment_intent_id:', paymentIntent.id);
+
                 const confirmResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/confirm-payment`, {
                     method: 'POST',
                     headers: {
@@ -84,6 +86,8 @@ const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentS
                     }),
                 });
 
+                console.log('Confirm response status:', confirmResponse.status, 'ok:', confirmResponse.ok);
+
                 if (confirmResponse.ok) {
                     const confirmData = await confirmResponse.json();
                     console.log("Payment confirmed:", confirmData);
@@ -94,7 +98,17 @@ const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentS
                         message: "Payment successful and booking confirmed!"
                     });
                 } else {
-                    const errorData = await confirmResponse.json();
+                    console.log('Confirm response not ok. Status:', confirmResponse.status);
+                    const responseText = await confirmResponse.text();
+                    console.log('Response text:', responseText);
+
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(responseText);
+                    } catch (e) {
+                        errorData = { error: responseText };
+                    }
+
                     throw new Error(errorData.error || "Payment succeeded but confirmation failed");
                 }
             }

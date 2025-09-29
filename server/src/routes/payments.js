@@ -88,10 +88,17 @@ router.post("/create-payment-intent", async (req, res) => {
  * Confirm payment after successful client-side handling
  */
 router.post("/confirm-payment", async (req, res) => {
+    console.log('🔄 Payment confirmation request received:', {
+        payment_intent_id: req.body.payment_intent_id,
+        booking_id: req.body.booking_id,
+        timestamp: new Date().toISOString()
+    });
+
     try {
         const { payment_intent_id, booking_id } = req.body;
 
         if (!payment_intent_id || !booking_id) {
+            console.log('❌ Missing required fields:', { payment_intent_id, booking_id });
             return res.status(400).json({
                 error: "Missing required fields: payment_intent_id, booking_id",
             });
@@ -105,14 +112,16 @@ router.post("/confirm-payment", async (req, res) => {
             try {
                 await client.query("BEGIN");
 
-                // Update booking status
+                // Update booking status and clear reservation expiry (confirm the reservation)
                 const updateQuery = `
                     UPDATE bookings
                     SET booking_status = 'confirmed',
                         payment_status = 'paid',
                         payment_method = 'stripe',
+                        reservation_expires_at = NULL,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE id = $1 AND stripe_payment_intent_id = $2
+                    AND (reservation_expires_at IS NULL OR reservation_expires_at > NOW())
                     RETURNING *
                 `;
 
@@ -130,12 +139,76 @@ router.post("/confirm-payment", async (req, res) => {
                     booking_id,
                 ]);
 
-                // Update event available tickets
-                await client.query(
-                    `UPDATE events SET available_tickets = available_tickets - $1
-                     WHERE id = (SELECT event_id FROM bookings WHERE id = $2)`,
-                    [result.rows[0].quantity, booking_id]
-                );
+                // Now decrement available tickets after successful payment
+                const booking = result.rows[0];
+
+                // Get booking tickets to understand quantities per tier
+                const ticketsQuery = `
+                    SELECT bt.*, b.event_id
+                    FROM booking_tickets bt
+                    JOIN bookings b ON bt.booking_id = b.id
+                    WHERE bt.booking_id = $1
+                `;
+                const ticketsResult = await client.query(ticketsQuery, [booking_id]);
+                const bookingTickets = ticketsResult.rows;
+
+                if (bookingTickets.length > 0) {
+                    const eventId = bookingTickets[0].event_id;
+
+                    // Group tickets by pricing tier for multi-tier events
+                    const tierCounts = {};
+                    bookingTickets.forEach(ticket => {
+                        const key = `${ticket.pricing_category_id || 'legacy'}_${ticket.pricing_tier_id || 'legacy'}`;
+                        tierCounts[key] = (tierCounts[key] || 0) + 1;
+                    });
+
+                    // Check if this is a multi-tier event
+                    const eventQuery = `SELECT pricing FROM events WHERE id = $1`;
+                    const eventResult = await client.query(eventQuery, [eventId]);
+                    const eventPricing = eventResult.rows[0]?.pricing;
+
+                    if (eventPricing && eventPricing.categories) {
+                        // Multi-tier system: update specific tier quantities
+                        let updatedPricing = JSON.parse(JSON.stringify(eventPricing));
+
+                        for (const [tierKey, quantity] of Object.entries(tierCounts)) {
+                            const [categoryId, tierId] = tierKey.split('_');
+
+                            if (categoryId !== 'legacy' && tierId !== 'legacy') {
+                                // Find and update the specific tier
+                                for (let category of updatedPricing.categories) {
+                                    if (category.id === parseInt(categoryId) && category.tiers) {
+                                        for (let tier of category.tiers) {
+                                            if (tier.id === parseInt(tierId)) {
+                                                const currentQuantity = parseInt(tier.available_quantity || 0);
+                                                tier.available_quantity = Math.max(0, currentQuantity - quantity);
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Calculate new total available tickets
+                        const { calculateTotalAvailableTickets } = await import('../utils/pricingUtils.js');
+                        const newTotalAvailable = await calculateTotalAvailableTickets(updatedPricing, eventId, client);
+
+                        // Update event with new pricing and total
+                        await client.query(
+                            `UPDATE events SET pricing = $1, available_tickets = $2 WHERE id = $3`,
+                            [JSON.stringify(updatedPricing), newTotalAvailable, eventId]
+                        );
+                    } else {
+                        // Legacy system: update available_tickets directly
+                        const totalTickets = bookingTickets.length;
+                        await client.query(
+                            `UPDATE events SET available_tickets = GREATEST(0, available_tickets - $1) WHERE id = $2`,
+                            [totalTickets, eventId]
+                        );
+                    }
+                }
 
                 await client.query("COMMIT");
 
@@ -147,6 +220,12 @@ router.post("/confirm-payment", async (req, res) => {
                     console.error(`Failed to send booking confirmation email for booking ${booking_id}:`, emailError);
                     // Don't fail the payment if email fails
                 }
+
+                console.log('✅ Payment confirmation successful:', {
+                    payment_intent_id,
+                    booking_id,
+                    booking_reference: result.rows[0]?.booking_reference
+                });
 
                 res.json({
                     success: true,

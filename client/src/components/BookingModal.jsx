@@ -536,10 +536,7 @@ const BookingModal = ({ open, onClose, event }) => {
             <DialogContent
                 sx={{
                     px: { xs: 2, sm: 3 }, // Reduced horizontal padding on mobile
-                    py: { xs: 2, sm: 3 }, // Reduced vertical padding on mobile
-                    '&.MuiDialogContent-root': {
-                        paddingTop: { xs: 16, sm: 20 } // Override default padding top
-                    }
+                    py: { xs: 2, sm: 3 }  // Reduced vertical padding on mobile
                 }}
             >
                 {/* Event Info Header */}

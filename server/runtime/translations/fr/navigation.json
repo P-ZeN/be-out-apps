@@ -1,0 +1,17 @@
+{
+    "menu": {
+        "home": "Accueil",
+        "events": "Événements",
+        "map": "Carte",
+        "dashboard": "Tableau de bord",
+        "profile": "Profil",
+        "login": "Connexion",
+        "register": "Inscription",
+        "logout": "Déconnexion"
+    },
+    "tooltips": {
+        "account": "Compte",
+        "loginRegister": "Connexion/Inscription",
+        "home": "Accueil"
+    }
+}

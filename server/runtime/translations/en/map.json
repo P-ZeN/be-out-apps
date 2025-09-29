@@ -1,0 +1,12 @@
+{
+    "searchPlaceholder": "Search by location or address...",
+    "nearbyEvents": "Nearby Events ({{count}})",
+    "viewAllEvents": "View All Events",
+    "eventsLoaded": "{{count}} events loaded with location",
+    "noEventsWithLocation": "No events with location available",
+    "noEventsFromAPI": "No events available at the moment",
+    "errorLoadingEvents": "Error loading events",
+    "locationUpdated": "Location updated: {{address}}",
+    "locationError": "Unable to get your location",
+    "viewEventDetails": "View Details"
+}

@@ -1,0 +1,468 @@
+{
+    "navigation": {
+        "dashboard": "Panel de Control",
+        "events": "Mis Eventos",
+        "bookings": "Reservas",
+        "revenue": "Ingresos",
+        "profile": "Mi Perfil",
+        "notifications": "Notificaciones",
+        "venues": "Mis Lugares",
+        "newEvent": "Nuevo Evento",
+        "settings": "Configuración",
+        "logout": "Cerrar Sesión",
+        "organizerSpace": "Be Out - Espacio Organizador"
+    },
+    "auth": {
+        "login": "Iniciar Sesión",
+        "logout": "Cerrar Sesión",
+        "register": "Registrarse",
+        "email": "Email",
+        "password": "Contraseña",
+        "loginPage": {
+            "title": "Be Out - Espacio Organizador",
+            "subtitle": "Inicie sesión para gestionar sus eventos",
+            "loginButton": "Iniciar Sesión",
+            "loggingIn": "Iniciando sesión...",
+            "or": "o",
+            "notRegistered": "¿Aún no está registrado?",
+            "createAccount": "Crear una cuenta de organizador",
+            "adminAccess": "¿Es usted administrador?",
+            "adminLink": "Acceso de administración",
+            "connectionError": "Error de conexión"
+        },
+        "registration": {
+            "title": "Convertirse en Organizador",
+            "subtitle": "Cree su cuenta para comenzar a organizar eventos",
+            "confirmPassword": "Confirmar Contraseña",
+            "companyName": "Nombre de la Empresa",
+            "contactPerson": "Persona de Contacto",
+            "phone": "Teléfono",
+            "registering": "Registrando...",
+            "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+            "success": {
+                "title": "¡Registro Exitoso!",
+                "message": "Su solicitud de registro ha sido enviada. Un administrador revisará su perfil y será notificado por correo electrónico una vez que su cuenta sea aprobada.",
+                "redirecting": "Redirigiendo a la página de inicio de sesión..."
+            },
+            "errors": {
+                "passwordMismatch": "Las contraseñas no coinciden",
+                "failed": "Error en el registro"
+            }
+        }
+    },
+    "events": {
+        "details": {
+            "title": "Detalles del Evento",
+            "description": "Ingrese la información principal de su evento.",
+            "fields": {
+                "title": "Título del Evento",
+                "titlePlaceholder": "Ej: Concierto de jazz en el parque",
+                "description": "Descripción",
+                "descriptionPlaceholder": "Describa su evento de manera atractiva...",
+                "dateTime": "Fecha y Hora",
+                "category": "Categoría",
+                "price": "Precio",
+                "priceHelp": "Deje vacío para un evento gratuito",
+                "maxParticipants": "Número máximo de participantes",
+                "maxParticipantsHelp": "Deje vacío para ilimitado",
+                "tags": "Etiquetas",
+                "image": "Imagen del Evento",
+                "chooseImage": "Elegir una imagen",
+                "selectedFile": "Archivo seleccionado:",
+                "requirements": "Requisitos o condiciones",
+                "requirementsPlaceholder": "Ej: Edad mínima 18 años, vestimenta adecuada requerida...",
+                "requirementsHelp": "Indique las condiciones especiales de participación",
+                "cancellationPolicy": "Política de Cancelación",
+                "cancellationPlaceholder": "Ej: Reembolso completo hasta 48h antes del evento...",
+                "cancellationHelp": "Describa las condiciones de reembolso y cancelación",
+                "featured": "Evento Destacado",
+                "featuredHelp": "Los eventos destacados aparecen con prioridad en las búsquedas",
+                "lastMinuteOffer": "Oferta de Último Momento",
+                "lastMinuteOfferHelp": "Las ofertas de último momento aparecen en la sección especial de la página de inicio"
+            }
+        }
+    },
+    "venues": {
+        "title": "Lugar del Evento",
+        "description": "Seleccione dónde se realizará su evento. También puede crear un nuevo lugar.",
+        "selected": "Lugar Seleccionado",
+        "capacity": "Capacidad:",
+        "people": "personas"
+    },
+    "tickets": {
+        "preview": {
+            "title": "Vista Previa del Boleto",
+            "fillDetails": "Complete los detalles del evento para ver la vista previa"
+        },
+        "design": {
+            "title": "Diseño y Boletería",
+            "description": "Configure la apariencia de sus boletos y las opciones de reserva.",
+            "template": "Plantilla de Boleto",
+            "defaultTemplate": "Plantilla Predeterminada",
+            "customization": "Personalización",
+            "primaryColor": "Color Principal",
+            "secondaryColor": "Color Secundario",
+            "customMessage": "Mensaje Personalizado",
+            "customMessageDefault": "¡Gracias por su participación!",
+            "format": {
+                "title": "Formato del Boleto",
+                "A4": "A4 (210×297mm)",
+                "A5": "A5 (148×210mm)",
+                "quarterA4": "1/4 A4 (105×148mm)",
+                "standardFull": "Formato estándar completo",
+                "landscape": "Formato paisaje",
+                "compact": "Formato de boleto compacto"
+            },
+            "images": {
+                "title": "Imágenes",
+                "useEventImage": "Usar imagen del evento"
+            },
+            "colors": {
+                "blue": "Azul",
+                "green": "Verde",
+                "orange": "Naranja",
+                "purple": "Morado",
+                "red": "Rojo",
+                "teal": "Turquesa"
+            },
+            "customColor": "Color primario personalizado",
+            "customSecondaryColor": "Color secundario personalizado",
+            "customText": "Texto personalizado",
+            "customTextPlaceholder": "Agregue un mensaje personalizado en sus boletos...",
+            "customTextHelp": "Este texto aparecerá en todos sus boletos",
+            "chooseImage": "Elegir imagen",
+            "removeImage": "Eliminar imagen",
+            "backgroundImageSelected": "Imagen de fondo seleccionada",
+            "backgroundImageNote": "Esta imagen será utilizada como fondo de sus boletos",
+            "backgroundImage": "Imagen de Fondo",
+            "remove": "Eliminar",
+            "logo": {
+                "footer": "Logo Be-Out en el Pie de Página",
+                "svg": "Logo SVG (recomendado)",
+                "orangePng": "Logo PNG Naranja",
+                "blackPng": "Logo PNG Negro",
+                "whitePng": "Logo PNG Blanco",
+                "none": "Sin logo"
+            },
+            "qr": {
+                "title": "Configuración del Código QR",
+                "description": "El Código QR permite verificar la autenticidad de los boletos y facilita el control de acceso a sus eventos.",
+                "contentType": "Tipo de contenido",
+                "showOnTicket": "Mostrar código QR en el boleto",
+                "options": {
+                    "bookingReference": "Referencia de reserva",
+                    "verificationUrl": "URL de verificación",
+                    "eventDetails": "Detalles del evento"
+                },
+                "descriptions": {
+                    "bookingReference": "Código de referencia único del boleto",
+                    "verificationUrl": "Enlace a una página de validación del boleto (recomendado)",
+                    "eventDetails": "Información completa sobre el evento"
+                },
+                "verificationUrl": "URL de verificación",
+                "verificationUrlHelp": "URL a su página de verificación. Use {booking_reference} como marcador.",
+                "bookingReferenceFormat": "Formato de referencia",
+                "bookingReferenceFormatHelp": "Formato personalizado para la referencia. Use {booking_id} para ID simple o {booking_reference} para referencia completa.",
+                "eventDetailsJson": "Detalles del evento (JSON)",
+                "eventDetailsJsonHelp": "Estructura JSON personalizada. Use marcadores como {event_title}, {booking_reference}, etc.",
+                "placeholdersTitle": "Marcadores disponibles:",
+                "placeholderTicketNumber": "Número único del boleto (recomendado)",
+                "placeholderBookingId": "UUID de reserva (mismo para todos los boletos)",
+                "placeholderBooking": "Referencia completa de reserva",
+                "placeholderTitle": "Título del evento",
+                "placeholderDate": "Fecha del evento",
+                "placeholderVenue": "Nombre del lugar"
+            }
+        },
+        "pricing": {
+            "title": "Tarifas y Categorías",
+            "description": "Configure diferentes categorías de precios y niveles para su evento.",
+            "tabs": {
+                "categories": "Categorías y Precios",
+                "templates": "Plantillas Rápidas"
+            },
+            "categories": "Categorías",
+            "addCategory": "Agregar Categoría",
+            "noCategories": "No hay categorías de precios definidas.",
+            "category": "Categoría",
+            "categoryName": "Nombre de la Categoría",
+            "categoryNamePlaceholder": "ej: Acceso General, VIP, Estudiante",
+            "categoryDescription": "Descripción de la Categoría",
+            "categoryDescriptionPlaceholder": "Describir lo que incluye esta categoría",
+            "addTier": "Agregar Nivel",
+            "tier": "Nivel",
+            "tierName": "Nombre del Nivel",
+            "tierNamePlaceholder": "ej: Early Bird, Regular",
+            "price": "Precio",
+            "originalPrice": "Precio Original",
+            "originalPriceHelp": "Mostrar precio tachado para descuentos",
+            "discountPercentage": "Descuento %",
+            "discountPercentageHelp": "Mostrar insignia de descuento",
+            "displayPrice": "Precio a mostrar",
+            "displayPriceHelp": "Precio final mostrado a los usuarios",
+            "quantity": "Cantidad Disponible",
+            "quantityHelp": "Deje vacío para ilimitado",
+            "earlyBird": "Precio Early Bird",
+            "tiers": "niveles",
+            "templates": {
+                "title": "Plantillas de Precios",
+                "description": "Elija una plantilla para configurar rápidamente su estructura de precios.",
+                "apply": "Aplicar Plantilla",
+                "simple": "Simple",
+                "simpleDesc": "Una categoría, un precio",
+                "earlyBird": "Early Bird",
+                "earlyBirdDesc": "Descuento early bird + precio regular",
+                "tiered": "Por Niveles",
+                "tieredDesc": "Múltiples categorías (Estándar, VIP, Estudiante)",
+                "standardTicket": "Entrada Estándar",
+                "regularPrice": "Precio Regular",
+                "earlyBirdPrice": "Early Bird",
+                "standardCategory": "Estándar",
+                "standardDesc": "Acceso regular al evento",
+                "vipDesc": "Acceso premium con beneficios adicionales",
+                "studentCategory": "Estudiante",
+                "studentDesc": "Tarifa reducida para estudiantes",
+                "studentPrice": "Precio Estudiante",
+                "vipCategory": "VIP",
+                "vipPrice": "Precio VIP"
+            },
+            "stats": {
+                "title": "Estadísticas de Precios",
+                "totalCategories": "Categorías Totales",
+                "totalTiers": "Niveles Totales",
+                "priceRange": "Rango de Precios",
+                "averagePrice": "Precio Promedio"
+            }
+        },
+        "booking": {
+            "settings": "Configuración de Reservas",
+            "deadline": "Fecha Límite de Reserva",
+            "deadlineHelp": "Deje vacío para permitir reservas hasta el inicio del evento",
+            "maxPerUser": "Máximo de reservas por usuario",
+            "allowMultiple": "Permitir múltiples reservas por usuario"
+        }
+    },
+    "publication": {
+        "title": "Publicación y Moderación",
+        "description": "Gestione la publicación de su evento y siga su estado de moderación.",
+        "step": "Publicación",
+        "stepDescription": "Finalice su evento y elija las opciones de publicación.",
+        "summary": {
+            "title": "Resumen del Evento",
+            "details": "Detalles del Evento",
+            "detailsComplete": "Título, descripción y detalles configurados",
+            "venue": "Lugar",
+            "venueComplete": "Lugar seleccionado y configurado",
+            "ticketing": "Boletería",
+            "ticketingComplete": "Configuración de boletos completada"
+        },
+        "status": {
+            "current": "Estado Actual del Evento",
+            "approval": "Estado de Aprobación:",
+            "general": "Estado General:",
+            "approved": "Aprobado",
+            "rejected": "Rechazado",
+            "underReview": "En Revisión",
+            "revisionRequested": "Revisión Solicitada",
+            "flagged": "Marcado",
+            "pending": "Pendiente de Revisión",
+            "draft": "Borrador",
+            "published": "Publicado",
+            "approvedNotPublished": "Aprobado (no publicado)",
+            "pendingValidation": "Pendiente de Validación",
+            "cancelled": "Cancelado",
+            "suspended": "Suspendido",
+            "finished": "Finalizado",
+            "unknown": "Estado Desconocido"
+        },
+        "admin": {
+            "comments": "Comentarios del Administrador:",
+            "noComments": "Sin comentarios del administrador",
+            "note": "Nota del administrador:"
+        },
+        "actions": {
+            "title": "Acciones Disponibles",
+            "submitReview": "Enviar para Revisión",
+            "submitDescription": "Envíe su evento al equipo de moderación para aprobación",
+            "submit": "Enviar",
+            "revertDraft": "Devolver a Borrador",
+            "revertDescription": "Retire su evento de la revisión para modificarlo",
+            "unpublish": "Despublicar Evento",
+            "publish": "Publicar Evento",
+            "unpublishDescription": "Oculte su evento del público temporalmente",
+            "publishDescription": "Haga su evento visible al público",
+            "unpublishBtn": "Despublicar",
+            "publishBtn": "Publicar",
+            "viewPublic": "Ver Página Pública",
+            "viewPublicDescription": "Consulte su evento tal como aparece a los visitantes",
+            "viewPage": "Ver Página",
+            "statusHistory": "Historial de Estados",
+            "statusHistoryDescription": "Consulte el historial completo de cambios de estado",
+            "viewHistory": "Ver Historial"
+        },
+        "options": {
+            "title": "Opciones de Publicación",
+            "publishImmediately": "Publicar evento inmediatamente",
+            "visibleToUsers": "El evento será visible para los usuarios",
+            "stayDraft": "El evento permanecerá como borrador",
+            "requestReview": "Solicitar revisión por parte de los administradores",
+            "submitForReview": "El evento será enviado para revisión antes de la publicación",
+            "noReview": "El evento no será enviado para revisión",
+            "approvedByAdmin": "Este evento ha sido aprobado por los administradores",
+            "rejectedByAdmin": "Este evento ha sido rechazado por los administradores",
+            "underReview": "Este evento está siendo revisado",
+            "pendingReview": "Este evento está pendiente de revisión",
+            "submitAfterCreation": "Será enviado para revisión después de la creación",
+            "stayDraftAfterCreation": "Permanecer como borrador después de la creación",
+            "reviewTime": "Su evento será revisado por nuestro equipo en un plazo de 24-48 horas",
+            "submitForReviewShort": "Será enviado para revisión",
+            "stayDraftShort": "Permanecer como borrador",
+            "reviewSoon": "Su evento será revisado pronto"
+        },
+        "process": {
+            "title": "Proceso de Moderación",
+            "draft": "Borrador:",
+            "draftDescription": "Su evento está siendo creado, puede modificarlo libremente",
+            "review": "En Revisión:",
+            "reviewDescription": "Nuestro equipo está revisando su evento (24-48h)",
+            "approved": "Aprobado:",
+            "approvedDescription": "Ahora puede publicar su evento",
+            "published": "Publicado:",
+            "publishedDescription": "Su evento es visible al público y las reservas están abiertas",
+            "note": "Nota:",
+            "noteDescription": "Puede modificar un evento en borrador o si el administrador solicita revisiones. Una vez aprobado y publicado, los cambios importantes requerirán una nueva revisión."
+        },
+        "messages": {
+            "saveChanges": "Los cambios se guardarán durante la finalización.",
+            "createEvent": "El evento será creado durante la finalización.",
+            "notifyAdmin": "Se enviará una notificación a los administradores para la revisión.",
+            "saving": "Guardando...",
+            "finalizeSubmit": "Finalizar y Enviar",
+            "saveChangesBtn": "Guardar Cambios",
+            "createEventBtn": "Crear Evento",
+            "useNavigation": "Use los botones de navegación para finalizar"
+        }
+    },
+    "dashboard": {
+        "welcome": {
+            "greeting": "Hola, {{name}} 👋",
+            "defaultName": "Organizador",
+            "subtitle": "Aquí tienes un resumen de tu rendimiento este mes"
+        },
+        "buttons": {
+            "newEvent": "Nuevo Evento",
+            "completeProfile": "Completar Tu Perfil",
+            "awaitingApproval": "Esperando Aprobación"
+        },
+        "stats": {
+            "activeEvents": "Eventos Activos",
+            "bookings": "Reservas",
+            "revenue": "Ingresos",
+            "ticketsSold": "Tickets Vendidos"
+        },
+        "sections": {
+            "recentBookings": {
+                "title": "Reservas Recientes",
+                "empty": "No hay reservas recientes",
+                "viewAll": "Ver Todo",
+                "tickets": "ticket(s)"
+            },
+            "upcomingEvents": {
+                "title": "Próximos Eventos",
+                "empty": "No hay eventos programados",
+                "viewAll": "Ver Todo",
+                "createEvent": "Crear Evento",
+                "bookings": "reservas"
+            }
+        },
+        "status": {
+            "approvalPending": "Tu cuenta de organizador está pendiente de aprobación por nuestro equipo.",
+            "profileIncomplete": "Tu perfil de organizador no está completo.",
+            "completeProfile": "Completa tu perfil para comenzar a crear eventos.",
+            "validationInProgress": "Validación en Progreso",
+            "profileUnderReview": "Tu perfil está siendo revisado. Este paso generalmente toma 24-48 horas."
+        },
+        "errors": {
+            "loadingData": "Error al cargar los datos"
+        }
+    },
+    "status": {
+        "approved": "Aprobado",
+        "pending": "Pendiente",
+        "suspended": "Suspendido",
+        "rejected": "Rechazado"
+    },
+    "bookings": {
+        "title": "Reservas",
+        "subtitle": "Gestiona todas las reservas de tus eventos",
+        "empty": "No se encontraron reservas",
+        "search": {
+            "placeholder": "Buscar por nombre, email o referencia..."
+        },
+        "filters": {
+            "status": "Estado",
+            "event": "Evento",
+            "all": "Todos"
+        },
+        "status": {
+            "confirmed": "Confirmada",
+            "pending": "Pendiente",
+            "cancelled": "Cancelada",
+            "refunded": "Reembolsada"
+        },
+        "table": {
+            "reference": "Referencia",
+            "customer": "Cliente",
+            "event": "Evento",
+            "date": "Fecha",
+            "quantity": "Cantidad",
+            "amount": "Importe",
+            "status": "Estado",
+            "actions": "Acciones"
+        },
+        "details": {
+            "title": "Detalles de la Reserva",
+            "bookingInfo": "Información de Reserva",
+            "customerInfo": "Información del Cliente",
+            "eventInfo": "Información del Evento",
+            "reference": "Referencia",
+            "status": "Estado",
+            "bookingDate": "Fecha de Reserva",
+            "quantity": "Cantidad",
+            "tickets": "boleto(s)",
+            "totalAmount": "Importe Total",
+            "name": "Nombre",
+            "email": "Email",
+            "phone": "Teléfono",
+            "specialRequests": "Solicitudes Especiales",
+            "close": "Cerrar"
+        },
+        "export": {
+            "button": "Exportar",
+            "notImplemented": "Funcionalidad de exportación en desarrollo"
+        },
+        "refresh": "Actualizar",
+        "clearFilters": "Limpiar Filtros",
+        "pagination": {
+            "rowsPerPage": "Filas por página:"
+        },
+        "errors": {
+            "loadFailed": "Error al cargar las reservas"
+        }
+    },
+    "common": {
+        "loading": "Cargando...",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "view": "Ver",
+        "create": "Crear",
+        "active": "Activo",
+        "draft": "Borrador",
+        "cancelled": "Cancelado",
+        "pending": "Pendiente",
+        "approved": "Aprobado",
+        "rejected": "Rechazado"
+    }
+}

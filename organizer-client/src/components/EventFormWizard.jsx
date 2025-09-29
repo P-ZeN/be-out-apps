@@ -586,6 +586,7 @@ const EventFormWizard = () => {
                 {activeStep === 0 && (
                     <EventDetailsStep
                         data={getCurrentStepData()}
+                        pricing={formData.pricing}
                         onChange={(data) => handleStepDataChange(getCurrentStepKey(), data)}
                         categories={categories}
                         onImageChange={setImagePreview}

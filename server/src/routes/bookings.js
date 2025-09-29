@@ -8,7 +8,8 @@ import {
     validatePricingSelection,
     calculateBookingPrice,
     generateTierAwareQRContent,
-    generateTierAwareTicketNumber
+    generateTierAwareTicketNumber,
+    calculateTotalAvailableTickets
 } from "../utils/pricingUtils.js";
 
 /**
@@ -157,14 +158,17 @@ router.post("/", async (req, res) => {
         // Calculate pricing based on selected tier
         const priceCalculation = calculateBookingPrice(pricingOption, quantity);
 
-        // Create booking with pricing tier information
+        // Set reservation expiry (15 minutes from now)
+        const reservationExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        // Create booking with pricing tier information and reservation expiry
         const bookingQuery = `
             INSERT INTO bookings (
                 user_id, event_id, quantity, unit_price, total_price,
                 customer_name, customer_email, customer_phone, special_requests,
                 pricing_category_id, pricing_tier_id, pricing_category_name, pricing_tier_name,
-                booking_status, payment_status
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', 'pending')
+                booking_status, payment_status, reservation_expires_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', 'pending', $14)
             RETURNING *
         `;
 
@@ -182,9 +186,14 @@ router.post("/", async (req, res) => {
             pricingOption.tier_id, // tier_id is varchar, can stay as string
             pricingOption.category_name,
             pricingOption.tier_name,
+            reservationExpiry
         ]);
 
         const booking = bookingResult.rows[0];
+
+        // NOTE: Available tickets are NOT decremented here during booking creation
+        // Tickets will be decremented only after successful payment confirmation
+        // This prevents inventory loss from abandoned/failed payments
 
         // Generate individual tickets with pricing tier information
         const tickets = [];
@@ -536,6 +545,59 @@ router.post("/:id/resend-tickets", async (req, res) => {
     } catch (err) {
         console.error("Error resending tickets:", err);
         res.status(500).json({ error: "Failed to resend tickets: " + err.message });
+    }
+});
+
+// Clean up expired reservations (pending bookings past expiry time)
+router.post("/cleanup-expired-reservations", async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        // Find expired reservations
+        const expiredQuery = `
+            SELECT id, event_id, quantity, pricing_category_id, pricing_tier_id
+            FROM bookings
+            WHERE booking_status = 'pending'
+            AND reservation_expires_at IS NOT NULL
+            AND reservation_expires_at <= NOW()
+        `;
+
+        const expiredResult = await client.query(expiredQuery);
+        const expiredBookings = expiredResult.rows;
+
+        if (expiredBookings.length > 0) {
+            console.log(`🧹 Cleaning up ${expiredBookings.length} expired reservations`);
+
+            // Delete expired booking tickets first
+            const bookingIds = expiredBookings.map(b => b.id);
+            await client.query(
+                `DELETE FROM booking_tickets WHERE booking_id = ANY($1)`,
+                [bookingIds]
+            );
+
+            // Delete expired bookings
+            await client.query(
+                `DELETE FROM bookings WHERE booking_status = 'pending' AND reservation_expires_at <= NOW()`
+            );
+
+            console.log(`✅ Cleaned up ${expiredBookings.length} expired reservations`);
+        }
+
+        await client.query("COMMIT");
+
+        res.json({
+            success: true,
+            cleaned_count: expiredBookings.length,
+            message: `Cleaned up ${expiredBookings.length} expired reservations`
+        });
+
+    } catch (error) {
+        await client.query("ROLLBACK");
+        console.error("Error cleaning up expired reservations:", error);
+        res.status(500).json({ error: "Failed to cleanup expired reservations" });
+    } finally {
+        client.release();
     }
 });
 

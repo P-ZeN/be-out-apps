@@ -30,7 +30,7 @@ const MenuProps = {
     },
 };
 
-const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
+const EventDetailsStep = ({ data, pricing, onChange, categories, onImageChange }) => {
     const { t } = useTranslation('organizer');
 
     const handleChange = (field, value) => {
@@ -131,15 +131,23 @@ const EventDetailsStep = ({ data, onChange, categories, onImageChange }) => {
                     </FormControl>
                 </Grid>
 
-                {/* Max Participants */}
+                {/* Available Tickets - Auto-calculated from pricing tiers */}
                 <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                         fullWidth
-                        type="number"
-                        label={t('events:maxParticipants')}
-                        value={data.max_participants || ''}
-                        onChange={(e) => handleChange('max_participants', e.target.value)}
-                        helperText={t('events:unlimitedHint')}
+                        label={t('events:availableTickets')}
+                        value={(() => {
+                            if (!pricing || !pricing.categories) return 'Set in Pricing Step';
+                            const total = pricing.categories.reduce((sum, category) => {
+                                if (!category.tiers) return sum;
+                                return sum + category.tiers.reduce((tierSum, tier) => {
+                                    return tierSum + (parseInt(tier.available_quantity || 0));
+                                }, 0);
+                            }, 0);
+                            return total > 0 ? `${total} tickets (auto-calculated)` : 'Set in Pricing Step';
+                        })()}
+                        disabled
+                        helperText={t('events:calculatedFromPricing')}
                     />
                 </Grid>
 

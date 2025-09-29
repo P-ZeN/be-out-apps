@@ -1,0 +1,43 @@
+{
+  "welcome": "Bienvenue sur Be-Out ! 🎉",
+  "description": "Configurons votre profil pour commencer",
+  "completing": "Finalisation...",
+  "complete": "Finaliser la configuration",
+  "steps": {
+    "personal": {
+      "label": "Informations personnelles",
+      "title": "Informations personnelles",
+      "description": "Veuillez compléter vos informations personnelles"
+    },
+    "address": {
+      "label": "Adresse",
+      "title": "Votre adresse",
+      "description": "Cela nous aide à vous montrer les événements à proximité"
+    }
+  },
+  "fields": {
+    "firstName": "Prénom",
+    "lastName": "Nom de famille",
+    "phone": "Numéro de téléphone",
+    "dateOfBirth": "Date de naissance",
+    "addressLine1": "Adresse ligne 1",
+    "addressLine1Help": "Numéro et nom de rue",
+    "addressLine2": "Adresse ligne 2 (Optionnel)",
+    "addressLine2Help": "Appartement, suite, unité, bâtiment, étage, etc.",
+    "city": "Ville",
+    "locality": "Ville",
+    "administrativeArea": "État/Province/Région",
+    "administrativeAreaHelp": "État, province, ou région",
+    "postalCode": "Code postal",
+    "country": "Pays",
+    "addressLabel": "Libellé d'adresse",
+    "addressLabelHelp": "Un nom pour cette adresse (ex: Domicile, Travail)"
+  },
+  "errors": {
+    "fillFields": "Veuillez remplir tous les champs requis",
+    "failed": "Échec de la finalisation de l'inscription. Veuillez réessayer."
+  },
+  "success": {
+    "completed": "Inscription finalisée avec succès !"
+  }
+}

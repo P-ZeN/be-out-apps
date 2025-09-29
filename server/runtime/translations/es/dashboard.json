@@ -1,0 +1,31 @@
+{
+    "welcome": {
+        "greeting": "¡Hola, {{name}}! 👋",
+        "subtitle": "Bienvenido a tu panel de Be-Out",
+        "defaultUser": "Usuario"
+    },
+    "stats": {
+        "bookings": "Reservas",
+        "favorites": "Favoritos",
+        "upcoming": "Próximos",
+        "spent": "Gastado"
+    },
+    "sections": {
+        "recentBookings": {
+            "title": "Mis reservas recientes",
+            "viewAll": "Ver todo",
+            "empty": {
+                "title": "Sin reservas por ahora",
+                "action": "Descubrir eventos"
+            }
+        },
+        "recentFavorites": {
+            "title": "Mis favoritos recientes",
+            "viewAll": "Ver todo",
+            "empty": {
+                "title": "Sin favoritos por ahora",
+                "action": "Descubrir eventos"
+            }
+        }
+    }
+}

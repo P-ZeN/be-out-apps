@@ -1,0 +1,12 @@
+{
+    "searchPlaceholder": "Rechercher par lieu ou adresse...",
+    "nearbyEvents": "Événements à proximité ({{count}})",
+    "viewAllEvents": "Voir tous les événements",
+    "eventsLoaded": "{{count}} événements chargés avec localisation",
+    "noEventsWithLocation": "Aucun événement avec localisation disponible",
+    "noEventsFromAPI": "Aucun événement disponible pour le moment",
+    "errorLoadingEvents": "Erreur lors du chargement des événements",
+    "locationUpdated": "Position mise à jour: {{address}}",
+    "locationError": "Impossible d'obtenir votre position",
+    "viewEventDetails": "Voir les détails"
+}

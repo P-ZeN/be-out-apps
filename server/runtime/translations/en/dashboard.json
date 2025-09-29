@@ -1,0 +1,31 @@
+{
+    "welcome": {
+        "greeting": "Hello, {{name}}! 👋",
+        "subtitle": "Welcome to your Be-Out dashboard",
+        "defaultUser": "User"
+    },
+    "stats": {
+        "bookings": "Bookings",
+        "favorites": "Favorites",
+        "upcoming": "Upcoming",
+        "spent": "Spent"
+    },
+    "sections": {
+        "recentBookings": {
+            "title": "My recent bookings",
+            "viewAll": "View all",
+            "empty": {
+                "title": "No bookings yet",
+                "action": "Discover events"
+            }
+        },
+        "recentFavorites": {
+            "title": "My recent favorites",
+            "viewAll": "View all",
+            "empty": {
+                "title": "No favorites yet",
+                "action": "Discover events"
+            }
+        }
+    }
+}

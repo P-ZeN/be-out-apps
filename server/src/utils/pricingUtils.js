@@ -4,6 +4,50 @@
  */
 
 /**
+ * Calculate total available tickets from pricing tiers
+ * @param {Object} pricing - Pricing structure with categories and tiers
+ * @param {Number} eventId - Event ID to check for active reservations (optional)
+ * @param {Object} dbClient - Database client for reservation queries (optional)
+ * @returns {number} Total available tickets across all tiers
+ */
+const calculateTotalAvailableTickets = async (pricing, eventId = null, dbClient = null) => {
+    if (!pricing || !pricing.categories) {
+        return 0;
+    }
+
+    let total = 0;
+    pricing.categories.forEach(category => {
+        if (category.tiers && category.tiers.length > 0) {
+            category.tiers.forEach(tier => {
+                total += parseInt(tier.available_quantity || 0);
+            });
+        }
+    });
+
+    // Subtract active reservations (pending bookings that haven't expired)
+    if (eventId && dbClient) {
+        try {
+            const reservationQuery = `
+                SELECT COALESCE(SUM(quantity), 0) as reserved_tickets
+                FROM bookings
+                WHERE event_id = $1
+                AND booking_status = 'pending'
+                AND (reservation_expires_at IS NULL OR reservation_expires_at > NOW())
+            `;
+            const reservationResult = await dbClient.query(reservationQuery, [eventId]);
+            const reservedTickets = parseInt(reservationResult.rows[0].reserved_tickets || 0);
+
+            total = Math.max(0, total - reservedTickets);
+        } catch (error) {
+            console.error('Error calculating reserved tickets:', error);
+            // Continue with original calculation if reservation query fails
+        }
+    }
+
+    return total;
+};
+
+/**
  * Extract all available pricing options from event data
  * @param {Object} event - Event data with pricing structure
  * @returns {Array} Array of pricing options with category and tier info
@@ -162,7 +206,12 @@ export const generateTierAwareTicketNumber = (bookingReference, ticketIndex, pri
     const categoryCode = pricingOption.category_name.substring(0, 3).toUpperCase();
     const tierCode = pricingOption.tier_name.substring(0, 2).toUpperCase();
     const ticketNumber = String(ticketIndex + 1).padStart(3, '0');
+    
+    // Use microseconds + random for uniqueness
     const timestamp = Date.now().toString().slice(-4);
+    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    return `${bookingReference}-${categoryCode}${tierCode}-${ticketNumber}-${timestamp}`;
+    return `${bookingReference}-${categoryCode}${tierCode}-${ticketNumber}-${timestamp}${randomSuffix}`;
 };
+
+export { calculateTotalAvailableTickets };

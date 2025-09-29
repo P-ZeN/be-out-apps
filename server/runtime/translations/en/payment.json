@@ -1,0 +1,16 @@
+{
+    "form": {
+        "processing": "Processing...",
+        "payAmount": "Pay {{amount}}",
+        "cancel": "Cancel",
+        "securityMessage": "🔒 Your payment information is secure and encrypted"
+    },
+    "loading": {
+        "creating": "Preparing payment...",
+        "processing": "Processing payment..."
+    },
+    "errors": {
+        "paymentFailed": "Payment failed",
+        "unexpectedError": "An unexpected error occurred"
+    }
+}

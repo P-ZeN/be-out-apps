@@ -1,0 +1,96 @@
+{
+    "title": "Be Out",
+    "subtitle": "Discover last-minute deals on events near you",
+    "searchPlaceholder": "Search events, concerts, shows...",
+    "categories": {
+        "all": "All Events",
+        "music": "Music",
+        "sport": "Sports",
+        "theater": "Theater",
+        "food": "Food & Drinks"
+    },
+    "sections": {
+        "lastMinute": "⚡ Last Minute Deals",
+        "today": "Today",
+        "thisWeek": "This Week",
+        "thisMonth": "This Month",
+        "allEvents": "All Events",
+        "categoryEvents": "{{category}} Events",
+        "recommended": "Recommended for You",
+        "nearYou": "Near You"
+    },
+    "badges": {
+        "lastMinute": "Last Minute",
+        "hotDeal": "Hot Deal",
+        "newEvent": "New"
+    },
+    "ticketsAvailable": "tickets left",
+    "eventsFound": "events found",
+    "noEventsFound": "No events found matching your criteria",
+    "clearFilters": "Clear Filters",
+    "features": {
+        "title": "Why Choose BeOut?",
+        "discover": {
+            "title": "Discover Events",
+            "description": "Find amazing events happening around you"
+        },
+        "location": {
+            "title": "Location Based",
+            "description": "See events near your location on an interactive map"
+        },
+        "connect": {
+            "title": "Connect",
+            "description": "Meet like-minded people and build your community"
+        },
+        "favorites": {
+            "title": "Favorites",
+            "description": "Save and track your favorite events and venues"
+        },
+        "save": {
+            "title": "Save Money",
+            "description": "Get up to 70% off on last-minute tickets and special offers."
+        },
+        "enjoy": {
+            "title": "Enjoy",
+            "description": "Live unique moments and create unforgettable memories."
+        }
+    },
+    "cta": {
+        "title": "Ready to discover amazing events?",
+        "description": "Join thousands of users who save money on their favorite activities"
+    },
+    "hero": {
+        "title": "Discover amazing events happening around you"
+    },
+    "browseEvents": "Browse Events Now",
+    "browseEventsNow": "Browse Events Now",
+    "noDownloadRequired": "No download required",
+    "downloadIOS": "Download on the App Store",
+    "downloadAndroid": "Get it on Google Play",
+    "status": "🚀 Coming Soon to App Stores",
+    "viewMap": "View Map",
+    "filters": {
+        "title": "Filters",
+        "sortBy": "Sort by",
+        "priceRange": "Price range",
+        "categories": "Categories",
+        "maxDistance": "Maximum distance",
+        "options": "Options",
+        "price": "Price Range",
+        "date": "Date",
+        "distance": "Distance",
+        "category": "Category",
+        "sortOptions": {
+            "date": "Date",
+            "price": "Price",
+            "distance": "Distance",
+            "popularity": "Popularity"
+        },
+        "priceDisplay": "€{{min}} - €{{max}}",
+        "distanceDisplay": "Within {{distance}} km",
+        "lastMinuteOnly": "Last minute offers only",
+        "availableOnly": "Hide sold out events",
+        "applyFilters": "Apply filters",
+        "resetFilters": "Reset"
+    }
+}

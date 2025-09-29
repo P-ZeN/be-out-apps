@@ -1,0 +1,36 @@
+{
+    "profile": {
+        "title": "Mon Profil",
+        "edit": "Modifier le profil",
+        "save": "Sauvegarder",
+        "cancel": "Annuler",
+        "saving": "Sauvegarde...",
+        "updateSuccess": "Profil mis à jour avec succès !",
+        "updateError": "Échec de la mise à jour du profil. Veuillez réessayer.",
+        "fetchError": "Échec du chargement du profil",
+        "sections": {
+            "personalInfo": "Informations personnelles",
+            "address": "Adresse"
+        },
+        "fields": {
+            "firstName": "Prénom",
+            "lastName": "Nom",
+            "email": "Email",
+            "emailHelper": "L'email ne peut pas être modifié",
+            "phone": "Téléphone",
+            "dateOfBirth": "Date de naissance",
+            "streetNumber": "Numéro de rue",
+            "streetName": "Nom de rue",
+            "postalCode": "Code postal",
+            "city": "Ville",
+            "country": "Pays"
+        },
+        "placeholders": {
+            "phone": "+33 1 23 45 67 89",
+            "streetNumber": "123",
+            "streetName": "Rue de la Paix",
+            "postalCode": "75001",
+            "city": "Paris"
+        }
+    }
+}

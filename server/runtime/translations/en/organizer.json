@@ -1,0 +1,497 @@
+{
+    "navigation": {
+        "dashboard": "Dashboard",
+        "events": "My Events",
+        "bookings": "Bookings",
+        "revenue": "Revenue",
+        "profile": "My Profile",
+        "notifications": "Notifications",
+        "venues": "My Venues",
+        "newEvent": "New Event",
+        "settings": "Settings",
+        "logout": "Logout",
+        "organizerSpace": "Be Out - Organizer Space"
+    },
+    "auth": {
+        "login": "Log In",
+        "logout": "Logout",
+        "register": "Register",
+        "email": "Email",
+        "password": "Password",
+        "loginPage": {
+            "title": "Be Out - Organizer Space",
+            "subtitle": "Log in to manage your events",
+            "loginButton": "Log In",
+            "loggingIn": "Logging in...",
+            "or": "or",
+            "notRegistered": "Not registered yet?",
+            "createAccount": "Create an organizer account",
+            "adminAccess": "Are you an administrator?",
+            "adminLink": "Administration access",
+            "connectionError": "Connection error"
+        },
+        "registration": {
+            "title": "Become an Organizer",
+            "subtitle": "Create your account to start organizing events",
+            "confirmPassword": "Confirm Password",
+            "companyName": "Company Name",
+            "contactPerson": "Contact Person",
+            "phone": "Phone",
+            "registering": "Registering...",
+            "alreadyHaveAccount": "Already have an account?",
+            "success": {
+                "title": "Registration Successful!",
+                "message": "Your registration request has been sent. An administrator will review your profile and you will be notified by email once your account is approved.",
+                "redirecting": "Redirecting to login page..."
+            },
+            "errors": {
+                "passwordMismatch": "Passwords do not match",
+                "failed": "Registration failed"
+            }
+        }
+    },
+    "events": {
+        "details": {
+            "title": "Event Details",
+            "description": "Fill in the main information of your event.",
+            "fields": {
+                "title": "Event Title",
+                "titlePlaceholder": "Ex: Jazz concert in the park",
+                "description": "Description",
+                "descriptionPlaceholder": "Describe your event in an attractive way...",
+                "dateTime": "Date and Time",
+                "category": "Category",
+                "price": "Price",
+                "priceHelp": "Leave empty for a free event",
+                "maxParticipants": "Maximum number of participants",
+                "maxParticipantsHelp": "Leave empty for unlimited",
+                "tags": "Tags",
+                "image": "Event Image",
+                "chooseImage": "Choose an image",
+                "selectedFile": "Selected file:",
+                "requirements": "Prerequisites or conditions",
+                "requirementsPlaceholder": "Ex: Minimum age 18, proper attire required...",
+                "requirementsHelp": "Indicate special participation conditions",
+                "cancellationPolicy": "Cancellation Policy",
+                "cancellationPlaceholder": "Ex: Full refund up to 48h before the event...",
+                "cancellationHelp": "Describe refund and cancellation conditions",
+                "featured": "Featured Event",
+                "featuredHelp": "Featured events appear as priority in searches",
+                "lastMinuteOffer": "Last Minute Offer",
+                "lastMinuteOfferHelp": "Mark this event as a last-minute offer for special promotion"
+            }
+        }
+    },
+    "venues": {
+        "title": "Event Venue",
+        "description": "Select where your event will take place. You can also create a new venue.",
+        "selected": "Selected Venue",
+        "capacity": "Capacity:",
+        "people": "people"
+    },
+    "tickets": {
+        "preview": {
+            "title": "Ticket Preview",
+            "fillDetails": "Fill in the event details to see the preview"
+        },
+        "design": {
+            "title": "Design and Ticketing",
+            "description": "Configure the appearance of your tickets and booking options.",
+            "template": "Ticket Template",
+            "defaultTemplate": "Default Template",
+            "customization": "Customization",
+            "primaryColor": "Primary Color",
+            "secondaryColor": "Secondary Color",
+            "customColor": "Custom Primary Color",
+            "customSecondaryColor": "Custom Secondary Color",
+            "customText": "Custom Text",
+            "customTextPlaceholder": "Enter your custom message...",
+            "customTextHelp": "This text will appear on the ticket",
+            "customMessage": "Custom Message",
+            "customMessageDefault": "Thank you for your participation!",
+            "images": {
+                "title": "Images",
+                "useEventImage": "Use event image",
+                "backgroundImage": "Background Image",
+                "chooseImage": "Choose Image",
+                "removeImage": "Remove Image",
+                "backgroundImageSelected": "Background image selected",
+                "backgroundImageNote": "This image will be used as the ticket background"
+            },
+            "colors": {
+                "blue": "Blue",
+                "green": "Green",
+                "orange": "Orange",
+                "purple": "Purple",
+                "red": "Red",
+                "teal": "Teal"
+            },
+            "format": {
+                "title": "Ticket Format",
+                "A4": "A4 (210×297mm)",
+                "A5": "A5 (148×210mm)",
+                "quarterA4": "1/4 A4 (105×148mm)",
+                "standardFull": "Full standard format",
+                "landscape": "Landscape format",
+                "compact": "Compact ticket format"
+            },
+            "backgroundImage": "Background Image",
+            "chooseImage": "Choose Image",
+            "removeImage": "Remove Image",
+            "remove": "Remove",
+            "logo": {
+                "footer": "Be-Out Logo in Footer",
+                "svg": "SVG Logo (recommended)",
+                "orangePng": "Orange PNG Logo",
+                "blackPng": "Black PNG Logo",
+                "whitePng": "White PNG Logo",
+                "none": "No logo"
+            },
+            "presets": {
+                "title": "Design Presets",
+                "applyDescription": "Select a preset to apply to this ticket.",
+                "saveDescription": "Save your current design as a preset to quickly apply it to future events.",
+                "selectPreset": "Select Preset",
+                "noPreset": "No preset selected",
+                "noPresetsYet": "No presets yet",
+                "apply": "Apply Preset",
+                "save": "Save as Preset",
+                "saveTitle": "Save Design as Preset",
+                "presetName": "Preset Name",
+                "presetNamePlaceholder": "My Corporate Template",
+                "presetDescription": "Description (optional)",
+                "descriptionPlaceholder": "Corporate blue colors with QR code",
+                "setAsDefault": "Use by default for new events",
+                "saveNote": "This will save your current colors, QR configuration, custom message, and background image.",
+                "savePreset": "Save Preset",
+                "enterName": "Enter a name for this preset:",
+                "loading": "Loading presets...",
+                "availablePresets": "Available Presets:",
+                "delete": "Delete preset",
+                "deleteTitle": "Delete Preset",
+                "deleteMessage": "Are you sure you want to delete the preset \"{presetName}\"? This action cannot be undone.",
+                "cancel": "Cancel",
+                "deleteConfirm": "Delete"
+            },
+            "qr": {
+                "title": "QR Code Configuration",
+                "description": "The QR Code allows to verify ticket authenticity and facilitates access control to your events.",
+                "contentType": "QR Code Content Type",
+                "showOnTicket": "Show QR code on ticket",
+                "options": {
+                    "bookingReference": "Booking Reference",
+                    "verificationUrl": "Verification URL",
+                    "eventDetails": "Event Details"
+                },
+                "descriptions": {
+                    "bookingReference": "Unique ticket reference code",
+                    "verificationUrl": "Link to a ticket validation page (recommended)",
+                    "eventDetails": "Complete event information"
+                },
+                "verificationUrl": "Verification URL",
+                "verificationUrlHelp": "URL to your verification page. Use {booking_reference} as placeholder.",
+                "bookingReferenceFormat": "Reference Format",
+                "bookingReferenceFormatHelp": "Custom format for the reference. Use {booking_id} for simple ID or {booking_reference} for full reference.",
+                "eventDetailsJson": "Event Details (JSON)",
+                "eventDetailsJsonHelp": "Custom JSON structure. Use placeholders like {event_title}, {booking_reference}, etc.",
+                "placeholdersTitle": "Available placeholders:",
+                "placeholderTicketNumber": "Unique ticket number (recommended)",
+                "placeholderBookingId": "Booking UUID (same for all tickets)",
+                "placeholderBooking": "Full booking reference",
+                "placeholderTitle": "Event title",
+                "placeholderDate": "Event date",
+                "placeholderVenue": "Venue name"
+            }
+        },
+        "pricing": {
+            "title": "Pricing & Categories",
+            "description": "Set up different pricing categories and tiers for your event.",
+            "tabs": {
+                "categories": "Categories & Pricing",
+                "templates": "Quick Templates"
+            },
+            "stats": {
+                "categories": "Categories",
+                "tiers": "Price Tiers",
+                "tickets": "Available Tickets"
+            },
+            "addCategory": "Add Category",
+            "noCategories": "No pricing categories defined. Add categories to create different ticket types and pricing tiers.",
+            "categoryName": "Category Name",
+            "categoryNamePlaceholder": "e.g., Standard, VIP, Student",
+            "categoryDescription": "Description",
+            "categoryDescriptionPlaceholder": "What's included in this category?",
+            "removeCategory": "Remove Category",
+            "unnamedCategory": "Unnamed Category",
+            "priceTiers": "Price Tiers",
+            "addTier": "Add Tier",
+            "noTiers": "No price tiers defined for this category. Add tiers to set different prices.",
+            "tier": "Tier",
+            "tierName": "Tier Name",
+            "tierNamePlaceholder": "e.g., Early Bird, Regular",
+            "price": "Price",
+            "originalPrice": "Original Price",
+            "originalPriceHelp": "Show crossed-out price for discounts",
+            "discountPercentage": "Discount %",
+            "discountPercentageHelp": "Display discount badge",
+            "displayPrice": "Price to display",
+            "displayPriceHelp": "Final price shown to users",
+            "quantity": "Available Quantity",
+            "quantityHelp": "Leave empty for unlimited",
+            "earlyBird": "Early Bird Pricing",
+            "tiers": "tiers",
+            "templates": {
+                "title": "Pricing Templates",
+                "description": "Choose a template to quickly set up your pricing structure.",
+                "apply": "Apply Template",
+                "simple": "Simple",
+                "simpleDesc": "One category, one price",
+                "earlyBird": "Early Bird",
+                "earlyBirdDesc": "Early bird discount + regular pricing",
+                "tiered": "Tiered",
+                "tieredDesc": "Multiple categories (Standard, VIP, Student)",
+                "standardTicket": "Standard Ticket",
+                "regularPrice": "Regular Price",
+                "earlyBirdPrice": "Early Bird",
+                "standardCategory": "Standard",
+                "standardDesc": "Regular access to the event",
+                "vipDesc": "Premium access with additional benefits",
+                "studentCategory": "Student",
+                "studentDesc": "Discounted rate for students",
+                "studentPrice": "Student Price",
+                "existingDataWarning": "You already have pricing configured. Applying a template will replace your current pricing structure.",
+                "confirmReplace": "This will replace your current pricing structure. Are you sure?"
+            }
+        },
+        "booking": {
+            "settings": "Booking Settings",
+            "deadline": "Booking Deadline",
+            "deadlineHelp": "Leave empty to allow bookings until the event starts",
+            "maxPerUser": "Maximum bookings per user",
+            "allowMultiple": "Allow multiple bookings per user"
+        }
+    },
+    "publication": {
+        "title": "Publication and Moderation",
+        "description": "Manage your event publication and track its moderation status.",
+        "step": "Publication",
+        "stepDescription": "Finalize your event and choose publication options.",
+        "summary": {
+            "title": "Event Summary",
+            "details": "Event Details",
+            "detailsComplete": "Title, description and details configured",
+            "venue": "Venue",
+            "venueComplete": "Venue selected and configured",
+            "ticketing": "Ticketing",
+            "ticketingComplete": "Ticket configuration completed"
+        },
+        "status": {
+            "current": "Current Event Status",
+            "approval": "Approval Status:",
+            "general": "General Status:",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "underReview": "Under Review",
+            "revisionRequested": "Revision Requested",
+            "flagged": "Flagged",
+            "pending": "Pending Review",
+            "draft": "Draft",
+            "published": "Published",
+            "approvedNotPublished": "Approved (not published)",
+            "pendingValidation": "Pending Validation",
+            "cancelled": "Cancelled",
+            "suspended": "Suspended",
+            "finished": "Finished",
+            "unknown": "Unknown Status"
+        },
+        "admin": {
+            "comments": "Administrator Comments:",
+            "noComments": "No administrator comments",
+            "note": "Administrator note:"
+        },
+        "actions": {
+            "title": "Available Actions",
+            "submitReview": "Submit for Review",
+            "submitDescription": "Send your event to the moderation team for approval",
+            "submit": "Submit",
+            "revertDraft": "Revert to Draft",
+            "revertDescription": "Remove your event from review to modify it",
+            "unpublish": "Unpublish Event",
+            "publish": "Publish Event",
+            "unpublishDescription": "Hide your event from the public temporarily",
+            "publishDescription": "Make your event visible to the public",
+            "unpublishBtn": "Unpublish",
+            "publishBtn": "Publish",
+            "viewPublic": "View Public Page",
+            "viewPublicDescription": "View your event as it appears to visitors",
+            "viewPage": "View Page",
+            "statusHistory": "Status History",
+            "statusHistoryDescription": "View the complete history of status changes",
+            "viewHistory": "View History"
+        },
+        "options": {
+            "title": "Publication Options",
+            "publishImmediately": "Publish event immediately",
+            "visibleToUsers": "The event will be visible to users",
+            "stayDraft": "The event will remain as draft",
+            "requestReview": "Request review by administrators",
+            "submitForReview": "The event will be submitted for review before publication",
+            "noReview": "The event will not be submitted for review",
+            "approvedByAdmin": "This event has been approved by administrators",
+            "rejectedByAdmin": "This event has been rejected by administrators",
+            "underReview": "This event is under review",
+            "pendingReview": "This event is pending review",
+            "submitAfterCreation": "Will be submitted for review after creation",
+            "stayDraftAfterCreation": "Stay as draft after creation",
+            "reviewTime": "Your event will be reviewed by our team within 24-48 hours",
+            "submitForReviewShort": "Will be submitted for review",
+            "stayDraftShort": "Stay as draft",
+            "reviewSoon": "Your event will be reviewed soon"
+        },
+        "process": {
+            "title": "Moderation Process",
+            "draft": "Draft:",
+            "draftDescription": "Your event is being created, you can modify it freely",
+            "review": "Under Review:",
+            "reviewDescription": "Our team is reviewing your event (24-48h)",
+            "approved": "Approved:",
+            "approvedDescription": "You can now publish your event",
+            "published": "Published:",
+            "publishedDescription": "Your event is visible to the public and bookings are open",
+            "note": "Note:",
+            "noteDescription": "You can modify a draft event or if the administrator requests revisions. Once approved and published, major changes will require a new review."
+        },
+        "messages": {
+            "saveChanges": "Changes will be saved during finalization.",
+            "createEvent": "The event will be created during finalization.",
+            "notifyAdmin": "A notification will be sent to administrators for review.",
+            "saving": "Saving...",
+            "finalizeSubmit": "Finalize and Submit",
+            "saveChangesBtn": "Save Changes",
+            "createEventBtn": "Create Event",
+            "useNavigation": "Use navigation buttons to finalize"
+        }
+    },
+    "dashboard": {
+        "welcome": {
+            "greeting": "Hello, {{name}} 👋",
+            "defaultName": "Organizer",
+            "subtitle": "Here's an overview of your performance this month"
+        },
+        "buttons": {
+            "newEvent": "New Event",
+            "completeProfile": "Complete Your Profile",
+            "awaitingApproval": "Awaiting Approval"
+        },
+        "stats": {
+            "activeEvents": "Active Events",
+            "bookings": "Bookings",
+            "revenue": "Revenue",
+            "ticketsSold": "Tickets Sold"
+        },
+        "sections": {
+            "recentBookings": {
+                "title": "Recent Bookings",
+                "empty": "No recent bookings",
+                "viewAll": "View All",
+                "tickets": "ticket(s)"
+            },
+            "upcomingEvents": {
+                "title": "Upcoming Events",
+                "empty": "No scheduled events",
+                "viewAll": "View All",
+                "createEvent": "Create Event",
+                "bookings": "bookings"
+            }
+        },
+        "status": {
+            "approvalPending": "Your organizer account is pending approval by our team.",
+            "profileIncomplete": "Your organizer profile is not complete.",
+            "completeProfile": "Complete your profile to start creating events.",
+            "validationInProgress": "Validation in Progress",
+            "profileUnderReview": "Your profile is under review. This step usually takes 24-48 hours."
+        },
+        "errors": {
+            "loadingData": "Error loading data"
+        }
+    },
+    "status": {
+        "approved": "Approved",
+        "pending": "Pending",
+        "suspended": "Suspended",
+        "rejected": "Rejected"
+    },
+    "bookings": {
+        "title": "Bookings",
+        "subtitle": "Manage all bookings for your events",
+        "empty": "No bookings found",
+        "search": {
+            "placeholder": "Search by name, email or reference..."
+        },
+        "filters": {
+            "status": "Status",
+            "event": "Event",
+            "all": "All"
+        },
+        "status": {
+            "confirmed": "Confirmed",
+            "pending": "Pending",
+            "cancelled": "Cancelled",
+            "refunded": "Refunded"
+        },
+        "table": {
+            "reference": "Reference",
+            "customer": "Customer",
+            "event": "Event",
+            "date": "Date",
+            "quantity": "Quantity",
+            "amount": "Amount",
+            "status": "Status",
+            "actions": "Actions"
+        },
+        "details": {
+            "title": "Booking Details",
+            "bookingInfo": "Booking Information",
+            "customerInfo": "Customer Information",
+            "eventInfo": "Event Information",
+            "reference": "Reference",
+            "status": "Status",
+            "bookingDate": "Booking Date",
+            "quantity": "Quantity",
+            "tickets": "ticket(s)",
+            "totalAmount": "Total Amount",
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone",
+            "specialRequests": "Special Requests",
+            "close": "Close"
+        },
+        "export": {
+            "button": "Export",
+            "notImplemented": "Export functionality in development"
+        },
+        "refresh": "Refresh",
+        "clearFilters": "Clear Filters",
+        "pagination": {
+            "rowsPerPage": "Rows per page:"
+        },
+        "errors": {
+            "loadFailed": "Error loading bookings"
+        }
+    },
+    "common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "view": "View",
+        "create": "Create",
+        "active": "Active",
+        "draft": "Draft",
+        "cancelled": "Cancelled",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+    }
+}

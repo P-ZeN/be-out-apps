@@ -5,6 +5,7 @@ import multer from "multer";
 import sharp from "sharp";
 import path from "path";
 import fs from "fs/promises";
+import { calculateTotalAvailableTickets } from "../utils/pricingUtils.js";
 
 const router = Router();
 
@@ -386,6 +387,11 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
         try {
             await client.query("BEGIN");
 
+            // Calculate available tickets from pricing tiers or fallback to max_participants
+            const calculatedAvailableTickets = pricing
+                ? await calculateTotalAvailableTickets(pricing)
+                : (max_participants || 100);
+
             // Create the event with draft status by default
             const eventResult = await client.query(
                 `INSERT INTO events (
@@ -404,8 +410,8 @@ router.post("/events", verifyOrganizerToken, async (req, res) => {
                     finalOriginalPrice, // original_price
                     finalDiscountedPrice, // discounted_price
                     finalDiscountPercentage, // discount_percentage
-                    max_participants || 100, // total_tickets
-                    max_participants || 100, // available_tickets
+                    calculatedAvailableTickets, // total_tickets (sum of all tiers)
+                    calculatedAvailableTickets, // available_tickets (sum of all tiers)
                     false, // is_featured
                     is_last_minute || false, // is_last_minute
                     requirements || null, // requirements
@@ -489,6 +495,11 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
                 return res.status(404).json({ message: "Event not found" });
             }
 
+            // Calculate available tickets from pricing tiers or fallback to max_participants
+            const calculatedAvailableTickets = pricing
+                ? await calculateTotalAvailableTickets(pricing)
+                : (max_participants || 100);
+
             // Update the event
             const eventResult = await client.query(
                 `UPDATE events SET
@@ -506,8 +517,8 @@ router.put("/events/:id", verifyOrganizerToken, async (req, res) => {
                     finalOriginalPrice, // original_price
                     finalDiscountedPrice, // discounted_price
                     finalDiscountPercentage, // discount_percentage
-                    max_participants || 100, // total_tickets
-                    max_participants || 100, // available_tickets
+                    calculatedAvailableTickets, // total_tickets (sum of all tiers)
+                    calculatedAvailableTickets, // available_tickets (sum of all tiers)
                     is_last_minute || false, // is_last_minute
                     requirements || null, // requirements
                     cancellation_policy || null, // cancellation_policy

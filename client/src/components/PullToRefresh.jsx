@@ -183,14 +183,24 @@ const PullToRefresh = ({
                         gap: 1,
                     }}
                 >
-                    <CircularProgress
-                        size={20}
-                        sx={{
-                            opacity: refreshing ? 1 : 0,
-                            transition: 'opacity 0.3s ease-out',
-                            color: theme.palette.primary.main,
-                        }}
-                    />
+                    {refreshing ? (
+                        <CircularProgress
+                            size={20}
+                            sx={{
+                                color: theme.palette.primary.main,
+                            }}
+                        />
+                    ) : (
+                        <Box
+                            sx={{
+                                width: 20,
+                                height: 20,
+                                borderRadius: '50%',
+                                border: `2px solid ${theme.palette.primary.main}`,
+                                opacity: Math.min(pullY / triggerDistance, 1),
+                            }}
+                        />
+                    )}
                     <Typography
                         variant="body2"
                         color="text.secondary"

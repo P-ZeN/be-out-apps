@@ -1061,9 +1061,17 @@ CREATE TABLE public.bookings (
     pricing_tier_id character varying(255),
     pricing_category_name character varying(255),
     pricing_tier_name character varying(255),
+    reservation_expires_at timestamp without time zone,
     CONSTRAINT bookings_booking_status_check CHECK (((booking_status)::text = ANY ((ARRAY['pending'::character varying, 'confirmed'::character varying, 'cancelled'::character varying, 'refunded'::character varying])::text[]))),
     CONSTRAINT bookings_payment_status_check CHECK (((payment_status)::text = ANY ((ARRAY['pending'::character varying, 'paid'::character varying, 'failed'::character varying, 'refunded'::character varying])::text[])))
 );
+
+
+--
+-- Name: COLUMN bookings.reservation_expires_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.bookings.reservation_expires_at IS 'Expiry timestamp for pending ticket reservations (15 minutes from booking creation)';
 
 
 --
@@ -2302,6 +2310,13 @@ CREATE INDEX idx_bookings_organizer_events ON public.bookings USING btree (event
 
 
 --
+-- Name: idx_bookings_pending_reservations; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_bookings_pending_reservations ON public.bookings USING btree (event_id, booking_status, reservation_expires_at) WHERE ((booking_status)::text = 'pending'::text);
+
+
+--
 -- Name: idx_bookings_pricing_category; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2320,6 +2335,13 @@ CREATE INDEX idx_bookings_pricing_tier ON public.bookings USING btree (pricing_t
 --
 
 CREATE INDEX idx_bookings_reference ON public.bookings USING btree (booking_reference);
+
+
+--
+-- Name: idx_bookings_reservation_expiry; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_bookings_reservation_expiry ON public.bookings USING btree (reservation_expires_at) WHERE (reservation_expires_at IS NOT NULL);
 
 
 --
