@@ -72,7 +72,7 @@ const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentS
                 console.log("Payment succeeded:", paymentIntent);
 
                 // Payment succeeded - confirm on server
-                const confirmResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/payments/confirm-payment`, {
+                const confirmResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/confirm-payment`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -305,7 +305,7 @@ const StripePaymentForm = ({ eventId, amount, currency = "eur", bookingData, onP
 
                 // Step 1: Create a pending booking
                 console.log("Creating booking for event:", eventId, "with data:", bookingData);
-                const bookingResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/bookings`, {
+                const bookingResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bookings`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -335,7 +335,7 @@ const StripePaymentForm = ({ eventId, amount, currency = "eur", bookingData, onP
                 setBookingId(bookingResult.booking.id);
 
                 // Step 2: Create payment intent
-                const paymentResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/payments/create-payment-intent`, {
+                const paymentResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-payment-intent`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
