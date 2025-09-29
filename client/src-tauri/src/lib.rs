@@ -30,7 +30,8 @@ pub fn run() {
 
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_deep_link::init());
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_store::Builder::default().build());
         // Google Auth plugin temporarily disabled
         // .plugin(tauri_plugin_google_auth::init());
 

@@ -9,7 +9,8 @@
         "core:default",
         "shell:allow-open",
         "shell:default",
-        "deep-link:default"
+        "deep-link:default",
+        "store:default"
     ],
     "local": true
 }

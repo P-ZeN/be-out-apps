@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import userService from "../services/userService";
 import { areTauriApisAvailable } from "../utils/platformDetection";
 import NativeMobileAuthService from "../services/nativeMobileAuthService";
+import secureStorage from "../services/secureStorage";
 
 const AuthContext = createContext(null);
 
@@ -30,11 +31,38 @@ export const AuthProvider = ({ children }) => {
                 // Get user profile with the new token
                 const userData = await userService.getProfile();
                 setUser(userData);
+                
+                // Store credentials securely if user wants to be remembered
+                if (secureStorage.getRememberMe()) {
+                    await secureStorage.storeCredentials({
+                        token: tokenFromUrl,
+                        user: userData
+                    });
+                }
+                
                 // Redirect to onboarding if not complete
                 if (!userData.onboarding_complete) {
                     navigate("/onboarding");
                 }
             } else {
+                // First, try to get stored credentials (mobile persistent auth)
+                const storedCredentials = await secureStorage.getStoredCredentials();
+                if (storedCredentials && storedCredentials.token) {
+                    console.log("[AUTH_CONTEXT] Found stored credentials, attempting auto-login");
+                    try {
+                        // Set token and verify it's still valid
+                        localStorage.setItem("token", storedCredentials.token);
+                        const userData = await userService.getProfile();
+                        setUser(userData);
+                        console.log("[AUTH_CONTEXT] Auto-login successful");
+                        return; // Success, no need to check other methods
+                    } catch (error) {
+                        console.log("[AUTH_CONTEXT] Stored credentials invalid, clearing...");
+                        await secureStorage.clearCredentials();
+                        localStorage.removeItem("token");
+                    }
+                }
+
                 // Check for existing token in localStorage
                 const token = localStorage.getItem("token");
                 if (token) {
@@ -44,6 +72,7 @@ export const AuthProvider = ({ children }) => {
                     } catch (error) {
                         console.log("Token invalid, clearing localStorage");
                         localStorage.removeItem("token");
+                        await secureStorage.clearCredentials();
                         setUser(null);
                     }
                 } else if (areTauriApisAvailable()) {
@@ -68,10 +97,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const login = (userData) => {
+    const login = async (userData, rememberMe = false) => {
         localStorage.setItem("token", userData.token);
-        userService.getProfile().then((profileData) => {
+        
+        // Store remember preference
+        await secureStorage.setRememberMe(rememberMe);
+        
+        try {
+            const profileData = await userService.getProfile();
             setUser(profileData);
+            
+            // Store credentials securely if user wants to be remembered
+            if (rememberMe) {
+                await secureStorage.storeCredentials({
+                    token: userData.token,
+                    user: profileData
+                });
+            }
+            
             // Check if onboarding is complete and redirect accordingly
             if (!profileData.onboarding_complete) {
                 navigate("/onboarding");
@@ -79,7 +122,9 @@ export const AuthProvider = ({ children }) => {
                 // Redirect to dashboard after successful login
                 navigate("/dashboard");
             }
-        });
+        } catch (error) {
+            console.error("Error during login profile fetch:", error);
+        }
     };
 
     const loginWithToken = (token) => {
@@ -95,7 +140,7 @@ export const AuthProvider = ({ children }) => {
         });
     };
 
-    const nativeLogin = async (token = null, userData = null) => {
+    const nativeLogin = async (token = null, userData = null, rememberMe = true) => {
         try {
             setLoading(true);
             console.log("[AUTH_CONTEXT] Starting native login...");
@@ -115,16 +160,40 @@ export const AuthProvider = ({ children }) => {
                     console.log("[AUTH_CONTEXT] Full user profile retrieved:", fullUserData);
                     setUser(fullUserData);
                     result = { user: fullUserData, token };
+                    
+                    // Store credentials securely for mobile (default behavior for native login)
+                    if (rememberMe) {
+                        await secureStorage.storeCredentials({
+                            token,
+                            user: fullUserData
+                        });
+                    }
                 } catch (profileError) {
                     console.warn("[AUTH_CONTEXT] Could not get full profile, using provided data:", profileError);
                     setUser(userData);
                     result = { user: userData, token };
+                    
+                    // Store credentials securely for mobile
+                    if (rememberMe) {
+                        await secureStorage.storeCredentials({
+                            token,
+                            user: userData
+                        });
+                    }
                 }
             } else {
                 // Fallback to native auth service
                 console.log("[AUTH_CONTEXT] Using native auth service");
                 result = await nativeAuthService.signIn();
                 setUser(result.user);
+                
+                // Store credentials securely for mobile
+                if (rememberMe && result.token) {
+                    await secureStorage.storeCredentials({
+                        token: result.token,
+                        user: result.user
+                    });
+                }
             }
 
             console.log("[AUTH_CONTEXT] Native login successful");
@@ -162,6 +231,9 @@ export const AuthProvider = ({ children }) => {
                 }
             }
 
+            // Clear secure storage
+            await secureStorage.clearCredentials();
+
             // Clear local storage and state
             localStorage.removeItem("token");
             localStorage.removeItem("refreshToken");
@@ -171,6 +243,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("[AUTH_CONTEXT] Logout failed:", error);
             // Still clear local state even if there was an error
+            await secureStorage.clearCredentials();
             localStorage.removeItem("token");
             localStorage.removeItem("refreshToken");
             localStorage.removeItem("userProfile");

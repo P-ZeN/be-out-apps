@@ -28,6 +28,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "@mui/material/styles";
 import FilterDrawer from "../components/FilterDrawer";
 import FavoriteButton from "../components/FavoriteButton";
+import PullToRefresh from "../components/PullToRefresh";
 import EventService from "../services/eventService";
 import { getEventPricingInfo, formatPriceDisplay } from "../utils/pricingUtils";
 import { getEventPricingInfo, formatPriceDisplay } from "../utils/pricingUtils";
@@ -42,6 +43,7 @@ const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) =>
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
     const [filters, setFilters] = useState({
         priceRange: [0, 200],
@@ -88,42 +90,53 @@ const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) =>
     ];
 
     // Load events from API
-    useEffect(() => {
-        const loadEvents = async () => {
-            try {
+    const loadEvents = async (isRefresh = false) => {
+        try {
+            if (isRefresh) {
+                setRefreshing(true);
+            } else {
                 setLoading(true);
-                setError(null);
-
-                // Load events
-                const params = {
-                    limit: 12,
-                    sortBy: filters.sortBy,
-                    lang: i18n.language, // Include current language
-                    ...(filters.categories && filters.categories.length > 0 && {
-                        categoryIds: filters.categories // Use category IDs from filters
-                    }),
-                    ...(searchQuery && { search: searchQuery }),
-                    ...(filters.lastMinuteOnly && { lastMinute: true }),
-                    minPrice: filters.priceRange[0],
-                    maxPrice: filters.priceRange[1],
-                };
-
-                const eventsData = await EventService.getAllEvents(params);
-                const formattedData = EventService.formatEvents(eventsData);
-                setEvents(formattedData.events);
-            } catch (err) {
-                console.error("Error loading events:", err);
-                setError("Failed to load events. Please try again.");
-            } finally {
-                setLoading(false);
             }
-        };
+            setError(null);
 
+            // Load events
+            const params = {
+                limit: 12,
+                sortBy: filters.sortBy,
+                lang: i18n.language, // Include current language
+                ...(filters.categories && filters.categories.length > 0 && {
+                    categoryIds: filters.categories // Use category IDs from filters
+                }),
+                ...(searchQuery && { search: searchQuery }),
+                ...(filters.lastMinuteOnly && { lastMinute: true }),
+                minPrice: filters.priceRange[0],
+                maxPrice: filters.priceRange[1],
+            };
+
+            const eventsData = await EventService.getAllEvents(params);
+            const formattedData = EventService.formatEvents(eventsData);
+            setEvents(formattedData.events);
+        } catch (err) {
+            console.error("Error loading events:", err);
+            setError("Failed to load events. Please try again.");
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
         // Only load events if categories are available or not needed
         if (!categoriesLoading) {
             loadEvents();
         }
     }, [selectedCategory, searchQuery, filters, categoriesLoading, i18n.language]);
+
+    // Handle pull-to-refresh
+    const handleRefresh = async () => {
+        console.log("[HOME] Pull-to-refresh triggered");
+        await loadEvents(true);
+    };
 
     // Since filtering is now done on the server side via API calls,
     // we can use the events directly from state
@@ -258,28 +271,33 @@ const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) =>
     );
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            {/* Loading State */}
-            {(loading || categoriesLoading) && (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-                    <Typography variant="h6">Loading events...</Typography>
-                </Box>
-            )}
+        <PullToRefresh 
+            onRefresh={handleRefresh} 
+            refreshing={refreshing}
+            disabled={loading || categoriesLoading}
+        >
+            <Container maxWidth="lg" sx={{ py: 4 }}>
+                {/* Loading State */}
+                {(loading || categoriesLoading) && (
+                    <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                        <Typography variant="h6">Loading events...</Typography>
+                    </Box>
+                )}
 
-            {/* Error State */}
-            {(error || categoriesError) && (
-                <Box sx={{ textAlign: "center", py: 8 }}>
-                    <Typography variant="h6" color="error" gutterBottom>
-                        {error || categoriesError}
-                    </Typography>
-                    <Button variant="contained" onClick={() => window.location.reload()}>
-                        Retry
-                    </Button>
-                </Box>
-            )}
+                {/* Error State */}
+                {(error || categoriesError) && (
+                    <Box sx={{ textAlign: "center", py: 8 }}>
+                        <Typography variant="h6" color="error" gutterBottom>
+                            {error || categoriesError}
+                        </Typography>
+                        <Button variant="contained" onClick={handleRefresh}>
+                            Retry
+                        </Button>
+                    </Box>
+                )}
 
-            {/* Main Content */}
-            {!loading && !categoriesLoading && !error && !categoriesError && (
+                {/* Main Content */}
+                {!loading && !categoriesLoading && !error && !categoriesError && (
                 <>
                     {/* Category Tabs */}
                     <Box sx={{ mb: 4 }}>
@@ -370,7 +388,8 @@ const Home = ({ searchQuery: externalSearchQuery, filters: externalFilters }) =>
                     )}
                 </>
             )}
-        </Container>
+            </Container>
+        </PullToRefresh>
     );
 };
 

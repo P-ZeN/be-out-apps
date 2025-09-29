@@ -265,7 +265,7 @@ const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentS
 const StripeLoading = () => {
     const theme = useTheme();
     const isMobile = getIsTauriApp();
-    
+
     return (
         <Box sx={{
             display: 'flex',

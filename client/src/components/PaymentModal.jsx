@@ -270,7 +270,7 @@ const PaymentModal = ({ isOpen, onClose, event, bookingData, onPaymentSuccess, o
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ 
+            <DialogContent sx={{
                 px: { xs: 2, sm: 3 }, // Responsive horizontal padding
                 py: { xs: 1.5, sm: 3 }, // Reduced vertical padding on mobile
                 '&.MuiDialogContent-root': {

@@ -21,6 +21,7 @@ import { useTheme } from "@mui/material/styles";
 import EventService from "../services/eventService";
 import { useCategories } from "../services/enhancedCategoryService";
 import HorizontalEventsSection from "../components/HorizontalEventsSection";
+import PullToRefresh from "../components/PullToRefresh";
 
 const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters }) => {
     const navigate = useNavigate();
@@ -38,6 +39,9 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
         nearYou: { events: [], loading: true },
         categories: {}
     });
+
+    // Refresh state
+    const [refreshing, setRefreshing] = useState(false);
 
     // User location state
     const [userLocation, setUserLocation] = useState(null);
@@ -64,82 +68,130 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
     }, []);
 
     // Load all sections data
-    useEffect(() => {
-        const loadAllSections = async () => {
-            const currentLang = i18n.language;
+    const loadAllSections = async (isRefresh = false) => {
+        const currentLang = i18n.language;
 
-            try {
-                // Load time-based sections
-                const [lastMinuteData, todayData, thisWeekData, thisMonthData, recommendedData] = await Promise.all([
-                    EventService.getAllEvents({
-                        lang: currentLang,
-                        limit: 12,
-                        lastMinute: true,
-                        sortBy: "date"
-                    }),
-                    EventService.getEventsByTimePeriod("today", currentLang, 12),
-                    EventService.getEventsByTimePeriod("thisWeek", currentLang, 12),
-                    EventService.getEventsByTimePeriod("thisMonth", currentLang, 12),
-                    EventService.getRecommendedEvents(currentLang, 12)
-                ]);
+        if (isRefresh) {
+            setRefreshing(true);
+        }
 
-                // Load nearby events if location available
-                let nearYouData = { events: [] };
-                if (userLocation) {
-                    nearYouData = await EventService.getNearbyEvents(
-                        userLocation.lat,
-                        userLocation.lng,
-                        currentLang,
-                        12
-                    );
-                }
+        try {
+            // Load time-based sections
+            const [lastMinuteData, todayData, thisWeekData, thisMonthData, recommendedData] = await Promise.all([
+                EventService.getAllEvents({
+                    lang: currentLang,
+                    limit: 12,
+                    lastMinute: true,
+                    sortBy: "date"
+                }),
+                EventService.getEventsByTimePeriod("today", currentLang, 12),
+                EventService.getEventsByTimePeriod("thisWeek", currentLang, 12),
+                EventService.getEventsByTimePeriod("thisMonth", currentLang, 12),
+                EventService.getRecommendedEvents(currentLang, 12)
+            ]);
 
-                // Update sections data
-                setSectionsData(prev => ({
-                    ...prev,
-                    lastMinute: {
-                        events: EventService.formatEvents(lastMinuteData).events,
-                        loading: false
-                    },
-                    today: {
-                        events: EventService.formatEvents(todayData).events,
-                        loading: false
-                    },
-                    thisWeek: {
-                        events: EventService.formatEvents(thisWeekData).events,
-                        loading: false
-                    },
-                    thisMonth: {
-                        events: EventService.formatEvents(thisMonthData).events,
-                        loading: false
-                    },
-                    recommended: {
-                        events: EventService.formatEvents(recommendedData).events,
-                        loading: false
-                    },
-                    nearYou: {
-                        events: EventService.formatEvents(nearYouData).events,
-                        loading: false
-                    }
-                }));
-
-            } catch (error) {
-                console.error("Error loading sections:", error);
-                // Set all sections as not loading with empty events
-                setSectionsData(prev => ({
-                    ...prev,
-                    lastMinute: { events: [], loading: false },
-                    today: { events: [], loading: false },
-                    thisWeek: { events: [], loading: false },
-                    thisMonth: { events: [], loading: false },
-                    recommended: { events: [], loading: false },
-                    nearYou: { events: [], loading: false }
-                }));
+            // Load nearby events if location available
+            let nearYouData = { events: [] };
+            if (userLocation) {
+                nearYouData = await EventService.getNearbyEvents(
+                    userLocation.lat,
+                    userLocation.lng,
+                    currentLang,
+                    12
+                );
             }
-        };
 
+            // Update sections data
+            setSectionsData(prev => ({
+                ...prev,
+                lastMinute: {
+                    events: EventService.formatEvents(lastMinuteData).events,
+                    loading: false
+                },
+                today: {
+                    events: EventService.formatEvents(todayData).events,
+                    loading: false
+                },
+                thisWeek: {
+                    events: EventService.formatEvents(thisWeekData).events,
+                    loading: false
+                },
+                thisMonth: {
+                    events: EventService.formatEvents(thisMonthData).events,
+                    loading: false
+                },
+                recommended: {
+                    events: EventService.formatEvents(recommendedData).events,
+                    loading: false
+                },
+                nearYou: {
+                    events: EventService.formatEvents(nearYouData).events,
+                    loading: false
+                }
+            }));
+
+        } catch (error) {
+            console.error("Error loading sections:", error);
+            // Set all sections as not loading with empty events
+            setSectionsData(prev => ({
+                ...prev,
+                lastMinute: { events: [], loading: false },
+                today: { events: [], loading: false },
+                thisWeek: { events: [], loading: false },
+                thisMonth: { events: [], loading: false },
+                recommended: { events: [], loading: false },
+                nearYou: { events: [], loading: false }
+            }));
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
         loadAllSections();
     }, [i18n.language, userLocation]);
+
+    // Handle pull-to-refresh
+    const handleRefresh = async () => {
+        console.log("[EVENTS_PAGE] Pull-to-refresh triggered");
+        await loadAllSections(true);
+        
+        // Also reload category sections
+        const loadCategorySections = async () => {
+            if (categoriesLoading || !categoriesData.length) return;
+
+            const currentLang = i18n.language;
+            const categoryPromises = categoriesData.map(async (category) => {
+                try {
+                    const data = await EventService.getEventsByCategory(category.id, currentLang, 12);
+                    return {
+                        id: category.id,
+                        events: EventService.formatEvents(data).events
+                    };
+                } catch (error) {
+                    console.error(`Error loading category ${category.id}:`, error);
+                    return {
+                        id: category.id,
+                        events: []
+                    };
+                }
+            });
+
+            const categoryResults = await Promise.all(categoryPromises);
+            const categorySections = {};
+
+            categoryResults.forEach(({ id, events }) => {
+                categorySections[id] = { events, loading: false };
+            });
+
+            setSectionsData(prev => ({
+                ...prev,
+                categories: categorySections
+            }));
+        };
+
+        await loadCategorySections();
+    };
 
     // Load category sections
     useEffect(() => {
@@ -180,7 +232,11 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
     }, [categoriesData, categoriesLoading, i18n.language]);
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4, backgroundColor: "#fff" }}>
+        <PullToRefresh 
+            onRefresh={handleRefresh} 
+            refreshing={refreshing}
+        >
+            <Container maxWidth="lg" sx={{ py: 4, backgroundColor: "#fff" }}>
             {/* Last Minute Deals Section */}
             <HorizontalEventsSection
                 title={t("home:sections.lastMinute")}
@@ -280,7 +336,8 @@ const EventsPage = ({ searchQuery: externalSearchQuery, filters: externalFilters
                     </Box>
                 </Paper>
             )}
-        </Container>
+            </Container>
+        </PullToRefresh>
     );
 };
 

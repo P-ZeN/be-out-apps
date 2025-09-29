@@ -6,9 +6,10 @@ import { useTranslation } from "react-i18next";
 import { useExternalLink } from "../hooks/useExternalLink";
 import { waitForTauri, getTauriInfo } from "../utils/tauriReady";
 import { areTauriApisAvailable } from "../utils/platformDetection";
-import { Button, TextField, Container, Typography, Box, Alert, Divider, CircularProgress } from "@mui/material";
+import { Button, TextField, Container, Typography, Box, Alert, Divider, CircularProgress, FormControlLabel, Checkbox } from "@mui/material";
 import { Google, Facebook, Apple } from "@mui/icons-material";
 import WebViewOverlay from "./WebViewOverlay";
+import secureStorage from "../services/secureStorage";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -18,6 +19,7 @@ const Login = () => {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(secureStorage.getRememberMe());
     // Removed oauthLoading state as Google Auth is temporarily disabled
     const { login, nativeLogin } = useAuth();
     const navigate = useNavigate();
@@ -33,7 +35,7 @@ const Login = () => {
         setIsLoading(true);
         try {
             const response = await authService.login({ email, password });
-            login(response); // AuthContext will handle navigation based on onboarding status
+            await login(response, rememberMe); // Pass remember me preference
             setMessage(t("auth:login.success"));
         } catch (error) {
             setError(t("auth:login.failed"));
@@ -124,6 +126,17 @@ const Login = () => {
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                        label={t("auth:login.rememberMe", "Remember me")}
+                        sx={{ mt: 1 }}
                     />
                     <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} disabled={isLoading}>
                         {isLoading ? <CircularProgress size={24} /> : t("auth:login.title")}

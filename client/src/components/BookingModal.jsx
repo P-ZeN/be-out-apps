@@ -533,8 +533,8 @@ const BookingModal = ({ open, onClose, event }) => {
                 </Box>
             </DialogTitle>
 
-            <DialogContent 
-                sx={{ 
+            <DialogContent
+                sx={{
                     px: { xs: 2, sm: 3 }, // Reduced horizontal padding on mobile
                     py: { xs: 2, sm: 3 }, // Reduced vertical padding on mobile
                     '&.MuiDialogContent-root': {
@@ -596,9 +596,9 @@ const BookingModal = ({ open, onClose, event }) => {
                 </Paper>
 
                 {/* Stepper - Mobile Responsive */}
-                <Stepper 
-                    activeStep={activeStep} 
-                    sx={{ 
+                <Stepper
+                    activeStep={activeStep}
+                    sx={{
                         mb: 3,
                         // Mobile responsive stepper
                         '& .MuiStepper-root': {
