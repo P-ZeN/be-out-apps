@@ -5,7 +5,7 @@
 ### 1. Stripe Configuration
 - **Secret Key**: Configured with your test key `sk_test_51SAW8tC2...`
 - **Publishable Key**: Configured with your test key `pk_test_51SAW8tC2...`
-- **Webhook Secret**: Configured with `whsec_uSxjwEQzpdnlnSRyxmkqfiyKyJpP6vil`
+- **Webhook Secret**: Configured with `whsec_uSx...`
 - **Webhook URL**: Set to production URL `https://server.be-out-app.dedibox2.philippezenone.net/api/webhooks/stripe`
 
 ### 2. Code Infrastructure

@@ -13,11 +13,11 @@ import {
     Card,
     CardContent,
 } from "@mui/material";
-import { 
-    CreditCard, 
-    Security, 
-    Lock, 
-    CheckCircle 
+import {
+    CreditCard,
+    Security,
+    Lock,
+    CheckCircle
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import paymentService from "../services/paymentService";
@@ -133,10 +133,10 @@ const PaymentForm = ({ eventId, amount, currency = "eur", onPaymentSuccess, onPa
     // Simple loading check
     if (isLoading && !paymentIntentCreated) {
         return (
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
                 justifyContent: 'center',
                 py: 6,
                 textAlign: 'center'
@@ -160,8 +160,8 @@ const PaymentForm = ({ eventId, amount, currency = "eur", onPaymentSuccess, onPa
                         {error}
                     </Typography>
                 </Alert>
-                <Button 
-                    variant="outlined" 
+                <Button
+                    variant="outlined"
                     onClick={onCancel}
                     size="large"
                 >
@@ -182,15 +182,15 @@ const PaymentForm = ({ eventId, amount, currency = "eur", onPaymentSuccess, onPa
                             Résumé du paiement
                         </Typography>
                     </Box>
-                    
+
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="body1">
                             Total:
                         </Typography>
-                        <Chip 
-                            label={formatAmount(amount, currency)} 
+                        <Chip
+                            label={formatAmount(amount, currency)}
                             color="primary"
-                            sx={{ 
+                            sx={{
                                 fontSize: '1.1rem',
                                 fontWeight: 700,
                                 height: 36
@@ -272,8 +272,8 @@ const PaymentForm = ({ eventId, amount, currency = "eur", onPaymentSuccess, onPa
                             sx={{ flex: 1 }}
                             startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <Lock />}
                         >
-                            {isLoading ? 
-                                t('payment:form.processing') : 
+                            {isLoading ?
+                                t('payment:form.processing') :
                                 t('payment:form.payAmount', { amount: formatAmount(amount, currency) })
                             }
                         </Button>
@@ -282,11 +282,11 @@ const PaymentForm = ({ eventId, amount, currency = "eur", onPaymentSuccess, onPa
             </Box>
 
             {/* Security Notice */}
-            <Box sx={{ 
-                mt: 3, 
-                pt: 2, 
+            <Box sx={{
+                mt: 3,
+                pt: 2,
                 borderTop: `1px solid ${theme.palette.divider}`,
-                textAlign: 'center' 
+                textAlign: 'center'
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                     <Security sx={{ fontSize: 16, color: 'text.secondary' }} />
