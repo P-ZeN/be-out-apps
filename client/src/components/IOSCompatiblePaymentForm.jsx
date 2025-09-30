@@ -87,12 +87,9 @@ const IOSCompatiblePaymentForm = ({
                     throw new Error(`❌ iOS: Invalid Stripe key format: ${stripePublishableKey.substring(0, 10)}... (should start with pk_)`);
                 }
 
-                // Load Stripe with iOS-specific options
+                // Load Stripe with iOS-specific options (minimal config for WebKit compatibility)
                 const stripe = await loadStripe(stripePublishableKey, {
-                    // iOS WebKit-specific configuration
-                    stripeAccount: undefined,
-                    apiVersion: '2020-08-27',
-                    // Disable features that may not work in iOS WebView
+                    // iOS WebKit-specific configuration - minimal options only
                     locale: 'auto'
                 });
 
