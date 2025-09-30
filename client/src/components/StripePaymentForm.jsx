@@ -324,6 +324,7 @@ const StripePaymentForm = ({ eventId, amount, currency = "eur", bookingData, onP
 
     // iOS WebKit detection - using improved detection utility
     const isIOSDevice = isIOS();
+    console.log("🔍 Platform detection - isIOSDevice:", isIOSDevice, "User Agent:", navigator.userAgent);
 
     // Use iOS-compatible form for iOS Tauri apps
     if (isIOSDevice) {

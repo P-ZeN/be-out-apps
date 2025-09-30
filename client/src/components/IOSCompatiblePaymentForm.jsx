@@ -19,6 +19,14 @@ import { getIsTauriApp } from "../utils/platformDetection";
 // Initialize Stripe key at module level (same as regular form)
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
+// Debug logging at module level
+console.log("📱 IOSCompatiblePaymentForm module loaded");
+console.log("📱 Module-level Stripe key check:", {
+    stripePublishableKey: stripePublishableKey ? `${stripePublishableKey.substring(0, 10)}...` : 'UNDEFINED',
+    typeofKey: typeof stripePublishableKey,
+    allEnvVars: Object.keys(import.meta.env)
+});
+
 /**
  * iOS WebKit-specific payment form that addresses iOS Tauri WebView limitations
  * Uses direct Stripe Elements API calls instead of PaymentElement for better iOS compatibility
@@ -34,6 +42,14 @@ const IOSCompatiblePaymentForm = ({
 }) => {
     const theme = useTheme();
     const [isLoading, setIsLoading] = useState(true);
+    
+    // Debug: Show what the environment variable actually contains
+    const debugInfo = {
+        stripeKey: stripePublishableKey,
+        hasKey: !!stripePublishableKey,
+        keyLength: stripePublishableKey?.length || 0,
+        startsWithPk: stripePublishableKey?.startsWith('pk_') || false
+    };
     const [clientSecret, setClientSecret] = useState("");
     const [error, setError] = useState(null);
     const [stripeInstance, setStripeInstance] = useState(null);
@@ -54,15 +70,17 @@ const IOSCompatiblePaymentForm = ({
                 // Import Stripe with iOS-specific configuration
                 const { loadStripe } = await import("@stripe/stripe-js");
 
-                console.log("🍎 iOS checking Stripe key:", stripePublishableKey ? `${stripePublishableKey.substring(0, 10)}...` : 'NOT SET');
-                console.log("🍎 iOS environment variables:", {
-                    VITE_STRIPE_PUBLISHABLE_KEY: stripePublishableKey ? 'SET' : 'NOT SET',
-                    NODE_ENV: import.meta.env.NODE_ENV,
-                    MODE: import.meta.env.MODE
-                });
+                // Debug info that will be visible in the UI if there's an error
+                const debugInfo = {
+                    stripeKey: stripePublishableKey ? `${stripePublishableKey.substring(0, 10)}...` : 'NOT SET',
+                    keyType: typeof stripePublishableKey,
+                    keyLength: stripePublishableKey ? stripePublishableKey.length : 0,
+                    nodeEnv: import.meta.env.NODE_ENV,
+                    mode: import.meta.env.MODE
+                };
 
                 if (!stripePublishableKey) {
-                    throw new Error("❌ iOS: Stripe publishable key not configured! Check VITE_STRIPE_PUBLISHABLE_KEY environment variable.");
+                    throw new Error(`❌ iOS: Stripe publishable key not configured! Debug: ${JSON.stringify(debugInfo)}`);
                 }
 
                 if (!stripePublishableKey.startsWith('pk_')) {
@@ -435,9 +453,29 @@ const IOSCompatiblePaymentForm = ({
 
             {/* Error display */}
             {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                    {error}
-                </Alert>
+                <Box sx={{ mb: 3 }}>
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                    {/* Debug info for iOS */}
+                    <Paper sx={{ p: 2, bgcolor: 'grey.100' }}>
+                        <Typography variant="caption" component="div">
+                            <strong>Debug Info:</strong>
+                        </Typography>
+                        <Typography variant="caption" component="div">
+                            Has Key: {debugInfo.hasKey ? 'YES' : 'NO'}
+                        </Typography>
+                        <Typography variant="caption" component="div">
+                            Key Length: {debugInfo.keyLength}
+                        </Typography>
+                        <Typography variant="caption" component="div">
+                            Starts with pk_: {debugInfo.startsWithPk ? 'YES' : 'NO'}
+                        </Typography>
+                        <Typography variant="caption" component="div">
+                            Key Preview: {debugInfo.stripeKey ? `${debugInfo.stripeKey.substring(0, 15)}...` : 'UNDEFINED'}
+                        </Typography>
+                    </Paper>
+                </Box>
             )}
 
             {/* Action buttons */}
