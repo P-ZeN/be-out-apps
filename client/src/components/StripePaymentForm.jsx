@@ -322,7 +322,7 @@ const StripePaymentForm = ({ eventId, amount, currency = "eur", bookingData, onP
     const [isSettingUp, setIsSettingUp] = useState(true);
     const isMobile = getIsTauriApp();
 
-    // iOS WebKit detection - use improved detection utility
+    // iOS WebKit detection - using improved detection utility
     const isIOSDevice = isIOS();
 
     // Use iOS-compatible form for iOS Tauri apps

@@ -16,6 +16,9 @@ import { CreditCard, Lock, Security, Apple } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { getIsTauriApp } from "../utils/platformDetection";
 
+// Initialize Stripe key at module level (same as regular form)
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
 /**
  * iOS WebKit-specific payment form that addresses iOS Tauri WebView limitations
  * Uses direct Stripe Elements API calls instead of PaymentElement for better iOS compatibility
@@ -51,24 +54,23 @@ const IOSCompatiblePaymentForm = ({
                 // Import Stripe with iOS-specific configuration
                 const { loadStripe } = await import("@stripe/stripe-js");
 
-                const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-                console.log("🍎 iOS checking Stripe key:", stripeKey ? `${stripeKey.substring(0, 10)}...` : 'NOT SET');
+                console.log("🍎 iOS checking Stripe key:", stripePublishableKey ? `${stripePublishableKey.substring(0, 10)}...` : 'NOT SET');
                 console.log("🍎 iOS environment variables:", {
-                    VITE_STRIPE_PUBLISHABLE_KEY: stripeKey ? 'SET' : 'NOT SET',
+                    VITE_STRIPE_PUBLISHABLE_KEY: stripePublishableKey ? 'SET' : 'NOT SET',
                     NODE_ENV: import.meta.env.NODE_ENV,
                     MODE: import.meta.env.MODE
                 });
 
-                if (!stripeKey) {
+                if (!stripePublishableKey) {
                     throw new Error("❌ iOS: Stripe publishable key not configured! Check VITE_STRIPE_PUBLISHABLE_KEY environment variable.");
                 }
 
-                if (!stripeKey.startsWith('pk_')) {
-                    throw new Error(`❌ iOS: Invalid Stripe key format: ${stripeKey.substring(0, 10)}... (should start with pk_)`);
+                if (!stripePublishableKey.startsWith('pk_')) {
+                    throw new Error(`❌ iOS: Invalid Stripe key format: ${stripePublishableKey.substring(0, 10)}... (should start with pk_)`);
                 }
 
                 // Load Stripe with iOS-specific options
-                const stripe = await loadStripe(stripeKey, {
+                const stripe = await loadStripe(stripePublishableKey, {
                     // iOS WebKit-specific configuration
                     stripeAccount: undefined,
                     apiVersion: '2020-08-27',
