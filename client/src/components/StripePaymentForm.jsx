@@ -18,6 +18,7 @@ import {
 import { CreditCard, Lock } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { getIsTauriApp } from "../utils/platformDetection";
+import IOSCompatiblePaymentForm from "./IOSCompatiblePaymentForm";
 
 // Initialize Stripe with the publishable key
 const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -320,6 +321,29 @@ const StripePaymentForm = ({ eventId, amount, currency = "eur", bookingData, onP
     const [setupError, setSetupError] = useState(null);
     const [isSettingUp, setIsSettingUp] = useState(true);
     const isMobile = getIsTauriApp();
+
+    // iOS WebKit detection - use specialized form for iOS Tauri apps
+    const isIOS = isMobile && (
+        navigator.userAgent.includes('iPhone') ||
+        navigator.userAgent.includes('iPad') ||
+        (window.webkit && window.webkit.messageHandlers)
+    );
+
+    // Use iOS-compatible form for iOS Tauri apps
+    if (isIOS) {
+        console.log("🍎 iOS WebKit detected - using iOS-compatible payment form");
+        return (
+            <IOSCompatiblePaymentForm
+                eventId={eventId}
+                amount={amount}
+                currency={currency}
+                bookingData={bookingData}
+                onPaymentSuccess={onPaymentSuccess}
+                onPaymentError={onPaymentError}
+                onCancel={onCancel}
+            />
+        );
+    }
 
     // Create booking and payment intent on component mount
     useEffect(() => {
