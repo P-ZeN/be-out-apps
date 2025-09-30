@@ -50,6 +50,7 @@ export default defineConfig(({ mode }) => {
             // Explicitly define VITE environment variables with fallbacks
             "import.meta.env.VITE_API_URL": JSON.stringify(apiUrl),
             "import.meta.env.VITE_MAPBOX_ACCESS_TOKEN": JSON.stringify(mapboxToken),
+            "import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY": JSON.stringify(env.VITE_STRIPE_PUBLISHABLE_KEY),
             // Also define them as process.env for compatibility
             "process.env.VITE_API_URL": JSON.stringify(apiUrl),
             "process.env.VITE_MAPBOX_ACCESS_TOKEN": JSON.stringify(mapboxToken),
