@@ -206,7 +206,7 @@ export const generateTierAwareTicketNumber = (bookingReference, ticketIndex, pri
     const categoryCode = pricingOption.category_name.substring(0, 3).toUpperCase();
     const tierCode = pricingOption.tier_name.substring(0, 2).toUpperCase();
     const ticketNumber = String(ticketIndex + 1).padStart(3, '0');
-    
+
     // Use microseconds + random for uniqueness
     const timestamp = Date.now().toString().slice(-4);
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
