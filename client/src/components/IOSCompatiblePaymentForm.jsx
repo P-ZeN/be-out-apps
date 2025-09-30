@@ -52,10 +52,19 @@ const IOSCompatiblePaymentForm = ({
                 const { loadStripe } = await import("@stripe/stripe-js");
 
                 const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-                console.log("Using Stripe key:", stripeKey ? stripeKey.substring(0, 10) + '...' : 'NOT SET');
+                console.log("🍎 iOS checking Stripe key:", stripeKey ? `${stripeKey.substring(0, 10)}...` : 'NOT SET');
+                console.log("🍎 iOS environment variables:", {
+                    VITE_STRIPE_PUBLISHABLE_KEY: stripeKey ? 'SET' : 'NOT SET',
+                    NODE_ENV: import.meta.env.NODE_ENV,
+                    MODE: import.meta.env.MODE
+                });
 
                 if (!stripeKey) {
-                    throw new Error("Stripe publishable key not configured");
+                    throw new Error("❌ iOS: Stripe publishable key not configured! Check VITE_STRIPE_PUBLISHABLE_KEY environment variable.");
+                }
+
+                if (!stripeKey.startsWith('pk_')) {
+                    throw new Error(`❌ iOS: Invalid Stripe key format: ${stripeKey.substring(0, 10)}... (should start with pk_)`);
                 }
 
                 // Load Stripe with iOS-specific options
@@ -118,24 +127,18 @@ const IOSCompatiblePaymentForm = ({
             const bookingResult = await bookingResponse.json();
             console.log("Booking created:", bookingResult.booking_id);
 
-            // Step 2: Create payment intent with iOS-specific metadata
-            const paymentResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-intent`, {
+            // Step 2: Create payment intent with correct API endpoint
+            const paymentResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/create-payment-intent`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 credentials: 'include',
                 body: JSON.stringify({
-                    booking_id: bookingResult.booking_id,
-                    amount: Math.round(amount * 100),
-                    currency: currency.toLowerCase(),
-                    // iOS-specific metadata
-                    metadata: {
-                        platform: 'ios-tauri',
-                        webview: 'webkit',
-                        booking_id: bookingResult.booking_id,
-                        event_id: eventId
-                    }
+                    booking_id: bookingResult.booking.id, // Use correct field name
+                    amount: bookingResult.booking.total_price, // Use the price from booking
+                    event_title: bookingResult.event?.title,
+                    customer_email: bookingResult.booking.customer_email
                 })
             });
 
@@ -284,19 +287,18 @@ const IOSCompatiblePaymentForm = ({
                 console.log("✅ iOS payment succeeded:", paymentIntent.id);
 
                 // Confirm with backend
-                const confirmResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/confirm`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        payment_intent_id: paymentIntent.id,
-                        booking_id: window._iosBookingData?.booking_id
-                    })
-                });
-
-                if (confirmResponse.ok) {
+            // Step 4: Confirm payment on server
+            const confirmResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payments/confirm-payment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    payment_intent_id: paymentResult.client_secret.split('_secret_')[0],
+                    booking_id: bookingResult.booking.id
+                })
+            });                if (confirmResponse.ok) {
                     const confirmResult = await confirmResponse.json();
                     onPaymentSuccess?.(paymentIntent, confirmResult);
                 } else {
