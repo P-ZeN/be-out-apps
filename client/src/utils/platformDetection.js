@@ -108,3 +108,55 @@ export const areTauriApisAvailable = () => {
     if (typeof window === "undefined") return false;
     return !!(window.__TAURI__ || window.__TAURI_IPC__ || window.__TAURI_INTERNALS__ || window.ipc || window.rpc);
 };
+
+/**
+ * Detect if running on iOS (including Tauri iOS apps)
+ * @returns {boolean}
+ */
+export const isIOS = () => {
+    if (typeof window === "undefined") return false;
+
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+
+    // Check for iOS devices in user agent
+    const isIOSUserAgent = /iPad|iPhone|iPod/.test(userAgent);
+
+    // Check for iOS platform
+    const isIOSPlatform = /iPad|iPhone|iPod|iOS/.test(platform);
+
+    // Check for Tauri iOS app specifically
+    const isTauriIOS = getIsTauriApp() && (
+        isIOSUserAgent ||
+        isIOSPlatform ||
+        // Check for iOS WebKit specifics in Tauri
+        (window.webkit && typeof window.webkit === 'object') ||
+        // Check for iOS-specific Tauri environment variables
+        process.env.TAURI_PLATFORM === 'ios' ||
+        // Check for iOS in the build target
+        userAgent.includes('Mobile/') && userAgent.includes('Safari/')
+    );
+
+    return isIOSUserAgent || isIOSPlatform || isTauriIOS;
+};
+
+/**
+ * Detect if running on Android (including Tauri Android apps)
+ * @returns {boolean}
+ */
+export const isAndroid = () => {
+    if (typeof window === "undefined") return false;
+
+    const userAgent = navigator.userAgent;
+
+    // Check for Android in user agent
+    const isAndroidUserAgent = /Android/.test(userAgent);
+
+    // Check for Tauri Android app specifically
+    const isTauriAndroid = getIsTauriApp() && (
+        isAndroidUserAgent ||
+        process.env.TAURI_PLATFORM === 'android'
+    );
+
+    return isAndroidUserAgent || isTauriAndroid;
+};
