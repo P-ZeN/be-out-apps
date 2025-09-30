@@ -20,7 +20,18 @@ import { useTheme } from "@mui/material/styles";
 import { getIsTauriApp } from "../utils/platformDetection";
 
 // Initialize Stripe with the publishable key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+// Debug logging for production issues
+if (!stripePublishableKey) {
+    console.error('❌ VITE_STRIPE_PUBLISHABLE_KEY is not set');
+} else if (!stripePublishableKey.startsWith('pk_')) {
+    console.error('❌ Invalid Stripe publishable key format:', stripePublishableKey);
+} else {
+    console.log('✅ Stripe publishable key loaded:', stripePublishableKey.substring(0, 10) + '...');
+}
+
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 // Internal payment form component using modern PaymentElement
 const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentSuccess, onPaymentError, onCancel, clientSecret, bookingId }) => {
@@ -428,6 +439,25 @@ const StripePaymentForm = ({ eventId, amount, currency = "eur", bookingData, onP
         },
         loader: 'auto',
     };
+
+    // Check if Stripe failed to initialize
+    if (!stripePromise) {
+        return (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    <Typography variant="h6" gutterBottom>
+                        Configuration de paiement manquante
+                    </Typography>
+                    <Typography variant="body2">
+                        La clé Stripe n'est pas configurée. Veuillez contacter l'administrateur.
+                    </Typography>
+                </Alert>
+                <Button variant="outlined" onClick={onCancel}>
+                    Fermer
+                </Button>
+            </Box>
+        );
+    }
 
     return (
         <Suspense fallback={<StripeLoading />}>
