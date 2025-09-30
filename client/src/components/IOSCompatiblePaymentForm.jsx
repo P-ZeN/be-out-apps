@@ -238,6 +238,34 @@ const IOSCompatiblePaymentForm = ({
                     cardElement.on('ready', () => {
                         setCardElementReady(true);
                         console.log("✅ iOS Card Element ready");
+                        
+                        // iOS-specific focus fix: Add touch event listeners to the container
+                        if (cardElementRef.current) {
+                            const container = cardElementRef.current;
+                            
+                            // Add iOS focus fix: prevent default touch behavior and force focus
+                            const handleTouch = (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                // Trigger focus on the Stripe element
+                                cardElement.focus();
+                                
+                                // Also try to focus the iframe inside
+                                const iframe = container.querySelector('iframe');
+                                if (iframe) {
+                                    iframe.focus();
+                                }
+                            };
+                            
+                            container.addEventListener('touchstart', handleTouch, { passive: false });
+                            container.addEventListener('touchend', handleTouch, { passive: false });
+                            container.addEventListener('click', handleTouch, { passive: false });
+                            
+                            // Add visual feedback for touch
+                            container.style.cursor = 'text';
+                            container.style.webkitTapHighlightColor = 'transparent';
+                        }
                     });
 
                     cardElement.on('change', (event) => {
@@ -415,6 +443,15 @@ const IOSCompatiblePaymentForm = ({
                         borderRadius: theme.shape.borderRadius,
                         backgroundColor: theme.palette.background.paper,
                         minHeight: 60,
+                        // iOS-specific focus improvements
+                        cursor: 'text',
+                        WebkitTapHighlightColor: 'transparent',
+                        WebkitTouchCallout: 'none',
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        // Ensure the container is interactive
+                        position: 'relative',
+                        zIndex: 1,
                         display: 'flex',
                         alignItems: 'center',
                         transition: 'all 0.2s ease',
@@ -423,7 +460,38 @@ const IOSCompatiblePaymentForm = ({
                             boxShadow: `0 0 0 2px ${theme.palette.primary.main}25`,
                         },
                     }}
-                />
+                >
+                    {/* iOS Focus Helper - Invisible overlay to help with touch events */}
+                    {!cardElementReady && (
+                        <Box sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: theme.palette.text.secondary,
+                            fontSize: '14px',
+                            pointerEvents: 'none'
+                        }}>
+                            Chargement du formulaire de carte...
+                        </Box>
+                    )}
+                </Box>
+
+                {/* iOS Focus Helper Text */}
+                {cardElementReady && (
+                    <Typography variant="caption" sx={{ 
+                        mt: 1, 
+                        color: theme.palette.text.secondary,
+                        fontSize: '12px',
+                        fontStyle: 'italic'
+                    }}>
+                        💡 iOS: Toucher directement dans le champ de carte pour saisir les informations
+                    </Typography>
+                )}
 
                 {/* Card status indicator */}
                 {cardElementReady && (
