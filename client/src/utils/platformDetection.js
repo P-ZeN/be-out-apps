@@ -131,8 +131,6 @@ export const isIOS = () => {
         isIOSPlatform ||
         // Check for iOS WebKit specifics in Tauri
         (window.webkit && typeof window.webkit === 'object') ||
-        // Check for iOS-specific Tauri environment variables
-        process.env.TAURI_PLATFORM === 'ios' ||
         // Check for iOS in the build target
         userAgent.includes('Mobile/') && userAgent.includes('Safari/')
     );
@@ -153,10 +151,7 @@ export const isAndroid = () => {
     const isAndroidUserAgent = /Android/.test(userAgent);
 
     // Check for Tauri Android app specifically
-    const isTauriAndroid = getIsTauriApp() && (
-        isAndroidUserAgent ||
-        process.env.TAURI_PLATFORM === 'android'
-    );
+    const isTauriAndroid = getIsTauriApp() && isAndroidUserAgent;
 
     return isAndroidUserAgent || isTauriAndroid;
 };
