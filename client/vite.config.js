@@ -50,7 +50,7 @@ export default defineConfig(({ mode }) => {
             // Explicitly define VITE environment variables with fallbacks
             "import.meta.env.VITE_API_URL": JSON.stringify(apiUrl),
             "import.meta.env.VITE_MAPBOX_ACCESS_TOKEN": JSON.stringify(mapboxToken),
-            "import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY": JSON.stringify(env.VITE_STRIPE_PUBLISHABLE_KEY),
+            "import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY": JSON.stringify(env.VITE_STRIPE_PUBLISHABLE_KEY || "pk_test_51SAW8tC2Kwh0fI2FWL7T40WqcW3L8BlZCcln4KqGeu8kiIrZQ4pbujJuFLfmifuFbzSI95Fd0g1PT2ZG63W6hWzP00LU2BHqzJ"),
             // Also define them as process.env for compatibility
             "process.env.VITE_API_URL": JSON.stringify(apiUrl),
             "process.env.VITE_MAPBOX_ACCESS_TOKEN": JSON.stringify(mapboxToken),

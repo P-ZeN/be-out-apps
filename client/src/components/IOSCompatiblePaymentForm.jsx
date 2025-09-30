@@ -42,7 +42,7 @@ const IOSCompatiblePaymentForm = ({
 }) => {
     const theme = useTheme();
     const [isLoading, setIsLoading] = useState(true);
-    
+
     // Debug: Show what the environment variable actually contains
     const debugInfo = {
         stripeKey: stripePublishableKey,
