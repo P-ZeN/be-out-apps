@@ -87,7 +87,7 @@ const IOSCompatiblePaymentForm = ({
                 console.log("Loading Stripe for iOS WebKit environment...");
 
                 // Add timeout to prevent infinite loading
-                const timeoutPromise = new Promise((_, reject) => 
+                const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error("Stripe loading timeout after 10 seconds")), 10000)
                 );
 
@@ -119,8 +119,8 @@ const IOSCompatiblePaymentForm = ({
                     // iOS WebKit-specific configuration - minimal options only
                     locale: 'auto'
                 });
-                
-                const stripeTimeoutPromise = new Promise((_, reject) => 
+
+                const stripeTimeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error("Stripe initialization timeout after 15 seconds")), 15000)
                 );
 
@@ -147,11 +147,17 @@ const IOSCompatiblePaymentForm = ({
         loadStripeForIOS();
     }, []);
 
-    // Create payment intent and Elements instance for iOS
+    // Create payment intent and Elements instance for iOS - DISABLED FOR DEBUGGING
     useEffect(() => {
-        if (stripeInstance && !clientSecret && !isLoading) {
-            createPaymentIntentForIOS();
-        }
+        // TEMPORARILY DISABLED: This was causing the crash after red screen
+        // if (stripeInstance && !clientSecret && !isLoading) {
+        //     createPaymentIntentForIOS();
+        // }
+        console.log("🍎 Second useEffect triggered but disabled for debugging", {
+            hasStripe: !!stripeInstance,
+            hasSecret: !!clientSecret,
+            isLoading
+        });
     }, [stripeInstance]);
 
     const createPaymentIntentForIOS = async () => {
@@ -477,7 +483,13 @@ const IOSCompatiblePaymentForm = ({
                 zIndex: 9999
             }}>
                 <Typography variant="h4" sx={{ color: 'white', mb: 2 }}>
-                    🍎 iOS FORM DEBUG - CAN YOU SEE THIS?
+                    🍎 iOS FORM RENDERED SUCCESSFULLY!
+                </Typography>
+                <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+                    Stripe Instance: {stripeInstance ? '✅ LOADED' : '❌ MISSING'}
+                </Typography>
+                <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+                    If you see this, the crash happens AFTER rendering
                 </Typography>
                 {/* iOS-specific header */}
                 <Paper sx={{ p: 3, mb: 3, textAlign: 'center' }}>

@@ -184,12 +184,36 @@ const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentS
                     '& .StripeElement--invalid': {
                         borderColor: theme.palette.error.main,
                     },
+                }}
+                onClick={() => {
+                    // iOS focus fix: Help mobile devices focus on payment input
+                    if (isIOSDevice) {
+                        console.log("🍎 iOS click assist for payment element focus");
+                        // Small delay to ensure element is ready
+                        setTimeout(() => {
+                            const paymentInput = document.querySelector('iframe[name*="__privateStripeFrame"]');
+                            if (paymentInput) {
+                                paymentInput.focus();
+                            }
+                        }, 100);
+                    }
                 }}>
                     {clientSecret && (
                         <PaymentElement
                             onReady={() => {
                                 setIsReady(true);
                                 console.log("PaymentElement ready");
+                                // iOS focus assistance on ready
+                                if (isIOSDevice) {
+                                    console.log("🍎 PaymentElement ready - iOS focus assistance");
+                                    setTimeout(() => {
+                                        const firstInput = document.querySelector('input[placeholder*="1234"], input[data-testid*="card"]');
+                                        if (firstInput) {
+                                            firstInput.focus();
+                                            console.log("🍎 Attempted focus on card input");
+                                        }
+                                    }, 500);
+                                }
                             }}
                             onChange={(event) => {
                                 if (event.error) {
@@ -211,6 +235,25 @@ const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentS
                                 fields: {
                                     billingDetails: 'auto',
                                 },
+                                // iOS focus fix: Enhanced mobile input handling
+                                ...(isIOSDevice && {
+                                    appearance: {
+                                        variables: {
+                                            focusOutline: '2px solid #007AFF',
+                                            focusBoxShadow: '0 0 0 1px #007AFF',
+                                        }
+                                    },
+                                    // Enhanced mobile keyboard and focus behavior
+                                    business: { name: 'Be Out App' },
+                                    paymentMethodOrder: ['card'],
+                                    defaultValues: {
+                                        billingDetails: {
+                                            address: {
+                                                country: 'FR'
+                                            }
+                                        }
+                                    }
+                                }),
                                 // Remove invalid terms configuration that was causing warnings
                                 terms: {
                                     card: 'never',
@@ -326,8 +369,9 @@ const StripePaymentForm = ({ eventId, amount, currency = "eur", bookingData, onP
     const isIOSDevice = isIOS();
     console.log("🔍 Platform detection - isIOSDevice:", isIOSDevice, "User Agent:", navigator.userAgent);
 
-    // Use iOS-compatible form for iOS Tauri apps
-    if (isIOSDevice) {
+    // TEMPORARILY DISABLED: Use regular form for all platforms
+    // Complex iOS form was overengineering - focus issue can be fixed simply
+    if (false && isIOSDevice) {
         console.log("🍎 iOS WebKit detected - using iOS-compatible payment form");
         return (
             <IOSCompatiblePaymentForm
