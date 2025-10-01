@@ -427,7 +427,20 @@ const IOSCompatiblePaymentForm = ({
     // Add error boundary protection
     try {
         return (
-            <Box sx={{ maxWidth: 500, mx: 'auto', p: 2 }}>
+            <Box sx={{ 
+                maxWidth: 500, 
+                mx: 'auto', 
+                p: 2,
+                // Debug styling to ensure visibility
+                backgroundColor: 'red',
+                border: '5px solid blue',
+                minHeight: '200px',
+                position: 'relative',
+                zIndex: 9999
+            }}>
+                <Typography variant="h4" sx={{ color: 'white', mb: 2 }}>
+                    🍎 iOS FORM DEBUG - CAN YOU SEE THIS?
+                </Typography>
                 {/* iOS-specific header */}
                 <Paper sx={{ p: 3, mb: 3, textAlign: 'center' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
