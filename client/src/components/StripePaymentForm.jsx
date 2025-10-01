@@ -35,7 +35,7 @@ if (!stripePublishableKey) {
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 // Internal payment form component using modern PaymentElement
-const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentSuccess, onPaymentError, onCancel, clientSecret, bookingId }) => {
+const PaymentFormContent = ({ eventId, amount, currency, bookingData, onPaymentSuccess, onPaymentError, onCancel, clientSecret, bookingId, isIOSDevice }) => {
     const stripe = useStripe();
     const elements = useElements();
     const theme = useTheme();
@@ -534,6 +534,7 @@ const StripePaymentForm = ({ eventId, amount, currency = "eur", bookingData, onP
                     bookingData={bookingData}
                     clientSecret={clientSecret}
                     bookingId={bookingId}
+                    isIOSDevice={isIOSDevice}
                     onPaymentSuccess={onPaymentSuccess}
                     onPaymentError={onPaymentError}
                     onCancel={onCancel}
