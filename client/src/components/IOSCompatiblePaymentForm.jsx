@@ -395,8 +395,17 @@ const IOSCompatiblePaymentForm = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 py: 6,
-                textAlign: 'center'
+                textAlign: 'center',
+                // Debug styling for loading state
+                backgroundColor: 'yellow',
+                border: '5px solid green',
+                minHeight: '300px',
+                position: 'relative',
+                zIndex: 9999
             }}>
+                <Typography variant="h4" sx={{ color: 'red', mb: 2 }}>
+                    🔄 LOADING STATE DEBUG - STUCK HERE?
+                </Typography>
                 <CircularProgress size={40} sx={{ mb: 2 }} />
                 <Typography variant="body2" color="text.secondary">
                     🍎 Chargement optimisé pour iOS...
@@ -411,7 +420,19 @@ const IOSCompatiblePaymentForm = ({
     // Error state
     if (error) {
         return (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Box sx={{ 
+                textAlign: 'center', 
+                py: 4,
+                // Debug styling for error state
+                backgroundColor: 'orange',
+                border: '5px solid purple',
+                minHeight: '200px',
+                position: 'relative',
+                zIndex: 9999
+            }}>
+                <Typography variant="h4" sx={{ color: 'white', mb: 2 }}>
+                    ❌ ERROR STATE DEBUG
+                </Typography>
                 <Alert severity="error" sx={{ mb: 2 }}>
                     <Typography variant="body2">
                         {error}
