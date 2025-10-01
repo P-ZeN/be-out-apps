@@ -40,6 +40,25 @@ const IOSCompatiblePaymentForm = ({
     onPaymentError,
     onCancel
 }) => {
+    console.log("🍎 IOSCompatiblePaymentForm rendering with props:", { eventId, amount, currency });
+    
+    // Early validation to prevent white screen
+    if (!eventId || !amount) {
+        return (
+            <Box sx={{ maxWidth: 500, mx: 'auto', p: 2 }}>
+                <Alert severity="error">
+                    <Typography variant="h6">Invalid Payment Data</Typography>
+                    <Typography variant="body2">
+                        Missing required payment information (eventId: {eventId}, amount: {amount})
+                    </Typography>
+                    <Button onClick={onCancel} sx={{ mt: 2 }}>
+                        Return
+                    </Button>
+                </Alert>
+            </Box>
+        );
+    }
+    
     const theme = useTheme();
     const [isLoading, setIsLoading] = useState(true);
 
@@ -238,30 +257,30 @@ const IOSCompatiblePaymentForm = ({
                     cardElement.on('ready', () => {
                         setCardElementReady(true);
                         console.log("✅ iOS Card Element ready");
-                        
+
                         // iOS-specific focus fix: Add touch event listeners to the container
                         if (cardElementRef.current) {
                             const container = cardElementRef.current;
-                            
+
                             // Add iOS focus fix: prevent default touch behavior and force focus
                             const handleTouch = (e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                
+
                                 // Trigger focus on the Stripe element
                                 cardElement.focus();
-                                
+
                                 // Also try to focus the iframe inside
                                 const iframe = container.querySelector('iframe');
                                 if (iframe) {
                                     iframe.focus();
                                 }
                             };
-                            
+
                             container.addEventListener('touchstart', handleTouch, { passive: false });
                             container.addEventListener('touchend', handleTouch, { passive: false });
                             container.addEventListener('click', handleTouch, { passive: false });
-                            
+
                             // Add visual feedback for touch
                             container.style.cursor = 'text';
                             container.style.webkitTapHighlightColor = 'transparent';
@@ -405,20 +424,22 @@ const IOSCompatiblePaymentForm = ({
         );
     }
 
-    return (
-        <Box sx={{ maxWidth: 500, mx: 'auto', p: 2 }}>
-            {/* iOS-specific header */}
-            <Paper sx={{ p: 3, mb: 3, textAlign: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
-                    <Apple sx={{ color: theme.palette.text.secondary }} />
-                    <Typography variant="h6" color="primary">
-                        Paiement iOS WebKit
+    // Add error boundary protection
+    try {
+        return (
+            <Box sx={{ maxWidth: 500, mx: 'auto', p: 2 }}>
+                {/* iOS-specific header */}
+                <Paper sx={{ p: 3, mb: 3, textAlign: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
+                        <Apple sx={{ color: theme.palette.text.secondary }} />
+                        <Typography variant="h6" color="primary">
+                            Paiement iOS WebKit
+                        </Typography>
+                    </Box>
+                    <Typography variant="body1" color="text.secondary">
+                        Montant total: <strong>{amount ? formatAmount(amount) : 'N/A'}</strong>
                     </Typography>
-                </Box>
-                <Typography variant="body1" color="text.secondary">
-                    Montant total: <strong>{formatAmount(amount)}</strong>
-                </Typography>
-            </Paper>
+                </Paper>
 
             {/* iOS-specific instructions */}
             <Alert severity="info" sx={{ mb: 3 }}>
@@ -483,8 +504,8 @@ const IOSCompatiblePaymentForm = ({
 
                 {/* iOS Focus Helper Text */}
                 {cardElementReady && (
-                    <Typography variant="caption" sx={{ 
-                        mt: 1, 
+                    <Typography variant="caption" sx={{
+                        mt: 1,
                         color: theme.palette.text.secondary,
                         fontSize: '12px',
                         fontStyle: 'italic'
@@ -585,6 +606,25 @@ const IOSCompatiblePaymentForm = ({
             </Box>
         </Box>
     );
+    } catch (renderError) {
+        console.error("❌ iOS Payment Form render error:", renderError);
+        return (
+            <Box sx={{ maxWidth: 500, mx: 'auto', p: 2 }}>
+                <Alert severity="error">
+                    <Typography variant="h6">iOS Payment Form Error</Typography>
+                    <Typography variant="body2">
+                        The payment form encountered an error: {renderError.message}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                        Debug info: Amount={amount}, EventId={eventId}
+                    </Typography>
+                    <Button onClick={onCancel} sx={{ mt: 2 }}>
+                        Return
+                    </Button>
+                </Alert>
+            </Box>
+        );
+    }
 };
 
 export default IOSCompatiblePaymentForm;
