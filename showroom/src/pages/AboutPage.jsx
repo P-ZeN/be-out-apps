@@ -34,17 +34,17 @@ const AboutPage = () => {
         <Container maxWidth="lg" sx={{ py: 6 }}>
             {/* Hero Section */}
             <Box sx={{ textAlign: 'center', mb: 6 }}>
-                <Typography 
-                    variant="h2" 
-                    component="h1" 
-                    gutterBottom 
+                <Typography
+                    variant="h2"
+                    component="h1"
+                    gutterBottom
                     sx={{ color: theme.palette.primary.main }}
                 >
                     {t('about.title', 'About Be Out')}
                 </Typography>
-                <Typography 
-                    variant="h5" 
-                    color="text.secondary" 
+                <Typography
+                    variant="h5"
+                    color="text.secondary"
                     sx={{ maxWidth: 600, mx: 'auto' }}
                 >
                     {t('about.subtitle', 'Connecting communities through amazing events')}
@@ -53,10 +53,10 @@ const AboutPage = () => {
 
             {/* Mission Section */}
             <Box sx={{ mb: 6 }}>
-                <Typography 
-                    variant="h4" 
-                    component="h2" 
-                    gutterBottom 
+                <Typography
+                    variant="h4"
+                    component="h2"
+                    gutterBottom
                     sx={{ mb: 3, color: theme.palette.primary.main }}
                 >
                     {t('about.mission.title', 'Our Mission')}
@@ -71,11 +71,11 @@ const AboutPage = () => {
 
             {/* Values Section */}
             <Box sx={{ mb: 6 }}>
-                <Typography 
-                    variant="h4" 
-                    component="h2" 
-                    textAlign="center" 
-                    gutterBottom 
+                <Typography
+                    variant="h4"
+                    component="h2"
+                    textAlign="center"
+                    gutterBottom
                     sx={{ mb: 4, color: theme.palette.primary.main }}
                 >
                     {t('about.values.title', 'Our Values')}
@@ -86,8 +86,8 @@ const AboutPage = () => {
                             <Card sx={{ height: '100%', p: 2 }}>
                                 <CardContent>
                                     <Stack direction="row" spacing={2} alignItems="flex-start">
-                                        <Avatar 
-                                            sx={{ 
+                                        <Avatar
+                                            sx={{
                                                 bgcolor: 'transparent',
                                                 width: 56,
                                                 height: 56,
@@ -96,9 +96,9 @@ const AboutPage = () => {
                                             {value.icon}
                                         </Avatar>
                                         <Box>
-                                            <Typography 
-                                                variant="h6" 
-                                                gutterBottom 
+                                            <Typography
+                                                variant="h6"
+                                                gutterBottom
                                                 sx={{ color: theme.palette.primary.main }}
                                             >
                                                 {value.title}
@@ -117,10 +117,10 @@ const AboutPage = () => {
 
             {/* Story Section */}
             <Box sx={{ mb: 6 }}>
-                <Typography 
-                    variant="h4" 
-                    component="h2" 
-                    gutterBottom 
+                <Typography
+                    variant="h4"
+                    component="h2"
+                    gutterBottom
                     sx={{ mb: 3, color: theme.palette.primary.main }}
                 >
                     {t('about.story.title', 'Our Story')}
@@ -137,17 +137,17 @@ const AboutPage = () => {
             </Box>
 
             {/* Contact CTA */}
-            <Box 
-                sx={{ 
-                    textAlign: 'center', 
-                    p: 4, 
-                    bgcolor: theme.palette.grey[50], 
-                    borderRadius: 2 
+            <Box
+                sx={{
+                    textAlign: 'center',
+                    p: 4,
+                    bgcolor: theme.palette.grey[50],
+                    borderRadius: 2
                 }}
             >
-                <Typography 
-                    variant="h5" 
-                    gutterBottom 
+                <Typography
+                    variant="h5"
+                    gutterBottom
                     sx={{ color: theme.palette.primary.main }}
                 >
                     {t('about.contact.title', 'Get in Touch')}

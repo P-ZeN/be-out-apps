@@ -53,17 +53,17 @@ const ParametersPage = () => {
     return (
         <Container maxWidth="md" sx={{ py: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
-                <Settings 
-                    sx={{ 
-                        fontSize: 40, 
-                        color: theme.palette.primary.main, 
-                        mr: 2 
-                    }} 
+                <Settings
+                    sx={{
+                        fontSize: 40,
+                        color: theme.palette.primary.main,
+                        mr: 2
+                    }}
                 />
-                <Typography 
-                    variant="h4" 
-                    component="h1" 
-                    sx={{ 
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    sx={{
                         color: theme.palette.primary.main,
                         mb: 0
                     }}
@@ -72,10 +72,10 @@ const ParametersPage = () => {
                 </Typography>
             </Box>
 
-            <Typography 
+            <Typography
                 variant="body1"
                 color="text.secondary"
-                sx={{ 
+                sx={{
                     mb: 4,
                     textAlign: 'center',
                     maxWidth: 600,
@@ -90,9 +90,9 @@ const ParametersPage = () => {
                     {showroomLinks.map((link, index) => (
                         <Box key={link.url}>
                             <ListItem disablePadding>
-                                <ListItemButton 
+                                <ListItemButton
                                     onClick={() => handleLinkClick(link.url)}
-                                    sx={{ 
+                                    sx={{
                                         py: 2,
                                         '&:hover': {
                                             backgroundColor: theme.palette.action.hover,

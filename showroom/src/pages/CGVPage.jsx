@@ -11,7 +11,7 @@ const CGVPage = () => {
                 <Typography variant="h3" component="h1" gutterBottom align="center" color="primary">
                     Conditions Générales de Vente (CGV)
                 </Typography>
-                
+
                 <Divider sx={{ my: 3 }} />
 
                 <Box sx={{ '& > *': { mb: 3 } }}>

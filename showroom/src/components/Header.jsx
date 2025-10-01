@@ -146,15 +146,15 @@ const Header = () => {
                                 sx={{
                                     borderRadius: 1,
                                     mb: 1,
-                                    backgroundColor: location.pathname === item.path 
-                                        ? 'rgba(255, 255, 255, 0.1)' 
+                                    backgroundColor: location.pathname === item.path
+                                        ? 'rgba(255, 255, 255, 0.1)'
                                         : 'transparent',
                                     '&:hover': {
                                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                                     },
                                 }}
                             >
-                                <ListItemText 
+                                <ListItemText
                                     primary={item.label}
                                     sx={{
                                         '& .MuiListItemText-primary': {
@@ -181,7 +181,7 @@ const Header = () => {
                                 },
                             }}
                         >
-                            <ListItemText 
+                            <ListItemText
                                 primary={t('nav.openApp', 'Open App')}
                                 sx={{
                                     textAlign: 'center',

@@ -24,9 +24,9 @@ const Footer = () => {
                 px: { xs: 0 }, // Ensure no padding on the outer Box, let Container handle it
             }}>
             <Container maxWidth="lg">
-                <Box 
-                    sx={{ 
-                        display: "flex", 
+                <Box
+                    sx={{
+                        display: "flex",
                         flexDirection: { xs: "column", md: "row" },
                         gap: 3,
                         flexWrap: "nowrap"
@@ -43,10 +43,10 @@ const Footer = () => {
                             }}>
                             {t("brand.name", "Be Out")}
                         </Typography>
-                        <Typography 
-                            variant="body2" 
-                            sx={{ 
-                                mb: 2, 
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                mb: 2,
                                 color: theme.palette.footer.textSecondary,
                                 wordWrap: "break-word",
                                 lineHeight: 1.6,

@@ -11,7 +11,7 @@ const PolitiqueConfidentialitePage = () => {
                 <Typography variant="h3" component="h1" gutterBottom align="center" color="primary">
                     Politique de Confidentialité (RGPD)
                 </Typography>
-                
+
                 <Divider sx={{ my: 3 }} />
 
                 <Box sx={{ '& > *': { mb: 3 } }}>

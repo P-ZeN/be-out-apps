@@ -86,8 +86,16 @@ const IOSCompatiblePaymentForm = ({
                 setIsLoading(true);
                 console.log("Loading Stripe for iOS WebKit environment...");
 
+                // Add timeout to prevent infinite loading
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Stripe loading timeout after 10 seconds")), 10000)
+                );
+
                 // Import Stripe with iOS-specific configuration
-                const { loadStripe } = await import("@stripe/stripe-js");
+                const { loadStripe } = await Promise.race([
+                    import("@stripe/stripe-js"),
+                    timeoutPromise
+                ]);
 
                 // Debug info that will be visible in the UI if there's an error
                 const debugInfo = {
@@ -107,10 +115,19 @@ const IOSCompatiblePaymentForm = ({
                 }
 
                 // Load Stripe with iOS-specific options (minimal config for WebKit compatibility)
-                const stripe = await loadStripe(stripePublishableKey, {
+                const stripeLoadPromise = loadStripe(stripePublishableKey, {
                     // iOS WebKit-specific configuration - minimal options only
                     locale: 'auto'
                 });
+                
+                const stripeTimeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Stripe initialization timeout after 15 seconds")), 15000)
+                );
+
+                const stripe = await Promise.race([
+                    stripeLoadPromise,
+                    stripeTimeoutPromise
+                ]);
 
                 if (!stripe) {
                     throw new Error("Failed to initialize Stripe");

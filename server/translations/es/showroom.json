@@ -1,90 +1,90 @@
 {
-  "nav": {
-    "home": "Inicio",
-    "about": "Acerca de",
-    "legal": "Legal",
-    "privacy": "Privacidad",
-    "openApp": "Abrir App"
-  },
-  "hero": {
-    "title": "Descubre eventos increíbles que suceden cerca de ti",
-    "description": "Conéctate con tu comunidad, explora eventos locales y nunca te pierdas las experiencias que importan para ti."
-  },
-  "openApp": "Abrir Be Out",
-  "noDownloadRequired": "No se requiere descarga",
-  "downloadIOS": "Descargar en App Store",
-  "downloadAndroid": "Disponible en Google Play",
-  "status": "🚀 Próximamente en las tiendas",
-  "openAppNow": "Abrir Be Out ahora",
-  "viewMap": "Ver mapa",
-  "features": {
-    "title": "¿Por qué elegir Be Out?",
-    "discover": {
-      "title": "Descubrir eventos",
-      "description": "Encuentra eventos increíbles cerca de ti"
+    "nav": {
+        "home": "Inicio",
+        "about": "Acerca de",
+        "legal": "Legal",
+        "privacy": "Privacidad",
+        "openApp": "Abrir App"
     },
-    "location": {
-      "title": "Basado en ubicación",
-      "description": "Ve eventos cerca de tu ubicación en un mapa interactivo"
+    "hero": {
+        "title": "Descubre eventos increíbles que suceden cerca de ti",
+        "description": "Conéctate con tu comunidad, explora eventos locales y nunca te pierdas las experiencias que importan para ti."
     },
-    "connect": {
-      "title": "Conectar",
-      "description": "Conoce personas afines y construye tu comunidad"
+    "openApp": "Abrir Be Out",
+    "noDownloadRequired": "No se requiere descarga",
+    "downloadIOS": "Descargar en App Store",
+    "downloadAndroid": "Disponible en Google Play",
+    "status": "🚀 Próximamente en las tiendas",
+    "openAppNow": "Abrir Be Out ahora",
+    "viewMap": "Ver mapa",
+    "features": {
+        "title": "¿Por qué elegir Be Out?",
+        "discover": {
+            "title": "Descubrir eventos",
+            "description": "Encuentra eventos increíbles cerca de ti"
+        },
+        "location": {
+            "title": "Basado en ubicación",
+            "description": "Ve eventos cerca de tu ubicación en un mapa interactivo"
+        },
+        "connect": {
+            "title": "Conectar",
+            "description": "Conoce personas afines y construye tu comunidad"
+        },
+        "favorites": {
+            "title": "Favoritos",
+            "description": "Guarda y sigue tus eventos y lugares favoritos"
+        }
     },
-    "favorites": {
-      "title": "Favoritos",
-      "description": "Guarda y sigue tus eventos y lugares favoritos"
+    "cta": {
+        "title": "Comienza a explorar eventos",
+        "description": "Únete a miles de usuarios que ya han descubierto eventos increíbles en su ciudad. ¡Comienza a explorar ahora o descarga la app cuando esté lista!"
+    },
+    "about": {
+        "title": "Acerca de Be Out",
+        "subtitle": "Conectando comunidades a través de eventos increíbles",
+        "mission": {
+            "title": "Nuestra misión",
+            "description": "Be Out fue creado con una visión simple pero poderosa: ayudar a las personas a descubrir y conectarse through eventos locales. Creemos que cada comunidad tiene experiencias increíbles esperando ser descubiertas, y estamos aquí para hacer que ese descubrimiento sea fácil y agradable.",
+            "vision": "Ya sea que busques música en vivo, eventos culturales, actividades deportivas o experiencias culinarias, Be Out te acerca a lo que más importa: tu comunidad y las experiencias que enriquecen tu vida."
+        },
+        "values": {
+            "title": "Nuestros valores",
+            "community": {
+                "title": "La comunidad primero",
+                "description": "Creemos en unir a las personas y fortalecer las comunidades locales a través de experiencias compartidas."
+            },
+            "accessibility": {
+                "title": "Accesible para todos",
+                "description": "Todos deberían tener acceso a eventos increíbles, sin importar su origen o ubicación."
+            },
+            "innovation": {
+                "title": "Innovación",
+                "description": "Mejoramos continuamente nuestra plataforma para brindar la mejor experiencia de descubrimiento de eventos."
+            },
+            "support": {
+                "title": "Apoyando lo local",
+                "description": "Apoyamos a las empresas locales y organizadores de eventos para que prosperen en sus comunidades."
+            }
+        },
+        "story": {
+            "title": "Nuestra historia",
+            "beginning": "Be Out nació de una observación simple: demasiados eventos locales increíbles pasan desapercibidos, mientras que las personas luchan por encontrar actividades que coincidan con sus intereses. Vimos una oportunidad de cerrar esta brecha y crear una plataforma que realmente sirva tanto a los asistentes a eventos como a los organizadores.",
+            "development": "Construido con tecnología moderna y un enfoque centrado en el usuario, Be Out combina el poder del descubrimiento basado en ubicación con la simplicidad de las redes sociales. Nuestra plataforma está diseñada para ser intuitiva, accesible y genuinamente útil para descubrir lo que está pasando en tu área.",
+            "future": "Hoy, Be Out continúa evolucionando, siempre con el objetivo de hacer que el descubrimiento de eventos sea más accesible, más social y más alineado con lo que las comunidades realmente necesitan."
+        },
+        "contact": {
+            "title": "Ponte en contacto",
+            "description": "¿Tienes preguntas sobre Be Out? ¿Quieres asociarte con nosotros? Nos encantaría saber de ti.",
+            "email": "Escríbenos a: "
+        }
+    },
+    "legal": {
+        "title": "Términos de servicio",
+        "lastUpdated": "Última actualización: 1 de octubre de 2025"
+    },
+    "privacy": {
+        "title": "Política de privacidad",
+        "lastUpdated": "Última actualización: 1 de octubre de 2025"
     }
-  },
-  "cta": {
-    "title": "Comienza a explorar eventos",
-    "description": "Únete a miles de usuarios que ya han descubierto eventos increíbles en su ciudad. ¡Comienza a explorar ahora o descarga la app cuando esté lista!"
-  },
-  "about": {
-    "title": "Acerca de Be Out",
-    "subtitle": "Conectando comunidades a través de eventos increíbles",
-    "mission": {
-      "title": "Nuestra misión",
-      "description": "Be Out fue creado con una visión simple pero poderosa: ayudar a las personas a descubrir y conectarse through eventos locales. Creemos que cada comunidad tiene experiencias increíbles esperando ser descubiertas, y estamos aquí para hacer que ese descubrimiento sea fácil y agradable.",
-      "vision": "Ya sea que busques música en vivo, eventos culturales, actividades deportivas o experiencias culinarias, Be Out te acerca a lo que más importa: tu comunidad y las experiencias que enriquecen tu vida."
-    },
-    "values": {
-      "title": "Nuestros valores",
-      "community": {
-        "title": "La comunidad primero",
-        "description": "Creemos en unir a las personas y fortalecer las comunidades locales a través de experiencias compartidas."
-      },
-      "accessibility": {
-        "title": "Accesible para todos",
-        "description": "Todos deberían tener acceso a eventos increíbles, sin importar su origen o ubicación."
-      },
-      "innovation": {
-        "title": "Innovación",
-        "description": "Mejoramos continuamente nuestra plataforma para brindar la mejor experiencia de descubrimiento de eventos."
-      },
-      "support": {
-        "title": "Apoyando lo local",
-        "description": "Apoyamos a las empresas locales y organizadores de eventos para que prosperen en sus comunidades."
-      }
-    },
-    "story": {
-      "title": "Nuestra historia",
-      "beginning": "Be Out nació de una observación simple: demasiados eventos locales increíbles pasan desapercibidos, mientras que las personas luchan por encontrar actividades que coincidan con sus intereses. Vimos una oportunidad de cerrar esta brecha y crear una plataforma que realmente sirva tanto a los asistentes a eventos como a los organizadores.",
-      "development": "Construido con tecnología moderna y un enfoque centrado en el usuario, Be Out combina el poder del descubrimiento basado en ubicación con la simplicidad de las redes sociales. Nuestra plataforma está diseñada para ser intuitiva, accesible y genuinamente útil para descubrir lo que está pasando en tu área.",
-      "future": "Hoy, Be Out continúa evolucionando, siempre con el objetivo de hacer que el descubrimiento de eventos sea más accesible, más social y más alineado con lo que las comunidades realmente necesitan."
-    },
-    "contact": {
-      "title": "Ponte en contacto",
-      "description": "¿Tienes preguntas sobre Be Out? ¿Quieres asociarte con nosotros? Nos encantaría saber de ti.",
-      "email": "Escríbenos a: "
-    }
-  },
-  "legal": {
-    "title": "Términos de servicio",
-    "lastUpdated": "Última actualización: 1 de octubre de 2025"
-  },
-  "privacy": {
-    "title": "Política de privacidad",
-    "lastUpdated": "Última actualización: 1 de octubre de 2025"
-  }
 }
