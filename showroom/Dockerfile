@@ -1,36 +1,40 @@
-FROM node:18-alpine AS builder
-
+# Build stage
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy root package.json and package-lock.json for workspace
+# Copy package.json from showroom specifically
 COPY package*.json ./
-COPY showroom/package*.json ./showroom/
+RUN npm install
 
-# Install dependencies using workspace
-RUN npm ci --workspace=showroom --include-workspace-root
+# Copy source files (exclude node_modules and other apps)
+COPY src ./src
+COPY public ./public
+COPY index.html ./
+COPY vite.config.js ./
+COPY nginx.conf ./
+COPY docker-entrypoint.sh ./
 
-# Copy source code
-COPY showroom ./showroom
+ARG VITE_API_BASE_URL
+ARG VITE_SHOWROOM_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_SHOWROOM_URL=$VITE_SHOWROOM_URL
+ENV NODE_ENV=production
+ENV CI=true
+ENV NO_UPDATE_NOTIFIER=true
+ENV npm_config_fund=false
+ENV npm_config_audit=false
+RUN echo "VITE_API_BASE_URL is set to $VITE_API_BASE_URL"
+RUN echo "VITE_SHOWROOM_URL is set to $VITE_SHOWROOM_URL"
 
-# Build the app
-RUN npm run build --workspace=showroom
+# Build the showroom app
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy built app from builder stage
-COPY --from=builder /app/showroom/build /usr/share/nginx/html
-
-# Copy docker entrypoint script
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/nginx.conf /etc/nginx/nginx.conf
+COPY --from=builder /app/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
-
-# Expose port 80
 EXPOSE 80
-
-# Use custom entrypoint
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/docker-entrypoint.sh"]
