@@ -41,7 +41,7 @@ const IOSCompatiblePaymentForm = ({
     onCancel
 }) => {
     console.log("🍎 IOSCompatiblePaymentForm rendering with props:", { eventId, amount, currency });
-    
+
     // Early validation to prevent white screen
     if (!eventId || !amount) {
         return (
@@ -58,7 +58,7 @@ const IOSCompatiblePaymentForm = ({
             </Box>
         );
     }
-    
+
     const theme = useTheme();
     const [isLoading, setIsLoading] = useState(true);
 
@@ -420,8 +420,8 @@ const IOSCompatiblePaymentForm = ({
     // Error state
     if (error) {
         return (
-            <Box sx={{ 
-                textAlign: 'center', 
+            <Box sx={{
+                textAlign: 'center',
                 py: 4,
                 // Debug styling for error state
                 backgroundColor: 'orange',
@@ -448,9 +448,9 @@ const IOSCompatiblePaymentForm = ({
     // Add error boundary protection
     try {
         return (
-            <Box sx={{ 
-                maxWidth: 500, 
-                mx: 'auto', 
+            <Box sx={{
+                maxWidth: 500,
+                mx: 'auto',
                 p: 2,
                 // Debug styling to ensure visibility
                 backgroundColor: 'red',
