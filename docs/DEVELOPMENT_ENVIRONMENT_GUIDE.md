@@ -6,6 +6,7 @@ This project consists of multiple applications that run simultaneously during de
 - **Client** (User App) - Port 5173
 - **Admin Client** (Admin Panel) - Port 5174
 - **Organizer Client** (Organizer Panel) - Port 5175
+- **Showroom** (Marketing Site) - Port 5176
 
 ## Important Notes for Development
 
@@ -57,6 +58,16 @@ npm run dev
 # URL: http://localhost:5175
 ```
 
+### Showroom (Marketing Site)
+```bash
+# Navigate and start
+cd /home/zen/dev/be-out-apps/showroom
+npm run dev
+
+# Port: 5176
+# URL: http://localhost:5176
+```
+
 ## How to Stop Running Applications
 
 ### Method 1: Using Process Manager
@@ -79,12 +90,14 @@ netstat -tlnp | grep :3000    # Server
 netstat -tlnp | grep :5173    # Client
 netstat -tlnp | grep :5174    # Admin Client
 netstat -tlnp | grep :5175    # Organizer Client
+netstat -tlnp | grep :5176    # Showroom
 
 # Alternative using lsof
 lsof -i :3000    # Server
 lsof -i :5173    # Client
 lsof -i :5174    # Admin Client
 lsof -i :5175    # Organizer Client
+lsof -i :5176    # Showroom
 
 # Kill process by PID
 kill <PID>

@@ -4,16 +4,15 @@ import Register from "./Register";
 import Profile from "./Profile";
 import Onboarding from "./Onboarding";
 import PrivateRoute from "./PrivateRoute";
-import HomeWrapper from "./HomeWrapper";
 import UserDashboard from "./UserDashboard";
 import GoogleSignInTest from "./GoogleSignInTest";
-import { EventsPage, EventDetail, MapView, Bookings, Favorites } from "../pages";
+import { EventsPage, EventDetail, MapView, Bookings, Favorites, ParametersPage } from "../pages";
 
 const AppRoutes = ({ searchQuery, filters }) => {
     return (
         <Routes>
-            <Route path="/" element={<HomeWrapper searchQuery={searchQuery} filters={filters} />} />
-            <Route path="/home" element={<HomeWrapper searchQuery={searchQuery} filters={filters} />} />
+            <Route path="/" element={<EventsPage searchQuery={searchQuery} filters={filters} />} />
+            <Route path="/home" element={<EventsPage searchQuery={searchQuery} filters={filters} />} />
             <Route path="/events" element={<EventsPage searchQuery={searchQuery} filters={filters} />} />
             <Route path="/map" element={<MapView searchQuery={searchQuery} filters={filters} />} />
             <Route path="/event/:id" element={<EventDetail />} />
@@ -60,6 +59,7 @@ const AppRoutes = ({ searchQuery, filters }) => {
                     </PrivateRoute>
                 }
             />
+            <Route path="/parameters" element={<ParametersPage />} />
         </Routes>
     );
 };

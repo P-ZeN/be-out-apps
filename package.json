@@ -4,16 +4,18 @@
     "description": "Be-Out App Monorepo",
     "main": "index.js",
     "scripts": {
-        "dev": "concurrently \"npm run dev --workspace=client\" \"npm run dev --workspace=server\" \"npm run dev --workspace=admin-client\" \"npm run dev --workspace=organizer-client\"",
+        "dev": "concurrently \"npm run dev --workspace=client\" \"npm run dev --workspace=server\" \"npm run dev --workspace=admin-client\" \"npm run dev --workspace=organizer-client\" \"npm run dev --workspace=showroom\"",
         "dev:client": "npm run dev --workspace=client",
         "dev:server": "npm run dev --workspace=server",
         "dev:admin": "npm run dev --workspace=admin-client",
         "dev:organizer": "npm run dev --workspace=organizer-client",
-        "build": "npm run build --workspace=client && npm run build --workspace=server && npm run build --workspace=admin-client && npm run build --workspace=organizer-client",
+        "dev:showroom": "npm run dev --workspace=showroom",
+        "build": "npm run build --workspace=client && npm run build --workspace=server && npm run build --workspace=admin-client && npm run build --workspace=organizer-client && npm run build --workspace=showroom",
         "build:client": "npm run build:mobile --workspace=client",
         "build:server": "npm run build --workspace=server",
         "build:admin": "npm run build --workspace=admin-client",
         "build:organizer": "npm run build --workspace=organizer-client",
+        "build:showroom": "npm run build --workspace=showroom",
         "tauri": "tauri",
         "tauri:dev": "tauri dev",
         "tauri:build": "tauri build",
@@ -35,7 +37,8 @@
         "client",
         "server",
         "admin-client",
-        "organizer-client"
+        "organizer-client",
+        "showroom"
     ],
     "packageManager": "pnpm@9.13.2+sha1.969cc200a41db98449afee1bfa7578b3ce6ff330"
 }

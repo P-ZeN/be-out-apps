@@ -53,9 +53,11 @@ const corsOptions = {
             "http://localhost:5173",
             "http://localhost:5174",
             "http://localhost:5175",
+            "http://localhost:5176", // Showroom app
             "http://127.0.0.1:5173",
             "http://127.0.0.1:5174",
             "http://127.0.0.1:5175",
+            "http://127.0.0.1:5176", // Showroom app
         ];
 
         // Check for allowed origins or production domains
@@ -206,6 +208,7 @@ app.get("/api/translations/:language/:namespace", async (req, res) => {
             "organizer", // New: Organizer-specific translations
             "events", // Events namespace for organizer-client
             "venues", // Venues namespace for organizer-client
+            "showroom", // Showroom app translations
         ];
         if (!allowedNamespaces.includes(namespace)) {
             return res.status(400).json({ error: "Invalid namespace" });

@@ -5,6 +5,8 @@
         "map": "Mapa",
         "dashboard": "Panel",
         "profile": "Perfil",
+        "bookings": "Mis Reservas",
+        "parameters": "Configuración",
         "login": "Iniciar sesión",
         "register": "Registrarse",
         "logout": "Cerrar sesión"
@@ -13,5 +15,18 @@
         "account": "Cuenta",
         "loginRegister": "Iniciar Sesión/Registrarse",
         "home": "Inicio"
+    },
+    "parameters": {
+        "title": "Configuración",
+        "subtitle": "Accede a información importante sobre Be Out",
+        "aboutBeOut": "Acerca de Be Out",
+        "aboutDescription": "Descubre nuestra misión, valores e historia",
+        "legal": "Legal",
+        "legalDescription": "Términos de servicio e información legal",
+        "privacy": "Política de Privacidad",
+        "privacyDescription": "Cómo protegemos tus datos personales",
+        "website": "Sitio Web Be Out",
+        "websiteDescription": "Visita nuestro sitio web principal",
+        "note": "Estos enlaces se abrirán en una nueva pestaña"
     }
 }

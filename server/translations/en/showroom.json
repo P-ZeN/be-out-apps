@@ -1,0 +1,190 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "openApp": "Open App"
+  },
+  "hero": {
+    "title": "Discover amazing events happening around you",
+    "description": "Connect with your community, explore local events, and never miss out on the experiences that matter to you."
+  },
+  "openApp": "Open Be Out App",
+  "noDownloadRequired": "No download required",
+  "downloadIOS": "Download on the App Store",
+  "downloadAndroid": "Get it on Google Play",
+  "status": "🚀 Coming Soon to App Stores",
+  "openAppNow": "Open Be Out App Now",
+  "viewMap": "View Map",
+  "features": {
+    "title": "Why Choose Be Out?",
+    "discover": {
+      "title": "Discover Events",
+      "description": "Find amazing events happening around you"
+    },
+    "location": {
+      "title": "Location Based",
+      "description": "See events near your location on an interactive map"
+    },
+    "connect": {
+      "title": "Connect",
+      "description": "Meet like-minded people and build your community"
+    },
+    "favorites": {
+      "title": "Favorites",
+      "description": "Save and track your favorite events and venues"
+    }
+  },
+  "cta": {
+    "title": "Start Exploring Events",
+    "description": "Join thousands of users who have already discovered amazing events in their city. Start exploring events now or download the app when it's ready!"
+  },
+  "about": {
+    "title": "About Be Out",
+    "subtitle": "Connecting communities through amazing events",
+    "mission": {
+      "title": "Our Mission",
+      "description": "Be Out was created with a simple yet powerful vision: to help people discover and connect through local events. We believe that every community has amazing experiences waiting to be discovered, and we're here to make that discovery effortless and enjoyable.",
+      "vision": "Whether you're looking for live music, cultural events, sports activities, or culinary experiences, Be Out brings you closer to what matters most - your community and the experiences that enrich your life."
+    },
+    "values": {
+      "title": "Our Values",
+      "community": {
+        "title": "Community First",
+        "description": "We believe in bringing people together and strengthening local communities through shared experiences."
+      },
+      "accessibility": {
+        "title": "Accessible to All",
+        "description": "Everyone should have access to amazing events, regardless of their background or location."
+      },
+      "innovation": {
+        "title": "Innovation",
+        "description": "We continuously improve our platform to provide the best event discovery experience."
+      },
+      "support": {
+        "title": "Supporting Local",
+        "description": "We support local businesses and event organizers to thrive in their communities."
+      }
+    },
+    "story": {
+      "title": "Our Story",
+      "beginning": "Be Out was born from a simple observation: too many amazing local events go unnoticed, while people struggle to find activities that match their interests. We saw an opportunity to bridge this gap and create a platform that truly serves both event-goers and organizers.",
+      "development": "Built with modern technology and a user-first approach, Be Out combines the power of location-based discovery with the simplicity of social networking. Our platform is designed to be intuitive, accessible, and genuinely useful for discovering what's happening in your area.",
+      "future": "Today, Be Out continues to evolve, always with the goal of making event discovery more accessible, more social, and more aligned with what communities actually need."
+    },
+    "contact": {
+      "title": "Get in Touch",
+      "description": "Have questions about Be Out? Want to partner with us? We'd love to hear from you.",
+      "email": "Email us at: "
+    }
+  },
+  "legal": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: October 1, 2025",
+    "acceptance": {
+      "title": "1. Acceptance of Terms",
+      "content": "By accessing and using Be Out, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service."
+    },
+    "service": {
+      "title": "2. Use of Service",
+      "description": "Be Out is a platform that helps users discover local events and connect with their community. The service is provided \"as is\" and we reserve the right to modify or discontinue the service at any time.",
+      "userAccount": "Users are responsible for maintaining the confidentiality of their account and password and for restricting access to their account."
+    },
+    "conduct": {
+      "title": "3. User Conduct",
+      "content": "Users agree not to use the service to:",
+      "harassment": "Harass, abuse, or harm other users",
+      "illegal": "Violate any applicable laws or regulations",
+      "spam": "Spam or send unsolicited communications",
+      "false": "Post false or misleading information"
+    },
+    "content": {
+      "title": "4. Content and Intellectual Property",
+      "ownership": "Users retain ownership of content they post on Be Out. By posting content, users grant Be Out a non-exclusive, worldwide, royalty-free license to use, display, and distribute such content on the platform.",
+      "platform": "Be Out retains all rights to the platform's design, functionality, and underlying technology."
+    },
+    "privacy": {
+      "title": "5. Privacy",
+      "content": "Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the service, to understand our practices."
+    },
+    "limitation": {
+      "title": "6. Limitation of Liability",
+      "content": "Be Out shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly."
+    },
+    "termination": {
+      "title": "7. Termination",
+      "content": "We may terminate or suspend your account and bar access to the service immediately, without prior notice or liability, under our sole discretion, for any reason whatsoever."
+    },
+    "changes": {
+      "title": "8. Changes to Terms",
+      "content": "We reserve the right to modify these terms at any time. We will always post the most current version of our terms on this page."
+    },
+    "contact": {
+      "title": "9. Contact Information",
+      "content": "If you have any questions about these Terms of Service, please contact us at:"
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: October 1, 2025",
+    "intro": {
+      "title": "1. Introduction",
+      "content": "Be Out (\"we\", \"our\", or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and web service."
+    },
+    "collection": {
+      "title": "2. Information We Collect",
+      "personal": "Personal Information: When you create an account, we may collect:",
+      "name": "Name and email address",
+      "profile": "Profile information you choose to provide",
+      "preferences": "Event preferences and interests",
+      "location": "Location Information: We may collect location data to help you discover events near you. You can control location sharing through your device settings.",
+      "usage": "Usage Information: We collect information about how you interact with our service, including events viewed, searches performed, and features used."
+    },
+    "use": {
+      "title": "3. How We Use Your Information",
+      "content": "We use your information to:",
+      "service": "Provide and maintain our service",
+      "personalize": "Personalize your experience and event recommendations",
+      "communicate": "Communicate with you about events and updates",
+      "improve": "Improve our service and develop new features",
+      "security": "Ensure security and prevent fraud"
+    },
+    "sharing": {
+      "title": "4. Information Sharing",
+      "content": "We do not sell, trade, or rent your personal information to third parties. We may share your information in the following circumstances:",
+      "consent": "With your explicit consent",
+      "service": "With service providers who help us operate our platform",
+      "legal": "When required by law or to protect our rights",
+      "business": "In connection with a business transaction"
+    },
+    "security": {
+      "title": "5. Security",
+      "content": "We implement appropriate security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction."
+    },
+    "rights": {
+      "title": "6. Your Rights",
+      "content": "You have the right to:",
+      "access": "Access and update your personal information",
+      "delete": "Request deletion of your account and data",
+      "opt": "Opt out of certain communications",
+      "portable": "Request data portability (where applicable)"
+    },
+    "cookies": {
+      "title": "7. Cookies and Tracking",
+      "content": "We use cookies and similar technologies to enhance your experience, analyze usage, and provide personalized content. You can control cookie settings through your browser."
+    },
+    "children": {
+      "title": "8. Children's Privacy",
+      "content": "Our service is not intended for children under 13. We do not knowingly collect personal information from children under 13."
+    },
+    "changes": {
+      "title": "9. Changes to This Policy",
+      "content": "We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page."
+    },
+    "contact": {
+      "title": "10. Contact Us",
+      "content": "If you have any questions about this Privacy Policy, please contact us at:"
+    }
+  }
+}

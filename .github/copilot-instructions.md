@@ -2,13 +2,20 @@
 
 ## Project Architecture
 
-**Monorepo Structure**: 4 interconnected applications running simultaneously during development:
+**Monorepo Structure**: 5 interconnected applications running simultaneously during development:
 - `server/` - Express.js API (port 3000) with PostgreSQL, OAuth, and file uploads
-- `client/` - React/Vite user app (port 5173) with Tauri mobile support
+- `client/` - React/Vite user app (port 5173) with Tauri mobile support - **Home = Events page**
 - `admin-client/` - React/Vite admin panel (port 5174) for content management
 - `organizer-client/` - React/Vite organizer panel (port 5175) for event management
+- `showroom/` - React/Vite marketing site (port 5176) for landing page and legal content
 
-**Key Pattern**: Always run from project root `/home/zen/dev/be-out-apps` - use `npm run dev` to start all apps or `npm run dev:client|server|admin|organizer` for individual services.
+**Key Architectural Changes**:
+- **Client app simplified**: Home page = Events page (no more platform detection)
+- **Showroom app**: Contains the former landing page + about/legal content
+- **Cross-app navigation**: Client footer has "About Be Out" link to showroom
+- **Consistent translations**: All apps use server-based i18n system
+
+**Key Pattern**: Always run from project root `/home/zen/dev/be-out-apps` - use `npm run dev` to start all apps or `npm run dev:client|server|admin|organizer|showroom` for individual services.
 
 ## Branch Strategy & Deployment
 
@@ -41,6 +48,13 @@ git push origin staging      # Deploys to production
 ```
 
 **NEVER directly push to staging** - always merge from mobile-build or main to maintain proper CI/CD flow.
+
+**Production URLs**:
+- **Showroom** (Marketing): `https://www.be-out-app.dedibox2.philippezenone.net`
+- **Client** (User App): `https://frontend.be-out-app.dedibox2.philippezenone.net`
+- **Admin**: `https://admin.be-out-app.dedibox2.philippezenone.net`
+- **Organizer**: `https://organizer.be-out-app.dedibox2.philippezenone.net`
+- **Server** (API): `https://server.be-out-app.dedibox2.philippezenone.net`
 
 ## Development Environment
 

@@ -5,6 +5,8 @@
         "map": "Map",
         "dashboard": "Dashboard",
         "profile": "Profile",
+        "bookings": "My Bookings",
+        "parameters": "Settings",
         "login": "Login",
         "register": "Register",
         "logout": "Logout"
@@ -13,5 +15,18 @@
         "account": "Account",
         "loginRegister": "Login/Register",
         "home": "Home"
+    },
+    "parameters": {
+        "title": "Settings",
+        "subtitle": "Access important information about Be Out",
+        "aboutBeOut": "About Be Out",
+        "aboutDescription": "Discover our mission, values and story",
+        "legal": "Legal",
+        "legalDescription": "Terms of service and legal information",
+        "privacy": "Privacy Policy",
+        "privacyDescription": "How we protect your personal data",
+        "website": "Be Out Website",
+        "websiteDescription": "Visit our main website",
+        "note": "These links will open in a new tab"
     }
 }

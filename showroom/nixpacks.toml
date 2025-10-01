@@ -1,0 +1,10 @@
+# Nixpacks configuration for the showroom app
+[start]
+cmd = "npm run build && npx serve -s build -l 3000"
+
+[build]
+cmd = "npm ci && npm run build"
+
+[variables]
+NODE_ENV = "production"
+VITE_API_URL = "https://server.be-out-app.dedibox2.philippezenone.net"

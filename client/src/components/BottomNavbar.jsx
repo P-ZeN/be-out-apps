@@ -16,12 +16,19 @@ import {
     Divider,
     TextField,
     InputAdornment,
+    ListItemIcon,
 } from "@mui/material";
 import {
     Explore as CompassIcon,
     Search as SearchIcon,
     FavoriteBorder as HeartIcon,
     Person as UserIcon,
+    Settings as SettingsIcon,
+    Dashboard as DashboardIcon,
+    BookOnline as BookingsIcon,
+    Login as LoginIcon,
+    PersonAdd as RegisterIcon,
+    Logout as LogoutIcon,
 } from "@mui/icons-material";
 
 const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSearch }) => {
@@ -264,6 +271,9 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                                 component={Link}
                                 to="/dashboard"
                                 onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                    <DashboardIcon fontSize="small" />
+                                </ListItemIcon>
                                 {t("menu.dashboard", "Mon tableau de bord")}
                             </MenuItem>,
                             <MenuItem
@@ -271,6 +281,9 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                                 component={Link}
                                 to="/profile"
                                 onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                    <UserIcon fontSize="small" />
+                                </ListItemIcon>
                                 {t("menu.profile", "Mon profil")}
                             </MenuItem>,
                             <MenuItem
@@ -278,12 +291,28 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                                 component={Link}
                                 to="/bookings"
                                 onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                    <BookingsIcon fontSize="small" />
+                                </ListItemIcon>
                                 {t("menu.bookings", "Mes réservations")}
+                            </MenuItem>,
+                            <MenuItem
+                                key="parameters"
+                                component={Link}
+                                to="/parameters"
+                                onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                    <SettingsIcon fontSize="small" />
+                                </ListItemIcon>
+                                {t("menu.parameters", "Paramètres")}
                             </MenuItem>,
                             <Divider key="logout-divider" />,
                             <MenuItem
                                 key="logout"
                                 onClick={handleLogout}>
+                                <ListItemIcon>
+                                    <LogoutIcon fontSize="small" />
+                                </ListItemIcon>
                                 {t("menu.logout", "Se déconnecter")}
                             </MenuItem>,
                         ] : [
@@ -292,6 +321,9 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                                 component={Link}
                                 to="/login"
                                 onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                    <LoginIcon fontSize="small" />
+                                </ListItemIcon>
                                 {t("menu.login", "Se connecter")}
                             </MenuItem>,
                             <MenuItem
@@ -299,7 +331,20 @@ const BottomNavbar = ({ searchQuery, onSearchChange, showSearchField, onToggleSe
                                 component={Link}
                                 to="/register"
                                 onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                    <RegisterIcon fontSize="small" />
+                                </ListItemIcon>
                                 {t("menu.register", "S'inscrire")}
+                            </MenuItem>,
+                            <MenuItem
+                                key="parameters"
+                                component={Link}
+                                to="/parameters"
+                                onClick={handleProfileMenuClose}>
+                                <ListItemIcon>
+                                    <SettingsIcon fontSize="small" />
+                                </ListItemIcon>
+                                {t("menu.parameters", "Paramètres")}
                             </MenuItem>,
                         ]}
                     </Menu>

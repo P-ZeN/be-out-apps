@@ -1,0 +1,190 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "about": "À propos",
+    "legal": "Mentions légales",
+    "privacy": "Confidentialité",
+    "openApp": "Ouvrir l'app"
+  },
+  "hero": {
+    "title": "Découvrez les événements incroyables qui se déroulent près de chez vous",
+    "description": "Connectez-vous avec votre communauté, explorez les événements locaux et ne manquez jamais les expériences qui comptent pour vous."
+  },
+  "openApp": "Ouvrir Be Out",
+  "noDownloadRequired": "Aucun téléchargement requis",
+  "downloadIOS": "Télécharger sur l'App Store",
+  "downloadAndroid": "Disponible sur Google Play",
+  "status": "🚀 Bientôt disponible sur les stores",
+  "openAppNow": "Ouvrir Be Out maintenant",
+  "viewMap": "Voir la carte",
+  "features": {
+    "title": "Pourquoi choisir Be Out ?",
+    "discover": {
+      "title": "Découvrir les événements",
+      "description": "Trouvez des événements incroyables près de chez vous"
+    },
+    "location": {
+      "title": "Basé sur la localisation",
+      "description": "Voyez les événements près de votre position sur une carte interactive"
+    },
+    "connect": {
+      "title": "Se connecter",
+      "description": "Rencontrez des personnes partageant vos centres d'intérêt et construisez votre communauté"
+    },
+    "favorites": {
+      "title": "Favoris",
+      "description": "Sauvegardez et suivez vos événements et lieux préférés"
+    }
+  },
+  "cta": {
+    "title": "Commencez à explorer les événements",
+    "description": "Rejoignez des milliers d'utilisateurs qui ont déjà découvert des événements incroyables dans leur ville. Commencez à explorer maintenant ou téléchargez l'app quand elle sera prête !"
+  },
+  "about": {
+    "title": "À propos de Be Out",
+    "subtitle": "Connecter les communautés grâce à des événements incroyables",
+    "mission": {
+      "title": "Notre mission",
+      "description": "Be Out a été créé avec une vision simple mais puissante : aider les gens à découvrir et à se connecter grâce aux événements locaux. Nous croyons que chaque communauté recèle des expériences incroyables qui n'attendent qu'à être découvertes, et nous sommes là pour rendre cette découverte facile et agréable.",
+      "vision": "Que vous recherchiez de la musique live, des événements culturels, des activités sportives ou des expériences culinaires, Be Out vous rapproche de ce qui compte le plus : votre communauté et les expériences qui enrichissent votre vie."
+    },
+    "values": {
+      "title": "Nos valeurs",
+      "community": {
+        "title": "La communauté d'abord",
+        "description": "Nous croyons au rapprochement des gens et au renforcement des communautés locales grâce aux expériences partagées."
+      },
+      "accessibility": {
+        "title": "Accessible à tous",
+        "description": "Tout le monde devrait avoir accès à des événements incroyables, peu importe son origine ou sa localisation."
+      },
+      "innovation": {
+        "title": "Innovation",
+        "description": "Nous améliorons continuellement notre plateforme pour offrir la meilleure expérience de découverte d'événements."
+      },
+      "support": {
+        "title": "Soutenir le local",
+        "description": "Nous soutenons les entreprises locales et les organisateurs d'événements pour qu'ils prospèrent dans leurs communautés."
+      }
+    },
+    "story": {
+      "title": "Notre histoire",
+      "beginning": "Be Out est né d'une observation simple : trop d'événements locaux incroyables passent inaperçus, tandis que les gens peinent à trouver des activités qui correspondent à leurs intérêts. Nous avons vu une opportunité de combler ce fossé et de créer une plateforme qui serve vraiment les participants aux événements et les organisateurs.",
+      "development": "Construite avec des technologies modernes et une approche centrée sur l'utilisateur, Be Out combine la puissance de la découverte basée sur la localisation avec la simplicité des réseaux sociaux. Notre plateforme est conçue pour être intuitive, accessible et véritablement utile pour découvrir ce qui se passe dans votre région.",
+      "future": "Aujourd'hui, Be Out continue d'évoluer, toujours avec l'objectif de rendre la découverte d'événements plus accessible, plus sociale et plus alignée avec ce dont les communautés ont réellement besoin."
+    },
+    "contact": {
+      "title": "Contactez-nous",
+      "description": "Vous avez des questions sur Be Out ? Vous voulez devenir partenaire ? Nous serions ravis de vous entendre.",
+      "email": "Écrivez-nous à : "
+    }
+  },
+  "legal": {
+    "title": "Conditions d'utilisation",
+    "lastUpdated": "Dernière mise à jour : 1er octobre 2025",
+    "acceptance": {
+      "title": "1. Acceptation des conditions",
+      "content": "En accédant et en utilisant Be Out, vous acceptez et convenez d'être lié par les termes et dispositions de cet accord. Si vous n'acceptez pas de respecter ce qui précède, veuillez ne pas utiliser ce service."
+    },
+    "service": {
+      "title": "2. Utilisation du service",
+      "description": "Be Out est une plateforme qui aide les utilisateurs à découvrir des événements locaux et à se connecter avec leur communauté. Le service est fourni « en l'état » et nous nous réservons le droit de modifier ou d'interrompre le service à tout moment.",
+      "userAccount": "Les utilisateurs sont responsables de maintenir la confidentialité de leur compte et mot de passe et de restreindre l'accès à leur compte."
+    },
+    "conduct": {
+      "title": "3. Conduite de l'utilisateur",
+      "content": "Les utilisateurs s'engagent à ne pas utiliser le service pour :",
+      "harassment": "Harceler, abuser ou nuire à d'autres utilisateurs",
+      "illegal": "Violer les lois ou règlements applicables",
+      "spam": "Envoyer du spam ou des communications non sollicitées",
+      "false": "Publier des informations fausses ou trompeuses"
+    },
+    "content": {
+      "title": "4. Contenu et propriété intellectuelle",
+      "ownership": "Les utilisateurs conservent la propriété du contenu qu'ils publient sur Be Out. En publiant du contenu, les utilisateurs accordent à Be Out une licence non exclusive, mondiale et libre de droits pour utiliser, afficher et distribuer ce contenu sur la plateforme.",
+      "platform": "Be Out conserve tous les droits sur la conception, la fonctionnalité et la technologie sous-jacente de la plateforme."
+    },
+    "privacy": {
+      "title": "5. Confidentialité",
+      "content": "Votre confidentialité est importante pour nous. Veuillez consulter notre Politique de confidentialité, qui régit également votre utilisation du service, pour comprendre nos pratiques."
+    },
+    "limitation": {
+      "title": "6. Limitation de responsabilité",
+      "content": "Be Out ne sera pas responsable des dommages indirects, accessoires, spéciaux, consécutifs ou punitifs, ou de toute perte de profits ou de revenus, qu'ils soient encourus directement ou indirectement."
+    },
+    "termination": {
+      "title": "7. Résiliation",
+      "content": "Nous pouvons résilier ou suspendre votre compte et interdire l'accès au service immédiatement, sans préavis ou responsabilité, à notre seule discrétion, pour quelque raison que ce soit."
+    },
+    "changes": {
+      "title": "8. Modifications des conditions",
+      "content": "Nous nous réservons le droit de modifier ces conditions à tout moment. Nous publierons toujours la version la plus actuelle de nos conditions sur cette page."
+    },
+    "contact": {
+      "title": "9. Informations de contact",
+      "content": "Si vous avez des questions concernant ces Conditions d'utilisation, veuillez nous contacter à :"
+    }
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "lastUpdated": "Dernière mise à jour : 1er octobre 2025",
+    "intro": {
+      "title": "1. Introduction",
+      "content": "Be Out (« nous », « notre » ou « nos ») s'engage à protéger votre confidentialité. Cette Politique de confidentialité explique comment nous collectons, utilisons, divulguons et protégeons vos informations lorsque vous utilisez notre application mobile et notre service web."
+    },
+    "collection": {
+      "title": "2. Informations que nous collectons",
+      "personal": "Informations personnelles : Lorsque vous créez un compte, nous pouvons collecter :",
+      "name": "Nom et adresse e-mail",
+      "profile": "Informations de profil que vous choisissez de fournir",
+      "preferences": "Préférences d'événements et centres d'intérêt",
+      "location": "Informations de localisation : Nous pouvons collecter des données de localisation pour vous aider à découvrir des événements près de chez vous. Vous pouvez contrôler le partage de localisation via les paramètres de votre appareil.",
+      "usage": "Informations d'utilisation : Nous collectons des informations sur la façon dont vous interagissez avec notre service, y compris les événements consultés, les recherches effectuées et les fonctionnalités utilisées."
+    },
+    "use": {
+      "title": "3. Comment nous utilisons vos informations",
+      "content": "Nous utilisons vos informations pour :",
+      "service": "Fournir et maintenir notre service",
+      "personalize": "Personnaliser votre expérience et vos recommandations d'événements",
+      "communicate": "Communiquer avec vous au sujet des événements et des mises à jour",
+      "improve": "Améliorer notre service et développer de nouvelles fonctionnalités",
+      "security": "Assurer la sécurité et prévenir la fraude"
+    },
+    "sharing": {
+      "title": "4. Partage des informations",
+      "content": "Nous ne vendons, n'échangeons ou ne louons pas vos informations personnelles à des tiers. Nous pouvons partager vos informations dans les circonstances suivantes :",
+      "consent": "Avec votre consentement explicite",
+      "service": "Avec des prestataires de services qui nous aident à exploiter notre plateforme",
+      "legal": "Lorsque requis par la loi ou pour protéger nos droits",
+      "business": "Dans le cadre d'une transaction commerciale"
+    },
+    "security": {
+      "title": "5. Sécurité",
+      "content": "Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos informations personnelles contre l'accès non autorisé, l'altération, la divulgation ou la destruction."
+    },
+    "rights": {
+      "title": "6. Vos droits",
+      "content": "Vous avez le droit de :",
+      "access": "Accéder et mettre à jour vos informations personnelles",
+      "delete": "Demander la suppression de votre compte et de vos données",
+      "opt": "Vous désabonner de certaines communications",
+      "portable": "Demander la portabilité des données (le cas échéant)"
+    },
+    "cookies": {
+      "title": "7. Cookies et suivi",
+      "content": "Nous utilisons des cookies et des technologies similaires pour améliorer votre expérience, analyser l'utilisation et fournir du contenu personnalisé. Vous pouvez contrôler les paramètres des cookies via votre navigateur."
+    },
+    "children": {
+      "title": "8. Confidentialité des enfants",
+      "content": "Notre service n'est pas destiné aux enfants de moins de 13 ans. Nous ne collectons pas sciemment d'informations personnelles auprès d'enfants de moins de 13 ans."
+    },
+    "changes": {
+      "title": "9. Modifications de cette politique",
+      "content": "Nous pouvons mettre à jour cette Politique de confidentialité de temps à autre. Nous vous informerons de tout changement en publiant la nouvelle politique sur cette page."
+    },
+    "contact": {
+      "title": "10. Nous contacter",
+      "content": "Si vous avez des questions concernant cette Politique de confidentialité, veuillez nous contacter à :"
+    }
+  }
+}
