@@ -26,6 +26,11 @@ const PullToRefresh = ({
     // Only enable on mobile Tauri apps
     const isEnabled = !disabled && isMobile;
 
+    // Debug refreshing state changes
+    useEffect(() => {
+        console.log(`🔄 Pull-to-refresh: refreshing state changed to ${refreshing}`);
+    }, [refreshing]);
+
     const handleTouchStart = (e) => {
         if (!isEnabled || refreshing) return;
 
@@ -140,8 +145,13 @@ const PullToRefresh = ({
     };
 
     const getStatusOpacity = () => {
-        if (refreshing) return 1;
-        return Math.min(pullY / triggerDistance, 1);
+        if (refreshing) {
+            console.log('🔄 Pull-to-refresh: refreshing state, opacity = 1');
+            return 1;
+        }
+        const opacity = Math.min(pullY / triggerDistance, 1);
+        console.log(`🔄 Pull-to-refresh: pullY=${pullY}, opacity=${opacity}`);
+        return opacity;
     };
 
     return (
@@ -163,7 +173,7 @@ const PullToRefresh = ({
             <Box
                 sx={{
                     position: 'absolute',
-                    top: -60,
+                    top: refreshing ? 0 : -60, // Show at top when refreshing
                     left: 0,
                     right: 0,
                     height: 60,
@@ -171,9 +181,10 @@ const PullToRefresh = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: theme.palette.background.paper,
-                    opacity: getStatusOpacity(),
-                    transition: pulling ? 'none' : 'opacity 0.3s ease-out',
+                    opacity: refreshing ? 1 : getStatusOpacity(), // Always visible when refreshing
+                    transition: pulling ? 'none' : 'all 0.3s ease-out',
                     zIndex: 1000,
+                    boxShadow: refreshing ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
                 }}
             >
                 <Box
@@ -185,7 +196,8 @@ const PullToRefresh = ({
                 >
                     {refreshing ? (
                         <CircularProgress
-                            size={20}
+                            size={24}
+                            thickness={4}
                             sx={{
                                 color: theme.palette.primary.main,
                             }}
@@ -193,11 +205,13 @@ const PullToRefresh = ({
                     ) : (
                         <Box
                             sx={{
-                                width: 20,
-                                height: 20,
+                                width: 24,
+                                height: 24,
                                 borderRadius: '50%',
-                                border: `2px solid ${theme.palette.primary.main}`,
+                                border: `3px solid ${theme.palette.primary.main}`,
                                 opacity: Math.min(pullY / triggerDistance, 1),
+                                transform: `rotate(${pullY * 2}deg)`, // Rotate as user pulls
+                                transition: 'transform 0.1s ease-out',
                             }}
                         />
                     )}
