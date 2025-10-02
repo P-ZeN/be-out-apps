@@ -1,0 +1,47 @@
+{
+    "fr": {
+        "title": "Réservation confirmée ✓",
+        "body": "Votre réservation pour {{eventTitle}} est confirmée !",
+        "icon": "/icons/success-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "booking_confirmation",
+        "requireInteraction": false,
+        "actions": [
+            {
+                "action": "view",
+                "title": "Voir le billet",
+                "icon": "/icons/ticket-icon.png"
+            }
+        ]
+    },
+    "en": {
+        "title": "Booking confirmed ✓",
+        "body": "Your booking for {{eventTitle}} is confirmed!",
+        "icon": "/icons/success-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "booking_confirmation",
+        "requireInteraction": false,
+        "actions": [
+            {
+                "action": "view",
+                "title": "View ticket",
+                "icon": "/icons/ticket-icon.png"
+            }
+        ]
+    },
+    "es": {
+        "title": "Reserva confirmada ✓",
+        "body": "¡Tu reserva para {{eventTitle}} está confirmada!",
+        "icon": "/icons/success-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "booking_confirmation",
+        "requireInteraction": false,
+        "actions": [
+            {
+                "action": "view",
+                "title": "Ver boleto",
+                "icon": "/icons/ticket-icon.png"
+            }
+        ]
+    }
+}

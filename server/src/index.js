@@ -22,8 +22,10 @@ import emailsRoutes from "./routes/emails.js";
 import filesRoutes from "./routes/files.js";
 import ticketsRoutes from "./routes/tickets.js";
 import debugRoutes from "./routes/debug.js";
+import notificationRoutes from "./routes/notifications.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
+import "./jobs/notificationProcessor.js"; // Start notification background processor
 
 // Add error handlers for debugging server crashes
 process.on('uncaughtException', (error) => {
@@ -173,6 +175,7 @@ app.use("/api/webhooks", webhooksRoutes);
 app.use("/api/emails", emailsRoutes);
 app.use("/api/files", filesRoutes);
 app.use("/api/tickets", ticketsRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/debug", debugRoutes);
 app.use("/api", addressesRoutes);
 

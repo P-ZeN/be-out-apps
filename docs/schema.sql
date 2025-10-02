@@ -812,7 +812,7 @@ CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
     AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
-RETURN NEW;
+    RETURN NEW;
 END;
 $$;
 
@@ -1312,6 +1312,60 @@ CREATE TABLE public.file_settings (
 
 
 --
+-- Name: notification_delivery_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notification_delivery_log (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    notification_queue_id uuid,
+    user_id uuid NOT NULL,
+    channel character varying(20) NOT NULL,
+    status character varying(20) NOT NULL,
+    provider_message_id character varying(255),
+    error_details jsonb,
+    delivered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE notification_delivery_log; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.notification_delivery_log IS 'Log of all notification delivery attempts for analytics';
+
+
+--
+-- Name: notification_queue; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notification_queue (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    user_id uuid NOT NULL,
+    booking_id uuid,
+    notification_type character varying(50) NOT NULL,
+    channel character varying(20) NOT NULL,
+    scheduled_for timestamp with time zone NOT NULL,
+    status character varying(20) DEFAULT 'pending'::character varying,
+    message_template character varying(100) NOT NULL,
+    template_data jsonb,
+    attempts integer DEFAULT 0,
+    max_attempts integer DEFAULT 3,
+    last_attempt_at timestamp with time zone,
+    sent_at timestamp with time zone,
+    error_message text,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE notification_queue; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.notification_queue IS 'Queue for scheduled notifications to be processed by background jobs';
+
+
+--
 -- Name: organizer_accounts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1628,6 +1682,32 @@ CREATE TABLE public.payment_refunds (
 
 
 --
+-- Name: push_subscriptions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.push_subscriptions (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    user_id uuid NOT NULL,
+    endpoint text NOT NULL,
+    p256dh_key text NOT NULL,
+    auth_key text NOT NULL,
+    user_agent text,
+    platform character varying(20),
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    last_used_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE push_subscriptions; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.push_subscriptions IS 'Web Push API subscription data for browser notifications';
+
+
+--
 -- Name: revenue_splits; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1729,6 +1809,27 @@ CREATE TABLE public.user_favorites (
 
 
 --
+-- Name: user_notification_preferences; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_notification_preferences (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    user_id uuid NOT NULL,
+    notification_type character varying(50) NOT NULL,
+    enabled boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: TABLE user_notification_preferences; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.user_notification_preferences IS 'Stores user preferences for different notification types';
+
+
+--
 -- Name: user_profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1755,6 +1856,31 @@ CREATE TABLE public.user_profiles (
     terms_of_service_accepted boolean DEFAULT false,
     terms_of_service_accepted_at timestamp with time zone
 );
+
+
+--
+-- Name: user_notification_settings; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.user_notification_settings AS
+ SELECT u.id AS user_id,
+    u.email,
+    up.first_name,
+    up.last_name,
+    COALESCE(jsonb_object_agg(unp.notification_type, unp.enabled) FILTER (WHERE (unp.notification_type IS NOT NULL)), '{}'::jsonb) AS preferences,
+    count(ps.id) AS active_push_subscriptions
+   FROM (((public.users u
+     LEFT JOIN public.user_profiles up ON ((u.id = up.user_id)))
+     LEFT JOIN public.user_notification_preferences unp ON ((u.id = unp.user_id)))
+     LEFT JOIN public.push_subscriptions ps ON (((u.id = ps.user_id) AND (ps.is_active = true))))
+  GROUP BY u.id, u.email, up.first_name, up.last_name;
+
+
+--
+-- Name: VIEW user_notification_settings; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON VIEW public.user_notification_settings IS 'Convenient view for user notification preferences and subscription status';
 
 
 --
@@ -1986,6 +2112,22 @@ ALTER TABLE ONLY public.file_settings
 
 
 --
+-- Name: notification_delivery_log notification_delivery_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_delivery_log
+    ADD CONSTRAINT notification_delivery_log_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notification_queue notification_queue_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_queue
+    ADD CONSTRAINT notification_queue_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: organizer_accounts organizer_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2066,6 +2208,22 @@ ALTER TABLE ONLY public.payment_transactions
 
 
 --
+-- Name: push_subscriptions push_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_subscriptions
+    ADD CONSTRAINT push_subscriptions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: push_subscriptions push_subscriptions_user_id_endpoint_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_subscriptions
+    ADD CONSTRAINT push_subscriptions_user_id_endpoint_key UNIQUE (user_id, endpoint);
+
+
+--
 -- Name: revenue_splits revenue_splits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2119,6 +2277,22 @@ ALTER TABLE ONLY public.user_favorites
 
 ALTER TABLE ONLY public.user_favorites
     ADD CONSTRAINT user_favorites_user_id_event_id_key UNIQUE (user_id, event_id);
+
+
+--
+-- Name: user_notification_preferences user_notification_preferences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_notification_preferences
+    ADD CONSTRAINT user_notification_preferences_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_notification_preferences user_notification_preferences_user_id_notification_type_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_notification_preferences
+    ADD CONSTRAINT user_notification_preferences_user_id_notification_type_key UNIQUE (user_id, notification_type);
 
 
 --
@@ -2582,6 +2756,48 @@ CREATE INDEX idx_events_venue ON public.events USING btree (venue_id);
 
 
 --
+-- Name: idx_notification_delivery_log_channel; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notification_delivery_log_channel ON public.notification_delivery_log USING btree (channel, status);
+
+
+--
+-- Name: idx_notification_delivery_log_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notification_delivery_log_user ON public.notification_delivery_log USING btree (user_id, delivered_at);
+
+
+--
+-- Name: idx_notification_queue_booking_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notification_queue_booking_id ON public.notification_queue USING btree (booking_id);
+
+
+--
+-- Name: idx_notification_queue_scheduled; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notification_queue_scheduled ON public.notification_queue USING btree (scheduled_for) WHERE ((status)::text = 'pending'::text);
+
+
+--
+-- Name: idx_notification_queue_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notification_queue_status ON public.notification_queue USING btree (status);
+
+
+--
+-- Name: idx_notification_queue_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notification_queue_user_id ON public.notification_queue USING btree (user_id);
+
+
+--
 -- Name: idx_organizer_accounts_stripe_account_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2736,6 +2952,13 @@ CREATE INDEX idx_payment_transactions_stripe_id ON public.payment_transactions U
 
 
 --
+-- Name: idx_push_subscriptions_user_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_push_subscriptions_user_active ON public.push_subscriptions USING btree (user_id) WHERE (is_active = true);
+
+
+--
 -- Name: idx_revenue_splits_booking_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2817,6 +3040,20 @@ CREATE INDEX idx_user_favorites_event_id ON public.user_favorites USING btree (e
 --
 
 CREATE INDEX idx_user_favorites_user_id ON public.user_favorites USING btree (user_id);
+
+
+--
+-- Name: idx_user_notification_preferences_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_user_notification_preferences_type ON public.user_notification_preferences USING btree (notification_type);
+
+
+--
+-- Name: idx_user_notification_preferences_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_user_notification_preferences_user_id ON public.user_notification_preferences USING btree (user_id);
 
 
 --
@@ -2911,10 +3148,31 @@ CREATE TRIGGER update_email_templates_updated_at BEFORE UPDATE ON public.email_t
 
 
 --
+-- Name: notification_queue update_notification_queue_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_notification_queue_updated_at BEFORE UPDATE ON public.notification_queue FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: push_subscriptions update_push_subscriptions_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_push_subscriptions_updated_at BEFORE UPDATE ON public.push_subscriptions FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
 -- Name: ticket_templates update_ticket_templates_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
 CREATE TRIGGER update_ticket_templates_updated_at BEFORE UPDATE ON public.ticket_templates FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: user_notification_preferences update_user_notification_preferences_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_user_notification_preferences_updated_at BEFORE UPDATE ON public.user_notification_preferences FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
@@ -3092,6 +3350,38 @@ ALTER TABLE ONLY public.file_settings
 
 
 --
+-- Name: notification_delivery_log notification_delivery_log_notification_queue_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_delivery_log
+    ADD CONSTRAINT notification_delivery_log_notification_queue_id_fkey FOREIGN KEY (notification_queue_id) REFERENCES public.notification_queue(id) ON DELETE SET NULL;
+
+
+--
+-- Name: notification_delivery_log notification_delivery_log_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_delivery_log
+    ADD CONSTRAINT notification_delivery_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notification_queue notification_queue_booking_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_queue
+    ADD CONSTRAINT notification_queue_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notification_queue notification_queue_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_queue
+    ADD CONSTRAINT notification_queue_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: organizer_accounts organizer_accounts_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3153,6 +3443,14 @@ ALTER TABLE ONLY public.payment_refunds
 
 ALTER TABLE ONLY public.payment_transactions
     ADD CONSTRAINT payment_transactions_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE CASCADE;
+
+
+--
+-- Name: push_subscriptions push_subscriptions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_subscriptions
+    ADD CONSTRAINT push_subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -3233,6 +3531,14 @@ ALTER TABLE ONLY public.user_favorites
 
 ALTER TABLE ONLY public.user_favorites
     ADD CONSTRAINT user_favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_notification_preferences user_notification_preferences_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_notification_preferences
+    ADD CONSTRAINT user_notification_preferences_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --

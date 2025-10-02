@@ -1,0 +1,62 @@
+{
+    "fr": {
+        "title": "Événement demain !",
+        "body": "{{eventTitle}} commence demain à {{eventTime}}. N'oubliez pas votre réservation !",
+        "icon": "/icons/calendar-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "event_reminder_24h",
+        "requireInteraction": false,
+        "actions": [
+            {
+                "action": "view",
+                "title": "Voir l'événement",
+                "icon": "/icons/view-icon.png"
+            },
+            {
+                "action": "directions",
+                "title": "Itinéraire",
+                "icon": "/icons/directions-icon.png"
+            }
+        ]
+    },
+    "en": {
+        "title": "Event tomorrow!",
+        "body": "{{eventTitle}} starts tomorrow at {{eventTime}}. Don't forget your reservation!",
+        "icon": "/icons/calendar-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "event_reminder_24h",
+        "requireInteraction": false,
+        "actions": [
+            {
+                "action": "view",
+                "title": "View event",
+                "icon": "/icons/view-icon.png"
+            },
+            {
+                "action": "directions",
+                "title": "Directions",
+                "icon": "/icons/directions-icon.png"
+            }
+        ]
+    },
+    "es": {
+        "title": "¡Evento mañana!",
+        "body": "{{eventTitle}} comienza mañana a las {{eventTime}}. ¡No olvides tu reserva!",
+        "icon": "/icons/calendar-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "event_reminder_24h",
+        "requireInteraction": false,
+        "actions": [
+            {
+                "action": "view",
+                "title": "Ver evento",
+                "icon": "/icons/view-icon.png"
+            },
+            {
+                "action": "directions",
+                "title": "Direcciones",
+                "icon": "/icons/directions-icon.png"
+            }
+        ]
+    }
+}

@@ -1,0 +1,62 @@
+{
+    "fr": {
+        "title": "{{eventTitle}} dans 2h !",
+        "body": "Votre événement commence bientôt. Il est temps de vous préparer !",
+        "icon": "/icons/clock-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "event_reminder_2h",
+        "requireInteraction": true,
+        "actions": [
+            {
+                "action": "view",
+                "title": "Voir détails",
+                "icon": "/icons/view-icon.png"
+            },
+            {
+                "action": "directions",
+                "title": "Y aller",
+                "icon": "/icons/directions-icon.png"
+            }
+        ]
+    },
+    "en": {
+        "title": "{{eventTitle}} in 2h!",
+        "body": "Your event starts soon. Time to get ready!",
+        "icon": "/icons/clock-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "event_reminder_2h",
+        "requireInteraction": true,
+        "actions": [
+            {
+                "action": "view",
+                "title": "View details",
+                "icon": "/icons/view-icon.png"
+            },
+            {
+                "action": "directions",
+                "title": "Get directions",
+                "icon": "/icons/directions-icon.png"
+            }
+        ]
+    },
+    "es": {
+        "title": "¡{{eventTitle}} en 2h!",
+        "body": "Tu evento comienza pronto. ¡Es hora de prepararse!",
+        "icon": "/icons/clock-icon.png",
+        "badge": "/icons/badge-icon.png",
+        "tag": "event_reminder_2h",
+        "requireInteraction": true,
+        "actions": [
+            {
+                "action": "view",
+                "title": "Ver detalles",
+                "icon": "/icons/view-icon.png"
+            },
+            {
+                "action": "directions",
+                "title": "Obtener direcciones",
+                "icon": "/icons/directions-icon.png"
+            }
+        ]
+    }
+}

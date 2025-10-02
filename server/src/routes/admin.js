@@ -2,6 +2,7 @@ import { Router } from "express";
 import pool from "../db.js";
 import authenticateToken from "../middleware/authenticateToken.js";
 import { CategoryService } from "../services/categoryService.js";
+import pushNotificationService from "../services/pushNotificationService.js";
 
 const router = Router();
 
@@ -1974,6 +1975,228 @@ router.post("/venues", requireAdmin, async (req, res) => {
     } catch (error) {
         console.error("Error creating venue:", error);
         res.status(500).json({ message: "Error creating venue" });
+    }
+});
+
+// ===== PUSH NOTIFICATION ROUTES =====
+
+// Get all push notification templates (file-based)
+router.get("/push-templates", requireAdmin, async (req, res) => {
+    try {
+        const templates = await pushNotificationService.getAllTemplates();
+        res.json({ templates });
+    } catch (error) {
+        console.error("Error fetching push templates:", error);
+        res.status(500).json({ error: "Failed to fetch push templates" });
+    }
+});
+
+// Create new push notification template
+router.post("/push-templates", requireAdmin, async (req, res) => {
+    const { name, description, type, key, title, body, icon, badge, image, actions } = req.body;
+
+    if (!name || !key || !type || !title || !body) {
+        return res.status(400).json({ error: "Name, key, type, title, and body are required" });
+    }
+
+    try {
+        const template = await pushNotificationService.createTemplate({
+            name,
+            description,
+            type,
+            key,
+            title,
+            body,
+            icon,
+            badge,
+            image,
+            actions,
+            created_by: req.adminUser.id,
+            updated_by: req.adminUser.id
+        });
+
+        res.status(201).json(template);
+    } catch (error) {
+        console.error("Error creating push template:", error);
+        if (error.message.includes('already exists')) {
+            res.status(409).json({ error: "Push template with this key already exists" });
+        } else {
+            res.status(500).json({ error: "Failed to create push template" });
+        }
+    }
+});
+
+// Update push notification template
+router.put("/push-templates/:id", requireAdmin, async (req, res) => {
+    const { name, description, type, key, title, body, icon, badge, image, actions } = req.body;
+
+    if (!name || !key || !type || !title || !body) {
+        return res.status(400).json({ error: "Name, key, type, title, and body are required" });
+    }
+
+    try {
+        const template = await pushNotificationService.updateTemplate(req.params.id, {
+            name,
+            description,
+            type,
+            key,
+            title,
+            body,
+            icon,
+            badge,
+            image,
+            actions,
+            updated_by: req.adminUser.id
+        });
+
+        if (!template) {
+            return res.status(404).json({ error: "Push template not found" });
+        }
+
+        res.json(template);
+    } catch (error) {
+        console.error("Error updating push template:", error);
+        if (error.message.includes('already exists')) {
+            res.status(409).json({ error: "Push template with this key already exists" });
+        } else {
+            res.status(500).json({ error: "Failed to update push template" });
+        }
+    }
+});
+
+// Delete push notification template
+router.delete("/push-templates/:id", requireAdmin, async (req, res) => {
+    try {
+        const deleted = await pushNotificationService.deleteTemplate(req.params.id);
+
+        if (!deleted) {
+            return res.status(404).json({ error: "Push template not found" });
+        }
+
+        res.json({ message: "Push template deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting push template:", error);
+        res.status(500).json({ error: "Failed to delete push template" });
+    }
+});
+
+// Test push notification
+router.post("/push-notifications/test", requireAdmin, async (req, res) => {
+    const { templateKey, testData, language = 'fr' } = req.body;
+
+    if (!templateKey) {
+        return res.status(400).json({ error: "Template key is required" });
+    }
+
+    try {
+        // For testing, we'll send to a test subscription or simulate
+        const result = await pushNotificationService.sendTestNotification(
+            templateKey,
+            testData || {},
+            language,
+            req.adminUser.id
+        );
+
+        res.json({
+            message: "Test push notification sent successfully",
+            result
+        });
+    } catch (error) {
+        console.error("Error sending test push notification:", error);
+        res.status(500).json({ error: "Failed to send test push notification" });
+    }
+});
+
+// Get push notification logs
+router.get("/push-notifications/logs", requireAdmin, async (req, res) => {
+    const { page = 1, limit = 50, status, template_key } = req.query;
+    const offset = (page - 1) * limit;
+
+    const client = await pool.connect();
+    try {
+        let query = `
+            SELECT ndl.*
+            FROM notification_delivery_log ndl
+            WHERE ndl.channel = 'push'
+        `;
+        const params = [];
+
+        if (status) {
+            params.push(status);
+            query += ` AND ndl.status = $${params.length}`;
+        }
+
+        // Note: template_key column doesn't exist in current schema
+        // if (template_key) {
+        //     params.push(template_key);
+        //     query += ` AND ndl.template_key = $${params.length}`;
+        // }
+
+        query += ` ORDER BY ndl.delivered_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+        params.push(limit, offset);
+
+        const result = await client.query(query, params);
+
+        // Get total count
+        let countQuery = `
+            SELECT COUNT(*)
+            FROM notification_delivery_log
+            WHERE channel = 'push'
+        `;
+        const countParams = [];
+
+        if (status) {
+            countParams.push(status);
+            countQuery += ` AND status = $${countParams.length}`;
+        }
+
+        // Note: template_key column doesn't exist in current schema
+        // if (template_key) {
+        //     countParams.push(template_key);
+        //     countQuery += ` AND template_key = $${countParams.length}`;
+        // }
+
+        const countResult = await client.query(countQuery, countParams);
+        const total = parseInt(countResult.rows[0].count);
+
+        res.json({
+            logs: result.rows,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / limit),
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching push notification logs:", error);
+        res.status(500).json({ error: "Failed to fetch push notification logs" });
+    } finally {
+        client.release();
+    }
+});
+
+// Get push notification settings
+router.get("/push-notifications/settings", requireAdmin, async (req, res) => {
+    try {
+        const settings = await pushNotificationService.getSettings();
+        res.json({ settings });
+    } catch (error) {
+        console.error("Error fetching push notification settings:", error);
+        res.status(500).json({ error: "Failed to fetch push notification settings" });
+    }
+});
+
+// Update push notification settings
+router.put("/push-notifications/settings", requireAdmin, async (req, res) => {
+    const settings = req.body;
+
+    try {
+        const updatedSettings = await pushNotificationService.updateSettings(settings);
+        res.json({ settings: updatedSettings });
+    } catch (error) {
+        console.error("Error updating push notification settings:", error);
+        res.status(500).json({ error: "Failed to update push notification settings" });
     }
 });
 

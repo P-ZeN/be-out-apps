@@ -1,0 +1,29 @@
+{
+    "key": "booking_confirmation",
+    "name": "Confirmation de réservation",
+    "description": "Notification envoyée après confirmation d'une réservation",
+    "type": "booking_confirmation",
+    "title": {
+        "fr": "Réservation confirmée !",
+        "en": "Booking confirmed!",
+        "es": "¡Reserva confirmada!"
+    },
+    "body": {
+        "fr": "Votre réservation pour {{eventName}} le {{eventDate}} est confirmée. Organisé par {{organizerName}}.",
+        "en": "Your booking for {{eventName}} on {{eventDate}} is confirmed. Organized by {{organizerName}}.",
+        "es": "Tu reserva para {{eventName}} el {{eventDate}} está confirmada. Organizado por {{organizerName}}."
+    },
+    "icon": "/icons/check-circle-icon.png",
+    "badge": "/icons/badge.png",
+    "image": "",
+    "actions": [
+        {
+            "action": "view",
+            "title": "Voir les détails",
+            "icon": "/icons/view-icon.png"
+        }
+    ],
+    "requireInteraction": true,
+    "created_at": "2024-12-13T10:00:00.000Z",
+    "updated_at": "2024-12-13T10:00:00.000Z"
+}

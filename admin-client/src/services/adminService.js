@@ -572,6 +572,32 @@ class AdminService {
         return labels[type]?.[status] || status;
     }
 
+    // Generic request method for API calls
+    static async request(endpoint, method = "GET", body = null) {
+        try {
+            const config = {
+                method,
+                headers: this.getAdminHeaders(),
+            };
+
+            if (body && (method === "POST" || method === "PUT" || method === "PATCH")) {
+                config.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error(`Error making ${method} request to ${endpoint}:`, error);
+            throw error;
+        }
+    }
+
     static isAdmin(user) {
         return user && (user.role === "admin" || user.role === "moderator");
     }

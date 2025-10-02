@@ -1,0 +1,29 @@
+{
+    "key": "test_notification",
+    "name": "Notification de test",
+    "description": "Template utilisé pour tester les notifications push",
+    "type": "general",
+    "title": {
+        "fr": "Test de notification",
+        "en": "Notification test",
+        "es": "Prueba de notificación"
+    },
+    "body": {
+        "fr": "Bonjour {{userName}} ! Les notifications push fonctionnent correctement. 🎉",
+        "en": "Hello {{userName}}! Push notifications are working correctly. 🎉",
+        "es": "¡Hola {{userName}}! Las notificaciones push funcionan correctamente. 🎉"
+    },
+    "icon": "/icons/test-icon.png",
+    "badge": "/icons/badge-icon.png",
+    "image": "",
+    "actions": [
+        {
+            "action": "ok",
+            "title": "Super !",
+            "icon": "/icons/ok-icon.png"
+        }
+    ],
+    "requireInteraction": false,
+    "created_at": "2024-12-13T10:00:00.000Z",
+    "updated_at": "2024-12-13T10:00:00.000Z"
+}

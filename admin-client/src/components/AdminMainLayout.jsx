@@ -83,7 +83,7 @@ const AdminMainLayout = ({ user, onLogout }) => {
             component: AdminPayments,
         },
         {
-            text: "Emails",
+            text: "E-mails & Notifications",
             icon: <Email />,
             path: "/emails",
             component: AdminEmails,

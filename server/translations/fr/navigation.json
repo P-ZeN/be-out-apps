@@ -27,6 +27,33 @@
         "privacyDescription": "Comment nous protégeons vos données personnelles",
         "website": "Site web Be Out",
         "websiteDescription": "Visitez notre site web principal",
-        "note": "Ces liens s'ouvriront dans un nouvel onglet"
+        "note": "Ces liens s'ouvriront dans un nouvel onglet",
+        "notifications": {
+            "title": "Notifications",
+            "subtitle": "Choisissez comment vous souhaitez recevoir vos notifications",
+            "native": "Notifications natives",
+            "nativeDesc": "Notifications push sur votre appareil",
+            "sms": "Notifications SMS",
+            "smsDesc": "Messages texte sur votre téléphone",
+            "email": "Notifications par email",
+            "emailDesc": "Emails de confirmation et rappels"
+        },
+        "reminders": {
+            "title": "Rappels d'événements",
+            "subtitle": "Recevez des rappels avant vos événements réservés",
+            "24h": "Rappel 24h avant",
+            "24hDesc": "Notification la veille de l'événement",
+            "2h": "Rappel 2h avant",
+            "2hDesc": "Notification 2 heures avant l'événement"
+        },
+        "news": {
+            "title": "Actualités Be Out",
+            "subtitle": "Restez informé des nouveautés et opportunités",
+            "updates": "Nouveautés et opportunités",
+            "updatesDesc": "Nouveaux événements, promotions et fonctionnalités"
+        },
+        "information": {
+            "title": "Informations"
+        }
     }
 }
