@@ -4,7 +4,12 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import Backend from "i18next-http-backend";
 
 // API base URL for loading translations
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+// Use production server URL when running in production, localhost in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+    import.meta.env.MODE === 'production' || window.location.origin.includes('be-out-app.dedibox2')
+        ? "https://server.be-out-app.dedibox2.philippezenone.net"
+        : "http://localhost:3000"
+);
 
 const i18nConfig = {
     lng: "fr", // Default language

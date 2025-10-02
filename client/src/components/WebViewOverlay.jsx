@@ -15,11 +15,21 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
         setIsTauriApp(getIsTauriApp());
     }, []);
 
+    useEffect(() => {
+        if (open && url) {
+            console.log(`🌐 WebView overlay opening for URL: ${url}`);
+            console.log(`📱 Is Tauri app: ${isTauriApp}`);
+            setLoading(true);
+        }
+    }, [open, url, isTauriApp]);
+
     const handleIframeLoad = () => {
+        console.log(`✅ WebView iframe loaded successfully: ${url}`);
         setLoading(false);
     };
 
-    const handleIframeError = () => {
+    const handleIframeError = (event) => {
+        console.error(`❌ WebView iframe failed to load: ${url}`, event);
         setLoading(false);
     };
 
@@ -38,19 +48,30 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                     backgroundColor: "#fff",
                 },
             }}>
-            <AppBar position="static" color="default" elevation={1}>
+            <AppBar position="static" color="primary" elevation={2}>
                 <Toolbar>
-                    <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
+                    <IconButton 
+                        edge="start" 
+                        color="inherit" 
+                        onClick={onClose} 
+                        aria-label="back"
+                        sx={{ mr: 1 }}
+                    >
                         <ArrowBackIcon />
                     </IconButton>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 1 }}>
-                        {title || "External Link"}
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        {title || "Be Out"}
                     </Typography>
-                    <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close">
+                    <IconButton 
+                        edge="end" 
+                        color="inherit" 
+                        onClick={onClose} 
+                        aria-label="close"
+                    >
                         <CloseIcon />
                     </IconButton>
                 </Toolbar>
-                {loading && <LinearProgress />}
+                {loading && <LinearProgress color="secondary" />}
             </AppBar>
 
             <DialogContent sx={{ p: 0, height: "100%", overflow: "hidden" }}>
