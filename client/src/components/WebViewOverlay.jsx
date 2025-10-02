@@ -19,17 +19,10 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
         if (open && url) {
             console.log(`🌐 WebView overlay opening for URL: ${url}`);
             console.log(`📱 Is Tauri app: ${isTauriApp}`);
+            console.log(`� WebView props - open: ${open}, url: ${url}, title: ${title}`);
             setLoading(true);
         }
-    }, [open, url, isTauriApp]);
-
-    useEffect(() => {
-        if (open && url) {
-            console.log(`🌐 WebView overlay opening for URL: ${url}`);
-            console.log(`📱 Is Tauri app: ${isTauriApp}`);
-            setLoading(true);
-        }
-    }, [open, url, isTauriApp]);
+    }, [open, url, isTauriApp, title]);
 
     const handleIframeLoad = () => {
         console.log(`✅ WebView iframe loaded successfully: ${url}`);
@@ -43,8 +36,11 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
 
     // Only show overlay in mobile apps
     if (!isTauriApp) {
+        console.log('⚠️ WebView not rendered - not a Tauri app');
         return null;
     }
+
+    console.log('🚀 WebView rendering with AppBar');
 
     return (
         <Dialog
@@ -56,18 +52,32 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                     backgroundColor: "#fff",
                 },
             }}>
-            <AppBar position="static" color="primary" elevation={2}>
+            <AppBar 
+                position="static" 
+                color="primary" 
+                elevation={2}
+                sx={{
+                    zIndex: 1300, // High z-index to stay above iframe
+                    position: 'relative'
+                }}
+            >
                 <Toolbar>
                     <IconButton
                         edge="start"
                         color="inherit"
                         onClick={onClose}
                         aria-label="back"
-                        sx={{ mr: 1 }}
+                        sx={{ 
+                            mr: 1,
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255,255,255,0.2)'
+                            }
+                        }}
                     >
                         <ArrowBackIcon />
                     </IconButton>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
                         {title || "Be Out"}
                     </Typography>
                     <IconButton
@@ -75,6 +85,12 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                         color="inherit"
                         onClick={onClose}
                         aria-label="close"
+                        sx={{ 
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                            '&:hover': {
+                                backgroundColor: 'rgba(255,255,255,0.2)'
+                            }
+                        }}
                     >
                         <CloseIcon />
                     </IconButton>
@@ -82,7 +98,14 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                 {loading && <LinearProgress color="secondary" />}
             </AppBar>
 
-            <DialogContent sx={{ p: 0, height: "100%", overflow: "hidden" }}>
+            <DialogContent 
+                sx={{ 
+                    p: 0, 
+                    height: "calc(100% - 64px)", // Subtract AppBar height
+                    overflow: "hidden",
+                    mt: 0 // Ensure no margin pushes content down
+                }}
+            >
                 {url && (
                     <Box sx={{ height: "100%", width: "100%" }}>
                         <iframe
