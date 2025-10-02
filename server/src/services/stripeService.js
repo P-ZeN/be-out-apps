@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import pool from "../db.js";
+import emailNotificationService from "./emailNotificationService.js";
 
 // Initialize Stripe only if the secret key is provided
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -273,6 +274,82 @@ class StripeService {
             const result = await client.query(bookingQuery, [paymentIntent.id, bookingId]);
 
             if (result.rows.length > 0) {
+                // Update booking tickets status
+                await client.query(`UPDATE booking_tickets SET ticket_status = 'valid' WHERE booking_id = $1`, [
+                    bookingId,
+                ]);
+
+                // Now decrement available tickets after successful payment
+                const booking = result.rows[0];
+
+                // Get booking tickets to understand quantities per tier
+                const ticketsQuery = `
+                    SELECT bt.*, b.event_id
+                    FROM booking_tickets bt
+                    JOIN bookings b ON bt.booking_id = b.id
+                    WHERE bt.booking_id = $1
+                `;
+                const ticketsResult = await client.query(ticketsQuery, [bookingId]);
+                const bookingTickets = ticketsResult.rows;
+
+                if (bookingTickets.length > 0) {
+                    const eventId = bookingTickets[0].event_id;
+
+                    // Group tickets by pricing tier for multi-tier events
+                    const tierCounts = {};
+                    bookingTickets.forEach(ticket => {
+                        const key = `${ticket.pricing_category_id || 'legacy'}_${ticket.pricing_tier_id || 'legacy'}`;
+                        tierCounts[key] = (tierCounts[key] || 0) + 1;
+                    });
+
+                    // Check if this is a multi-tier event
+                    const eventQuery = `SELECT pricing FROM events WHERE id = $1`;
+                    const eventResult = await client.query(eventQuery, [eventId]);
+                    const eventPricing = eventResult.rows[0]?.pricing;
+
+                    if (eventPricing && eventPricing.categories) {
+                        // Multi-tier system: update specific tier quantities
+                        let updatedPricing = JSON.parse(JSON.stringify(eventPricing));
+
+                        for (const [tierKey, quantity] of Object.entries(tierCounts)) {
+                            const [categoryId, tierId] = tierKey.split('_');
+
+                            if (categoryId !== 'legacy' && tierId !== 'legacy') {
+                                // Find and update the specific tier
+                                for (let category of updatedPricing.categories) {
+                                    if (category.id === parseInt(categoryId) && category.tiers) {
+                                        for (let tier of category.tiers) {
+                                            if (tier.id === parseInt(tierId)) {
+                                                const currentQuantity = parseInt(tier.available_quantity || 0);
+                                                tier.available_quantity = Math.max(0, currentQuantity - quantity);
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Calculate new total available tickets
+                        const { calculateTotalAvailableTickets } = await import('../utils/pricingUtils.js');
+                        const newTotalAvailable = await calculateTotalAvailableTickets(updatedPricing, eventId, client);
+
+                        // Update event with new pricing and total
+                        await client.query(
+                            `UPDATE events SET pricing = $1, available_tickets = $2 WHERE id = $3`,
+                            [JSON.stringify(updatedPricing), newTotalAvailable, eventId]
+                        );
+                    } else {
+                        // Legacy system: update available_tickets directly
+                        const totalTickets = bookingTickets.length;
+                        await client.query(
+                            `UPDATE events SET available_tickets = GREATEST(0, available_tickets - $1) WHERE id = $2`,
+                            [totalTickets, eventId]
+                        );
+                    }
+                }
+
                 // Log successful transaction
                 await this.logTransaction({
                     booking_id: bookingId,
@@ -285,6 +362,15 @@ class StripeService {
                 });
 
                 console.log(`Payment succeeded for booking ${bookingId}`);
+
+                // Send booking confirmation email with PDF tickets after successful payment
+                try {
+                    await emailNotificationService.sendBookingConfirmation(bookingId);
+                    console.log(`Booking confirmation email sent for booking ${bookingId}`);
+                } catch (emailError) {
+                    console.error(`Failed to send booking confirmation email for booking ${bookingId}:`, emailError);
+                    // Don't fail the payment if email fails
+                }
             }
         } catch (error) {
             console.error("Error handling payment success:", error);

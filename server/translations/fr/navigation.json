@@ -54,6 +54,10 @@
         },
         "information": {
             "title": "Informations"
+        },
+        "loginRequired": {
+            "title": "Connectez-vous pour personnaliser vos notifications",
+            "subtitle": "Accédez à vos préférences de notifications, rappels d'événements et actualités Be Out"
         }
     }
 }

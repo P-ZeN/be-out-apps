@@ -54,6 +54,10 @@
         },
         "information": {
             "title": "Information"
+        },
+        "loginRequired": {
+            "title": "Sign in to customize your notifications",
+            "subtitle": "Access your notification preferences, event reminders and Be Out news"
         }
     }
 }
