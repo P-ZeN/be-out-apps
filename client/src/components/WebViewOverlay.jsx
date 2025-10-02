@@ -26,11 +26,15 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
 
     const handleIframeLoad = () => {
         console.log(`✅ WebView iframe loaded successfully: ${url}`);
+        console.log(`🌍 Current window origin:`, window.location.origin);
+        console.log(`🌍 Current window protocol:`, window.location.protocol);
+        console.log(`🌍 Current window href:`, window.location.href);
         setLoading(false);
     };
 
     const handleIframeError = (event) => {
         console.error(`❌ WebView iframe failed to load: ${url}`, event);
+        console.error(`🌍 Error context - origin:`, window.location.origin);
         setLoading(false);
     };
 
@@ -122,7 +126,8 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                             onLoad={handleIframeLoad}
                             onError={handleIframeError}
                             title={title || "External Content"}
-                            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"
+                            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation allow-top-navigation-by-user-activation"
+                            referrerPolicy="no-referrer-when-downgrade"
                         />
                         {loading && (
                             <Box
