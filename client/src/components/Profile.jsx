@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import userService from "../services/userService";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
-import { Button, TextField, Container, Typography, Box, Alert, Grid, Paper, Divider, IconButton } from "@mui/material";
-import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { Button, TextField, Container, Typography, Box, Alert, Grid, Paper, Divider, IconButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
+import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, DeleteForever as DeleteIcon } from "@mui/icons-material";
 import { formatDateForInput, formatDateForServer } from "../utils/dateUtils";
 
 const Profile = () => {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, logout } = useAuth();
     const { t } = useTranslation(["profile", "common"]);
+    const navigate = useNavigate();
     const [profile, setProfile] = useState({
         first_name: "",
         last_name: "",
@@ -25,6 +27,8 @@ const Profile = () => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deletingAccount, setDeletingAccount] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -116,6 +120,22 @@ const Profile = () => {
             setError(t("profile:updateError"));
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        setDeletingAccount(true);
+        setError("");
+
+        try {
+            await userService.deleteAccount();
+            logout(); // Clear authentication state
+            navigate("/", { replace: true }); // Redirect to home page
+        } catch (error) {
+            setError(t("profile:deleteAccountError"));
+            setDeleteDialogOpen(false);
+        } finally {
+            setDeletingAccount(false);
         }
     };
 
@@ -305,6 +325,62 @@ const Profile = () => {
                         {error}
                     </Alert>
                 )}
+
+                {/* GDPR Account Deletion */}
+                <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
+                        {t("profile:deleteAccount.description")}
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Button
+                            variant="text"
+                            color="error"
+                            size="small"
+                            startIcon={<DeleteIcon />}
+                            onClick={() => setDeleteDialogOpen(true)}
+                            sx={{ fontSize: '0.75rem' }}
+                        >
+                            {t("profile:deleteAccount.buttonText")}
+                        </Button>
+                    </Box>
+                </Box>
+
+                {/* Delete Account Confirmation Dialog */}
+                <Dialog
+                    open={deleteDialogOpen}
+                    onClose={() => !deletingAccount && setDeleteDialogOpen(false)}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        {t("profile:deleteAccount.confirmTitle")}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            {t("profile:deleteAccount.confirmMessage")}
+                        </DialogContentText>
+                        <DialogContentText sx={{ mt: 2, fontWeight: 'bold', color: 'error.main' }}>
+                            {t("profile:deleteAccount.warningMessage")}
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={() => setDeleteDialogOpen(false)}
+                            disabled={deletingAccount}
+                        >
+                            {t("profile:deleteAccount.cancel")}
+                        </Button>
+                        <Button
+                            onClick={handleDeleteAccount}
+                            color="error"
+                            variant="contained"
+                            disabled={deletingAccount}
+                            startIcon={deletingAccount ? null : <DeleteIcon />}
+                        >
+                            {deletingAccount ? t("profile:deleteAccount.deleting") : t("profile:deleteAccount.confirm")}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
         </Container>
     );

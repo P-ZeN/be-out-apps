@@ -31,7 +31,13 @@ router.get("/profile", authenticateToken, async (req, res) => {
                     up.postal_code,
                     up.city,
                     up.country,
-                    up.profile_picture
+                    up.profile_picture,
+                    up.terms_accepted,
+                    up.terms_accepted_at,
+                    up.privacy_policy_accepted,
+                    up.privacy_policy_accepted_at,
+                    up.terms_of_service_accepted,
+                    up.terms_of_service_accepted_at
                 FROM users u
                 LEFT JOIN user_profiles up ON u.id = up.user_id
                 WHERE u.id = $1
@@ -232,6 +238,54 @@ router.put("/language-preference", authenticateToken, async (req, res) => {
     } catch (error) {
         console.error("Error updating language preference:", error);
         res.status(500).json({ error: "Failed to update language preference" });
+    }
+});
+
+// Delete user account (GDPR compliance)
+router.delete("/delete-account", authenticateToken, async (req, res) => {
+    const userId = req.user.userId || req.user.id;
+
+    try {
+        const client = await pool.connect();
+        try {
+            await client.query("BEGIN");
+
+            // Get user email for logging
+            const userCheck = await client.query("SELECT email FROM users WHERE id = $1", [userId]);
+            if (userCheck.rows.length === 0) {
+                return res.status(404).json({ error: "User not found" });
+            }
+            const userEmail = userCheck.rows[0].email;
+
+            // Delete user data in order (following foreign key constraints)
+            // 1. Delete user bookings
+            await client.query("DELETE FROM bookings WHERE user_id = $1", [userId]);
+
+            // 2. Delete user reviews
+            await client.query("DELETE FROM reviews WHERE user_id = $1", [userId]);
+
+            // 3. Delete user favorites
+            await client.query("DELETE FROM user_favorites WHERE user_id = $1", [userId]);
+
+            // 4. Delete user profile
+            await client.query("DELETE FROM user_profiles WHERE user_id = $1", [userId]);
+
+            // 5. Finally delete the user
+            await client.query("DELETE FROM users WHERE id = $1", [userId]);
+
+            await client.query("COMMIT");
+
+            console.log(`User account deleted: ${userEmail} (ID: ${userId})`);
+            res.json({ message: "Account deleted successfully" });
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
+    } catch (error) {
+        console.error("Error deleting user account:", error);
+        res.status(500).json({ error: "Failed to delete account" });
     }
 });
 

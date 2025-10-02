@@ -1747,7 +1747,13 @@ CREATE TABLE public.user_profiles (
     postal_code character varying(20),
     city character varying(100),
     country character varying(100) DEFAULT 'France'::character varying,
-    preferred_language character varying(5) DEFAULT 'fr'::character varying
+    preferred_language character varying(5) DEFAULT 'fr'::character varying,
+    terms_accepted boolean DEFAULT false,
+    terms_accepted_at timestamp with time zone,
+    privacy_policy_accepted boolean DEFAULT false,
+    privacy_policy_accepted_at timestamp with time zone,
+    terms_of_service_accepted boolean DEFAULT false,
+    terms_of_service_accepted_at timestamp with time zone
 );
 
 

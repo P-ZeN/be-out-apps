@@ -4,7 +4,7 @@ import authService from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useExternalLink } from "../hooks/useExternalLink";
-import { Button, TextField, Container, Typography, Box, Alert, Divider } from "@mui/material";
+import { Button, TextField, Container, Typography, Box, Alert, Divider, FormControlLabel, Checkbox, Link } from "@mui/material";
 import { Google, Facebook, Apple } from "@mui/icons-material";
 import WebViewOverlay from "./WebViewOverlay";
 import { areTauriApisAvailable } from "../utils/platformDetection";
@@ -17,6 +17,11 @@ const Register = () => {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [isTauriAvailable, setIsTauriAvailable] = useState(false);
+    const [legalConsent, setLegalConsent] = useState({
+        termsOfUse: false,
+        termsOfService: false,
+        privacyPolicy: false
+    });
     const navigate = useNavigate();
     const { login, nativeLogin } = useAuth();
     const t = useTranslation(["auth", "common"]).t;
@@ -36,12 +41,34 @@ const Register = () => {
         checkTauri();
     }, []);
 
+    const handleLegalConsentChange = (field) => (event) => {
+        setLegalConsent({
+            ...legalConsent,
+            [field]: event.target.checked
+        });
+    };
+
+    const isLegalConsentComplete = () => {
+        return legalConsent.termsOfUse && legalConsent.termsOfService && legalConsent.privacyPolicy;
+    };
+
     const handleRegister = async (e) => {
         e.preventDefault();
         setMessage("");
         setError("");
+
+        // Check legal consent before proceeding
+        if (!isLegalConsentComplete()) {
+            setError(t("auth:register.legalConsentRequired"));
+            return;
+        }
+
         try {
-            const response = await authService.register({ email, password });
+            const response = await authService.register({
+                email,
+                password,
+                legalConsent
+            });
             login(response);
             setMessage(t("auth:register.success"));
             // Redirect to onboarding instead of home
@@ -141,7 +168,93 @@ const Register = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
+
+                    {/* Legal Consent Section */}
+                    <Box sx={{ mt: 3, mb: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold' }}>
+                            {t("auth:register.legalConsent.title")}
+                        </Typography>
+
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={legalConsent.termsOfUse}
+                                    onChange={handleLegalConsentChange("termsOfUse")}
+                                    size="small"
+                                />
+                            }
+                            label={
+                                <Typography variant="body2">
+                                    {t("auth:register.legalConsent.acceptTermsPrefix")}{" "}
+                                    <Link
+                                        href="https://www.be-out-app.dedibox2.philippezenone.net/cgu"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        sx={{ textDecoration: 'underline' }}
+                                    >
+                                        {t("auth:register.legalConsent.termsOfUse")}
+                                    </Link>
+                                </Typography>
+                            }
+                            sx={{ alignItems: 'flex-start', mb: 1 }}
+                        />
+
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={legalConsent.termsOfService}
+                                    onChange={handleLegalConsentChange("termsOfService")}
+                                    size="small"
+                                />
+                            }
+                            label={
+                                <Typography variant="body2">
+                                    {t("auth:register.legalConsent.acceptTermsPrefix")}{" "}
+                                    <Link
+                                        href="https://www.be-out-app.dedibox2.philippezenone.net/cgv"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        sx={{ textDecoration: 'underline' }}
+                                    >
+                                        {t("auth:register.legalConsent.termsOfService")}
+                                    </Link>
+                                </Typography>
+                            }
+                            sx={{ alignItems: 'flex-start', mb: 1 }}
+                        />
+
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={legalConsent.privacyPolicy}
+                                    onChange={handleLegalConsentChange("privacyPolicy")}
+                                    size="small"
+                                />
+                            }
+                            label={
+                                <Typography variant="body2">
+                                    {t("auth:register.legalConsent.acceptTermsPrefix")}{" "}
+                                    <Link
+                                        href="https://www.be-out-app.dedibox2.philippezenone.net/politique-confidentialite"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        sx={{ textDecoration: 'underline' }}
+                                    >
+                                        {t("auth:register.legalConsent.privacyPolicy")}
+                                    </Link>
+                                </Typography>
+                            }
+                            sx={{ alignItems: 'flex-start', mb: 1 }}
+                        />
+                    </Box>
+
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 2, mb: 2 }}
+                        disabled={!isLegalConsentComplete()}
+                    >
                         {t("auth:register.submitButton")}
                     </Button>
                 </Box>

@@ -35,11 +35,28 @@ const updateLanguagePreference = async (languageCode) => {
         },
         body: JSON.stringify({ preferred_language: languageCode }),
     });
-    
+
     if (!response.ok) {
         throw new Error('Failed to update language preference');
     }
-    
+
+    return response.json();
+};
+
+const deleteAccount = async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/delete-account`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete account');
+    }
+
     return response.json();
 };
 
@@ -47,4 +64,5 @@ export default {
     getProfile,
     updateProfile,
     updateLanguagePreference,
+    deleteAccount,
 };

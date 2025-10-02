@@ -8,10 +8,15 @@ const router = Router();
 
 // Register route
 router.post("/register", async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, legalConsent } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    // Validate legal consent for GDPR compliance
+    if (!legalConsent || !legalConsent.termsOfUse || !legalConsent.termsOfService || !legalConsent.privacyPolicy) {
+        return res.status(400).json({ message: "Legal consent is required for registration" });
     }
 
     try {
@@ -25,8 +30,27 @@ router.post("/register", async (req, res) => {
             );
             const user = userResult.rows[0];
 
-            // Create minimal user profile - onboarding will complete it
-            await client.query("INSERT INTO user_profiles (user_id) VALUES ($1)", [user.id]);
+            // Create user profile with legal consent tracking
+            await client.query(
+                `INSERT INTO user_profiles (
+                    user_id,
+                    terms_accepted,
+                    terms_accepted_at,
+                    privacy_policy_accepted,
+                    privacy_policy_accepted_at,
+                    terms_of_service_accepted,
+                    terms_of_service_accepted_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [
+                    user.id,
+                    legalConsent.termsOfUse,
+                    new Date(),
+                    legalConsent.privacyPolicy,
+                    new Date(),
+                    legalConsent.termsOfService,
+                    new Date()
+                ]
+            );
 
             await client.query("COMMIT");
 
