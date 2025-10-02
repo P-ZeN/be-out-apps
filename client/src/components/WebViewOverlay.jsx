@@ -50,6 +50,9 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
             PaperProps={{
                 sx: {
                     backgroundColor: "#fff",
+                    // Account for system status bar on mobile
+                    marginTop: 'env(safe-area-inset-top, 0px)',
+                    height: 'calc(100% - env(safe-area-inset-top, 0px))',
                 },
             }}>
             <AppBar
