@@ -84,7 +84,7 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                     >
                         <ArrowBackIcon />
                     </IconButton>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', color: 'white' }}>
                         {title || "Be Out"}
                     </Typography>
                     <IconButton

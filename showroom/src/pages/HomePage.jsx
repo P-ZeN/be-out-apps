@@ -214,7 +214,7 @@ const HomePage = () => {
 
                 <Grid container spacing={4} sx={{ mb: 6 }}>
                     {features.map((feature, index) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
+                        <Grid item xs={12} sm={6} md={3} key={index}>
                             <Card
                                 sx={{
                                     height: "100%",
@@ -245,7 +245,113 @@ const HomePage = () => {
                         </Grid>
                     ))}
                 </Grid>
+            </Container>
 
+            {/* Organizer Hero Section - Dark Blue Background */}
+            <Box
+                sx={{
+                    textAlign: "center",
+                    py: 8,
+                    backgroundColor: "#110e3a", // Organizer dark blue color
+                    borderRadius: 0,
+                    boxShadow: "none",
+                    border: "none",
+                    width: "100vw", // Full viewport width
+                    marginLeft: "calc(-50vw + 50%)", // Center and expand to full width
+                    marginRight: "calc(-50vw + 50%)", // Center and expand to full width
+                    my: 6,
+                }}>
+                <Container maxWidth="lg">
+                    {/* Organizer Content */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 4,
+                            mb: 4,
+                            flexWrap: { xs: "wrap", md: "nowrap" },
+                            textAlign: { xs: "center", md: "left" },
+                            maxWidth: 800,
+                            mx: "auto",
+                        }}>
+                        {/* Event Organizer Icon/Graphic */}
+                        <Box
+                            sx={{
+                                height: 120,
+                                width: 120,
+                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                            }}>
+                            <EventAvailable sx={{ fontSize: 60, color: "white" }} />
+                        </Box>
+
+                        {/* Organizer Title */}
+                        <Typography
+                            variant="heroTitle"
+                            component="h2"
+                            sx={{
+                                color: "white",
+                                flex: 1,
+                                maxWidth: { md: 450 },
+                            }}>
+                            {t("organizer.hero.title", "Organize events and reach your community")}
+                        </Typography>
+                    </Box>
+
+                    <Typography
+                        variant="body1"
+                        sx={{
+                            color: "rgba(255, 255, 255, 0.8)",
+                            mb: 4,
+                            maxWidth: 600,
+                            mx: "auto",
+                            fontSize: "1.1rem",
+                            fontWeight: 200,
+                            fontFamily: theme.typography.fontFamily,
+                        }}>
+                        {t(
+                            "organizer.hero.description",
+                            "Join our platform as an event organizer. Create, manage and promote your events with powerful tools designed for professionals."
+                        )}
+                    </Typography>
+
+                    {/* Organizer CTA Button */}
+                    <Button
+                        variant="contained"
+                        size="large"
+                        href="https://pro.be-out-app.dedibox2.philippezenone.net/register"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{
+                            px: 4,
+                            py: 1.5,
+                            fontSize: "1.2rem",
+                            borderRadius: 2,
+                            textTransform: "none",
+                            mb: 2,
+                            backgroundColor: "white",
+                            color: "#110e3a",
+                            "&:hover": {
+                                backgroundColor: theme.palette.background.default,
+                                transform: "translateY(-2px)",
+                            },
+                            transition: "all 0.2s ease",
+                        }}>
+                        {t("organizer.registerCTA", "Become an Organizer")}
+                    </Button>
+
+                    <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)", mt: 2 }}>
+                        {t("organizer.freeToJoin", "Free to join • Professional tools included")}
+                    </Typography>
+                </Container>
+            </Box>
+
+            <Container maxWidth="lg" sx={{ py: 6 }}>
                 {/* Call to Action Section */}
                 <Paper
                     sx={{

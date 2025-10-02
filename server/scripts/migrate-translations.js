@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const sourceDir = path.join(__dirname, "../translations"); // Git repo location
-// Use local development path when TRANSLATIONS_PATH is not set (development mode)
-const targetDir = process.env.TRANSLATIONS_PATH || path.join(__dirname, "../runtime/translations"); // Development: local runtime folder, Production: persistent volume
+// Use TRANSLATIONS_PATH in production, in development files are already in the right place via symlink
+const targetDir = process.env.TRANSLATIONS_PATH || path.join(__dirname, "../../translations"); // Development: symlinked to server/translations, Production: persistent volume
 
 async function migrateTranslations() {
     try {
@@ -68,6 +68,11 @@ async function createEmptyTranslationStructure() {
         "events",
         "bookings",
         "payments",
+        "showroom",
+        "organizer",
+        "venues",
+        "footer",
+        "dashboard",
     ];
 
     for (const lang of languages) {

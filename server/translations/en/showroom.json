@@ -36,6 +36,14 @@
             "description": "Save and track your favorite events and venues"
         }
     },
+    "organizer": {
+        "hero": {
+            "title": "Organize events and reach your community",
+            "description": "Join our platform as an event organizer. Create, manage and promote your events with powerful tools designed for professionals."
+        },
+        "registerCTA": "Become an Organizer",
+        "freeToJoin": "Free to join • Professional tools included"
+    },
     "cta": {
         "title": "Start Exploring Events",
         "description": "Join thousands of users who have already discovered amazing events in their city. Start exploring events now or download the app when it's ready!"

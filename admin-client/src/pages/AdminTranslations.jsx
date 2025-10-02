@@ -82,6 +82,7 @@ const AdminTranslations = () => {
         { key: "events", name: "Events" },
         { key: "bookings", name: "Bookings" },
         { key: "payments", name: "Payments" },
+        { key: "showroom", name: "Showroom (Marketing Site)" },
     ];
 
     useEffect(() => {

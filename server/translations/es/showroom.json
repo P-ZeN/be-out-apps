@@ -36,6 +36,14 @@
             "description": "Guarda y sigue tus eventos y lugares favoritos"
         }
     },
+    "organizer": {
+        "hero": {
+            "title": "Organiza eventos y alcanza tu comunidad",
+            "description": "Únete a nuestra plataforma como organizador de eventos. Crea, gestiona y promociona tus eventos con herramientas poderosas diseñadas para profesionales."
+        },
+        "registerCTA": "Convertirse en organizador",
+        "freeToJoin": "Gratis • Herramientas profesionales incluidas"
+    },
     "cta": {
         "title": "Comienza a explorar eventos",
         "description": "Únete a miles de usuarios que ya han descubierto eventos increíbles en su ciudad. ¡Comienza a explorar ahora o descarga la app cuando esté lista!"
