@@ -52,9 +52,9 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                     backgroundColor: "#fff",
                 },
             }}>
-            <AppBar 
-                position="static" 
-                color="primary" 
+            <AppBar
+                position="static"
+                color="primary"
                 elevation={2}
                 sx={{
                     zIndex: 1300, // High z-index to stay above iframe
@@ -67,7 +67,7 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                         color="inherit"
                         onClick={onClose}
                         aria-label="back"
-                        sx={{ 
+                        sx={{
                             mr: 1,
                             backgroundColor: 'rgba(255,255,255,0.1)',
                             '&:hover': {
@@ -85,7 +85,7 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                         color="inherit"
                         onClick={onClose}
                         aria-label="close"
-                        sx={{ 
+                        sx={{
                             backgroundColor: 'rgba(255,255,255,0.1)',
                             '&:hover': {
                                 backgroundColor: 'rgba(255,255,255,0.2)'
@@ -98,9 +98,9 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
                 {loading && <LinearProgress color="secondary" />}
             </AppBar>
 
-            <DialogContent 
-                sx={{ 
-                    p: 0, 
+            <DialogContent
+                sx={{
+                    p: 0,
                     height: "calc(100% - 64px)", // Subtract AppBar height
                     overflow: "hidden",
                     mt: 0 // Ensure no margin pushes content down
