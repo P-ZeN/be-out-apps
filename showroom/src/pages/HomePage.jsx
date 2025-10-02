@@ -214,7 +214,7 @@ const HomePage = () => {
 
                 <Grid container spacing={4} sx={{ mb: 6 }}>
                     {features.map((feature, index) => (
-                        <Grid item xs={12} sm={6} md={3} key={index}>
+                        <Grid key={index} size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card
                                 sx={{
                                     height: "100%",
