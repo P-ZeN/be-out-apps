@@ -2086,7 +2086,7 @@ jobs:
         cd ..
 
         # Add timeout and memory monitoring
-        echo "📊 System resources before build:"
+        echo "📊 System resourcesss before build:"
         echo "Available memory:"
         vm_stat | grep "Pages free\|Pages active\|Pages inactive\|Pages speculative\|Pages wired"
         echo "Available disk space:"
