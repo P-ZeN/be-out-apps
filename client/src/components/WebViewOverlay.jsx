@@ -23,6 +23,14 @@ const WebViewOverlay = ({ url, title, open, onClose }) => {
         }
     }, [open, url, isTauriApp]);
 
+    useEffect(() => {
+        if (open && url) {
+            console.log(`🌐 WebView overlay opening for URL: ${url}`);
+            console.log(`📱 Is Tauri app: ${isTauriApp}`);
+            setLoading(true);
+        }
+    }, [open, url, isTauriApp]);
+
     const handleIframeLoad = () => {
         console.log(`✅ WebView iframe loaded successfully: ${url}`);
         setLoading(false);
