@@ -19,7 +19,8 @@ export const useExternalLink = () => {
 
     const openExternalLink = (url, title = null) => {
         if (isTauriApp) {
-            // For mobile apps: open in overlay
+            // For mobile apps: open in WebView overlay to keep users in-app
+            console.log(`Opening URL in WebView overlay: ${url}`);
             setWebViewState({
                 open: true,
                 url,

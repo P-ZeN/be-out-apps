@@ -2,10 +2,13 @@ import { Container, Typography, Box, List, ListItem, ListItemButton, ListItemIco
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { Info, Gavel, Security, Language, Settings, Assignment, ShoppingCart, Policy } from '@mui/icons-material';
+import { useExternalLink } from '../hooks/useExternalLink';
+import WebViewOverlay from '../components/WebViewOverlay';
 
 const ParametersPage = () => {
     const theme = useTheme();
     const { t } = useTranslation('navigation');
+    const { openExternalLink, closeWebView, webViewState } = useExternalLink();
 
     const showroomLinks = [
         {
@@ -46,8 +49,8 @@ const ParametersPage = () => {
         }
     ];
 
-    const handleLinkClick = (url) => {
-        window.open(url, '_blank', 'noopener,noreferrer');
+    const handleLinkClick = (url, title) => {
+        openExternalLink(url, title);
     };
 
     return (
@@ -91,7 +94,7 @@ const ParametersPage = () => {
                         <Box key={link.url}>
                             <ListItem disablePadding>
                                 <ListItemButton
-                                    onClick={() => handleLinkClick(link.url)}
+                                    onClick={() => handleLinkClick(link.url, link.title)}
                                     sx={{
                                         py: 2,
                                         '&:hover': {
@@ -128,6 +131,14 @@ const ParametersPage = () => {
                     {t('parameters.note', 'Ces liens s\'ouvriront dans un nouvel onglet')}
                 </Typography>
             </Box>
+
+            {/* WebView Overlay for mobile external links */}
+            <WebViewOverlay
+                url={webViewState.url}
+                title={webViewState.title}
+                open={webViewState.open}
+                onClose={closeWebView}
+            />
         </Container>
     );
 };
