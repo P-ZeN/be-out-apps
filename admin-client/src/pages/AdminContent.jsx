@@ -668,8 +668,8 @@ const ContentEditor = ({ open, onClose, page, onSave, onAlert }) => {
 
                             <Paper sx={{ width: '100%' }}>
                                 {/* Language Tabs */}
-                                <Tabs 
-                                    value={activeTab} 
+                                <Tabs
+                                    value={activeTab}
                                     onChange={handleTabChange}
                                     variant="scrollable"
                                     scrollButtons="auto"
@@ -678,7 +678,7 @@ const ContentEditor = ({ open, onClose, page, onSave, onAlert }) => {
                                     {sortedTranslations.map((translation, index) => {
                                         const language = availableLanguages.find(l => l.code === translation.language);
                                         return (
-                                            <Tab 
+                                            <Tab
                                                 key={translation.language}
                                                 label={
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -695,8 +695,8 @@ const ContentEditor = ({ open, onClose, page, onSave, onAlert }) => {
                                                                         setActiveTab(activeTab - 1);
                                                                     }
                                                                 }}
-                                                                sx={{ 
-                                                                    ml: 1, 
+                                                                sx={{
+                                                                    ml: 1,
                                                                     p: 0.5,
                                                                     cursor: 'pointer',
                                                                     borderRadius: '50%',

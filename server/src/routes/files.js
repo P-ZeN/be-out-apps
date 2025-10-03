@@ -189,7 +189,7 @@ router.post("/content-image", authenticateToken, upload.single("image"), async (
         // Create multiple sizes optimized for content
         const sizes = [
             { width: 1200, height: 675, suffix: "large" },   // 16:9 ratio for large displays
-            { width: 800, height: 450, suffix: "medium" },   // 16:9 ratio for medium displays  
+            { width: 800, height: 450, suffix: "medium" },   // 16:9 ratio for medium displays
             { width: 400, height: 225, suffix: "small" },    // 16:9 ratio for mobile
             { width: 200, height: 200, suffix: "thumbnail" }, // Square thumbnail
         ];

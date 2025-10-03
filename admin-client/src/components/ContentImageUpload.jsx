@@ -49,16 +49,16 @@ const ContentImageUpload = ({ currentImage, onImageChange, height = 200, label =
         try {
             const result = await fileService.uploadContentImage(file);
             console.log("Upload result:", result); // Debug log
-            
+
             // Return the large size image URL if available, otherwise the first one
-            const imageUrl = result.files?.find((f) => f.size === "large")?.fileUrl || 
+            const imageUrl = result.files?.find((f) => f.size === "large")?.fileUrl ||
                            result.files?.[0]?.fileUrl ||
-                           result.file?.fileUrl || 
+                           result.file?.fileUrl ||
                            result.fileUrl ||
                            currentImage;
-            
+
             console.log("Selected image URL:", imageUrl); // Debug log
-            
+
             if (imageUrl && imageUrl !== currentImage) {
                 onImageChange(imageUrl);
             } else {
@@ -118,17 +118,17 @@ const ContentImageUpload = ({ currentImage, onImageChange, height = 200, label =
                         sx={{ mb: 1 }}
                     />
                     <Box sx={{ display: "flex", gap: 1 }}>
-                        <Button 
-                            variant="contained" 
-                            size="small" 
+                        <Button
+                            variant="contained"
+                            size="small"
                             onClick={handleUrlSubmit}
                             disabled={!urlInput.trim()}
                         >
                             Valider
                         </Button>
-                        <Button 
-                            variant="outlined" 
-                            size="small" 
+                        <Button
+                            variant="outlined"
+                            size="small"
                             onClick={handleUrlCancel}
                         >
                             Annuler
