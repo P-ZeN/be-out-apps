@@ -9,8 +9,6 @@ import { Google, Facebook, Apple } from "@mui/icons-material";
 import WebViewOverlay from "./WebViewOverlay";
 import { areTauriApisAvailable } from "../utils/platformDetection";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
 const Register = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -26,6 +24,13 @@ const Register = () => {
     const { login, nativeLogin } = useAuth();
     const t = useTranslation(["auth", "common"]).t;
     const { openExternalLink, closeWebView, webViewState, isTauriApp } = useExternalLink();
+
+    // Dynamic showroom base URL for development vs production
+    const SHOWROOM_BASE_URL = import.meta.env.VITE_SHOWROOM_URL || (
+        import.meta.env.MODE === 'development'
+            ? "http://localhost:5176"
+            : "https://www.be-out-app.dedibox2.philippezenone.net"
+    );
 
     useEffect(() => {
         const checkTauri = async () => {
@@ -187,7 +192,7 @@ const Register = () => {
                                 <Typography variant="body2">
                                     {t("auth:register.legalConsent.acceptTermsPrefix")}{" "}
                                     <Link
-                                        href="https://www.be-out-app.dedibox2.philippezenone.net/cgu"
+                                        href={`${SHOWROOM_BASE_URL}/cgu`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         sx={{ textDecoration: 'underline' }}
@@ -211,7 +216,7 @@ const Register = () => {
                                 <Typography variant="body2">
                                     {t("auth:register.legalConsent.acceptTermsPrefix")}{" "}
                                     <Link
-                                        href="https://www.be-out-app.dedibox2.philippezenone.net/cgv"
+                                        href={`${SHOWROOM_BASE_URL}/cgv`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         sx={{ textDecoration: 'underline' }}
@@ -235,7 +240,7 @@ const Register = () => {
                                 <Typography variant="body2">
                                     {t("auth:register.legalConsent.acceptTermsPrefix")}{" "}
                                     <Link
-                                        href="https://www.be-out-app.dedibox2.philippezenone.net/politique-confidentialite"
+                                        href={`${SHOWROOM_BASE_URL}/politique-confidentialite`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         sx={{ textDecoration: 'underline' }}

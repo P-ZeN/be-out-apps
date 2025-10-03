@@ -1,4 +1,10 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+// API base URL for content service
+// Use production server URL when running in production, localhost in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+    import.meta.env.MODE === 'production' || window.location.origin.includes('be-out-app.dedibox2')
+        ? "https://server.be-out-app.dedibox2.philippezenone.net"
+        : "http://localhost:3000"
+);
 
 /**
  * Content API service for the showroom app
@@ -20,7 +26,7 @@ class ContentService {
             if (category) params.append('category', category);
             if (search) params.append('search', search);
 
-            const response = await fetch(`${API_BASE_URL}/content/pages?${params}`);
+            const response = await fetch(`${API_BASE_URL}/api/content/pages?${params}`);
             const data = await response.json();
 
             if (!data.success) {
@@ -40,7 +46,7 @@ class ContentService {
     async getPageBySlug(slug, language = 'fr') {
         try {
             const params = new URLSearchParams({ lang: language });
-            const response = await fetch(`${API_BASE_URL}/content/public/${slug}?${params}`);
+            const response = await fetch(`${API_BASE_URL}/api/content/public/${slug}?${params}`);
             const data = await response.json();
 
             if (!data.success) {

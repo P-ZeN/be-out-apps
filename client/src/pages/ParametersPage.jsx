@@ -108,46 +108,49 @@ const ParametersPage = () => {
         }
     };
 
-
-
-
+    // Dynamic showroom base URL for development vs production
+    const SHOWROOM_BASE_URL = import.meta.env.VITE_SHOWROOM_URL || (
+        import.meta.env.MODE === 'development'
+            ? "http://localhost:5176"
+            : "https://www.be-out-app.dedibox2.philippezenone.net"
+    );
 
     const showroomLinks = [
         {
             title: t('parameters.aboutBeOut', 'À propos de Be Out'),
             description: t('parameters.aboutDescription', 'Découvrez notre mission, nos valeurs et notre histoire'),
             icon: <Info color="primary" />,
-            url: 'https://www.be-out-app.dedibox2.philippezenone.net/about'
+            url: `${SHOWROOM_BASE_URL}/about`
         },
         {
             title: t('parameters.website', 'Site web Be Out'),
             description: t('parameters.websiteDescription', 'Visitez notre site web principal'),
             icon: <Language color="primary" />,
-            url: 'https://www.be-out-app.dedibox2.philippezenone.net'
+            url: SHOWROOM_BASE_URL
         },
         {
             title: t('parameters.cgu', 'Conditions Générales d\'Utilisation'),
             description: t('parameters.cguDescription', 'Conditions d\'utilisation de l\'application'),
             icon: <Assignment color="primary" />,
-            url: 'https://www.be-out-app.dedibox2.philippezenone.net/cgu'
+            url: `${SHOWROOM_BASE_URL}/cgu`
         },
         {
             title: t('parameters.cgv', 'Conditions Générales de Vente'),
             description: t('parameters.cgvDescription', 'Conditions de vente et de réservation'),
             icon: <ShoppingCart color="primary" />,
-            url: 'https://www.be-out-app.dedibox2.philippezenone.net/cgv'
+            url: `${SHOWROOM_BASE_URL}/cgv`
         },
         {
             title: t('parameters.mentions', 'Mentions légales'),
             description: t('parameters.mentionsDescription', 'Informations légales et responsabilités'),
             icon: <Gavel color="primary" />,
-            url: 'https://www.be-out-app.dedibox2.philippezenone.net/mentions-legales'
+            url: `${SHOWROOM_BASE_URL}/mentions-legales`
         },
         {
             title: t('parameters.privacy', 'Politique de confidentialité'),
             description: t('parameters.privacyDescription', 'Comment nous protégeons vos données personnelles'),
             icon: <Security color="primary" />,
-            url: 'https://www.be-out-app.dedibox2.philippezenone.net/politique-confidentialite'
+            url: `${SHOWROOM_BASE_URL}/politique-confidentialite`
         }
     ];
 

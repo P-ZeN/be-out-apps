@@ -79,9 +79,10 @@ const AdminTranslations = () => {
         { key: "onboarding", name: "Onboarding" },
         { key: "map", name: "Map & Events" },
         { key: "profile", name: "User Profile" },
-        { key: "events", name: "Events" },
         { key: "bookings", name: "Bookings" },
-        { key: "payments", name: "Payments" },
+        { key: "payment", name: "Payments" },
+        { key: "dashboard", name: "User Dashboard" },
+        { key: "footer", name: "Footer" },
         { key: "showroom", name: "Showroom (Marketing Site)" },
     ];
 

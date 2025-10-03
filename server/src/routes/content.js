@@ -517,4 +517,209 @@ router.get('/public/:slug', [
     }
 });
 
+// Get rendered HTML page by slug (for mobile apps and external links)
+router.get('/pages/:slug/rendered', [
+    param('slug').isSlug(),
+    query('lang').optional().isLength({ min: 2, max: 5 })
+], handleValidationErrors, async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const { lang = 'fr' } = req.query;
+
+        const query = `
+            SELECT
+                cp.id,
+                cp.slug,
+                cp.category,
+                cp.featured_image,
+                cp.keywords,
+                cp.published,
+                cp.view_count,
+                cp.created_at,
+                cp.updated_at,
+                ct.title,
+                ct.content,
+                ct.meta_description,
+                ct.excerpt,
+                ct.language
+            FROM content_pages cp
+            LEFT JOIN content_translations ct ON cp.id = ct.page_id AND ct.language = $2
+            WHERE cp.slug = $1 AND cp.published = true
+        `;
+
+        const result = await db.query(query, [slug, lang]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).send(`
+                <!DOCTYPE html>
+                <html lang="${lang}">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Page non trouvée - Be Out</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                               padding: 20px; text-align: center; color: #333; }
+                        .error { color: #e74c3c; margin-top: 50px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error">
+                        <h1>404</h1>
+                        <p>Page non trouvée</p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+
+        const page = result.rows[0];
+
+        // Increment view count
+        await db.query('UPDATE content_pages SET view_count = view_count + 1 WHERE id = $1', [page.id]);
+
+        // Generate HTML response
+        const html = `
+            <!DOCTYPE html>
+            <html lang="${page.language || lang}">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${page.title} - Be Out</title>
+                <meta name="description" content="${page.meta_description || page.excerpt || ''}">
+                <meta name="keywords" content="${Array.isArray(page.keywords) ? page.keywords.join(', ') : ''}">
+                <style>
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        padding: 20px;
+                        background-color: #f8f9fa;
+                    }
+                    .container {
+                        background: white;
+                        padding: 30px;
+                        border-radius: 10px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    }
+                    h1 {
+                        color: #0288d1;
+                        border-bottom: 3px solid #0288d1;
+                        padding-bottom: 10px;
+                        margin-bottom: 30px;
+                    }
+                    h2 {
+                        color: #0288d1;
+                        margin-top: 30px;
+                    }
+                    h3 {
+                        color: #666;
+                    }
+                    p {
+                        margin-bottom: 16px;
+                    }
+                    ul, ol {
+                        margin-bottom: 16px;
+                        padding-left: 30px;
+                    }
+                    li {
+                        margin-bottom: 8px;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 40px;
+                        padding-bottom: 20px;
+                        border-bottom: 1px solid #eee;
+                    }
+                    .logo {
+                        color: #0288d1;
+                        font-size: 24px;
+                        font-weight: bold;
+                        margin-bottom: 10px;
+                    }
+                    .footer {
+                        text-align: center;
+                        margin-top: 40px;
+                        padding-top: 20px;
+                        border-top: 1px solid #eee;
+                        color: #666;
+                        font-size: 14px;
+                    }
+                    .content img {
+                        max-width: 100%;
+                        height: auto;
+                        border-radius: 5px;
+                        margin: 20px 0;
+                    }
+                    .last-updated {
+                        color: #666;
+                        font-size: 14px;
+                        font-style: italic;
+                        margin-top: 30px;
+                    }
+                    @media (max-width: 600px) {
+                        body { padding: 10px; }
+                        .container { padding: 20px; }
+                        h1 { font-size: 24px; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">Be Out</div>
+                        <h1>${page.title}</h1>
+                    </div>
+
+                    <div class="content">
+                        ${page.content}
+                    </div>
+
+                    <div class="last-updated">
+                        Dernière mise à jour : ${new Date(page.updated_at).toLocaleDateString('fr-FR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}
+                    </div>
+
+                    <div class="footer">
+                        <p>© ${new Date().getFullYear()} Be Out. Tous droits réservés.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        res.send(html);
+
+    } catch (error) {
+        console.error('Error fetching rendered content page:', error);
+        res.status(500).send(`
+            <!DOCTYPE html>
+            <html lang="${req.query.lang || 'fr'}">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Erreur - Be Out</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                           padding: 20px; text-align: center; color: #333; }
+                    .error { color: #e74c3c; margin-top: 50px; }
+                </style>
+            </head>
+            <body>
+                <div class="error">
+                    <h1>Erreur</h1>
+                    <p>Une erreur s'est produite lors du chargement de la page.</p>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+});
+
 export default router;

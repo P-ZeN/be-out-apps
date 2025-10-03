@@ -31,7 +31,7 @@ const i18nConfig = {
     },
 
     defaultNS: "common",
-    ns: ["common", "auth", "home", "navigation", "onboarding", "map", "profile", "bookings", "footer"],
+    ns: ["common", "auth", "home", "navigation", "onboarding", "map", "profile", "bookings", "payment", "dashboard", "footer"],
 };
 
 i18n.use(Backend) // Use HTTP backend to load translations
