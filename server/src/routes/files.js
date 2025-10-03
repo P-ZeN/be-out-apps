@@ -20,6 +20,7 @@ class LocalFileService {
         const directories = [
             "public/avatars",
             "public/events",
+            "public/content",
             "public/thumbnails",
             "private/documents",
             "private/temp",
@@ -175,6 +176,53 @@ router.post("/event-image", authenticateToken, upload.single("image"), async (re
     } catch (error) {
         console.error("Error uploading event image:", error);
         res.status(500).json({ error: "Failed to upload event image" });
+    }
+});
+
+// Upload content image (for blog posts, articles, etc.)
+router.post("/content-image", authenticateToken, upload.single("image"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file provided" });
+        }
+
+        // Create multiple sizes optimized for content
+        const sizes = [
+            { width: 1200, height: 675, suffix: "large" },   // 16:9 ratio for large displays
+            { width: 800, height: 450, suffix: "medium" },   // 16:9 ratio for medium displays  
+            { width: 400, height: 225, suffix: "small" },    // 16:9 ratio for mobile
+            { width: 200, height: 200, suffix: "thumbnail" }, // Square thumbnail
+        ];
+
+        const results = [];
+
+        for (const size of sizes) {
+            const processedImage = await sharp(req.file.buffer)
+                .resize(size.width, size.height, { fit: "cover", position: "center" })
+                .jpeg({ quality: 85 })
+                .toBuffer();
+
+            const processedFile = {
+                ...req.file,
+                buffer: processedImage,
+                originalname: req.file.originalname.replace(/\.[^/.]+$/, "") + `_${size.suffix}.jpg`,
+                mimetype: "image/jpeg",
+            };
+
+            const result = await fileService.saveFile(processedFile, "content", true);
+            results.push({
+                size: size.suffix,
+                ...result,
+            });
+        }
+
+        res.json({
+            message: "Content image uploaded successfully",
+            files: results,
+        });
+    } catch (error) {
+        console.error("Error uploading content image:", error);
+        res.status(500).json({ error: "Failed to upload content image" });
     }
 });
 

@@ -708,6 +708,20 @@ $$;
 
 
 --
+-- Name: update_content_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_content_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: update_event_favorites_count(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1091,6 +1105,42 @@ CREATE TABLE public.categories (
     description_fr text,
     description_en text,
     description_es text
+);
+
+
+--
+-- Name: content_pages; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.content_pages (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    slug character varying(255) NOT NULL,
+    category character varying(100) DEFAULT 'page'::character varying,
+    featured_image text,
+    keywords text[],
+    published boolean DEFAULT false,
+    author_id uuid,
+    view_count integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    CONSTRAINT content_pages_category_check CHECK (((category)::text = ANY ((ARRAY['page'::character varying, 'blog'::character varying, 'legal'::character varying])::text[])))
+);
+
+
+--
+-- Name: content_translations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.content_translations (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    page_id uuid,
+    language character varying(5) NOT NULL,
+    title character varying(500) NOT NULL,
+    content text NOT NULL,
+    meta_description text,
+    excerpt text,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
 );
 
 
@@ -2024,6 +2074,38 @@ ALTER TABLE ONLY public.categories
 
 
 --
+-- Name: content_pages content_pages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_pages
+    ADD CONSTRAINT content_pages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: content_pages content_pages_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_pages
+    ADD CONSTRAINT content_pages_slug_key UNIQUE (slug);
+
+
+--
+-- Name: content_translations content_translations_page_id_language_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_translations
+    ADD CONSTRAINT content_translations_page_id_language_key UNIQUE (page_id, language);
+
+
+--
+-- Name: content_translations content_translations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_translations
+    ADD CONSTRAINT content_translations_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: email_logs email_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2574,6 +2656,48 @@ CREATE INDEX idx_categories_name_fr ON public.categories USING btree (name_fr);
 
 
 --
+-- Name: idx_content_pages_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_content_pages_category ON public.content_pages USING btree (category);
+
+
+--
+-- Name: idx_content_pages_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_content_pages_created_at ON public.content_pages USING btree (created_at DESC);
+
+
+--
+-- Name: idx_content_pages_published; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_content_pages_published ON public.content_pages USING btree (published);
+
+
+--
+-- Name: idx_content_pages_slug; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_content_pages_slug ON public.content_pages USING btree (slug);
+
+
+--
+-- Name: idx_content_translations_language; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_content_translations_language ON public.content_translations USING btree (language);
+
+
+--
+-- Name: idx_content_translations_page_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_content_translations_page_id ON public.content_translations USING btree (page_id);
+
+
+--
 -- Name: idx_email_logs_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3078,6 +3202,20 @@ CREATE TRIGGER trigger_addresses_updated_at BEFORE UPDATE ON public.addresses FO
 
 
 --
+-- Name: content_pages trigger_content_pages_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_content_pages_updated_at BEFORE UPDATE ON public.content_pages FOR EACH ROW EXECUTE FUNCTION public.update_content_updated_at();
+
+
+--
+-- Name: content_translations trigger_content_translations_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_content_translations_updated_at BEFORE UPDATE ON public.content_translations FOR EACH ROW EXECUTE FUNCTION public.update_content_updated_at();
+
+
+--
 -- Name: events trigger_log_event_status_change; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -3227,6 +3365,14 @@ ALTER TABLE ONLY public.bookings
 
 ALTER TABLE ONLY public.bookings
     ADD CONSTRAINT bookings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: content_translations content_translations_page_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_translations
+    ADD CONSTRAINT content_translations_page_id_fkey FOREIGN KEY (page_id) REFERENCES public.content_pages(id) ON DELETE CASCADE;
 
 
 --

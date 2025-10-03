@@ -23,6 +23,7 @@ import filesRoutes from "./routes/files.js";
 import ticketsRoutes from "./routes/tickets.js";
 import debugRoutes from "./routes/debug.js";
 import notificationRoutes from "./routes/notifications.js";
+import contentRoutes from "./routes/content.js";
 import pool from "./db.js";
 import "./passport-setup.js"; // Import passport setup
 import "./jobs/notificationProcessor.js"; // Start notification background processor
@@ -176,6 +177,7 @@ app.use("/api/emails", emailsRoutes);
 app.use("/api/files", filesRoutes);
 app.use("/api/tickets", ticketsRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/content", contentRoutes);
 app.use("/api/debug", debugRoutes);
 app.use("/api", addressesRoutes);
 

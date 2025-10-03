@@ -15,6 +15,7 @@ const Header = () => {
 
     const navigation = [
         { path: '/', label: t('nav.home', 'Home') },
+        { path: '/blog', label: t('nav.blog', 'Blog') },
         { path: '/about', label: t('nav.about', 'About') },
     ];
 

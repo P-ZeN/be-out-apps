@@ -29,6 +29,7 @@ import {
     ExitToApp,
     MenuOpen,
     Menu,
+    Article,
 } from "@mui/icons-material";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 
@@ -41,6 +42,7 @@ import AdminPayments from "../pages/AdminPayments";
 import AdminLogs from "../pages/AdminLogs";
 import AdminSettings from "../pages/AdminSettings";
 import AdminEmails from "../pages/AdminEmails";
+import AdminContent from "../pages/AdminContent";
 
 const drawerWidth = 280;
 
@@ -87,6 +89,12 @@ const AdminMainLayout = ({ user, onLogout }) => {
             icon: <Email />,
             path: "/emails",
             component: AdminEmails,
+        },
+        {
+            text: "Gestion de Contenu",
+            icon: <Article />,
+            path: "/content",
+            component: AdminContent,
         },
         {
             text: "Logs",
@@ -245,6 +253,7 @@ const AdminMainLayout = ({ user, onLogout }) => {
                     <Route path="/bookings" element={<AdminBookings user={user} />} />
                     <Route path="/payments" element={<AdminPayments user={user} />} />
                     <Route path="/emails" element={<AdminEmails user={user} />} />
+                    <Route path="/content" element={<AdminContent user={user} />} />
                     <Route path="/logs" element={<AdminLogs user={user} />} />
                     <Route path="/settings" element={<AdminSettings user={user} />} />
                 </Routes>
